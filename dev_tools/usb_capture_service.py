@@ -141,6 +141,9 @@ class CaptureService:
         self.server = None
         self.mouse_down = None
         self.last_control_warning = 0.0
+        self.control_lock = threading.Lock()
+        self.control_device = None
+        self.control_preload_started = False
 
     def open_capture_from_config(self):
         config = load_alas_config(self.config_path)
@@ -175,6 +178,8 @@ class CaptureService:
                     pass
                 self.preview_window_created = False
             return
+
+        self.preload_control_device()
 
         if self.preview_window_created:
             try:
@@ -212,7 +217,14 @@ class CaptureService:
 
     def send_control(self, payload):
         try:
-            response = control_request(self.config_name, payload, timeout=0.5)
+            response = control_request(self.config_name, payload, timeout=0.2)
+            if response.get('ok'):
+                return True
+        except Exception:
+            pass
+
+        try:
+            response = self.handle_local_control(payload)
             if response.get('ok'):
                 return True
             error = response.get('error', 'unknown error')
@@ -224,6 +236,93 @@ class CaptureService:
             print(f'USB preview control unavailable: {error}', flush=True)
             self.last_control_warning = now
         return False
+
+    def preload_control_device(self):
+        if self.control_preload_started:
+            return
+        self.control_preload_started = True
+        thread = threading.Thread(
+            target=self.preload_control_device_worker,
+            name='UsbCapturePreviewControlPreload',
+            daemon=True,
+        )
+        thread.start()
+
+    def preload_control_device_worker(self):
+        try:
+            self.get_control_device()
+            print('USB preview control ready', flush=True)
+        except Exception as e:
+            self.control_preload_started = False
+            now = time.time()
+            if now - self.last_control_warning > 5:
+                print(f'USB preview control preload failed: {e}', flush=True)
+                self.last_control_warning = now
+
+    def get_control_device(self):
+        with self.control_lock:
+            if self.control_device is not None:
+                return self.control_device
+
+            from module.config.config import AzurLaneConfig
+            from module.device.device import Device
+
+            config = AzurLaneConfig(config_name=self.config_name)
+            self.control_device = Device(config)
+            return self.control_device
+
+    @staticmethod
+    def escape_input_text(text):
+        text = str(text)
+        return (
+            text
+            .replace('%', r'\%')
+            .replace(' ', '%s')
+            .replace('&', r'\&')
+            .replace('<', r'\<')
+            .replace('>', r'\>')
+            .replace('|', r'\|')
+            .replace(';', r'\;')
+            .replace('(', r'\(')
+            .replace(')', r'\)')
+        )
+
+    def handle_local_control(self, payload):
+        device = self.get_control_device()
+        cmd = payload.get('cmd')
+        if cmd == 'tap':
+            x = int(payload.get('x', 0))
+            y = int(payload.get('y', 0))
+            method = device.click_methods.get(device.config.Emulator_ControlMethod, device.click_adb)
+            method(x, y)
+            return {'ok': True}
+        if cmd == 'swipe':
+            p1 = (int(payload.get('x1', 0)), int(payload.get('y1', 0)))
+            p2 = (int(payload.get('x2', 0)), int(payload.get('y2', 0)))
+            duration = max(0.05, min(2.0, float(payload.get('duration', 0.1))))
+            method = device.config.Emulator_ControlMethod
+            if method == 'minitouch':
+                device.swipe_minitouch(p1, p2)
+            elif method == 'uiautomator2':
+                device.swipe_uiautomator2(p1, p2, duration=duration)
+            elif method == 'scrcpy':
+                device.swipe_scrcpy(p1, p2)
+            elif method == 'MaaTouch':
+                device.swipe_maatouch(p1, p2)
+            elif method == 'nemu_ipc':
+                device.swipe_nemu_ipc(p1, p2)
+            else:
+                device.swipe_adb(p1, p2, duration=duration)
+            return {'ok': True}
+        if cmd == 'keyevent':
+            device.adb_shell(['input', 'keyevent', int(payload.get('keycode', 0))])
+            return {'ok': True}
+        if cmd == 'text':
+            text = str(payload.get('text', ''))
+            if text:
+                device.adb_shell(['input', 'text', self.escape_input_text(text)])
+            return {'ok': True}
+        return {'ok': False, 'error': f'Unknown command: {cmd}'}
 
     def on_mouse(self, event, x, y, flags, userdata=None):
         x, y = self.normalize_preview_point(x, y)
@@ -343,6 +442,8 @@ class CaptureService:
         thread_server.start()
         thread_capture.start()
         print(f'USB capture service started: {HOST}:{service_port(self.config_name)}', flush=True)
+        if self.preview_enabled:
+            self.preload_control_device()
         try:
             while not self.stop_event.is_set():
                 time.sleep(0.2)
@@ -371,6 +472,8 @@ class CaptureService:
                         })
                     elif cmd == 'preview':
                         service.preview_enabled = bool(payload.get('enabled'))
+                        if service.preview_enabled:
+                            service.preload_control_device()
                         send_json(self.request, {'ok': True, 'preview': service.preview_enabled})
                     elif cmd == 'stop':
                         service.stop_event.set()
