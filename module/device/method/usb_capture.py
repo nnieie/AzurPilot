@@ -1,4 +1,6 @@
 import time
+import subprocess
+import sys
 import threading
 import queue
 
@@ -21,7 +23,6 @@ class UsbCapture:
     _USB_CAPTURE_READ_TIMEOUT = 2
     _USB_CAPTURE_FRAME_TIMEOUT = 5
     _USB_CAPTURE_OUTPUT_SIZE = (1280, 720)
-    _USB_CAPTURE_PREVIEW_WINDOW = 'Alas USB Capture Preview'
 
     @staticmethod
     def _usb_capture_backend(backend):
@@ -239,7 +240,43 @@ class UsbCapture:
             except Exception as e:
                 logger.warning(f'Failed to release USB capture device: {e}')
             del_cached_property(self, 'usb_capture')
-        self.usb_capture_preview_stop()
+
+    def usb_capture_config_name(self):
+        return getattr(self.config, 'config_name', 'alas')
+
+    def usb_capture_service_start(self):
+        from dev_tools.usb_capture_service import ping_service, service_port
+
+        config_name = self.usb_capture_config_name()
+        if ping_service(config_name):
+            return
+
+        logger.info(f'Starting USB capture service: {config_name} @ 127.0.0.1:{service_port(config_name)}')
+        creationflags = 0
+        if sys.platform == 'win32':
+            creationflags = getattr(subprocess, 'CREATE_NO_WINDOW', 0)
+        subprocess.Popen(
+            [sys.executable, 'dev_tools/usb_capture_service.py', '--config-name', config_name],
+            creationflags=creationflags,
+        )
+
+        deadline = time.time() + self._USB_CAPTURE_OPEN_TIMEOUT
+        while time.time() < deadline:
+            if ping_service(config_name):
+                return
+            time.sleep(0.1)
+        raise UsbCaptureError('Start USB capture service timeout')
+
+    def usb_capture_service_frame(self):
+        from dev_tools.usb_capture_service import get_frame
+
+        self.usb_capture_service_start()
+        frame = get_frame(self.usb_capture_config_name(), timeout=self._USB_CAPTURE_FRAME_TIMEOUT)
+        if not getattr(self, '_usb_capture_service_logged', False):
+            logger.attr('UsbCaptureService', self.usb_capture_config_name())
+            self._usb_capture_service_logged = True
+        self._usb_capture_last_frame_time = time.time()
+        return frame
 
     def usb_capture_stream_stop(self):
         stop_event = getattr(self, '_usb_capture_stream_stop_event', None)
@@ -282,8 +319,6 @@ class UsbCapture:
                     self._usb_capture_stream_seq += 1
                     self._usb_capture_stream_error = None
                     frame_event.set()
-
-                self.usb_capture_preview(frame)
         except Exception as e:
             with lock:
                 self._usb_capture_stream_error = e
@@ -328,100 +363,9 @@ class UsbCapture:
 
         raise UsbCaptureError('Wait USB capture frame timeout')
 
-    def usb_capture_preview_stop(self):
-        stop_event = getattr(self, '_usb_capture_preview_stop_event', None)
-        frame_queue = getattr(self, '_usb_capture_preview_queue', None)
-        thread = getattr(self, '_usb_capture_preview_thread', None)
-        if stop_event is not None:
-            stop_event.set()
-        if frame_queue is not None:
-            try:
-                frame_queue.put_nowait(None)
-            except Exception:
-                pass
-        if thread is not None and thread.is_alive():
-            thread.join(timeout=0.5)
-        self._usb_capture_preview_thread = None
-        self._usb_capture_preview_queue = None
-        self._usb_capture_preview_stop_event = None
-
-    def usb_capture_preview_worker(self, frame_queue, stop_event):
-        window_created = False
-        try:
-            while not stop_event.is_set():
-                try:
-                    image = frame_queue.get(timeout=0.1)
-                except queue.Empty:
-                    continue
-                if image is None:
-                    break
-
-                try:
-                    if not window_created:
-                        cv2.namedWindow(self._USB_CAPTURE_PREVIEW_WINDOW, cv2.WINDOW_NORMAL)
-                        cv2.resizeWindow(self._USB_CAPTURE_PREVIEW_WINDOW, 960, 540)
-                        window_created = True
-
-                    cv2.imshow(self._USB_CAPTURE_PREVIEW_WINDOW, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
-                    key = cv2.waitKey(1) & 0xFF
-                except Exception as e:
-                    logger.warning(f'USB capture preview disabled: {e}')
-                    self.config.Emulator_UsbCapturePreview = False
-                    break
-
-                if key in (27, ord('q')):
-                    logger.info('USB capture preview closed')
-                    self.config.Emulator_UsbCapturePreview = False
-                    break
-        finally:
-            if window_created:
-                try:
-                    cv2.destroyWindow(self._USB_CAPTURE_PREVIEW_WINDOW)
-                except Exception:
-                    pass
-
-    def usb_capture_preview_start(self):
-        thread = getattr(self, '_usb_capture_preview_thread', None)
-        if thread is not None and thread.is_alive():
-            return
-
-        frame_queue = queue.Queue(maxsize=1)
-        stop_event = threading.Event()
-        thread = threading.Thread(
-            target=self.usb_capture_preview_worker,
-            args=(frame_queue, stop_event),
-            name='UsbCapturePreview',
-            daemon=True
-        )
-        self._usb_capture_preview_queue = frame_queue
-        self._usb_capture_preview_stop_event = stop_event
-        self._usb_capture_preview_thread = thread
-        thread.start()
-
-    def usb_capture_preview(self, image):
-        if not bool(getattr(self.config, 'Emulator_UsbCapturePreview', False)):
-            self.usb_capture_preview_stop()
-            return
-
-        self.usb_capture_preview_start()
-        frame_queue = getattr(self, '_usb_capture_preview_queue', None)
-        if frame_queue is None:
-            return
-        try:
-            frame_queue.put_nowait(image.copy())
-        except queue.Full:
-            try:
-                frame_queue.get_nowait()
-            except queue.Empty:
-                pass
-            try:
-                frame_queue.put_nowait(image.copy())
-            except queue.Full:
-                pass
-
     def screenshot_usb_capture(self):
         try:
-            return self.usb_capture_latest_frame()
+            return self.usb_capture_service_frame()
         except Exception as e:
             logger.critical(str(e))
             self.usb_capture_release()

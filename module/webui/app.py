@@ -76,7 +76,7 @@ from module.webui.fastapi import asgi_app
 from module.webui.lang import _t, t
 from module.webui.patch import fix_py37_subprocess_communicate, patch_executor, patch_mimetype
 from module.webui.pin import put_input, put_select
-from module.webui.process_manager import ProcessManager
+from module.webui.process_manager import ProcessManager, USB_CAPTURE_PREVIEW_SUFFIX
 from module.webui.remote_access import RemoteAccess
 from module.webui.setting import State
 from module.webui.updater import updater
@@ -1771,6 +1771,7 @@ class AlasGUI(Frame):
                                     ),
                                     color="off",
                                 ),
+                                put_scope("usb_capture_preview_btn"),
                                 put_scope("dashboard_btn"),
                             ],
                         ),
@@ -1807,10 +1808,12 @@ class AlasGUI(Frame):
             color_off="on",
             scope="dashboard_btn",
         )
+        switch_usb_capture_preview = self.make_usb_capture_preview_switch("usb_capture_preview_btn")
         self.task_handler.add(switch_scheduler.g(), 1, True)
         self.task_handler.add(switch_log_scroll.g(), 1, True)
         if 'Maa' not in self.ALAS_ARGS:
             self.task_handler.add(switch_dashboard.g(), 1, True)
+            self.task_handler.add(switch_usb_capture_preview.g(), 1, True)
         self.task_handler.add(self.alas_update_overview_task, 10, True)
         if 'Maa' not in self.ALAS_ARGS:
             self.task_handler.add(self.alas_update_dashboard, 10, True)
@@ -1854,6 +1857,65 @@ class AlasGUI(Frame):
                     self._save_config(modified, config_name, config_updater)
                     modified.clear()
                     break
+
+    def usb_capture_preview_manager(self) -> ProcessManager:
+        return ProcessManager.get_manager(f"{self.alas_name}{USB_CAPTURE_PREVIEW_SUFFIX}")
+
+    def usb_capture_service_alive(self) -> bool:
+        try:
+            from dev_tools.usb_capture_service import ping_service
+
+            return ping_service(self.alas_name)
+        except Exception:
+            return self.usb_capture_preview_manager().alive
+
+    def usb_capture_preview_enabled(self) -> bool:
+        try:
+            from dev_tools.usb_capture_service import request
+
+            response, _ = request(self.alas_name, {'cmd': 'ping'}, timeout=0.3)
+            return bool(response.get('ok') and response.get('preview'))
+        except Exception:
+            return False
+
+    def usb_capture_preview_start(self) -> None:
+        manager = self.usb_capture_preview_manager()
+        if self.usb_capture_service_alive():
+            try:
+                from dev_tools.usb_capture_service import set_preview
+
+                set_preview(self.alas_name, True)
+            except Exception as e:
+                logger.warning(f"Failed to enable USB capture preview: {e}")
+            return
+        manager.start("usb_capture_preview")
+        toast("USB采集预览已启动", color="success")
+
+    def usb_capture_preview_stop(self) -> None:
+        manager = self.usb_capture_preview_manager()
+        try:
+            from dev_tools.usb_capture_service import set_preview, stop_service
+
+            set_preview(self.alas_name, False)
+            if not (getattr(self, 'alas', None) is not None and self.alas.alive):
+                stop_service(self.alas_name)
+        except Exception as e:
+            logger.warning(f"Failed to stop USB capture preview: {e}")
+        if manager.alive and not (getattr(self, 'alas', None) is not None and self.alas.alive):
+            manager.stop()
+        toast("USB采集预览已停止", color="info")
+
+    def make_usb_capture_preview_switch(self, scope: str) -> BinarySwitchButton:
+        return BinarySwitchButton(
+            label_on="停止USB预览",
+            label_off="启动USB预览",
+            onclick_on=self.usb_capture_preview_stop,
+            onclick_off=self.usb_capture_preview_start,
+            get_state=self.usb_capture_preview_enabled,
+            color_on="off",
+            color_off="on",
+            scope=scope,
+        )
 
     def _save_config(
             self,
@@ -2189,6 +2251,7 @@ class AlasGUI(Frame):
                         ),
                         color="off",
                     ),
+                    put_scope("usb_capture_preview_btn"),
                 ],
             )
 
@@ -2202,6 +2265,7 @@ class AlasGUI(Frame):
             color_off="off",
             scope="log_scroll_btn",
         )
+        switch_usb_capture_preview = self.make_usb_capture_preview_switch("usb_capture_preview_btn")
 
         config = self.alas_config.read_file(self.alas_name)
         for group, arg_dict in deep_iter(self.ALAS_ARGS[task], depth=1):
@@ -2228,6 +2292,7 @@ class AlasGUI(Frame):
 
         self.task_handler.add(switch_scheduler.g(), 1, True)
         self.task_handler.add(switch_log_scroll.g(), 1, True)
+        self.task_handler.add(switch_usb_capture_preview.g(), 1, True)
         if hasattr(self, 'alas') and self.alas is not None:
             self.task_handler.add(log.put_log(self.alas), 0.25, True)
 

@@ -115,7 +115,6 @@ Emulator:
   UsbCaptureWidth: 1280
   UsbCaptureHeight: 720
   UsbCaptureFps: 30
-  UsbCapturePreview: false
   AdbRestart: false
 EmulatorInfo:
   Emulator:

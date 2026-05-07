@@ -175,6 +175,28 @@ def parse_args():
 
 def main():
     args = parse_args()
+    run_preview_from_args(args)
+
+
+def run_preview(config_name='alas', stop_event=None):
+    args = argparse.Namespace(
+        config=os.path.join('config', f'{config_name}.json'),
+        device=None,
+        backend=None,
+        codec=None,
+        width=None,
+        height=None,
+        fps=None,
+        buffer_size=1,
+        output_size=DEFAULT_OUTPUT_SIZE,
+        raw=False,
+        no_overlay=False,
+        save_dir='.',
+    )
+    run_preview_from_args(args, stop_event=stop_event)
+
+
+def run_preview_from_args(args, stop_event=None):
     config = load_alas_config(args.config)
 
     device = choose(args.device, config, 'UsbCaptureDevice', 0)
@@ -200,7 +222,7 @@ def main():
     last_frame = None
 
     try:
-        while True:
+        while not (stop_event is not None and stop_event.is_set()):
             if not paused:
                 ok, frame = cap.read()
                 if not (ok and frame is not None and frame.size):
@@ -258,7 +280,10 @@ def main():
                 print(f'Actual mode: {mode_text(cap)}')
     finally:
         cap.release()
-        cv2.destroyWindow(WINDOW_NAME)
+        try:
+            cv2.destroyWindow(WINDOW_NAME)
+        except Exception:
+            pass
 
 
 if __name__ == '__main__':

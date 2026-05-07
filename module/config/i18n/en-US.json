@@ -532,10 +532,6 @@
       "name": "USB Capture FPS",
       "help": "Requested capture frame rate."
     },
-    "UsbCapturePreview": {
-      "name": "USB Capture Preview",
-      "help": "Show the image received by Alas in an OpenCV window. Press q or Esc in the preview window to close it."
-    },
     "AdbRestart": {
       "name": "Try Restarting ADB When Device Not Detected",
       "help": ""

@@ -393,10 +393,6 @@
         "type": "input",
         "value": 30
       },
-      "UsbCapturePreview": {
-        "type": "checkbox",
-        "value": false
-      },
       "AdbRestart": {
         "type": "checkbox",
         "value": false

@@ -25,6 +25,9 @@ from module.submodule.utils import get_available_func, get_available_mod, get_av
 from module.webui.setting import State
 
 
+USB_CAPTURE_PREVIEW_SUFFIX = "__usb_capture_preview"
+
+
 class ProcessManager:
     _processes: Dict[str, "ProcessManager"] = {}
 
@@ -236,6 +239,13 @@ class ProcessManager:
                 if e is not None:
                     AzurLaneAutoScript.stop_event = e
                 AzurLaneAutoScript(config_name=config_name).loop()
+            elif func == "usb_capture_preview":
+                from dev_tools.usb_capture_service import run_service
+
+                preview_config_name = config_name
+                if preview_config_name.endswith(USB_CAPTURE_PREVIEW_SUFFIX):
+                    preview_config_name = preview_config_name[:-len(USB_CAPTURE_PREVIEW_SUFFIX)]
+                run_service(config_name=preview_config_name, preview=True, stop_event=e)
             elif func in get_available_func():
                 from alas import AzurLaneAutoScript
 
@@ -260,7 +270,9 @@ class ProcessManager:
     @classmethod
     def running_instances(cls) -> List["ProcessManager"]:
         l = []
-        for process in cls._processes.values():
+        for name, process in cls._processes.items():
+            if name.endswith(USB_CAPTURE_PREVIEW_SUFFIX):
+                continue
             if process.alive:
                 l.append(process)
         return l
