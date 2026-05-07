@@ -17,9 +17,9 @@ class UsbCaptureError(Exception):
 
 class UsbCapture:
     _usb_capture_last_frame_time = 0.0
-    _usb_capture_preview_window_created = False
     _USB_CAPTURE_OPEN_TIMEOUT = 5
     _USB_CAPTURE_READ_TIMEOUT = 2
+    _USB_CAPTURE_OUTPUT_SIZE = (1280, 720)
     _USB_CAPTURE_PREVIEW_WINDOW = 'Alas USB Capture Preview'
 
     @staticmethod
@@ -48,6 +48,29 @@ class UsbCapture:
             return int(device)
         except ValueError:
             return device
+
+    @staticmethod
+    def _usb_capture_fourcc(codec):
+        codec = str(codec).strip().upper()
+        if codec in ('', 'AUTO', 'DEFAULT'):
+            return None
+        if codec == 'MJPEG':
+            codec = 'MJPG'
+        if len(codec) != 4:
+            logger.warning(f'Invalid USB capture codec: {codec}, use driver default')
+            return None
+        return cv2.VideoWriter_fourcc(*codec)
+
+    @staticmethod
+    def _usb_capture_fourcc_name(value):
+        try:
+            value = int(value)
+            chars = ''.join(chr((value >> 8 * i) & 0xFF) for i in range(4))
+            if chars.strip('\x00 '):
+                return chars
+        except Exception:
+            pass
+        return 'unknown'
 
     @staticmethod
     def _usb_capture_call_timeout(func, timeout, error):
@@ -101,6 +124,7 @@ class UsbCapture:
         width = int(self.config.Emulator_UsbCaptureWidth)
         height = int(self.config.Emulator_UsbCaptureHeight)
         fps = int(self.config.Emulator_UsbCaptureFps)
+        fourcc = self._usb_capture_fourcc(getattr(self.config, 'Emulator_UsbCaptureCodec', 'MJPG'))
 
         def open_capture():
             logger.info(f'Opening USB capture device: {device}, backend={self.config.Emulator_UsbCaptureBackend}')
@@ -122,17 +146,19 @@ class UsbCapture:
         cap = open_capture()
 
         def configure():
-            cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+            if fourcc is not None:
+                cap.set(cv2.CAP_PROP_FOURCC, fourcc)
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
             cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
             cap.set(cv2.CAP_PROP_FPS, fps)
             actual_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 0)
             actual_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 0)
             actual_fps = cap.get(cv2.CAP_PROP_FPS) or 0
-            return actual_width, actual_height, actual_fps
+            actual_fourcc = self._usb_capture_fourcc_name(cap.get(cv2.CAP_PROP_FOURCC) or 0)
+            return actual_width, actual_height, actual_fps, actual_fourcc
 
         try:
-            actual_width, actual_height, actual_fps = self._usb_capture_call_timeout(
+            actual_width, actual_height, actual_fps, actual_fourcc = self._usb_capture_call_timeout(
                 configure,
                 timeout=self._USB_CAPTURE_OPEN_TIMEOUT,
                 error=f'Configure USB capture device timeout: {device}'
@@ -145,7 +171,7 @@ class UsbCapture:
             except Exception:
                 pass
             raise RequestHumanTakeover
-        logger.attr('UsbCapture', f'{actual_width}x{actual_height} @ {actual_fps:.2f}fps')
+        logger.attr('UsbCapture', f'{actual_fourcc} {actual_width}x{actual_height} @ {actual_fps:.2f}fps')
 
         try:
             ok, frame = self._usb_capture_call_timeout(
@@ -173,7 +199,8 @@ class UsbCapture:
             if ok and frame is not None and frame.size:
                 actual_height, actual_width = frame.shape[:2]
                 actual_fps = cap.get(cv2.CAP_PROP_FPS) or 0
-                logger.attr('UsbCapture', f'{actual_width}x{actual_height} @ {actual_fps:.2f}fps (default)')
+                actual_fourcc = self._usb_capture_fourcc_name(cap.get(cv2.CAP_PROP_FOURCC) or 0)
+                logger.attr('UsbCapture', f'{actual_fourcc} {actual_width}x{actual_height} @ {actual_fps:.2f}fps (default)')
             else:
                 try:
                     cap.release()
@@ -190,32 +217,101 @@ class UsbCapture:
             except Exception as e:
                 logger.warning(f'Failed to release USB capture device: {e}')
             del_cached_property(self, 'usb_capture')
-        if self._usb_capture_preview_window_created:
+        self.usb_capture_preview_stop()
+
+    def usb_capture_preview_stop(self):
+        stop_event = getattr(self, '_usb_capture_preview_stop_event', None)
+        frame_queue = getattr(self, '_usb_capture_preview_queue', None)
+        thread = getattr(self, '_usb_capture_preview_thread', None)
+        if stop_event is not None:
+            stop_event.set()
+        if frame_queue is not None:
             try:
-                cv2.destroyWindow(self._USB_CAPTURE_PREVIEW_WINDOW)
+                frame_queue.put_nowait(None)
             except Exception:
                 pass
-            self._usb_capture_preview_window_created = False
+        if thread is not None and thread.is_alive():
+            thread.join(timeout=0.5)
+        self._usb_capture_preview_thread = None
+        self._usb_capture_preview_queue = None
+        self._usb_capture_preview_stop_event = None
+
+    def usb_capture_preview_worker(self, frame_queue, stop_event):
+        window_created = False
+        try:
+            while not stop_event.is_set():
+                try:
+                    image = frame_queue.get(timeout=0.1)
+                except queue.Empty:
+                    continue
+                if image is None:
+                    break
+
+                try:
+                    if not window_created:
+                        cv2.namedWindow(self._USB_CAPTURE_PREVIEW_WINDOW, cv2.WINDOW_NORMAL)
+                        cv2.resizeWindow(self._USB_CAPTURE_PREVIEW_WINDOW, 960, 540)
+                        window_created = True
+
+                    cv2.imshow(self._USB_CAPTURE_PREVIEW_WINDOW, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+                    key = cv2.waitKey(1) & 0xFF
+                except Exception as e:
+                    logger.warning(f'USB capture preview disabled: {e}')
+                    self.config.Emulator_UsbCapturePreview = False
+                    break
+
+                if key in (27, ord('q')):
+                    logger.info('USB capture preview closed')
+                    self.config.Emulator_UsbCapturePreview = False
+                    break
+        finally:
+            if window_created:
+                try:
+                    cv2.destroyWindow(self._USB_CAPTURE_PREVIEW_WINDOW)
+                except Exception:
+                    pass
+
+    def usb_capture_preview_start(self):
+        thread = getattr(self, '_usb_capture_preview_thread', None)
+        if thread is not None and thread.is_alive():
+            return
+
+        frame_queue = queue.Queue(maxsize=1)
+        stop_event = threading.Event()
+        thread = threading.Thread(
+            target=self.usb_capture_preview_worker,
+            args=(frame_queue, stop_event),
+            name='UsbCapturePreview',
+            daemon=True
+        )
+        self._usb_capture_preview_queue = frame_queue
+        self._usb_capture_preview_stop_event = stop_event
+        self._usb_capture_preview_thread = thread
+        thread.start()
 
     def usb_capture_preview(self, image):
         if not bool(getattr(self.config, 'Emulator_UsbCapturePreview', False)):
+            self.usb_capture_preview_stop()
             return
 
-        if not self._usb_capture_preview_window_created:
-            cv2.namedWindow(self._USB_CAPTURE_PREVIEW_WINDOW, cv2.WINDOW_NORMAL)
-            cv2.resizeWindow(self._USB_CAPTURE_PREVIEW_WINDOW, 960, 540)
-            self._usb_capture_preview_window_created = True
-
-        cv2.imshow(self._USB_CAPTURE_PREVIEW_WINDOW, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
-        key = cv2.waitKey(1) & 0xFF
-        if key in (27, ord('q')):
-            logger.info('USB capture preview closed')
-            self.config.Emulator_UsbCapturePreview = False
-            self.usb_capture_release()
+        self.usb_capture_preview_start()
+        frame_queue = getattr(self, '_usb_capture_preview_queue', None)
+        if frame_queue is None:
+            return
+        try:
+            frame_queue.put_nowait(image.copy())
+        except queue.Full:
+            try:
+                frame_queue.get_nowait()
+            except queue.Empty:
+                pass
+            try:
+                frame_queue.put_nowait(image.copy())
+            except queue.Full:
+                pass
 
     def screenshot_usb_capture(self):
-        width = int(self.config.Emulator_UsbCaptureWidth)
-        height = int(self.config.Emulator_UsbCaptureHeight)
+        width, height = self._USB_CAPTURE_OUTPUT_SIZE
 
         last_error = None
         for _ in range(3):

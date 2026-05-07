@@ -109,6 +109,9 @@ Emulator:
   UsbCaptureBackend:
     value: auto
     option: [auto, dshow, msmf, v4l2, avfoundation]
+  UsbCaptureCodec:
+    value: MJPG
+    option: [MJPG, YUY2, default]
   UsbCaptureWidth: 1280
   UsbCaptureHeight: 720
   UsbCaptureFps: 30

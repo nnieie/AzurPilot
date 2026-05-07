@@ -513,13 +513,20 @@
       "v4l2": "v4l2",
       "avfoundation": "avfoundation"
     },
+    "UsbCaptureCodec": {
+      "name": "USB Capture Codec",
+      "help": "Requested video format. If the image is corrupted or black, try switching between MJPG, YUY2, and default.",
+      "MJPG": "MJPG",
+      "YUY2": "YUY2",
+      "default": "Default"
+    },
     "UsbCaptureWidth": {
       "name": "USB Capture Width",
-      "help": "Target capture width. Alas expects 1280."
+      "help": "Requested input width for the capture card. Alas scales the final image to 1280x720."
     },
     "UsbCaptureHeight": {
       "name": "USB Capture Height",
-      "help": "Target capture height. Alas expects 720."
+      "help": "Requested input height for the capture card. Alas scales the final image to 1280x720."
     },
     "UsbCaptureFps": {
       "name": "USB Capture FPS",

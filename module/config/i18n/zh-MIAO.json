@@ -513,13 +513,20 @@
       "v4l2": "v4l2",
       "avfoundation": "avfoundation"
     },
+    "UsbCaptureCodec": {
+      "name": "USB采集编码",
+      "help": "请求采集卡使用的视频格式。画面花屏或黑屏时可在MJPG、YUY2、default之间切换。",
+      "MJPG": "MJPG",
+      "YUY2": "YUY2",
+      "default": "默认"
+    },
     "UsbCaptureWidth": {
       "name": "USB采集宽度",
-      "help": "目标采集宽度，Alas需要1280。"
+      "help": "请求采集卡使用的输入宽度。Alas最终会缩放到1280x720。"
     },
     "UsbCaptureHeight": {
       "name": "USB采集高度",
-      "help": "目标采集高度，Alas需要720。"
+      "help": "请求采集卡使用的输入高度。Alas最终会缩放到1280x720。"
     },
     "UsbCaptureFps": {
       "name": "USB采集帧率",

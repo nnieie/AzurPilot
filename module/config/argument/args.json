@@ -372,6 +372,15 @@
           "avfoundation"
         ]
       },
+      "UsbCaptureCodec": {
+        "type": "select",
+        "value": "MJPG",
+        "option": [
+          "MJPG",
+          "YUY2",
+          "default"
+        ]
+      },
       "UsbCaptureWidth": {
         "type": "input",
         "value": 1280

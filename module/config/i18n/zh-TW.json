@@ -513,13 +513,20 @@
       "v4l2": "v4l2",
       "avfoundation": "avfoundation"
     },
+    "UsbCaptureCodec": {
+      "name": "USB採集編碼",
+      "help": "請求採集卡使用的影片格式。畫面花屏或黑屏時可在MJPG、YUY2、default之間切換。",
+      "MJPG": "MJPG",
+      "YUY2": "YUY2",
+      "default": "預設"
+    },
     "UsbCaptureWidth": {
       "name": "USB採集寬度",
-      "help": "目標採集寬度，Alas需要1280。"
+      "help": "請求採集卡使用的輸入寬度。Alas最終會縮放到1280x720。"
     },
     "UsbCaptureHeight": {
       "name": "USB採集高度",
-      "help": "目標採集高度，Alas需要720。"
+      "help": "請求採集卡使用的輸入高度。Alas最終會縮放到1280x720。"
     },
     "UsbCaptureFps": {
       "name": "USB採集幀率",

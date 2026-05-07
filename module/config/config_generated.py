@@ -91,6 +91,7 @@ class GeneratedConfig:
     Emulator_ScreenshotDedithering = False
     Emulator_UsbCaptureDevice = 0
     Emulator_UsbCaptureBackend = 'auto'  # auto, dshow, msmf, v4l2, avfoundation
+    Emulator_UsbCaptureCodec = 'MJPG'  # MJPG, YUY2, default
     Emulator_UsbCaptureWidth = 1280
     Emulator_UsbCaptureHeight = 720
     Emulator_UsbCaptureFps = 30
