@@ -33,6 +33,7 @@ PORT_RANGE = 1000
 FRAME_TIMEOUT = 5.0
 SERVICE_WINDOW_NAME = 'Alas USB Capture Preview'
 PREVIEW_TAP_DISTANCE = 10
+PREVIEW_MOVE_INTERVAL = 0.016
 
 ANDROID_KEY_BACK = 4
 ANDROID_KEY_DPAD_UP = 19
@@ -144,6 +145,9 @@ class CaptureService:
         self.control_lock = threading.Lock()
         self.control_device = None
         self.control_preload_started = False
+        self.realtime_touch_active = False
+        self.last_mouse_move_time = 0.0
+        self.remote_control_retry_time = 0.0
 
     def open_capture_from_config(self):
         config = load_alas_config(self.config_path)
@@ -216,12 +220,23 @@ class CaptureService:
             self.on_key(key)
 
     def send_control(self, payload):
-        try:
-            response = control_request(self.config_name, payload, timeout=0.2)
-            if response.get('ok'):
-                return True
-        except Exception:
-            pass
+        remote_error = None
+        now = time.time()
+        if now >= self.remote_control_retry_time:
+            try:
+                response = control_request(self.config_name, payload, timeout=0.2)
+                if response.get('ok'):
+                    self.remote_control_retry_time = 0.0
+                    return True
+                remote_error = response.get('error', 'unknown error')
+            except Exception:
+                self.remote_control_retry_time = now + 2.0
+
+        if remote_error is not None:
+            if now - self.last_control_warning > 5:
+                print(f'USB preview control unavailable: {remote_error}', flush=True)
+                self.last_control_warning = now
+            return False
 
         try:
             response = self.handle_local_control(payload)
@@ -289,52 +304,30 @@ class CaptureService:
 
     def handle_local_control(self, payload):
         device = self.get_control_device()
-        cmd = payload.get('cmd')
-        if cmd == 'tap':
-            x = int(payload.get('x', 0))
-            y = int(payload.get('y', 0))
-            method = device.click_methods.get(device.config.Emulator_ControlMethod, device.click_adb)
-            method(x, y)
-            return {'ok': True}
-        if cmd == 'swipe':
-            p1 = (int(payload.get('x1', 0)), int(payload.get('y1', 0)))
-            p2 = (int(payload.get('x2', 0)), int(payload.get('y2', 0)))
-            duration = max(0.05, min(2.0, float(payload.get('duration', 0.1))))
-            method = device.config.Emulator_ControlMethod
-            if method == 'minitouch':
-                device.swipe_minitouch(p1, p2)
-            elif method == 'uiautomator2':
-                device.swipe_uiautomator2(p1, p2, duration=duration)
-            elif method == 'scrcpy':
-                device.swipe_scrcpy(p1, p2)
-            elif method == 'MaaTouch':
-                device.swipe_maatouch(p1, p2)
-            elif method == 'nemu_ipc':
-                device.swipe_nemu_ipc(p1, p2)
-            else:
-                device.swipe_adb(p1, p2, duration=duration)
-            return {'ok': True}
-        if cmd == 'keyevent':
-            device.adb_shell(['input', 'keyevent', int(payload.get('keycode', 0))])
-            return {'ok': True}
-        if cmd == 'text':
-            text = str(payload.get('text', ''))
-            if text:
-                device.adb_shell(['input', 'text', self.escape_input_text(text)])
-            return {'ok': True}
-        return {'ok': False, 'error': f'Unknown command: {cmd}'}
+        return handle_control_payload(device, payload)
 
     def on_mouse(self, event, x, y, flags, userdata=None):
         x, y = self.normalize_preview_point(x, y)
 
         if event == cv2.EVENT_LBUTTONDOWN:
             self.mouse_down = (x, y, time.time())
+            self.realtime_touch_active = self.send_control({'cmd': 'touch_down', 'x': x, 'y': y})
+            self.last_mouse_move_time = 0.0
+        elif event == cv2.EVENT_MOUSEMOVE and self.realtime_touch_active and (flags & cv2.EVENT_FLAG_LBUTTON):
+            now = time.time()
+            if now - self.last_mouse_move_time >= PREVIEW_MOVE_INTERVAL:
+                self.send_control({'cmd': 'touch_move', 'x': x, 'y': y})
+                self.last_mouse_move_time = now
         elif event == cv2.EVENT_LBUTTONUP and self.mouse_down is not None:
             start_x, start_y, start_time = self.mouse_down
             self.mouse_down = None
             duration = max(0.05, time.time() - start_time)
             distance = ((x - start_x) ** 2 + (y - start_y) ** 2) ** 0.5
-            if distance <= PREVIEW_TAP_DISTANCE:
+            if self.realtime_touch_active:
+                self.send_control({'cmd': 'touch_move', 'x': x, 'y': y})
+                self.send_control({'cmd': 'touch_up', 'x': x, 'y': y})
+                self.realtime_touch_active = False
+            elif distance <= PREVIEW_TAP_DISTANCE:
                 self.send_control({'cmd': 'tap', 'x': x, 'y': y})
             else:
                 self.send_control({
@@ -350,13 +343,6 @@ class CaptureService:
 
     def normalize_preview_point(self, x, y):
         width, height = DEFAULT_OUTPUT_SIZE
-        try:
-            _, _, window_width, window_height = cv2.getWindowImageRect(SERVICE_WINDOW_NAME)
-        except Exception:
-            window_width, window_height = width, height
-        if window_width > 0 and window_height > 0:
-            x = int(round(x * width / window_width))
-            y = int(round(y * height / window_height))
         return max(0, min(width - 1, int(x))), max(0, min(height - 1, int(y)))
 
     def on_key(self, key):
@@ -500,6 +486,129 @@ class CaptureService:
                         pass
 
         return Handler
+
+
+def escape_input_text(text):
+    text = str(text)
+    return (
+        text
+        .replace('%', r'\%')
+        .replace(' ', '%s')
+        .replace('&', r'\&')
+        .replace('<', r'\<')
+        .replace('>', r'\>')
+        .replace('|', r'\|')
+        .replace(';', r'\;')
+        .replace('(', r'\(')
+        .replace(')', r'\)')
+    )
+
+
+def handle_control_payload(device, payload):
+    cmd = payload.get('cmd')
+    if cmd in ('touch_down', 'touch_move', 'touch_up'):
+        x = int(payload.get('x', 0))
+        y = int(payload.get('y', 0))
+        realtime_touch(device, cmd, x, y)
+        return {'ok': True}
+    if cmd == 'tap':
+        x = int(payload.get('x', 0))
+        y = int(payload.get('y', 0))
+        method = device.click_methods.get(device.config.Emulator_ControlMethod, device.click_adb)
+        method(x, y)
+        return {'ok': True}
+    if cmd == 'swipe':
+        p1 = (int(payload.get('x1', 0)), int(payload.get('y1', 0)))
+        p2 = (int(payload.get('x2', 0)), int(payload.get('y2', 0)))
+        duration = max(0.05, min(2.0, float(payload.get('duration', 0.1))))
+        method = device.config.Emulator_ControlMethod
+        if method == 'minitouch':
+            device.swipe_minitouch(p1, p2)
+        elif method == 'uiautomator2':
+            device.swipe_uiautomator2(p1, p2, duration=duration)
+        elif method == 'scrcpy':
+            device.swipe_scrcpy(p1, p2)
+        elif method == 'MaaTouch':
+            device.swipe_maatouch(p1, p2)
+        elif method == 'nemu_ipc':
+            device.swipe_nemu_ipc(p1, p2)
+        else:
+            device.swipe_adb(p1, p2, duration=duration)
+        return {'ok': True}
+    if cmd == 'keyevent':
+        device.adb_shell(['input', 'keyevent', int(payload.get('keycode', 0))])
+        return {'ok': True}
+    if cmd == 'text':
+        text = str(payload.get('text', ''))
+        if text:
+            device.adb_shell(['input', 'text', escape_input_text(text)])
+        return {'ok': True}
+    return {'ok': False, 'error': f'Unknown command: {cmd}'}
+
+
+def realtime_touch(device, cmd, x, y):
+    method = device.config.Emulator_ControlMethod
+    if method == 'MaaTouch':
+        builder = device.maatouch_builder
+        if cmd == 'touch_down':
+            builder.down(x, y).commit()
+        elif cmd == 'touch_move':
+            builder.move(x, y).commit()
+        else:
+            builder.up().commit()
+        send_maatouch_fast(device, builder)
+        return
+    if method == 'minitouch':
+        builder = device.minitouch_builder
+        if cmd == 'touch_down':
+            builder.down(x, y).commit()
+        elif cmd == 'touch_move':
+            builder.move(x, y).commit()
+        else:
+            builder.up().commit()
+        send_minitouch_fast(device, builder)
+        return
+    if method == 'scrcpy':
+        from module.device.method.scrcpy import const
+        device.scrcpy_ensure_running()
+        action = {
+            'touch_down': const.ACTION_DOWN,
+            'touch_move': const.ACTION_MOVE,
+            'touch_up': const.ACTION_UP,
+        }[cmd]
+        with device._scrcpy_control_socket_lock:
+            device._scrcpy_control.touch(x, y, action)
+        return
+    if method == 'nemu_ipc':
+        if cmd in ('touch_down', 'touch_move'):
+            device.nemu_ipc.down(x, y)
+        else:
+            device.nemu_ipc.up()
+        return
+    raise RuntimeError(f'Realtime touch is not supported by ControlMethod {method}')
+
+
+def send_maatouch_fast(device, builder):
+    content = builder.to_minitouch()
+    device._maatouch_stream.sendall(content.encode('utf-8'))
+    device._maatouch_stream.recv(0)
+    builder.clear()
+
+
+def send_minitouch_fast(device, builder):
+    if device.config.DEVICE_OVER_HTTP:
+        content = builder.to_atx_agent()
+
+        async def send():
+            for row in content:
+                await device._minitouch_ws.send(row)
+
+        device._minitouch_loop_run(send())
+    else:
+        content = builder.to_minitouch()
+        device._minitouch_client.sendall(content.encode('utf-8'))
+        device._minitouch_client.recv(0)
+    builder.clear()
 
 
 def run_service(config_name='alas', preview=False, stop_event=None):

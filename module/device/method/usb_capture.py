@@ -330,32 +330,9 @@ class UsbCapture:
         self._usb_capture_control_thread = None
 
     def usb_capture_handle_control(self, payload):
-        cmd = payload.get('cmd')
-        if cmd == 'tap':
-            x, y = self._usb_capture_clamp_point(payload.get('x', 0), payload.get('y', 0))
-            logger.info(f'USB preview tap ({x}, {y})')
-            method = self.click_methods.get(self.config.Emulator_ControlMethod, self.click_adb)
-            method(x, y)
-            return {'ok': True}
-        if cmd == 'swipe':
-            p1 = self._usb_capture_clamp_point(payload.get('x1', 0), payload.get('y1', 0))
-            p2 = self._usb_capture_clamp_point(payload.get('x2', 0), payload.get('y2', 0))
-            duration = max(0.05, min(2.0, float(payload.get('duration', 0.1))))
-            logger.info(f'USB preview swipe ({p1[0]}, {p1[1]}) -> ({p2[0]}, {p2[1]})')
-            self.usb_capture_control_swipe(p1, p2, duration)
-            return {'ok': True}
-        if cmd == 'keyevent':
-            keycode = int(payload.get('keycode', 0))
-            logger.info(f'USB preview keyevent {keycode}')
-            self.adb_shell(['input', 'keyevent', keycode])
-            return {'ok': True}
-        if cmd == 'text':
-            text = str(payload.get('text', ''))
-            if text:
-                logger.info(f'USB preview text {text!r}')
-                self.adb_shell(['input', 'text', self._usb_capture_escape_input_text(text)])
-            return {'ok': True}
-        return {'ok': False, 'error': f'Unknown command: {cmd}'}
+        from dev_tools.usb_capture_service import handle_control_payload
+
+        return handle_control_payload(self, payload)
 
     def usb_capture_control_swipe(self, p1, p2, duration):
         method = self.config.Emulator_ControlMethod
