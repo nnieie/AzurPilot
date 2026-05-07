@@ -28,13 +28,28 @@ from dev_tools.usb_capture_preview import (
 
 HOST = '127.0.0.1'
 BASE_PORT = 27180
+CONTROL_BASE_PORT = 28180
 PORT_RANGE = 1000
 FRAME_TIMEOUT = 5.0
 SERVICE_WINDOW_NAME = 'Alas USB Capture Preview'
+PREVIEW_TAP_DISTANCE = 10
+
+ANDROID_KEY_BACK = 4
+ANDROID_KEY_DPAD_UP = 19
+ANDROID_KEY_DPAD_DOWN = 20
+ANDROID_KEY_DPAD_LEFT = 21
+ANDROID_KEY_DPAD_RIGHT = 22
+ANDROID_KEY_TAB = 61
+ANDROID_KEY_ENTER = 66
+ANDROID_KEY_DEL = 67
 
 
 def service_port(config_name):
     return BASE_PORT + (zlib.crc32(str(config_name).encode('utf-8')) % PORT_RANGE)
+
+
+def control_port(config_name):
+    return CONTROL_BASE_PORT + (zlib.crc32(str(config_name).encode('utf-8')) % PORT_RANGE)
 
 
 def send_json(sock, payload):
@@ -59,6 +74,12 @@ def request(config_name, payload, timeout=5.0):
     with socket.create_connection((HOST, service_port(config_name)), timeout=timeout) as sock:
         send_json(sock, payload)
         return recv_json(sock, timeout=timeout), sock
+
+
+def control_request(config_name, payload, timeout=0.5):
+    with socket.create_connection((HOST, control_port(config_name)), timeout=timeout) as sock:
+        send_json(sock, payload)
+        return recv_json(sock, timeout=timeout)
 
 
 def ping_service(config_name, timeout=0.3):
@@ -118,6 +139,8 @@ class CaptureService:
         self.black_ratio = 0.0
         self.preview_window_created = False
         self.server = None
+        self.mouse_down = None
+        self.last_control_warning = 0.0
 
     def open_capture_from_config(self):
         config = load_alas_config(self.config_path)
@@ -167,18 +190,94 @@ class CaptureService:
         if not self.preview_window_created:
             cv2.namedWindow(SERVICE_WINDOW_NAME, cv2.WINDOW_NORMAL)
             cv2.resizeWindow(SERVICE_WINDOW_NAME, 960, 540)
+            cv2.setMouseCallback(SERVICE_WINDOW_NAME, self.on_mouse)
             self.preview_window_created = True
 
         preview = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
         cv2.imshow(SERVICE_WINDOW_NAME, preview)
-        key = cv2.waitKey(1) & 0xFF
+        key = cv2.waitKeyEx(1)
         try:
             visible = cv2.getWindowProperty(SERVICE_WINDOW_NAME, cv2.WND_PROP_VISIBLE) >= 1
         except Exception:
             visible = False
-        if key in (27, ord('q')) or not visible:
+        if key in (27, ord('q'), ord('Q')) or not visible:
             self.preview_enabled = False
+            try:
+                cv2.destroyWindow(SERVICE_WINDOW_NAME)
+            except Exception:
+                pass
             self.preview_window_created = False
+        elif key != -1:
+            self.on_key(key)
+
+    def send_control(self, payload):
+        try:
+            response = control_request(self.config_name, payload, timeout=0.5)
+            if response.get('ok'):
+                return True
+            error = response.get('error', 'unknown error')
+        except Exception as e:
+            error = str(e)
+
+        now = time.time()
+        if now - self.last_control_warning > 5:
+            print(f'USB preview control unavailable: {error}', flush=True)
+            self.last_control_warning = now
+        return False
+
+    def on_mouse(self, event, x, y, flags, userdata=None):
+        x, y = self.normalize_preview_point(x, y)
+
+        if event == cv2.EVENT_LBUTTONDOWN:
+            self.mouse_down = (x, y, time.time())
+        elif event == cv2.EVENT_LBUTTONUP and self.mouse_down is not None:
+            start_x, start_y, start_time = self.mouse_down
+            self.mouse_down = None
+            duration = max(0.05, time.time() - start_time)
+            distance = ((x - start_x) ** 2 + (y - start_y) ** 2) ** 0.5
+            if distance <= PREVIEW_TAP_DISTANCE:
+                self.send_control({'cmd': 'tap', 'x': x, 'y': y})
+            else:
+                self.send_control({
+                    'cmd': 'swipe',
+                    'x1': start_x,
+                    'y1': start_y,
+                    'x2': x,
+                    'y2': y,
+                    'duration': duration,
+                })
+        elif event == cv2.EVENT_RBUTTONUP:
+            self.send_control({'cmd': 'keyevent', 'keycode': ANDROID_KEY_BACK})
+
+    def normalize_preview_point(self, x, y):
+        width, height = DEFAULT_OUTPUT_SIZE
+        try:
+            _, _, window_width, window_height = cv2.getWindowImageRect(SERVICE_WINDOW_NAME)
+        except Exception:
+            window_width, window_height = width, height
+        if window_width > 0 and window_height > 0:
+            x = int(round(x * width / window_width))
+            y = int(round(y * height / window_height))
+        return max(0, min(width - 1, int(x))), max(0, min(height - 1, int(y)))
+
+    def on_key(self, key):
+        key_map = {
+            8: ANDROID_KEY_DEL,
+            9: ANDROID_KEY_TAB,
+            10: ANDROID_KEY_ENTER,
+            13: ANDROID_KEY_ENTER,
+            32: 62,
+            2424832: ANDROID_KEY_DPAD_LEFT,
+            2490368: ANDROID_KEY_DPAD_UP,
+            2555904: ANDROID_KEY_DPAD_RIGHT,
+            2621440: ANDROID_KEY_DPAD_DOWN,
+        }
+        if key in key_map:
+            self.send_control({'cmd': 'keyevent', 'keycode': key_map[key]})
+            return
+
+        if 32 <= key <= 126:
+            self.send_control({'cmd': 'text', 'text': chr(key)})
 
     def capture_loop(self):
         cap = None

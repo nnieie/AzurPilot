@@ -3,6 +3,8 @@ import subprocess
 import sys
 import threading
 import queue
+import json
+import socketserver
 
 import cv2
 import numpy as np
@@ -233,6 +235,7 @@ class UsbCapture:
         return cap
 
     def usb_capture_release(self):
+        self.usb_capture_control_stop()
         self.usb_capture_stream_stop()
         if has_cached_property(self, 'usb_capture'):
             try:
@@ -243,6 +246,131 @@ class UsbCapture:
 
     def usb_capture_config_name(self):
         return getattr(self.config, 'config_name', 'alas')
+
+    @staticmethod
+    def _usb_capture_clamp_point(x, y):
+        width, height = UsbCapture._USB_CAPTURE_OUTPUT_SIZE
+        return (
+            max(0, min(width - 1, int(round(float(x))))),
+            max(0, min(height - 1, int(round(float(y))))),
+        )
+
+    @staticmethod
+    def _usb_capture_escape_input_text(text):
+        text = str(text)
+        return (
+            text
+            .replace('%', r'\%')
+            .replace(' ', '%s')
+            .replace('&', r'\&')
+            .replace('<', r'\<')
+            .replace('>', r'\>')
+            .replace('|', r'\|')
+            .replace(';', r'\;')
+            .replace('(', r'\(')
+            .replace(')', r'\)')
+        )
+
+    def usb_capture_control_start(self):
+        from dev_tools.usb_capture_service import HOST, control_port, send_json
+
+        server = getattr(self, '_usb_capture_control_server', None)
+        thread = getattr(self, '_usb_capture_control_thread', None)
+        if server is not None and thread is not None and thread.is_alive():
+            return
+
+        device = self
+
+        class ControlServer(socketserver.ThreadingTCPServer):
+            allow_reuse_address = True
+
+        class Handler(socketserver.StreamRequestHandler):
+            def handle(self):
+                try:
+                    payload = json.loads(self.rfile.readline().decode('utf-8'))
+                    response = device.usb_capture_handle_control(payload)
+                    send_json(self.request, response)
+                except Exception as e:
+                    try:
+                        send_json(self.request, {'ok': False, 'error': str(e)})
+                    except Exception:
+                        pass
+
+        config_name = self.usb_capture_config_name()
+        port = control_port(config_name)
+        try:
+            server = ControlServer((HOST, port), Handler)
+        except OSError as e:
+            logger.warning(f'USB preview control server unavailable: {HOST}:{port}, {e}')
+            return
+        server.daemon_threads = True
+        thread = threading.Thread(
+            target=server.serve_forever,
+            name='UsbCaptureControlServer',
+            daemon=True,
+        )
+        thread.start()
+        self._usb_capture_control_server = server
+        self._usb_capture_control_thread = thread
+        logger.info(f'USB preview control server started: {HOST}:{port}')
+
+    def usb_capture_control_stop(self):
+        server = getattr(self, '_usb_capture_control_server', None)
+        thread = getattr(self, '_usb_capture_control_thread', None)
+        if server is None:
+            return
+        try:
+            server.shutdown()
+            server.server_close()
+        except Exception as e:
+            logger.warning(f'Failed to stop USB preview control server: {e}')
+        if thread is not None and thread.is_alive():
+            thread.join(timeout=1.0)
+        self._usb_capture_control_server = None
+        self._usb_capture_control_thread = None
+
+    def usb_capture_handle_control(self, payload):
+        cmd = payload.get('cmd')
+        if cmd == 'tap':
+            x, y = self._usb_capture_clamp_point(payload.get('x', 0), payload.get('y', 0))
+            logger.info(f'USB preview tap ({x}, {y})')
+            method = self.click_methods.get(self.config.Emulator_ControlMethod, self.click_adb)
+            method(x, y)
+            return {'ok': True}
+        if cmd == 'swipe':
+            p1 = self._usb_capture_clamp_point(payload.get('x1', 0), payload.get('y1', 0))
+            p2 = self._usb_capture_clamp_point(payload.get('x2', 0), payload.get('y2', 0))
+            duration = max(0.05, min(2.0, float(payload.get('duration', 0.1))))
+            logger.info(f'USB preview swipe ({p1[0]}, {p1[1]}) -> ({p2[0]}, {p2[1]})')
+            self.usb_capture_control_swipe(p1, p2, duration)
+            return {'ok': True}
+        if cmd == 'keyevent':
+            keycode = int(payload.get('keycode', 0))
+            logger.info(f'USB preview keyevent {keycode}')
+            self.adb_shell(['input', 'keyevent', keycode])
+            return {'ok': True}
+        if cmd == 'text':
+            text = str(payload.get('text', ''))
+            if text:
+                logger.info(f'USB preview text {text!r}')
+                self.adb_shell(['input', 'text', self._usb_capture_escape_input_text(text)])
+            return {'ok': True}
+        return {'ok': False, 'error': f'Unknown command: {cmd}'}
+
+    def usb_capture_control_swipe(self, p1, p2, duration):
+        method = self.config.Emulator_ControlMethod
+        if method == 'minitouch':
+            self.swipe_minitouch(p1, p2)
+        elif method == 'uiautomator2':
+            self.swipe_uiautomator2(p1, p2, duration=duration)
+        elif method == 'scrcpy':
+            self.swipe_scrcpy(p1, p2)
+        elif method == 'MaaTouch':
+            self.swipe_maatouch(p1, p2)
+        elif method == 'nemu_ipc':
+            self.swipe_nemu_ipc(p1, p2)
+        else:
+            self.swipe_adb(p1, p2, duration=duration)
 
     def usb_capture_service_start(self):
         from dev_tools.usb_capture_service import ping_service, service_port
@@ -270,6 +398,7 @@ class UsbCapture:
     def usb_capture_service_frame(self):
         from dev_tools.usb_capture_service import get_frame
 
+        self.usb_capture_control_start()
         self.usb_capture_service_start()
         frame = get_frame(self.usb_capture_config_name(), timeout=self._USB_CAPTURE_FRAME_TIMEOUT)
         if not getattr(self, '_usb_capture_service_logged', False):
