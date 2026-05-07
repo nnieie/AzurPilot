@@ -19,6 +19,7 @@ class UsbCapture:
     _usb_capture_last_frame_time = 0.0
     _USB_CAPTURE_OPEN_TIMEOUT = 5
     _USB_CAPTURE_READ_TIMEOUT = 2
+    _USB_CAPTURE_FRAME_TIMEOUT = 5
     _USB_CAPTURE_OUTPUT_SIZE = (1280, 720)
     _USB_CAPTURE_PREVIEW_WINDOW = 'Alas USB Capture Preview'
 
@@ -117,6 +118,26 @@ class UsbCapture:
 
         return cv2.resize(image, (width, height), interpolation=cv2.INTER_AREA)
 
+    def _usb_capture_convert_frame(self, frame):
+        if frame.ndim == 2:
+            frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2RGB)
+        elif frame.shape[2] == 4:
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2RGB)
+        else:
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        width, height = self._USB_CAPTURE_OUTPUT_SIZE
+        return np.ascontiguousarray(self._usb_capture_resize(frame, width, height))
+
+    def _usb_capture_frame_objects(self):
+        if not hasattr(self, '_usb_capture_frame_lock'):
+            self._usb_capture_frame_lock = threading.Lock()
+            self._usb_capture_frame_event = threading.Event()
+            self._usb_capture_latest_frame = None
+            self._usb_capture_stream_error = None
+            self._usb_capture_stream_seq = 0
+        return self._usb_capture_frame_lock, self._usb_capture_frame_event
+
     @cached_property
     def usb_capture(self):
         device = self._usb_capture_device(self.config.Emulator_UsbCaptureDevice)
@@ -211,6 +232,7 @@ class UsbCapture:
         return cap
 
     def usb_capture_release(self):
+        self.usb_capture_stream_stop()
         if has_cached_property(self, 'usb_capture'):
             try:
                 self.usb_capture.release()
@@ -218,6 +240,93 @@ class UsbCapture:
                 logger.warning(f'Failed to release USB capture device: {e}')
             del_cached_property(self, 'usb_capture')
         self.usb_capture_preview_stop()
+
+    def usb_capture_stream_stop(self):
+        stop_event = getattr(self, '_usb_capture_stream_stop_event', None)
+        thread = getattr(self, '_usb_capture_stream_thread', None)
+        if stop_event is not None:
+            stop_event.set()
+        if thread is not None and thread.is_alive():
+            thread.join(timeout=1.0)
+        self._usb_capture_stream_thread = None
+        self._usb_capture_stream_stop_event = None
+
+    def usb_capture_stream_worker(self, stop_event):
+        lock, frame_event = self._usb_capture_frame_objects()
+        failed_reads = 0
+        last_warning = 0
+
+        try:
+            cap = self.usb_capture
+            while not stop_event.is_set():
+                ok, frame = cap.read()
+                if not (ok and frame is not None and frame.size):
+                    failed_reads += 1
+                    now = time.time()
+                    if now - last_warning > 5:
+                        logger.warning(f'Unable to read frame from USB capture device, failed={failed_reads}')
+                        last_warning = now
+                    time.sleep(0.05)
+                    continue
+
+                failed_reads = 0
+                try:
+                    frame = self._usb_capture_convert_frame(frame)
+                except Exception as e:
+                    logger.warning(f'Invalid USB capture frame: {e}')
+                    continue
+
+                with lock:
+                    self._usb_capture_latest_frame = frame
+                    self._usb_capture_last_frame_time = time.time()
+                    self._usb_capture_stream_seq += 1
+                    self._usb_capture_stream_error = None
+                    frame_event.set()
+
+                self.usb_capture_preview(frame)
+        except Exception as e:
+            with lock:
+                self._usb_capture_stream_error = e
+                frame_event.set()
+            logger.warning(f'USB capture stream stopped: {e}')
+
+    def usb_capture_stream_start(self):
+        thread = getattr(self, '_usb_capture_stream_thread', None)
+        if thread is not None and thread.is_alive():
+            return
+
+        self._usb_capture_frame_objects()
+        stop_event = threading.Event()
+        thread = threading.Thread(
+            target=self.usb_capture_stream_worker,
+            args=(stop_event,),
+            name='UsbCaptureStream',
+            daemon=True
+        )
+        self._usb_capture_stream_stop_event = stop_event
+        self._usb_capture_stream_thread = thread
+        thread.start()
+
+    def usb_capture_latest_frame(self):
+        self.usb_capture_stream_start()
+        lock, frame_event = self._usb_capture_frame_objects()
+
+        deadline = time.time() + self._USB_CAPTURE_FRAME_TIMEOUT
+        while time.time() < deadline:
+            with lock:
+                error = self._usb_capture_stream_error
+                frame = self._usb_capture_latest_frame
+                frame_time = self._usb_capture_last_frame_time
+                if error is not None:
+                    raise error
+                if frame is not None and time.time() - frame_time <= self._USB_CAPTURE_FRAME_TIMEOUT:
+                    return frame.copy()
+
+            timeout = max(0.05, min(0.5, deadline - time.time()))
+            frame_event.wait(timeout=timeout)
+            frame_event.clear()
+
+        raise UsbCaptureError('Wait USB capture frame timeout')
 
     def usb_capture_preview_stop(self):
         stop_event = getattr(self, '_usb_capture_preview_stop_event', None)
@@ -311,37 +420,9 @@ class UsbCapture:
                 pass
 
     def screenshot_usb_capture(self):
-        width, height = self._USB_CAPTURE_OUTPUT_SIZE
-
-        last_error = None
-        for _ in range(3):
-            try:
-                ok, frame = self._usb_capture_call_timeout(
-                    self.usb_capture.read,
-                    timeout=self._USB_CAPTURE_READ_TIMEOUT,
-                    error='Read frame from USB capture device timeout'
-                )
-            except UsbCaptureError as e:
-                ok, frame = False, None
-                last_error = e
-            if ok and frame is not None and frame.size:
-                break
-            if last_error is None:
-                last_error = UsbCaptureError('Unable to read frame from USB capture device')
-            time.sleep(0.05)
-        else:
-            logger.critical(str(last_error))
+        try:
+            return self.usb_capture_latest_frame()
+        except Exception as e:
+            logger.critical(str(e))
             self.usb_capture_release()
             raise RequestHumanTakeover
-
-        if frame.ndim == 2:
-            frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2RGB)
-        elif frame.shape[2] == 4:
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2RGB)
-        else:
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-        frame = self._usb_capture_resize(frame, width, height)
-        self.usb_capture_preview(frame)
-        self._usb_capture_last_frame_time = time.time()
-        return np.ascontiguousarray(frame)
