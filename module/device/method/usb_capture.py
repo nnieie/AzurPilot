@@ -73,6 +73,12 @@ class UsbCapture:
         if current_width == width and current_height == height:
             return image
 
+        # Many USB HDMI capture cards expose a fallback 640x480 stream
+        # containing a squeezed 16:9 image. Stretch it back instead of
+        # center-cropping, otherwise UI text remains horizontally compressed.
+        if (current_width, current_height, width, height) == (640, 480, 1280, 720):
+            return cv2.resize(image, (width, height), interpolation=cv2.INTER_AREA)
+
         target_ratio = width / height
         current_ratio = current_width / current_height
         if current_ratio > target_ratio:
@@ -94,20 +100,24 @@ class UsbCapture:
         height = int(self.config.Emulator_UsbCaptureHeight)
         fps = int(self.config.Emulator_UsbCaptureFps)
 
-        logger.info(f'Opening USB capture device: {device}, backend={self.config.Emulator_UsbCaptureBackend}')
-        try:
-            cap = self._usb_capture_call_timeout(
-                lambda: cv2.VideoCapture(device, backend),
-                timeout=self._USB_CAPTURE_OPEN_TIMEOUT,
-                error=f'Open USB capture device timeout: {device}'
-            )
-        except UsbCaptureError as e:
-            logger.critical(str(e))
-            logger.critical('Try setting Emulator.UsbCaptureBackend to dshow or msmf')
-            raise RequestHumanTakeover
-        if not cap.isOpened():
-            logger.critical(f'Unable to open USB capture device: {device}')
-            raise RequestHumanTakeover
+        def open_capture():
+            logger.info(f'Opening USB capture device: {device}, backend={self.config.Emulator_UsbCaptureBackend}')
+            try:
+                opened = self._usb_capture_call_timeout(
+                    lambda: cv2.VideoCapture(device, backend),
+                    timeout=self._USB_CAPTURE_OPEN_TIMEOUT,
+                    error=f'Open USB capture device timeout: {device}'
+                )
+            except UsbCaptureError as e:
+                logger.critical(str(e))
+                logger.critical('Try setting Emulator.UsbCaptureBackend to dshow or msmf')
+                raise RequestHumanTakeover
+            if not opened.isOpened():
+                logger.critical(f'Unable to open USB capture device: {device}')
+                raise RequestHumanTakeover
+            return opened
+
+        cap = open_capture()
 
         def configure():
             cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
@@ -134,6 +144,41 @@ class UsbCapture:
                 pass
             raise RequestHumanTakeover
         logger.attr('UsbCapture', f'{actual_width}x{actual_height} @ {actual_fps:.2f}fps')
+
+        try:
+            ok, frame = self._usb_capture_call_timeout(
+                cap.read,
+                timeout=self._USB_CAPTURE_READ_TIMEOUT,
+                error='Read frame from configured USB capture device timeout'
+            )
+        except UsbCaptureError:
+            ok, frame = False, None
+        if not (ok and frame is not None and frame.size):
+            logger.warning('Configured USB capture mode produced no frame, retry with driver default mode')
+            try:
+                cap.release()
+            except Exception:
+                pass
+            cap = open_capture()
+            try:
+                ok, frame = self._usb_capture_call_timeout(
+                    cap.read,
+                    timeout=self._USB_CAPTURE_READ_TIMEOUT,
+                    error='Read frame from default USB capture device timeout'
+                )
+            except UsbCaptureError:
+                ok, frame = False, None
+            if ok and frame is not None and frame.size:
+                actual_height, actual_width = frame.shape[:2]
+                actual_fps = cap.get(cv2.CAP_PROP_FPS) or 0
+                logger.attr('UsbCapture', f'{actual_width}x{actual_height} @ {actual_fps:.2f}fps (default)')
+            else:
+                try:
+                    cap.release()
+                except Exception:
+                    pass
+                logger.critical('Unable to read frame from USB capture device')
+                raise RequestHumanTakeover
         return cap
 
     def usb_capture_release(self):
