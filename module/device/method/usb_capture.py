@@ -17,8 +17,10 @@ class UsbCaptureError(Exception):
 
 class UsbCapture:
     _usb_capture_last_frame_time = 0.0
+    _usb_capture_preview_window_created = False
     _USB_CAPTURE_OPEN_TIMEOUT = 5
     _USB_CAPTURE_READ_TIMEOUT = 2
+    _USB_CAPTURE_PREVIEW_WINDOW = 'Alas USB Capture Preview'
 
     @staticmethod
     def _usb_capture_backend(backend):
@@ -188,6 +190,28 @@ class UsbCapture:
             except Exception as e:
                 logger.warning(f'Failed to release USB capture device: {e}')
             del_cached_property(self, 'usb_capture')
+        if self._usb_capture_preview_window_created:
+            try:
+                cv2.destroyWindow(self._USB_CAPTURE_PREVIEW_WINDOW)
+            except Exception:
+                pass
+            self._usb_capture_preview_window_created = False
+
+    def usb_capture_preview(self, image):
+        if not bool(getattr(self.config, 'Emulator_UsbCapturePreview', False)):
+            return
+
+        if not self._usb_capture_preview_window_created:
+            cv2.namedWindow(self._USB_CAPTURE_PREVIEW_WINDOW, cv2.WINDOW_NORMAL)
+            cv2.resizeWindow(self._USB_CAPTURE_PREVIEW_WINDOW, 960, 540)
+            self._usb_capture_preview_window_created = True
+
+        cv2.imshow(self._USB_CAPTURE_PREVIEW_WINDOW, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+        key = cv2.waitKey(1) & 0xFF
+        if key in (27, ord('q')):
+            logger.info('USB capture preview closed')
+            self.config.Emulator_UsbCapturePreview = False
+            self.usb_capture_release()
 
     def screenshot_usb_capture(self):
         width = int(self.config.Emulator_UsbCaptureWidth)
@@ -222,5 +246,6 @@ class UsbCapture:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         frame = self._usb_capture_resize(frame, width, height)
+        self.usb_capture_preview(frame)
         self._usb_capture_last_frame_time = time.time()
         return np.ascontiguousarray(frame)

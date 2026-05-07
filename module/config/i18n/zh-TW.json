@@ -525,6 +525,10 @@
       "name": "USB採集幀率",
       "help": "請求採集卡使用的幀率。"
     },
+    "UsbCapturePreview": {
+      "name": "USB採集預覽",
+      "help": "使用OpenCV視窗顯示Alas實際收到的畫面。在預覽視窗按 q 或 Esc 可關閉。"
+    },
     "AdbRestart": {
       "name": "在檢測不到裝置的時候嘗試重啟adb",
       "help": ""

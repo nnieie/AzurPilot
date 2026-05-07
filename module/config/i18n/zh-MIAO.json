@@ -525,6 +525,10 @@
       "name": "USB采集帧率",
       "help": "请求采集卡使用的帧率。"
     },
+    "UsbCapturePreview": {
+      "name": "USB采集预览",
+      "help": "使用OpenCV窗口显示Alas实际收到的画面。在预览窗口按 q 或 Esc 可关闭。"
+    },
     "AdbRestart": {
       "name": "检测不到设备时重启adb喵",
       "help": "有时adb会闹脾气，重启一下就好 (´・ω・`)"

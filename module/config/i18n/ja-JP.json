@@ -525,6 +525,10 @@
       "name": "USBキャプチャFPS",
       "help": "要求するキャプチャフレームレート。"
     },
+    "UsbCapturePreview": {
+      "name": "USBキャプチャプレビュー",
+      "help": "Alasが受信した画像をOpenCVウィンドウで表示します。プレビューウィンドウで q または Esc を押すと閉じます。"
+    },
     "AdbRestart": {
       "name": "デバイスが検出できない場合にadbの再起動を試みる",
       "help": ""
