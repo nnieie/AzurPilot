@@ -1,9 +1,12 @@
 import time
+import threading
+import queue
 
 import cv2
 import numpy as np
 
 from module.base.decorator import cached_property, del_cached_property, has_cached_property
+from module.device.env import IS_MACINTOSH, IS_WINDOWS
 from module.exception import RequestHumanTakeover
 from module.logger import logger
 
@@ -14,12 +17,20 @@ class UsbCaptureError(Exception):
 
 class UsbCapture:
     _usb_capture_last_frame_time = 0.0
+    _USB_CAPTURE_OPEN_TIMEOUT = 5
+    _USB_CAPTURE_READ_TIMEOUT = 2
 
     @staticmethod
     def _usb_capture_backend(backend):
         backend = str(backend).strip().lower()
+        if backend == 'auto':
+            if IS_WINDOWS:
+                return getattr(cv2, 'CAP_DSHOW', cv2.CAP_ANY)
+            if IS_MACINTOSH:
+                return getattr(cv2, 'CAP_AVFOUNDATION', cv2.CAP_ANY)
+            return getattr(cv2, 'CAP_V4L2', cv2.CAP_ANY)
+
         mapping = {
-            'auto': cv2.CAP_ANY,
             'any': cv2.CAP_ANY,
             'dshow': getattr(cv2, 'CAP_DSHOW', cv2.CAP_ANY),
             'msmf': getattr(cv2, 'CAP_MSMF', cv2.CAP_ANY),
@@ -35,6 +46,26 @@ class UsbCapture:
             return int(device)
         except ValueError:
             return device
+
+    @staticmethod
+    def _usb_capture_call_timeout(func, timeout, error):
+        result = queue.Queue(maxsize=1)
+
+        def run():
+            try:
+                result.put((True, func()), block=False)
+            except Exception as e:
+                result.put((False, e), block=False)
+
+        thread = threading.Thread(target=run, daemon=True)
+        thread.start()
+        try:
+            ok, value = result.get(timeout=timeout)
+        except queue.Empty:
+            raise UsbCaptureError(error)
+        if ok:
+            return value
+        raise value
 
     @staticmethod
     def _usb_capture_resize(image, width, height):
@@ -64,19 +95,44 @@ class UsbCapture:
         fps = int(self.config.Emulator_UsbCaptureFps)
 
         logger.info(f'Opening USB capture device: {device}, backend={self.config.Emulator_UsbCaptureBackend}')
-        cap = cv2.VideoCapture(device, backend)
+        try:
+            cap = self._usb_capture_call_timeout(
+                lambda: cv2.VideoCapture(device, backend),
+                timeout=self._USB_CAPTURE_OPEN_TIMEOUT,
+                error=f'Open USB capture device timeout: {device}'
+            )
+        except UsbCaptureError as e:
+            logger.critical(str(e))
+            logger.critical('Try setting Emulator.UsbCaptureBackend to dshow or msmf')
+            raise RequestHumanTakeover
         if not cap.isOpened():
             logger.critical(f'Unable to open USB capture device: {device}')
             raise RequestHumanTakeover
 
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-        cap.set(cv2.CAP_PROP_FPS, fps)
-        cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+        def configure():
+            cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+            cap.set(cv2.CAP_PROP_FPS, fps)
+            actual_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 0)
+            actual_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 0)
+            actual_fps = cap.get(cv2.CAP_PROP_FPS) or 0
+            return actual_width, actual_height, actual_fps
 
-        actual_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        actual_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        actual_fps = cap.get(cv2.CAP_PROP_FPS)
+        try:
+            actual_width, actual_height, actual_fps = self._usb_capture_call_timeout(
+                configure,
+                timeout=self._USB_CAPTURE_OPEN_TIMEOUT,
+                error=f'Configure USB capture device timeout: {device}'
+            )
+        except UsbCaptureError as e:
+            logger.critical(str(e))
+            logger.critical('Try setting Emulator.UsbCaptureBackend to dshow or msmf')
+            try:
+                cap.release()
+            except Exception:
+                pass
+            raise RequestHumanTakeover
         logger.attr('UsbCapture', f'{actual_width}x{actual_height} @ {actual_fps:.2f}fps')
         return cap
 
@@ -94,10 +150,19 @@ class UsbCapture:
 
         last_error = None
         for _ in range(3):
-            ok, frame = self.usb_capture.read()
+            try:
+                ok, frame = self._usb_capture_call_timeout(
+                    self.usb_capture.read,
+                    timeout=self._USB_CAPTURE_READ_TIMEOUT,
+                    error='Read frame from USB capture device timeout'
+                )
+            except UsbCaptureError as e:
+                ok, frame = False, None
+                last_error = e
             if ok and frame is not None and frame.size:
                 break
-            last_error = UsbCaptureError('Unable to read frame from USB capture device')
+            if last_error is None:
+                last_error = UsbCaptureError('Unable to read frame from USB capture device')
             time.sleep(0.05)
         else:
             logger.critical(str(last_error))
