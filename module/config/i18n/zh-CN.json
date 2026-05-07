@@ -484,7 +484,8 @@
       "DroidCast": "DroidCast",
       "DroidCast_raw": "DroidCast_raw",
       "nemu_ipc": "nemu_ipc",
-      "ldopengl": "ldopengl"
+      "ldopengl": "ldopengl",
+      "usb_capture": "USB采集卡"
     },
     "ControlMethod": {
       "name": "模拟器控制方案",
@@ -498,6 +499,31 @@
     "ScreenshotDedithering": {
       "name": "去除图片色彩抖动",
       "help": "在手机上运行时开启"
+    },
+    "UsbCaptureDevice": {
+      "name": "USB采集卡设备",
+      "help": "OpenCV采集设备索引或路径，例如 0 或 /dev/video0"
+    },
+    "UsbCaptureBackend": {
+      "name": "USB采集卡后端",
+      "help": "OpenCV视频后端。除非采集卡无法打开，否则使用auto即可。",
+      "auto": "auto",
+      "dshow": "dshow",
+      "msmf": "msmf",
+      "v4l2": "v4l2",
+      "avfoundation": "avfoundation"
+    },
+    "UsbCaptureWidth": {
+      "name": "USB采集宽度",
+      "help": "目标采集宽度，Alas需要1280。"
+    },
+    "UsbCaptureHeight": {
+      "name": "USB采集高度",
+      "help": "目标采集高度，Alas需要720。"
+    },
+    "UsbCaptureFps": {
+      "name": "USB采集帧率",
+      "help": "请求采集卡使用的帧率。"
     },
     "AdbRestart": {
       "name": "在检测不到设备的时候尝试重启adb",

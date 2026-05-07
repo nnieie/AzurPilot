@@ -97,11 +97,21 @@ Emulator:
         DroidCast_raw,
         nemu_ipc,
         ldopengl,
+        usb_capture,
       ]
   ControlMethod:
     value: MaaTouch
     option: [ADB, uiautomator2, minitouch, Hermit, MaaTouch]
   ScreenshotDedithering: false
+  UsbCaptureDevice:
+    value: "0"
+    valuetype: str
+  UsbCaptureBackend:
+    value: auto
+    option: [auto, dshow, msmf, v4l2, avfoundation]
+  UsbCaptureWidth: 1280
+  UsbCaptureHeight: 720
+  UsbCaptureFps: 30
   AdbRestart: false
 EmulatorInfo:
   Emulator:

@@ -484,7 +484,8 @@
       "DroidCast": "DroidCast",
       "DroidCast_raw": "DroidCast_raw",
       "nemu_ipc": "nemu_ipc",
-      "ldopengl": "ldopengl"
+      "ldopengl": "ldopengl",
+      "usb_capture": "USBキャプチャ"
     },
     "ControlMethod": {
       "name": "エミュレータ制御方式",
@@ -498,6 +499,31 @@
     "ScreenshotDedithering": {
       "name": "画像色ディザリング除去",
       "help": "実機で実行する場合に有効にしてください"
+    },
+    "UsbCaptureDevice": {
+      "name": "USBキャプチャデバイス",
+      "help": "OpenCVのキャプチャデバイス番号またはパス。例: 0 または /dev/video0"
+    },
+    "UsbCaptureBackend": {
+      "name": "USBキャプチャバックエンド",
+      "help": "OpenCVのビデオバックエンド。キャプチャカードを開けない場合以外はautoを使用してください。",
+      "auto": "auto",
+      "dshow": "dshow",
+      "msmf": "msmf",
+      "v4l2": "v4l2",
+      "avfoundation": "avfoundation"
+    },
+    "UsbCaptureWidth": {
+      "name": "USBキャプチャ幅",
+      "help": "目標キャプチャ幅。Alasは1280を必要とします。"
+    },
+    "UsbCaptureHeight": {
+      "name": "USBキャプチャ高さ",
+      "help": "目標キャプチャ高さ。Alasは720を必要とします。"
+    },
+    "UsbCaptureFps": {
+      "name": "USBキャプチャFPS",
+      "help": "要求するキャプチャフレームレート。"
     },
     "AdbRestart": {
       "name": "デバイスが検出できない場合にadbの再起動を試みる",

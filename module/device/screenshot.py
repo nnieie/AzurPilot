@@ -21,11 +21,12 @@ from module.device.method.droidcast import DroidCast
 from module.device.method.ldopengl import LDOpenGL
 from module.device.method.nemu_ipc import NemuIpc
 from module.device.method.scrcpy import Scrcpy
+from module.device.method.usb_capture import UsbCapture
 from module.device.method.wsa import WSA
 from module.exception import RequestHumanTakeover, ScriptError
 from module.logger import logger
 
-class Screenshot(Adb, WSA, DroidCast, AScreenCap, Scrcpy, NemuIpc, LDOpenGL):
+class Screenshot(Adb, WSA, DroidCast, AScreenCap, Scrcpy, NemuIpc, LDOpenGL, UsbCapture):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -49,6 +50,7 @@ class Screenshot(Adb, WSA, DroidCast, AScreenCap, Scrcpy, NemuIpc, LDOpenGL):
             'scrcpy': self.screenshot_scrcpy,
             'nemu_ipc': self.screenshot_nemu_ipc,
             'ldopengl': self.screenshot_ldopengl,
+            'usb_capture': self.screenshot_usb_capture,
         }
 
     @cached_property
@@ -285,5 +287,4 @@ class Screenshot(Adb, WSA, DroidCast, AScreenCap, Scrcpy, NemuIpc, LDOpenGL):
         else:
             self._screen_black_checked = True
             return True
-
 

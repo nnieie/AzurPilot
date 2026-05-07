@@ -337,7 +337,8 @@
           "DroidCast",
           "DroidCast_raw",
           "nemu_ipc",
-          "ldopengl"
+          "ldopengl",
+          "usb_capture"
         ]
       },
       "ControlMethod": {
@@ -354,6 +355,34 @@
       "ScreenshotDedithering": {
         "type": "checkbox",
         "value": false
+      },
+      "UsbCaptureDevice": {
+        "type": "input",
+        "value": "0",
+        "valuetype": "str"
+      },
+      "UsbCaptureBackend": {
+        "type": "select",
+        "value": "auto",
+        "option": [
+          "auto",
+          "dshow",
+          "msmf",
+          "v4l2",
+          "avfoundation"
+        ]
+      },
+      "UsbCaptureWidth": {
+        "type": "input",
+        "value": 1280
+      },
+      "UsbCaptureHeight": {
+        "type": "input",
+        "value": 720
+      },
+      "UsbCaptureFps": {
+        "type": "input",
+        "value": 30
       },
       "AdbRestart": {
         "type": "checkbox",

@@ -484,7 +484,8 @@
       "DroidCast": "DroidCast",
       "DroidCast_raw": "DroidCast_raw",
       "nemu_ipc": "nemu_ipc",
-      "ldopengl": "ldopengl"
+      "ldopengl": "ldopengl",
+      "usb_capture": "USB採集卡"
     },
     "ControlMethod": {
       "name": "模擬器控制方案",
@@ -498,6 +499,31 @@
     "ScreenshotDedithering": {
       "name": "去除圖片色彩抖動",
       "help": "在手機上執行時開啟"
+    },
+    "UsbCaptureDevice": {
+      "name": "USB採集卡裝置",
+      "help": "OpenCV採集裝置索引或路徑，例如 0 或 /dev/video0"
+    },
+    "UsbCaptureBackend": {
+      "name": "USB採集卡後端",
+      "help": "OpenCV影片後端。除非採集卡無法開啟，否則使用auto即可。",
+      "auto": "auto",
+      "dshow": "dshow",
+      "msmf": "msmf",
+      "v4l2": "v4l2",
+      "avfoundation": "avfoundation"
+    },
+    "UsbCaptureWidth": {
+      "name": "USB採集寬度",
+      "help": "目標採集寬度，Alas需要1280。"
+    },
+    "UsbCaptureHeight": {
+      "name": "USB採集高度",
+      "help": "目標採集高度，Alas需要720。"
+    },
+    "UsbCaptureFps": {
+      "name": "USB採集幀率",
+      "help": "請求採集卡使用的幀率。"
     },
     "AdbRestart": {
       "name": "在檢測不到裝置的時候嘗試重啟adb",

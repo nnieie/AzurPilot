@@ -484,7 +484,8 @@
       "DroidCast": "DroidCast",
       "DroidCast_raw": "DroidCast_raw",
       "nemu_ipc": "nemu_ipc",
-      "ldopengl": "ldopengl"
+      "ldopengl": "ldopengl",
+      "usb_capture": "USB capture"
     },
     "ControlMethod": {
       "name": "Emulator Control Method",
@@ -498,6 +499,31 @@
     "ScreenshotDedithering": {
       "name": "Remove Image Color Dithering",
       "help": "Enable when running on a real device"
+    },
+    "UsbCaptureDevice": {
+      "name": "USB Capture Device",
+      "help": "OpenCV capture device index or path, such as 0 or /dev/video0"
+    },
+    "UsbCaptureBackend": {
+      "name": "USB Capture Backend",
+      "help": "OpenCV video backend. Use auto unless the capture card cannot be opened.",
+      "auto": "auto",
+      "dshow": "dshow",
+      "msmf": "msmf",
+      "v4l2": "v4l2",
+      "avfoundation": "avfoundation"
+    },
+    "UsbCaptureWidth": {
+      "name": "USB Capture Width",
+      "help": "Target capture width. Alas expects 1280."
+    },
+    "UsbCaptureHeight": {
+      "name": "USB Capture Height",
+      "help": "Target capture height. Alas expects 720."
+    },
+    "UsbCaptureFps": {
+      "name": "USB Capture FPS",
+      "help": "Requested capture frame rate."
     },
     "AdbRestart": {
       "name": "Try Restarting ADB When Device Not Detected",

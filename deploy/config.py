@@ -14,7 +14,7 @@ class ExecutionError(Exception):
 
 class ConfigModel:
     # Git
-    Repository: str = "https://gitee.com/wqeaxc/AzurLaneAutoScript1"
+    Repository: str = "https://github.com/nnieie/AzurPilot"
     Branch: str = "master"
     GitExecutable: str = "./toolkit/Git/mingw64/bin/git.exe"
     GitProxy: Optional[str] = None
@@ -126,8 +126,8 @@ class DeployConfig(ConfigModel):
             'https://e.coding.net/saarcenter/alas/AzurLaneAutoScript.git',
             'https://git.saarcenter.com/LmeSzinc/AzurLaneAutoScript.git',
         ]:
-            self.Repository = 'git://git.lyoko.io/AzurLaneAutoScript'
-            self.config['Repository'] = 'git://git.lyoko.io/AzurLaneAutoScript'
+            self.Repository = 'https://github.com/nnieie/AzurPilot'
+            self.config['Repository'] = 'https://github.com/nnieie/AzurPilot'
         if self.PypiMirror in [
             'https://pypi.tuna.tsinghua.edu.cn/simple'
         ]:
@@ -138,12 +138,12 @@ class DeployConfig(ConfigModel):
         # Don't write these into deploy.yaml
         super().__setattr__(
             'GitOverCdn',
-            self.Repository == 'git://git.lyoko.io/AzurLaneAutoScript' and self.Branch == 'master'
+            False
         )
         if self.Repository in ['global']:
-            super().__setattr__('Repository', 'https://github.com/LmeSzinc/AzurLaneAutoScript')
+            super().__setattr__('Repository', 'https://github.com/nnieie/AzurPilot')
         if self.Repository in ['cn']:
-            super().__setattr__('Repository', 'git://git.lyoko.io/AzurLaneAutoScript')
+            super().__setattr__('Repository', 'https://github.com/nnieie/AzurPilot')
 
     def filepath(self, key):
         """

@@ -911,6 +911,8 @@ class Connection(ConnectionAttr):
         return True
 
     def release_resource(self):
+        if hasattr(self, 'usb_capture_release'):
+            self.usb_capture_release()
         del_cached_property(self, 'hermit_session')
         del_cached_property(self, 'droidcast_session')
         del_cached_property(self, '_minitouch_builder')

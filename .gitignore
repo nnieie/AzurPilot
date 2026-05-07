@@ -15,6 +15,10 @@ dev_tools/debug_tools
 /screenshots
 /campaign/test/
 /toolkit
+acl_toolkit_after_install.txt
+alas-launcher.exe
+unins000.dat
+unins000.exe
 *.lock
 config/reloadflag
 config/reloadalas
