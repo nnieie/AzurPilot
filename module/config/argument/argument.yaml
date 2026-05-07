@@ -1183,28 +1183,6 @@ OpsiHazard1Leveling:
   RecordNonCL1AP: true
 OpsiSirenBug:
   SirenResearch_Enable: true
-  SirenBug_Enable: false
-  SirenBug_Type:
-    value: dangerous
-    option: [dangerous, safe]
-  SirenBug_Mode:
-    value: resource
-    option: [resource, enemy]
-  SirenBug_Zone: 0
-  SirenBug_Grid: null
-  SirenBug_SyncDailyCount:
-    type: checkbox
-    value: false
-    option: [true, false]
-  DisableTaskSwitchDuringBug:
-    type: checkbox
-    value: true
-    option: [true, false]
-  SirenBug_DailyCount: 0
-  SirenBug_DailyCountRecord: 2020-01-01 00:00:00
-  SirenBug_CountLimit: 10
-  SirenBug_CrossDay: true
-  SirenBug_AutoDisable: false
 
 OpsiCheckLeveling:
   TargetLevel: 0

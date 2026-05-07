@@ -51,6 +51,17 @@ AzurPilot 是基于 AzurLaneAutoScript 的碧蓝航线自动化辅助项目，�
 
 [https://addgroup.nanoda.work/#/](https://addgroup.nanoda.work/#/)
 
+## 赞助支持
+
+<p align="center">
+  <a href="https://afdian.com/a/miaonaa">
+    <img src="doc/afdian.jfif" alt="爱发电" width="400">
+  </a>
+  <br>
+  <b>爱发电支持本项目(用于支付服务器费用等)</b>
+</p>
+
+
 ## 重要说明
 
 本项目包含大量自动化逻辑和图像识别相关功能。使用前请确保已经按照本文档完成游戏内设置，否则可能导致识别失败、流程异常或任务无法正常执行。
@@ -120,14 +131,13 @@ AzurPilot 是基于 AzurLaneAutoScript 的碧蓝航线自动化辅助项目，�
 2. 大型作战限制解除相关功能
 3. 侵蚀 1 相关功能
 4. 部分未合并但实用的 Pull Request
-5. 自动卡吊机相关功能
-6. 舰娘等级识别
-7. 侵蚀 1 相关统计
-8. 模拟器管理
-9. Python 版本迁移
-10. OCR 模型更换
-11. GPU 加速推理支持
-12. Alas MCP 服务
+5. 舰娘等级识别
+6. 侵蚀 1 相关统计
+7. 模拟器管理
+8. Python 版本迁移
+9. OCR 模型更换
+10. GPU 加速推理支持
+11. Alas MCP 服务
 13. 其他实验性改动与细节优化
 
 ## 多平台启动器

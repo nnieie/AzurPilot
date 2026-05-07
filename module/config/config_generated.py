@@ -738,18 +738,6 @@ class GeneratedConfig:
 
     # Group `OpsiSirenBug`
     OpsiSirenBug_SirenResearch_Enable = True
-    OpsiSirenBug_SirenBug_Enable = False
-    OpsiSirenBug_SirenBug_Type = 'dangerous'  # dangerous, safe
-    OpsiSirenBug_SirenBug_Mode = 'resource'  # resource, enemy
-    OpsiSirenBug_SirenBug_Zone = 0
-    OpsiSirenBug_SirenBug_Grid = None
-    OpsiSirenBug_SirenBug_SyncDailyCount = False  # True, False
-    OpsiSirenBug_DisableTaskSwitchDuringBug = True  # True, False
-    OpsiSirenBug_SirenBug_DailyCount = 0
-    OpsiSirenBug_SirenBug_DailyCountRecord = datetime.datetime(2020, 1, 1, 0, 0)
-    OpsiSirenBug_SirenBug_CountLimit = 10
-    OpsiSirenBug_SirenBug_CrossDay = True
-    OpsiSirenBug_SirenBug_AutoDisable = False
 
     # Group `OpsiCheckLeveling`
     OpsiCheckLeveling_TargetLevel = 0

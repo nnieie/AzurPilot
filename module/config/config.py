@@ -127,16 +127,6 @@ class AzurLaneConfig(ConfigUpdater, ManualConfig, GeneratedConfig, ConfigWatcher
         self.data = self.read_file(self.config_name)
         self.config_override()
 
-        # Force disable OpsiSirenBug after 2026-05-07 10:00:00
-        if datetime.now() >= datetime(2026, 5, 7, 10, 0, 0):
-            for task_data in self.data.values():
-                if isinstance(task_data, dict) and 'OpsiSirenBug' in task_data:
-                    bug_config = task_data['OpsiSirenBug']
-                    if bug_config.get('SirenBug_Enable', False) or bug_config.get('SirenResearch_Enable', False):
-                        logger.warning(f'OpsiSirenBug feature is forced disabled after 2026-05-07 10:00:00')
-                        bug_config['SirenBug_Enable'] = False
-                        bug_config['SirenResearch_Enable'] = False
-
         for path, value in self.modified.items():
             deep_set(self.data, keys=path, value=value)
 
@@ -639,7 +629,7 @@ class AzurLaneConfig(ConfigUpdater, ManualConfig, GeneratedConfig, ConfigWatcher
         Raises:
             TaskEnd:
         """
-        # 如果设置了禁用任务切换标志（例如Bug利用期间），则跳过检查
+        # 如果设置了禁用任务切换标志，则跳过检查
         if getattr(self, '_disable_task_switch', False):
             logger.info('Task switch check disabled temporarily')
             return

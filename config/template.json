@@ -2575,19 +2575,7 @@
       "SirenDetectorSearch_FoundZones": null
     },
     "OpsiSirenBug": {
-      "SirenResearch_Enable": true,
-      "SirenBug_Enable": false,
-      "SirenBug_Type": "dangerous",
-      "SirenBug_Mode": "resource",
-      "SirenBug_Zone": 0,
-      "SirenBug_Grid": null,
-      "SirenBug_SyncDailyCount": false,
-      "DisableTaskSwitchDuringBug": true,
-      "SirenBug_DailyCount": 0,
-      "SirenBug_DailyCountRecord": "2020-01-01 00:00:00",
-      "SirenBug_CountLimit": 10,
-      "SirenBug_CrossDay": true,
-      "SirenBug_AutoDisable": false
+      "SirenResearch_Enable": true
     },
     "OpsiTarget": {
       "TargetFarming": false,
@@ -2620,19 +2608,7 @@
       "RecordNonCL1AP": true
     },
     "OpsiSirenBug": {
-      "SirenResearch_Enable": true,
-      "SirenBug_Enable": false,
-      "SirenBug_Type": "dangerous",
-      "SirenBug_Mode": "resource",
-      "SirenBug_Zone": 0,
-      "SirenBug_Grid": null,
-      "SirenBug_SyncDailyCount": false,
-      "DisableTaskSwitchDuringBug": true,
-      "SirenBug_DailyCount": 0,
-      "SirenBug_DailyCountRecord": "2020-01-01 00:00:00",
-      "SirenBug_CountLimit": 10,
-      "SirenBug_CrossDay": true,
-      "SirenBug_AutoDisable": false
+      "SirenResearch_Enable": true
     },
     "OpsiFleet": {
       "Fleet": 1,
