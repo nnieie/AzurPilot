@@ -18,12 +18,10 @@ import numpy as np
 
 from dev_tools.usb_capture_preview import (
     DEFAULT_OUTPUT_SIZE,
-    WINDOW_NAME,
     is_black,
     load_alas_config,
     mode_text,
     open_capture,
-    put_overlay,
     resize_like_alas,
 )
 
@@ -32,6 +30,7 @@ HOST = '127.0.0.1'
 BASE_PORT = 27180
 PORT_RANGE = 1000
 FRAME_TIMEOUT = 5.0
+SERVICE_WINDOW_NAME = 'Alas USB Capture Preview'
 
 
 def service_port(config_name):
@@ -148,23 +147,38 @@ class CaptureService:
         if not self.preview_enabled:
             if self.preview_window_created:
                 try:
-                    cv2.destroyWindow(WINDOW_NAME)
+                    cv2.destroyWindow(SERVICE_WINDOW_NAME)
                 except Exception:
                     pass
                 self.preview_window_created = False
             return
 
+        if self.preview_window_created:
+            try:
+                if cv2.getWindowProperty(SERVICE_WINDOW_NAME, cv2.WND_PROP_VISIBLE) < 1:
+                    self.preview_enabled = False
+                    self.preview_window_created = False
+                    return
+            except Exception:
+                self.preview_enabled = False
+                self.preview_window_created = False
+                return
+
         if not self.preview_window_created:
-            cv2.namedWindow(WINDOW_NAME, cv2.WINDOW_NORMAL)
-            cv2.resizeWindow(WINDOW_NAME, 960, 540)
+            cv2.namedWindow(SERVICE_WINDOW_NAME, cv2.WINDOW_NORMAL)
+            cv2.resizeWindow(SERVICE_WINDOW_NAME, 960, 540)
             self.preview_window_created = True
 
         preview = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-        put_overlay(preview, f'{self.mode} | service {self.measured_fps:.1f}fps')
-        cv2.imshow(WINDOW_NAME, preview)
+        cv2.imshow(SERVICE_WINDOW_NAME, preview)
         key = cv2.waitKey(1) & 0xFF
-        if key in (27, ord('q')):
+        try:
+            visible = cv2.getWindowProperty(SERVICE_WINDOW_NAME, cv2.WND_PROP_VISIBLE) >= 1
+        except Exception:
+            visible = False
+        if key in (27, ord('q')) or not visible:
             self.preview_enabled = False
+            self.preview_window_created = False
 
     def capture_loop(self):
         cap = None
@@ -207,7 +221,7 @@ class CaptureService:
                 cap.release()
             if self.preview_window_created:
                 try:
-                    cv2.destroyWindow(WINDOW_NAME)
+                    cv2.destroyWindow(SERVICE_WINDOW_NAME)
                 except Exception:
                     pass
 
