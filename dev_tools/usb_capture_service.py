@@ -24,6 +24,7 @@ from dev_tools.usb_capture_preview import (
     DEFAULT_PREVIEW_SIZE,
     fit_for_preview,
     get_window_image_size,
+    is_window_renderable,
     is_black,
     load_alas_config,
     mode_text,
@@ -656,6 +657,11 @@ class CaptureService:
         now = time.time()
         if self.preview_interval > 0 and now - self.last_preview_time < self.preview_interval:
             key = cv2.waitKeyEx(1)
+            if key != -1:
+                self.on_key(key)
+            return
+        if not is_window_renderable(SERVICE_WINDOW_NAME):
+            key = cv2.waitKeyEx(50)
             if key != -1:
                 self.on_key(key)
             return

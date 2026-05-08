@@ -32,6 +32,7 @@ BACKENDS = {
 WINDOW_NAME = 'Alas USB Capture Standalone Preview'
 DEFAULT_OUTPUT_SIZE = (1280, 720)
 DEFAULT_PREVIEW_SIZE = (960, 540)
+MIN_PREVIEW_RENDER_SIZE = 32
 PREVIEW_INTERPOLATIONS = {
     'nearest': cv2.INTER_NEAREST,
     'linear': cv2.INTER_LINEAR,
@@ -157,6 +158,14 @@ def get_window_image_size(name, fallback=DEFAULT_PREVIEW_SIZE):
     except Exception:
         pass
     return fallback
+
+
+def is_window_renderable(name, min_size=MIN_PREVIEW_RENDER_SIZE):
+    try:
+        _, _, width, height = cv2.getWindowImageRect(name)
+        return width >= min_size and height >= min_size
+    except Exception:
+        return False
 
 
 def load_alas_config(path):
@@ -338,6 +347,13 @@ def run_preview_from_args(args, stop_event=None):
 
             if preview_interval > 0 and now - last_preview_time < preview_interval:
                 key = cv2.waitKey(1) & 0xFF
+                if not is_window_visible(WINDOW_NAME):
+                    break
+                if key == ord(' '):
+                    paused = not paused
+                continue
+            if not is_window_renderable(WINDOW_NAME):
+                key = cv2.waitKey(50) & 0xFF
                 if not is_window_visible(WINDOW_NAME):
                     break
                 if key == ord(' '):
