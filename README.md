@@ -138,7 +138,40 @@ AzurPilot 是基于 AzurLaneAutoScript 的碧蓝航线自动化辅助项目，�
 9. OCR 模型更换
 10. GPU 加速推理支持
 11. Alas MCP 服务
+12. USB 采集卡截图与预览
 13. 其他实验性改动与细节优化
+
+## USB 采集卡截图
+
+本分支支持通过 USB 采集卡获取游戏画面，可在 `Alas > Emulator > ScreenshotMethod` 中选择 `usb_capture`。
+
+相关设置位于 `Alas > Emulator`：
+
+- `UsbCaptureDevice`：OpenCV 设备编号或路径，例如 `0`、`1` 或 `/dev/video0`
+- `UsbCaptureBackend`：OpenCV 视频后端，Windows 下通常使用 `auto` 或 `dshow`
+- `UsbCaptureCodec`：采集编码，可在 `MJPG`、`YUY2`、`default` 之间切换
+- `UsbCaptureWidth` / `UsbCaptureHeight` / `UsbCaptureFps`：请求采集卡使用的分辨率与帧率
+- `UsbCaptureCAccel`：启用 USB 色彩校准的 Windows C 加速模块
+- `UsbCaptureLockPreviewAspect`：锁定 USB 预览窗口画面比例，避免窗口拉伸导致画面变形
+
+WebUI 中可单独启动或停止 USB 预览窗口。预览窗口支持鼠标点击、拖动、右键返回以及键盘输入，并通过 Alas 的控制逻辑发送到安卓设备。
+
+辅助工具：
+
+```bat
+dev_tools\usb_capture_probe.bat
+dev_tools\usb_capture_preview.bat
+dev_tools\usb_capture_color_calibrate.bat "alas"
+dev_tools\usb_capture_latency_benchmark.bat "alas" --count 50
+```
+
+如需使用 C 加速色彩校准，请先在 Windows 上构建：
+
+```bat
+dev_tools\build_usb_capture_lut_accel.bat
+```
+
+色彩校准文件会保存到 `config/usb_color/`。如果 USB 画面与 ADB 截图存在颜色差异，建议先运行色彩校准，再重启 USB 预览或截图服务。
 
 ## 多平台启动器
 

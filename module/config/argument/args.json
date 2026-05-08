@@ -393,6 +393,14 @@
         "type": "input",
         "value": 30
       },
+      "UsbCaptureCAccel": {
+        "type": "checkbox",
+        "value": true
+      },
+      "UsbCaptureLockPreviewAspect": {
+        "type": "checkbox",
+        "value": true
+      },
       "AdbRestart": {
         "type": "checkbox",
         "value": false

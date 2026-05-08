@@ -532,6 +532,14 @@
       "name": "USB Capture FPS",
       "help": "Requested capture frame rate."
     },
+    "UsbCaptureCAccel": {
+      "name": "USB Color Calibration C Acceleration",
+      "help": "When enabled, lut3d color calibration requires dev_tools/usb_capture_lut_accel.dll. Missing or failed DLL loading raises an error. When disabled, Python/NumPy calibration is used."
+    },
+    "UsbCaptureLockPreviewAspect": {
+      "name": "Lock USB Preview Aspect Ratio",
+      "help": "When enabled, the USB preview keeps the 1280x720 aspect ratio and uses black bars when the window shape does not match, avoiding stretched video."
+    },
     "AdbRestart": {
       "name": "Try Restarting ADB When Device Not Detected",
       "help": ""

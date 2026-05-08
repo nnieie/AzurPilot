@@ -17,6 +17,7 @@ import platform
 import time
 
 import cv2
+import numpy as np
 
 
 BACKENDS = {
@@ -30,6 +31,7 @@ BACKENDS = {
 
 WINDOW_NAME = 'Alas USB Capture Standalone Preview'
 DEFAULT_OUTPUT_SIZE = (1280, 720)
+DEFAULT_PREVIEW_SIZE = (960, 540)
 
 
 def normalize_device(value):
@@ -103,6 +105,49 @@ def resize_like_alas(image, width, height):
     return cv2.resize(image, (width, height), interpolation=cv2.INTER_AREA)
 
 
+def preview_interpolation(image, width, height):
+    current_height, current_width = image.shape[:2]
+    if width < current_width or height < current_height:
+        return cv2.INTER_AREA
+    return cv2.INTER_LANCZOS4
+
+
+def resize_for_preview(image, width, height):
+    current_height, current_width = image.shape[:2]
+    if current_width == width and current_height == height:
+        return image
+    return cv2.resize(image, (width, height), interpolation=preview_interpolation(image, width, height))
+
+
+def fit_for_preview(image, width, height, lock_aspect=True):
+    current_height, current_width = image.shape[:2]
+    if not lock_aspect:
+        return resize_for_preview(image, width, height), (0, 0, width, height)
+
+    scale = min(width / current_width, height / current_height)
+    content_width = max(1, int(round(current_width * scale)))
+    content_height = max(1, int(round(current_height * scale)))
+    left = max(0, (width - content_width) // 2)
+    top = max(0, (height - content_height) // 2)
+    resized = resize_for_preview(image, content_width, content_height)
+    if content_width == width and content_height == height:
+        return resized, (0, 0, width, height)
+
+    canvas = np.zeros((height, width, image.shape[2]), dtype=image.dtype)
+    canvas[top:top + content_height, left:left + content_width] = resized
+    return canvas, (left, top, content_width, content_height)
+
+
+def get_window_image_size(name, fallback=DEFAULT_PREVIEW_SIZE):
+    try:
+        _, _, width, height = cv2.getWindowImageRect(name)
+        if width > 0 and height > 0:
+            return int(width), int(height)
+    except Exception:
+        pass
+    return fallback
+
+
 def load_alas_config(path):
     if not path or not os.path.exists(path):
         return {}
@@ -156,6 +201,13 @@ def put_overlay(frame, text):
     cv2.putText(frame, text, (8, 22), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (255, 255, 255), 1, cv2.LINE_AA)
 
 
+def is_window_visible(name):
+    try:
+        return cv2.getWindowProperty(name, cv2.WND_PROP_VISIBLE) >= 1
+    except Exception:
+        return False
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description='Open a standalone OpenCV preview for a USB capture card.')
     parser.add_argument('--config', default='config/alas.json', help='Read defaults from Alas config. Default: config/alas.json')
@@ -169,6 +221,7 @@ def parse_args():
     parser.add_argument('--output-size', type=parse_size, default=DEFAULT_OUTPUT_SIZE, help='Preview output size. Default: 1280x720')
     parser.add_argument('--raw', action='store_true', help='Show raw frame without Alas-style resize/crop.')
     parser.add_argument('--no-overlay', action='store_true', help='Do not draw mode/FPS text over the preview.')
+    parser.add_argument('--unlock-aspect', action='store_true', help='Stretch preview to fill the window instead of keeping aspect ratio.')
     parser.add_argument('--save-dir', default='.', help='Directory for snapshots saved with s. Default: current directory')
     return parser.parse_args()
 
@@ -191,6 +244,7 @@ def run_preview(config_name='alas', stop_event=None):
         output_size=DEFAULT_OUTPUT_SIZE,
         raw=False,
         no_overlay=False,
+        unlock_aspect=False,
         save_dir='.',
     )
     run_preview_from_args(args, stop_event=stop_event)
@@ -205,14 +259,15 @@ def run_preview_from_args(args, stop_event=None):
     width = int(choose(args.width, config, 'UsbCaptureWidth', 1280))
     height = int(choose(args.height, config, 'UsbCaptureHeight', 720))
     fps = int(choose(args.fps, config, 'UsbCaptureFps', 30))
+    lock_aspect = bool(config.get('UsbCaptureLockPreviewAspect', True)) and not args.unlock_aspect
 
     print(f'Opening device={device}, backend={backend}, codec={codec}, {width}x{height}@{fps}')
     cap = open_capture(device, backend, codec, width, height, fps, args.buffer_size)
     print(f'Actual mode: {mode_text(cap)}')
-    print('Keys: q/Esc quit, s save snapshot, r reconnect, space pause')
+    print('Keys: s save snapshot, r reconnect, space pause. Close the window to quit.')
 
     cv2.namedWindow(WINDOW_NAME, cv2.WINDOW_NORMAL)
-    cv2.resizeWindow(WINDOW_NAME, 960, 540)
+    cv2.resizeWindow(WINDOW_NAME, *DEFAULT_PREVIEW_SIZE)
 
     frames = 0
     black_frames = 0
@@ -228,8 +283,8 @@ def run_preview_from_args(args, stop_event=None):
                 if not (ok and frame is not None and frame.size):
                     print('Read failed, retrying...')
                     time.sleep(0.1)
-                    key = cv2.waitKey(1) & 0xFF
-                    if key in (27, ord('q')):
+                    cv2.waitKey(1)
+                    if not is_window_visible(WINDOW_NAME):
                         break
                     continue
                 last_frame = frame
@@ -238,7 +293,7 @@ def run_preview_from_args(args, stop_event=None):
                     black_frames += 1
             elif last_frame is None:
                 key = cv2.waitKey(30) & 0xFF
-                if key in (27, ord('q')):
+                if not is_window_visible(WINDOW_NAME):
                     break
                 if key == ord(' '):
                     paused = False
@@ -256,6 +311,7 @@ def run_preview_from_args(args, stop_event=None):
             preview = last_frame.copy()
             if not args.raw:
                 preview = resize_like_alas(preview, *args.output_size)
+            preview, _ = fit_for_preview(preview, *get_window_image_size(WINDOW_NAME), lock_aspect=lock_aspect)
             if not args.no_overlay:
                 text = f'{mode_text(cap)} | preview {measured_fps:.1f}fps'
                 if paused:
@@ -264,7 +320,7 @@ def run_preview_from_args(args, stop_event=None):
             cv2.imshow(WINDOW_NAME, preview)
 
             key = cv2.waitKey(1) & 0xFF
-            if key in (27, ord('q')):
+            if not is_window_visible(WINDOW_NAME):
                 break
             if key == ord(' '):
                 paused = not paused

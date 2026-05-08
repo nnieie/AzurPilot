@@ -95,6 +95,8 @@ class GeneratedConfig:
     Emulator_UsbCaptureWidth = 1280
     Emulator_UsbCaptureHeight = 720
     Emulator_UsbCaptureFps = 30
+    Emulator_UsbCaptureCAccel = True
+    Emulator_UsbCaptureLockPreviewAspect = True
     Emulator_AdbRestart = False
 
     # Group `EmulatorInfo`

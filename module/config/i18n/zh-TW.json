@@ -532,6 +532,14 @@
       "name": "USB採集幀率",
       "help": "請求採集卡使用的幀率。"
     },
+    "UsbCaptureCAccel": {
+      "name": "USB色彩校準C加速",
+      "help": "開啟後，lut3d色彩校準會強制載入dev_tools/usb_capture_lut_accel.dll。DLL缺失或載入失敗會直接報錯；關閉後使用Python/NumPy校準。"
+    },
+    "UsbCaptureLockPreviewAspect": {
+      "name": "鎖定USB預覽視窗比例",
+      "help": "開啟後，USB預覽會保持1280x720比例顯示，視窗比例不符合時會出現黑邊，避免畫面被拉伸。"
+    },
     "AdbRestart": {
       "name": "在檢測不到裝置的時候嘗試重啟adb",
       "help": ""

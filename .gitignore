@@ -26,6 +26,11 @@ test.py
 test/
 debug_ocr/
 PaddleOCR
+dev_tools/usb_capture_lut_accel.dll
+dev_tools/usb_capture_lut_accel.obj
+dev_tools/usb_capture_lut_accel.exp
+dev_tools/usb_capture_lut_accel.lib
+config/usb_color
 
 # Created by .ignore support plugin (hsz.mobi)
 
