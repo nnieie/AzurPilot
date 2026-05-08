@@ -1188,6 +1188,9 @@ OpsiHazard1Leveling:
   RecordNonCL1AP: true
 OpsiSirenBug:
   SirenResearch_Enable: true
+  Siren_Mode:
+    value: resource
+    option: [resource, enemy]
 
 OpsiCheckLeveling:
   TargetLevel: 0

@@ -2578,7 +2578,8 @@
       "SirenDetectorSearch_FoundZones": null
     },
     "OpsiSirenBug": {
-      "SirenResearch_Enable": true
+      "SirenResearch_Enable": true,
+      "Siren_Mode": "resource"
     },
     "OpsiTarget": {
       "TargetFarming": false,
@@ -2611,7 +2612,8 @@
       "RecordNonCL1AP": true
     },
     "OpsiSirenBug": {
-      "SirenResearch_Enable": true
+      "SirenResearch_Enable": true,
+      "Siren_Mode": "resource"
     },
     "OpsiFleet": {
       "Fleet": 1,

@@ -4681,6 +4681,12 @@
     "SirenResearch_Enable": {
       "name": "Enable Siren Research Device",
       "help": "After enabling, use purple coins to convert to yellow coins through the Siren Research Device\nSufficient nautical miles are needed to sustain the purple coin consumption"
+    },
+    "Siren_Mode": {
+      "name": "OpsiSirenBug.Siren_Mode.name",
+      "help": "OpsiSirenBug.Siren_Mode.help",
+      "resource": "resource",
+      "enemy": "enemy"
     }
   },
   "OpsiCheckLeveling": {

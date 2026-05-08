@@ -4681,6 +4681,12 @@
     "SirenResearch_Enable": {
       "name": "セイレーン研究装置を有効化",
       "help": "有効化すると、セイレーン研究装置で紫コインを黄コインに変換します\n紫コイン消費を維持するには十分な海里数が必要です"
+    },
+    "Siren_Mode": {
+      "name": "OpsiSirenBug.Siren_Mode.name",
+      "help": "OpsiSirenBug.Siren_Mode.help",
+      "resource": "resource",
+      "enemy": "enemy"
     }
   },
   "OpsiCheckLeveling": {

@@ -4681,6 +4681,12 @@
     "SirenResearch_Enable": {
       "name": "啟用塞壬研究裝置",
       "help": "啟用後使用紫幣透過塞壬研究裝置轉換為黃幣\n需要足夠的海里數支撐紫幣消耗"
+    },
+    "Siren_Mode": {
+      "name": "OpsiSirenBug.Siren_Mode.name",
+      "help": "OpsiSirenBug.Siren_Mode.help",
+      "resource": "resource",
+      "enemy": "enemy"
     }
   },
   "OpsiCheckLeveling": {
