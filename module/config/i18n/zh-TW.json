@@ -540,6 +540,28 @@
       "name": "鎖定USB預覽視窗比例",
       "help": "開啟後，USB預覽會保持1280x720比例顯示，視窗比例不符合時會出現黑邊，避免畫面被拉伸。"
     },
+    "UsbCapturePreviewWidth": {
+      "name": "USB預覽預設寬度",
+      "help": "USB預覽視窗開啟時的預設寬度，只影響預覽視窗，不影響採集解析度和Alas截圖。"
+    },
+    "UsbCapturePreviewHeight": {
+      "name": "USB預覽預設高度",
+      "help": "USB預覽視窗開啟時的預設高度，只影響預覽視窗，不影響採集解析度和Alas截圖。"
+    },
+    "UsbCapturePreviewFps": {
+      "name": "USB預覽幀率",
+      "help": "限制USB預覽視窗的刷新幀率，不影響Alas截圖取得最新畫面。設為0表示不限制。低配電腦建議15或30。"
+    },
+    "UsbCapturePreviewInterpolation": {
+      "name": "USB預覽縮放插值",
+      "help": "預覽視窗縮放畫面時使用的插值演算法。線性效能較好，Lanczos4更清晰但CPU占用更高，區域適合縮小，最近鄰最快但鋸齒明顯。",
+      "auto": "自動",
+      "nearest": "最近鄰",
+      "linear": "線性",
+      "cubic": "三次",
+      "area": "區域",
+      "lanczos4": "Lanczos4"
+    },
     "AdbRestart": {
       "name": "在檢測不到裝置的時候嘗試重啟adb",
       "help": ""

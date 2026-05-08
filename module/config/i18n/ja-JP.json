@@ -540,6 +540,28 @@
       "name": "USBプレビューのアスペクト比を固定",
       "help": "有効にすると、USBプレビューは1280x720の比率を維持します。ウィンドウ比率が合わない場合は黒帯を表示し、映像の引き伸ばしを防ぎます。"
     },
+    "UsbCapturePreviewWidth": {
+      "name": "USBプレビュー既定幅",
+      "help": "USBプレビューウィンドウを開くときの既定幅です。プレビューウィンドウだけに影響し、キャプチャ解像度やAlasのスクリーンショットには影響しません。"
+    },
+    "UsbCapturePreviewHeight": {
+      "name": "USBプレビュー既定高さ",
+      "help": "USBプレビューウィンドウを開くときの既定高さです。プレビューウィンドウだけに影響し、キャプチャ解像度やAlasのスクリーンショットには影響しません。"
+    },
+    "UsbCapturePreviewFps": {
+      "name": "USBプレビューFPS",
+      "help": "USBプレビューウィンドウの更新FPSを制限します。Alasが取得するスクリーンショットの鮮度には影響しません。0にすると無制限です。低スペックPCでは15または30を推奨します。"
+    },
+    "UsbCapturePreviewInterpolation": {
+      "name": "USBプレビュー拡大縮小補間",
+      "help": "プレビューウィンドウで映像をリサイズするときの補間方式です。linearは高速、lanczos4は鮮明ですがCPU使用率が高く、areaは縮小向き、nearestは最速ですがギザギザが目立ちます。",
+      "auto": "自動",
+      "nearest": "最近傍",
+      "linear": "線形",
+      "cubic": "三次",
+      "area": "エリア",
+      "lanczos4": "Lanczos4"
+    },
     "AdbRestart": {
       "name": "デバイスが検出できない場合にadbの再起動を試みる",
       "help": ""

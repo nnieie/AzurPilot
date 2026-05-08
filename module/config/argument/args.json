@@ -401,6 +401,30 @@
         "type": "checkbox",
         "value": true
       },
+      "UsbCapturePreviewWidth": {
+        "type": "input",
+        "value": 960
+      },
+      "UsbCapturePreviewHeight": {
+        "type": "input",
+        "value": 540
+      },
+      "UsbCapturePreviewFps": {
+        "type": "input",
+        "value": 30
+      },
+      "UsbCapturePreviewInterpolation": {
+        "type": "select",
+        "value": "linear",
+        "option": [
+          "auto",
+          "nearest",
+          "linear",
+          "cubic",
+          "area",
+          "lanczos4"
+        ]
+      },
       "AdbRestart": {
         "type": "checkbox",
         "value": false

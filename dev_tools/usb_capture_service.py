@@ -518,7 +518,11 @@ class CaptureService:
         self.last_precorrect_time = 0.0
         self.preview_display_size = DEFAULT_PREVIEW_SIZE
         self.preview_content_rect = (0, 0, *DEFAULT_PREVIEW_SIZE)
+        self.preview_initial_size = DEFAULT_PREVIEW_SIZE
         self.preview_lock_aspect = True
+        self.preview_interval = 1 / 30
+        self.preview_interpolation = 'linear'
+        self.last_preview_time = 0.0
 
     def open_capture_from_config(self):
         config = load_alas_config(self.config_path)
@@ -530,6 +534,13 @@ class CaptureService:
         fps = int(config.get('UsbCaptureFps', 30))
         self.usb_capture_c_accel = bool(config.get('UsbCaptureCAccel', True))
         self.preview_lock_aspect = bool(config.get('UsbCaptureLockPreviewAspect', True))
+        self.preview_initial_size = (
+            max(1, int(config.get('UsbCapturePreviewWidth', DEFAULT_PREVIEW_SIZE[0]))),
+            max(1, int(config.get('UsbCapturePreviewHeight', DEFAULT_PREVIEW_SIZE[1]))),
+        )
+        preview_fps = float(config.get('UsbCapturePreviewFps', 30))
+        self.preview_interval = 0.0 if preview_fps <= 0 else 1 / preview_fps
+        self.preview_interpolation = str(config.get('UsbCapturePreviewInterpolation', 'linear'))
         precorrect_fps = float(config.get('UsbCapturePreCorrectFps', 0))
         self.precorrect_interval = None if precorrect_fps <= 0 else 1 / precorrect_fps
 
@@ -638,9 +649,17 @@ class CaptureService:
 
         if not self.preview_window_created:
             cv2.namedWindow(SERVICE_WINDOW_NAME, cv2.WINDOW_NORMAL)
-            cv2.resizeWindow(SERVICE_WINDOW_NAME, *DEFAULT_PREVIEW_SIZE)
+            cv2.resizeWindow(SERVICE_WINDOW_NAME, *self.preview_initial_size)
             cv2.setMouseCallback(SERVICE_WINDOW_NAME, self.on_mouse)
             self.preview_window_created = True
+
+        now = time.time()
+        if self.preview_interval > 0 and now - self.last_preview_time < self.preview_interval:
+            key = cv2.waitKeyEx(1)
+            if key != -1:
+                self.on_key(key)
+            return
+        self.last_preview_time = now
 
         if rgb:
             preview = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
@@ -651,6 +670,7 @@ class CaptureService:
             preview,
             *self.preview_display_size,
             lock_aspect=self.preview_lock_aspect,
+            interpolation=self.preview_interpolation,
         )
         cv2.imshow(SERVICE_WINDOW_NAME, preview)
         key = cv2.waitKeyEx(1)

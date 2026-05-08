@@ -97,6 +97,10 @@ class GeneratedConfig:
     Emulator_UsbCaptureFps = 30
     Emulator_UsbCaptureCAccel = True
     Emulator_UsbCaptureLockPreviewAspect = True
+    Emulator_UsbCapturePreviewWidth = 960
+    Emulator_UsbCapturePreviewHeight = 540
+    Emulator_UsbCapturePreviewFps = 30
+    Emulator_UsbCapturePreviewInterpolation = 'linear'  # auto, nearest, linear, cubic, area, lanczos4
     Emulator_AdbRestart = False
 
     # Group `EmulatorInfo`

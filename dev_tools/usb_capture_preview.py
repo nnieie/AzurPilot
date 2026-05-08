@@ -32,6 +32,13 @@ BACKENDS = {
 WINDOW_NAME = 'Alas USB Capture Standalone Preview'
 DEFAULT_OUTPUT_SIZE = (1280, 720)
 DEFAULT_PREVIEW_SIZE = (960, 540)
+PREVIEW_INTERPOLATIONS = {
+    'nearest': cv2.INTER_NEAREST,
+    'linear': cv2.INTER_LINEAR,
+    'cubic': cv2.INTER_CUBIC,
+    'area': cv2.INTER_AREA,
+    'lanczos4': cv2.INTER_LANCZOS4,
+}
 
 
 def normalize_device(value):
@@ -105,31 +112,35 @@ def resize_like_alas(image, width, height):
     return cv2.resize(image, (width, height), interpolation=cv2.INTER_AREA)
 
 
-def preview_interpolation(image, width, height):
+def preview_interpolation(image, width, height, interpolation='auto'):
+    interpolation = str(interpolation or 'auto').strip().lower()
+    if interpolation in PREVIEW_INTERPOLATIONS:
+        return PREVIEW_INTERPOLATIONS[interpolation]
+
     current_height, current_width = image.shape[:2]
     if width < current_width or height < current_height:
         return cv2.INTER_AREA
-    return cv2.INTER_LANCZOS4
+    return cv2.INTER_LINEAR
 
 
-def resize_for_preview(image, width, height):
+def resize_for_preview(image, width, height, interpolation='auto'):
     current_height, current_width = image.shape[:2]
     if current_width == width and current_height == height:
         return image
-    return cv2.resize(image, (width, height), interpolation=preview_interpolation(image, width, height))
+    return cv2.resize(image, (width, height), interpolation=preview_interpolation(image, width, height, interpolation))
 
 
-def fit_for_preview(image, width, height, lock_aspect=True):
+def fit_for_preview(image, width, height, lock_aspect=True, interpolation='auto'):
     current_height, current_width = image.shape[:2]
     if not lock_aspect:
-        return resize_for_preview(image, width, height), (0, 0, width, height)
+        return resize_for_preview(image, width, height, interpolation), (0, 0, width, height)
 
     scale = min(width / current_width, height / current_height)
     content_width = max(1, int(round(current_width * scale)))
     content_height = max(1, int(round(current_height * scale)))
     left = max(0, (width - content_width) // 2)
     top = max(0, (height - content_height) // 2)
-    resized = resize_for_preview(image, content_width, content_height)
+    resized = resize_for_preview(image, content_width, content_height, interpolation)
     if content_width == width and content_height == height:
         return resized, (0, 0, width, height)
 
@@ -222,6 +233,13 @@ def parse_args():
     parser.add_argument('--raw', action='store_true', help='Show raw frame without Alas-style resize/crop.')
     parser.add_argument('--no-overlay', action='store_true', help='Do not draw mode/FPS text over the preview.')
     parser.add_argument('--unlock-aspect', action='store_true', help='Stretch preview to fill the window instead of keeping aspect ratio.')
+    parser.add_argument('--preview-fps', type=float, default=None, help='Limit preview redraw FPS. Default: value from config, then 30.')
+    parser.add_argument(
+        '--preview-interpolation',
+        choices=['auto', *sorted(PREVIEW_INTERPOLATIONS)],
+        default=None,
+        help='Preview resize interpolation. Default: value from config, then linear.',
+    )
     parser.add_argument('--save-dir', default='.', help='Directory for snapshots saved with s. Default: current directory')
     return parser.parse_args()
 
@@ -245,6 +263,8 @@ def run_preview(config_name='alas', stop_event=None):
         raw=False,
         no_overlay=False,
         unlock_aspect=False,
+        preview_fps=None,
+        preview_interpolation=None,
         save_dir='.',
     )
     run_preview_from_args(args, stop_event=stop_event)
@@ -260,6 +280,13 @@ def run_preview_from_args(args, stop_event=None):
     height = int(choose(args.height, config, 'UsbCaptureHeight', 720))
     fps = int(choose(args.fps, config, 'UsbCaptureFps', 30))
     lock_aspect = bool(config.get('UsbCaptureLockPreviewAspect', True)) and not args.unlock_aspect
+    preview_size = (
+        max(1, int(config.get('UsbCapturePreviewWidth', DEFAULT_PREVIEW_SIZE[0]))),
+        max(1, int(config.get('UsbCapturePreviewHeight', DEFAULT_PREVIEW_SIZE[1]))),
+    )
+    preview_fps = float(choose(args.preview_fps, config, 'UsbCapturePreviewFps', 30))
+    preview_interval = 0.0 if preview_fps <= 0 else 1 / preview_fps
+    preview_interpolation_name = choose(args.preview_interpolation, config, 'UsbCapturePreviewInterpolation', 'linear')
 
     print(f'Opening device={device}, backend={backend}, codec={codec}, {width}x{height}@{fps}')
     cap = open_capture(device, backend, codec, width, height, fps, args.buffer_size)
@@ -267,7 +294,7 @@ def run_preview_from_args(args, stop_event=None):
     print('Keys: s save snapshot, r reconnect, space pause. Close the window to quit.')
 
     cv2.namedWindow(WINDOW_NAME, cv2.WINDOW_NORMAL)
-    cv2.resizeWindow(WINDOW_NAME, *DEFAULT_PREVIEW_SIZE)
+    cv2.resizeWindow(WINDOW_NAME, *preview_size)
 
     frames = 0
     black_frames = 0
@@ -275,6 +302,7 @@ def run_preview_from_args(args, stop_event=None):
     measured_fps = 0.0
     paused = False
     last_frame = None
+    last_preview_time = 0.0
 
     try:
         while not (stop_event is not None and stop_event.is_set()):
@@ -308,10 +336,24 @@ def run_preview_from_args(args, stop_event=None):
                 black_frames = 0
                 last_report = now
 
+            if preview_interval > 0 and now - last_preview_time < preview_interval:
+                key = cv2.waitKey(1) & 0xFF
+                if not is_window_visible(WINDOW_NAME):
+                    break
+                if key == ord(' '):
+                    paused = not paused
+                continue
+            last_preview_time = now
+
             preview = last_frame.copy()
             if not args.raw:
                 preview = resize_like_alas(preview, *args.output_size)
-            preview, _ = fit_for_preview(preview, *get_window_image_size(WINDOW_NAME), lock_aspect=lock_aspect)
+            preview, _ = fit_for_preview(
+                preview,
+                *get_window_image_size(WINDOW_NAME),
+                lock_aspect=lock_aspect,
+                interpolation=preview_interpolation_name,
+            )
             if not args.no_overlay:
                 text = f'{mode_text(cap)} | preview {measured_fps:.1f}fps'
                 if paused:

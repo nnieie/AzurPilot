@@ -117,6 +117,12 @@ Emulator:
   UsbCaptureFps: 30
   UsbCaptureCAccel: true
   UsbCaptureLockPreviewAspect: true
+  UsbCapturePreviewWidth: 960
+  UsbCapturePreviewHeight: 540
+  UsbCapturePreviewFps: 30
+  UsbCapturePreviewInterpolation:
+    value: linear
+    option: [auto, nearest, linear, cubic, area, lanczos4]
   AdbRestart: false
 EmulatorInfo:
   Emulator:

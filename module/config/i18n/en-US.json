@@ -540,6 +540,28 @@
       "name": "Lock USB Preview Aspect Ratio",
       "help": "When enabled, the USB preview keeps the 1280x720 aspect ratio and uses black bars when the window shape does not match, avoiding stretched video."
     },
+    "UsbCapturePreviewWidth": {
+      "name": "USB Preview Default Width",
+      "help": "Default width when opening the USB preview window. This only affects the preview window, not capture resolution or Alas screenshots."
+    },
+    "UsbCapturePreviewHeight": {
+      "name": "USB Preview Default Height",
+      "help": "Default height when opening the USB preview window. This only affects the preview window, not capture resolution or Alas screenshots."
+    },
+    "UsbCapturePreviewFps": {
+      "name": "USB Preview FPS",
+      "help": "Limits the USB preview window refresh rate without affecting Alas screenshot freshness. Set to 0 for unlimited. Use 15 or 30 on low-end PCs."
+    },
+    "UsbCapturePreviewInterpolation": {
+      "name": "USB Preview Resize Interpolation",
+      "help": "Resize interpolation used by the preview window. linear is faster, lanczos4 is sharper but uses more CPU, area is good for downscaling, and nearest is fastest but jagged.",
+      "auto": "Auto",
+      "nearest": "Nearest",
+      "linear": "Linear",
+      "cubic": "Cubic",
+      "area": "Area",
+      "lanczos4": "Lanczos4"
+    },
     "AdbRestart": {
       "name": "Try Restarting ADB When Device Not Detected",
       "help": ""

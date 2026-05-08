@@ -83,6 +83,10 @@
       "UsbCaptureFps": 30,
       "UsbCaptureCAccel": true,
       "UsbCaptureLockPreviewAspect": true,
+      "UsbCapturePreviewWidth": 960,
+      "UsbCapturePreviewHeight": 540,
+      "UsbCapturePreviewFps": 30,
+      "UsbCapturePreviewInterpolation": "linear",
       "AdbRestart": false
     },
     "EmulatorInfo": {
