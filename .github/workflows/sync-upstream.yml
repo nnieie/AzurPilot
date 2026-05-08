@@ -1,14 +1,7 @@
 name: Sync Fork with Upstream
 
 on:
-  schedule:
-    - cron: '0 */12 * * *'
   workflow_dispatch:
-  push:
-    branches:
-      - master
-    paths-ignore:
-      - '.github/workflows/**'
 
 jobs:
   sync:
@@ -17,69 +10,11 @@ jobs:
       contents: write
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          ref: master
-
-      - name: Configure Git
+      - name: Sync master with upstream
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          git config user.name "GitHub Actions Bot"
-          git config user.email "actions@github.com"
-          git config pull.rebase false
-
-      - name: Add upstream repository
-        run: |
-          if ! git remote | grep -q upstream; then
-            git remote add upstream https://github.com/wess09/AzurPilot.git
-          fi
-
-      - name: Fetch upstream changes
-        run: git fetch upstream master
-
-      - name: Check if merge is needed
-        id: check
-        run: |
-          git log HEAD..upstream/master --oneline > commits.txt
-          if [ -s commits.txt ]; then
-            echo "new_commits=true" >> $GITHUB_OUTPUT
-            echo "commit_count=$(wc -l < commits.txt)" >> $GITHUB_OUTPUT
-            echo "commits=$(cat commits.txt | head -5 | tr '\n' '; ')" >> $GITHUB_OUTPUT
-          else
-            echo "new_commits=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Merge upstream into master
-        if: steps.check.outputs.new_commits == 'true'
-        id: merge_master
-        run: |
-          echo "CONFLICT_DETECTED=false" >> $GITHUB_ENV
-
-          if git merge upstream/master --no-edit; then
-            echo "upstream -> master 合并成功"
-          else
-            echo "upstream -> master 检测到冲突"
-            echo "CONFLICT_DETECTED=true" >> $GITHUB_ENV
-            git diff --name-only --diff-filter=U > conflict_files.txt
-            git merge --abort
-          fi
-
-      - name: Push master
-        if: steps.check.outputs.new_commits == 'true' && env.CONFLICT_DETECTED == 'false'
-        run: |
-          git push origin master
+          gh repo sync "${{ github.repository }}" --source wess09/AzurPilot --branch master
 
           echo "## 同步成功" >> $GITHUB_STEP_SUMMARY
-          echo "upstream/master -> master 合并完成" >> $GITHUB_STEP_SUMMARY
-          echo "同步了 ${{ steps.check.outputs.commit_count }} 个提交" >> $GITHUB_STEP_SUMMARY
-          echo "最近的提交：" >> $GITHUB_STEP_SUMMARY
-          echo "${{ steps.check.outputs.commits }}" | sed 's/; /\n- /g' | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
-
-      - name: Summary for upstream -> master conflict
-        if: steps.check.outputs.new_commits == 'true' && env.CONFLICT_DETECTED == 'true'
-        run: |
-          echo "## 同步失败 - upstream/master 与 master 冲突" >> $GITHUB_STEP_SUMMARY
-          echo "### 冲突文件：" >> $GITHUB_STEP_SUMMARY
-          cat conflict_files.txt >> $GITHUB_STEP_SUMMARY
-          echo "::error::upstream/master -> master 合并冲突，需要手动解决"
+          echo "已使用 GitHub CLI 将 ${{ github.repository }}:master 同步到 wess09/AzurPilot:master。" >> $GITHUB_STEP_SUMMARY

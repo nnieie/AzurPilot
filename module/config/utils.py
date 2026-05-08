@@ -111,7 +111,7 @@ def write_file(file, data):
     """
     print(f'write: {file}')
     if file.endswith('.json'):
-        content = json.dumps(data, indent=2, ensure_ascii=False, sort_keys=False, default=str)
+        content = json.dumps(data, indent=2, ensure_ascii=False, sort_keys=False, default=str) + '\n'
         atomic_write(file, content)
     elif file.endswith('.yaml'):
         if isinstance(data, list):
