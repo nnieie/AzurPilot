@@ -536,6 +536,14 @@
       "name": "USB色彩校准C加速",
       "help": "开启后，lut3d色彩校准会强制加载dev_tools/usb_capture_lut_accel.dll。DLL缺失或加载失败会直接报错；关闭后使用Python/NumPy校准。"
     },
+    "UsbCaptureAdbFallback": {
+      "name": "USB识别失败时使用ADB截图兜底",
+      "help": "开启后，当USB画面连续识别不到同一个按钮或模板时，Alas会低频抓取一张ADB截图作为判断参考。只在截图方式为usb_capture时生效。"
+    },
+    "UsbCaptureAutoCalibration": {
+      "name": "自动收集失败样本并更新USB校色",
+      "help": "开启后，ADB兜底成功的失败样本会自动保存，并在后台校验、拟合新的USB校色文件。只有安全检查通过才会写入，写入后USB采集服务会自动热重载，无需重启脚本。"
+    },
     "UsbCaptureLockPreviewAspect": {
       "name": "锁定USB预览窗口比例",
       "help": "开启后，USB预览会保持1280x720比例显示，窗口比例不匹配时会出现黑边，避免画面被拉伸喵。"

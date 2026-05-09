@@ -536,6 +536,14 @@
       "name": "USB色補正Cアクセラレーション",
       "help": "有効にすると、lut3d色補正はdev_tools/usb_capture_lut_accel.dllを必須として読み込みます。DLLがない、または読み込みに失敗するとエラーになります。無効にするとPython/NumPy補正を使用します。"
     },
+    "UsbCaptureAdbFallback": {
+      "name": "USB認識失敗時にADBスクリーンショットを使用",
+      "help": "有効にすると、同じボタンまたはテンプレートがUSB画像で連続して認識できない場合、Alasは低頻度でADBスクリーンショットを取得して判定します。ScreenshotMethodがusb_captureの場合のみ有効です。"
+    },
+    "UsbCaptureAutoCalibration": {
+      "name": "失敗サンプルを自動収集してUSB色補正を更新",
+      "help": "有効にすると、ADBフォールバックで復旧した失敗サンプルを保存し、バックグラウンドで安全確認付きのUSB色補正を作成します。安全チェックに通った場合のみ書き込み、USB capture serviceはAlasを再起動せずに自動リロードします。"
+    },
     "UsbCaptureLockPreviewAspect": {
       "name": "USBプレビューのアスペクト比を固定",
       "help": "有効にすると、USBプレビューは1280x720の比率を維持します。ウィンドウ比率が合わない場合は黒帯を表示し、映像の引き伸ばしを防ぎます。"

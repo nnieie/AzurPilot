@@ -82,6 +82,8 @@
       "UsbCaptureHeight": 720,
       "UsbCaptureFps": 30,
       "UsbCaptureCAccel": true,
+      "UsbCaptureAdbFallback": true,
+      "UsbCaptureAutoCalibration": true,
       "UsbCaptureLockPreviewAspect": true,
       "UsbCapturePreviewWidth": 960,
       "UsbCapturePreviewHeight": 540,

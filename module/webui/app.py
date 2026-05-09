@@ -64,6 +64,7 @@ from module.config.utils import (
     readable_time,
 )
 from module.config.utils import time_delta
+from module.device.usb_capture_guard_stats import format_usb_capture_guard_help
 from module.log_res.log_res import LogRes
 from module.logger import logger
 from module.log_res import LogRes
@@ -1556,6 +1557,8 @@ class AlasGUI(Frame):
             arg_help = t(f"{group_name}.{arg_name}.help")
             if arg_help == "" or not arg_help:
                 arg_help = None
+            if task == "Alas" and group_name == "Emulator":
+                arg_help = format_usb_capture_guard_help(getattr(self, 'alas_name', 'alas'), arg_name, arg_help)
             output_kwargs["help"] = arg_help
             # Invalid feedback
             output_kwargs["invalid_feedback"] = t("Gui.Text.InvalidFeedBack", value)

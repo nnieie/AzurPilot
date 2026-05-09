@@ -397,6 +397,14 @@
         "type": "checkbox",
         "value": true
       },
+      "UsbCaptureAdbFallback": {
+        "type": "checkbox",
+        "value": true
+      },
+      "UsbCaptureAutoCalibration": {
+        "type": "checkbox",
+        "value": true
+      },
       "UsbCaptureLockPreviewAspect": {
         "type": "checkbox",
         "value": true

@@ -536,6 +536,14 @@
       "name": "USB Color Calibration C Acceleration",
       "help": "When enabled, lut3d color calibration requires dev_tools/usb_capture_lut_accel.dll. Missing or failed DLL loading raises an error. When disabled, Python/NumPy calibration is used."
     },
+    "UsbCaptureAdbFallback": {
+      "name": "Use ADB Screenshot Fallback for USB Recognition",
+      "help": "When enabled, if the same button or template repeatedly fails on the USB frame, Alas captures a low-frequency ADB screenshot as a reference judge. Only works when ScreenshotMethod is usb_capture."
+    },
+    "UsbCaptureAutoCalibration": {
+      "name": "Auto Collect Failure Samples and Update USB Calibration",
+      "help": "When enabled, failure samples recovered by ADB fallback are saved and a background safety-checked USB color calibration is fitted. The calibration is written only when checks pass and the USB capture service hot-reloads it without restarting Alas."
+    },
     "UsbCaptureLockPreviewAspect": {
       "name": "Lock USB Preview Aspect Ratio",
       "help": "When enabled, the USB preview keeps the 1280x720 aspect ratio and uses black bars when the window shape does not match, avoiding stretched video."
