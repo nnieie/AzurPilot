@@ -1271,8 +1271,47 @@ def send_minitouch_fast(device, builder):
     builder.clear()
 
 
+def _attach_existing_service(config_name='alas', preview=False, stop_event=None):
+    if not ping_service(config_name):
+        return False
+    if not preview:
+        return True
+
+    try:
+        set_preview(config_name, True)
+    except Exception:
+        return False
+
+    stop_event = stop_event or threading.Event()
+    try:
+        while not stop_event.is_set():
+            time.sleep(0.5)
+            if not ping_service(config_name):
+                return False
+        return True
+    finally:
+        try:
+            set_preview(config_name, False)
+        except Exception:
+            pass
+
+
 def run_service(config_name='alas', preview=False, stop_event=None):
-    CaptureService(config_name=config_name, preview=preview, stop_event=stop_event).run()
+    deadline = time.time() + 2.0
+    while time.time() < deadline:
+        if _attach_existing_service(config_name=config_name, preview=preview, stop_event=stop_event):
+            return
+        time.sleep(0.1)
+
+    try:
+        CaptureService(config_name=config_name, preview=preview, stop_event=stop_event).run()
+    except OSError:
+        deadline = time.time() + 5.0
+        while time.time() < deadline:
+            if _attach_existing_service(config_name=config_name, preview=preview, stop_event=stop_event):
+                return
+            time.sleep(0.1)
+        raise
 
 
 def main():

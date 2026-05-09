@@ -64,6 +64,10 @@ def parse_args():
     parser.add_argument('--max-calibration-pairs', type=int, default=12)
     parser.add_argument('--allow-corrected-usb', action='store_true',
                         help='Use guard samples without usb_raw.png. Not recommended for --apply.')
+    parser.add_argument('--allow-unqualified-guard-samples', action='store_true',
+                        help='Use old guard samples without sample_quality.usable_for_calibration=true. Not recommended for --apply.')
+    parser.add_argument('--guard-include-visible-assets', action='store_true',
+                        help='Also use globally visible Button assets from guard sample screenshots. Disabled by default to avoid dynamic-frame contamination.')
     parser.add_argument('--asset-match-threshold', type=float, default=10.0)
     parser.add_argument('--asset-weight', type=float, default=24.0)
     parser.add_argument('--asset-failed-weight-multiplier', type=float, default=3.0)
@@ -122,12 +126,17 @@ def load_guard_pairs(args):
     metas.sort(key=lambda path: os.path.getmtime(path), reverse=True)
     pairs = []
     skipped_no_raw = 0
+    skipped_unqualified = 0
     limit = max(0, args.max_guard_samples)
     for meta_path in metas:
         if limit and len(pairs) >= limit:
             break
         with open(meta_path, 'r', encoding='utf-8') as file:
             meta = json.load(file)
+        quality = meta.get('sample_quality') or {}
+        if not args.allow_unqualified_guard_samples and quality.get('usable_for_calibration') is not True:
+            skipped_unqualified += 1
+            continue
         images = meta.get('images', {})
         usb_key = 'usb_raw' if images.get('usb_raw') else 'usb'
         if usb_key != 'usb_raw' and not args.allow_corrected_usb:
@@ -146,6 +155,8 @@ def load_guard_pairs(args):
         })
     if skipped_no_raw:
         print(f'Skipped {skipped_no_raw} guard samples without usb_raw.png; use --allow-corrected-usb to include them.')
+    if skipped_unqualified:
+        print(f'Skipped {skipped_unqualified} guard samples that were not marked safe for calibration.')
     return pairs
 
 
@@ -221,6 +232,25 @@ def guard_focus_area_sample(pair, args, area, name, color=None):
     )
 
 
+def _area_key(area):
+    area = tuple_ints(area, 4)
+    return None if area is None else tuple(area)
+
+
+def guard_quality_area_passed(meta, area):
+    quality = meta.get('sample_quality') or {}
+    quality_areas = quality.get('areas') or []
+    if not quality_areas:
+        return True
+    area_key = _area_key(area)
+    if area_key is None:
+        return False
+    for item in quality_areas:
+        if _area_key(item.get('training_area')) == area_key:
+            return bool(item.get('passed'))
+    return False
+
+
 def guard_focus_sample(pair, args):
     meta = pair.get('metadata') or {}
     entries = []
@@ -244,6 +274,8 @@ def guard_focus_sample(pair, args):
     weight_sets = []
     samples = []
     for entry in entries:
+        if not guard_quality_area_passed(meta, entry.get('area')):
+            continue
         focus = guard_focus_area_sample(
             pair,
             args,
@@ -275,8 +307,14 @@ def build_captures(args, pairs, assets):
     adb_sets = []
     weight_sets = []
     for index, pair in enumerate(pairs, 1):
-        usb_values, adb_values, weights, samples = sample_visible_assets(pair['adb'], pair['usb'], assets, args)
         if pair['source'] == 'guard':
+            if args.guard_include_visible_assets:
+                usb_values, adb_values, weights, samples = sample_visible_assets(pair['adb'], pair['usb'], assets, args)
+            else:
+                usb_values = np.empty((0, 3), dtype=np.float32)
+                adb_values = np.empty((0, 3), dtype=np.float32)
+                weights = np.empty((0,), dtype=np.float32)
+                samples = []
             focus = guard_focus_sample(pair, args)
             if focus is not None:
                 focus_usb, focus_adb, focus_weights, focus_samples = focus
@@ -284,6 +322,8 @@ def build_captures(args, pairs, assets):
                 adb_values = np.concatenate([adb_values, focus_adb], axis=0) if adb_values.size else focus_adb
                 weights = np.concatenate([weights, focus_weights], axis=0) if weights.size else focus_weights
                 samples.extend(focus_samples)
+        else:
+            usb_values, adb_values, weights, samples = sample_visible_assets(pair['adb'], pair['usb'], assets, args)
 
         captures.append({
             'index': index,
@@ -292,6 +332,7 @@ def build_captures(args, pairs, assets):
             'adb': pair['adb'],
             'usb': pair['usb'],
             'samples': samples,
+            'sample_quality': (pair.get('metadata') or {}).get('sample_quality'),
         })
         if len(samples):
             usb_sets.append(usb_values)
@@ -366,6 +407,7 @@ def evaluate(args, captures, correction, usb_all, adb_all):
             'source': capture['source'],
             'usb_source': capture['usb_source'],
             'visible_assets': len(capture['samples']),
+            'sample_quality': capture.get('sample_quality'),
             'samples': capture['samples'],
             'metrics': {
                 'before': full_before,
@@ -374,6 +416,10 @@ def evaluate(args, captures, correction, usb_all, adb_all):
             'asset_validation': validation,
         })
 
+    patch_capture_results = [
+        item for item in capture_results
+        if item.get('source') != 'guard'
+    ]
     safety_failures = []
     if after['mae'] >= before['mae']:
         safety_failures.append(f'fit MAE did not improve: {before["mae"]:.2f} -> {after["mae"]:.2f}')
@@ -383,7 +429,7 @@ def evaluate(args, captures, correction, usb_all, adb_all):
         safety_failures.append('asset regressions: ' + ', '.join(regressions[:20]))
     if guard_still_off:
         safety_failures.append('guard samples still off: ' + ', '.join(guard_still_off[:20]))
-    safety_failures.extend(patch_safety_check(args, args.model, correction, before, after, capture_results))
+    safety_failures.extend(patch_safety_check(args, args.model, correction, before, after, patch_capture_results))
 
     return {
         'before': before,
@@ -417,6 +463,8 @@ def build_output_data(args, captures, assets, correction, evaluation, strength):
             'guard_weight': args.guard_weight,
             'guard_pixel_samples': args.guard_pixel_samples,
             'lut_strength': strength,
+            'guard_sample_quality_required': not args.allow_unqualified_guard_samples,
+            'guard_visible_assets_enabled': bool(args.guard_include_visible_assets),
         },
         'metrics': {
             'before': evaluation['before'],
@@ -487,6 +535,8 @@ def main():
         raise RuntimeError('--apply requires at least one guard sample; use usb_capture_color_calibrate.py for snapshot-only fitting')
     if args.apply and any(pair['source'] == 'guard' and pair['usb_source'] != 'usb_raw' for pair in pairs):
         raise RuntimeError('--apply requires raw USB guard samples; rerun with --allow-corrected-usb --force to override')
+    if args.apply and args.allow_unqualified_guard_samples and not args.force:
+        raise RuntimeError('--apply requires quality-checked guard samples; use --force to override')
 
     captures, usb_sets, adb_sets, weight_sets = build_captures(args, pairs, assets)
     if not usb_sets:
