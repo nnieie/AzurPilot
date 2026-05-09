@@ -1139,31 +1139,6 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                 logger.info(f'[预检查] 格子 {grid} 是塞壬研究装置,功能已开启,继续处理')
         return False
 
-    def _should_skip_siren_research_for_explore(self):
-
-        # 检查是否由月度开荒调用
-        is_explore = getattr(self, 'is_in_task_explore', False)
-        if not is_explore:
-            return False
-
-        # 检查月度开荒是否配置跳过塞壬研究装置
-        skip_level = self.config.cross_get(keys="OpsiExplore.OpsiExplore.IfSkipSirenResearch")
-        if skip_level == 0:
-            return False
-        
-        # 根据海域难度决定是否跳过
-        hazard_level = self.zone.hazard_level
-        if skip_level == 6 and hazard_level == 6:
-            logger.info(f'[月度开荒] 海域危险度 {hazard_level} = 6, 跳过塞壬研究装置')
-            return True
-        if skip_level == 65 and hazard_level >= 5:
-            logger.info(f'[月度开荒] 海域危险度 {hazard_level} >= 5, 跳过塞壬研究装置')
-            return True
-        if skip_level == 654 and hazard_level >= 4:
-            logger.info(f'[月度开荒] 海域危险度 {hazard_level} >= 4, 跳过塞壬研究装置')
-            return True
-        return False
-
     def clear_question(self, drop=None):
         """
         Clear nearly (and 3 grids from above) question marks on radar.
@@ -1224,9 +1199,57 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                 # ========== 装置处理 ==========
                 # 选项点击已由 wait_until_walk_stable -> info_handler.story_skip 处理
                 
-                # 执行自律寻敌
-                logger.info('[装置处理] 步骤1: 执行自律寻敌')
-                self.os_auto_search_run(drop=drop)
+                # 检测选择的模式
+                siren_mode = getattr(self, 'siren_device_mode', None)
+                logger.attr('Siren_device_mode', siren_mode)
+                
+                # 如果选择了敌人模式
+                if siren_mode == 'enemy':
+                    logger.info('[装置处理] 检测到敌人模式，执行特殊处理')
+                    
+                    # 获取配置的舰队
+                    task = self.config.task.command
+                    if task not in ('OpsiHazard1Leveling', 'OpsiMeowfficerFarming'):
+                        task = 'OpsiHazard1Leveling'
+                    siren_fleet = self.config.cross_get(
+                        keys=f'{task}.OpsiSirenBug.Siren_Fleet',
+                        default=0
+                    )
+                    
+                    # 记录当前舰队
+                    current_fleet = self.fleet_selector.get()
+                    logger.info(f'[装置处理] 当前舰队: {current_fleet}')
+                    
+                    # 如果配置了指定舰队，切换到指定舰队
+                    if siren_fleet > 0:
+                        logger.info(f'[装置处理] 切换到指定舰队: {siren_fleet}')
+                        self.fleet_set(siren_fleet)
+                    else:
+                        logger.info('[装置处理] 使用当前舰队')
+                    
+                    # 执行三次自律寻敌
+                    for i in range(3):
+                        logger.info(f'[装置处理] 执行第 {i + 1}/3 次自律寻敌')
+                        self.os_auto_search_run(drop=drop)
+                    
+                    # 如果切换了舰队，切换回原舰队
+                    if siren_fleet > 0:
+                        logger.info(f'[装置处理] 切换回原舰队: {current_fleet}')
+                        self.fleet_set(current_fleet)
+                
+                # 如果选择了资源模式
+                elif siren_mode == 'resource':
+                    logger.info('[装置处理] 检测到资源模式，执行标准处理')
+                    # 执行一次自律寻敌
+                    logger.info('[装置处理] 执行自律寻敌')
+                    self.os_auto_search_run(drop=drop)
+                
+                # 未知模式或资源不足
+                else:
+                    logger.info('[装置处理] 未知模式或资源不足，执行标准处理')
+                    # 执行一次自律寻敌
+                    logger.info('[装置处理] 执行自律寻敌')
+                    self.os_auto_search_run(drop=drop)
                 
                 # 标记处理
                 self._solved_map_event.add('is_scanning_device')
@@ -1394,18 +1417,6 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                 logger.warning('[配置检查] 塞壬研究装置功能已禁用,跳过处理')
                 self._solved_map_event.add('is_scanning_device')
                 return True
-            
-            if self._should_skip_siren_research_for_explore():
-                # 记录已跳过的海域
-                zone_str = f'{self.zone};\n'
-                current_str = self.config.OpsiExplore_SkipedSirenResearch
-                if current_str is None:
-                    self.config.OpsiExplore_SkipedSirenResearch = zone_str
-                else:
-                    self.config.OpsiExplore_SkipedSirenResearch = str(current_str) + zone_str
-                logger.info(f'[月度开荒] 已记录跳过塞壬研究装置的海域: {self.config.OpsiExplore_SkipedSirenResearch}')
-                self._solved_map_event.add('is_scanning_device')
-                return True
 
             # ========== 移动并处理 ==========
             logger.info(f'[移动装置] 开始移动到装置位置: {grid}')
@@ -1422,9 +1433,61 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
             logger.info(f'[移动装置] 移动完成,结果: {result}')
             
             if getattr(self, 'is_siren_device_confirmed', False):
-                # 执行自律寻敌
-                logger.info('[装置处理] 执行自律寻敌')
-                self.os_auto_search_run(drop=drop)
+
+                # 保存标志状态，因为二次重扫可能会重置它
+                siren_confirmed = True
+                
+                # 检测选择的模式
+                siren_mode = getattr(self, 'siren_device_mode', None)
+                logger.attr('Siren_device_mode', siren_mode)
+                
+                # 如果选择了敌人模式
+                if siren_mode == 'enemy':
+                    logger.info('[装置处理] 敌人模式，执行特殊处理')
+                    
+                    # 获取配置的舰队
+                    task = self.config.task.command
+                    if task not in ('OpsiHazard1Leveling', 'OpsiMeowfficerFarming'):
+                        task = 'OpsiHazard1Leveling'
+                    siren_fleet = self.config.cross_get(
+                        keys=f'{task}.OpsiSirenBug.Siren_Fleet',
+                        default=0
+                    )
+                    
+                    # 记录当前舰队
+                    current_fleet = self.fleet_selector.get()
+                    logger.info(f'[装置处理] 当前舰队: {current_fleet}')
+                    
+                    # 如果配置了指定舰队，切换到指定舰队
+                    if siren_fleet > 0:
+                        logger.info(f'[装置处理] 切换到指定舰队: {siren_fleet}')
+                        self.fleet_set(siren_fleet)
+                    else:
+                        logger.info('[装置处理] 使用当前舰队')
+                    
+                    # 执行三次自律寻敌
+                    for i in range(3):
+                        logger.info(f'[装置处理] 执行第 {i + 1}/3 次自律寻敌')
+                        self.os_auto_search_run(drop=drop)
+                    
+                    # 如果切换了舰队，切换回原舰队
+                    if siren_fleet > 0:
+                        logger.info(f'[装置处理] 切换回原舰队: {current_fleet}')
+                        self.fleet_set(current_fleet)
+                
+                # 如果选择了资源模式
+                elif siren_mode == 'resource':
+                    logger.info('[装置处理] 检测到资源模式，执行标准处理')
+                    # 执行一次自律寻敌
+                    logger.info('[装置处理] 执行自律寻敌')
+                    self.os_auto_search_run(drop=drop)
+                
+                # 未知模式或资源不足
+                else:
+                    logger.info('[装置处理] 未知模式或资源不足，执行标准处理')
+                    # 执行一次自律寻敌
+                    logger.info('[装置处理] 执行自律寻敌')
+                    self.os_auto_search_run(drop=drop)
 
                 # 先标记为已处理，防止二次重扫时再次处理塞壬装置
                 self._solved_map_event.add('is_scanning_device')

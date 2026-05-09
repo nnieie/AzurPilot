@@ -8,7 +8,7 @@ import module.config.server as server
 
 from module.base.button import Button, ButtonGrid
 from module.base.timer import Timer
-from module.base.utils import color_similarity_2d, crop, random_rectangle_vector, rgb2gray
+from module.base.utils import color_similarity_2d, crop, random_rectangle_vector, rgb2gray, lower_template_match_similarity
 from module.config.deep import deep_get, deep_values
 from module.island.assets import *
 from module.island.project_data import *

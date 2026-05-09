@@ -4381,6 +4381,14 @@
     "NotifyOpsiMail": {
       "name": "Push Operation Siren notifications",
       "help": "Push notifications about Corrosion 1 and Meowfficer farming. Requires the \"Error Push\" function to be enabled. May be noisy due to high volume of messages."
+    },
+    "IndependentPush": {
+      "name": "Independent push of Siren Operation information",
+      "help": "The \"Push Siren Operation Related Information\" function needs to be enabled simultaneously.\nTo disable it, navigate to Smart Port Settings > Debug Settings > Error Push Settings, and the \"Error Push\" function needs to be enabled simultaneously.\nTo enable it, use the Siren Action Push Settings. If you need to separate the pushed content, please enable this function"
+    },
+    "OpsiOnePushConfig": {
+      "name": "Operation Siren notifications push settings",
+      "help": "The settings will take effect only when the \"Siren Operation Information Independent Push\" function is enabled. Use Onepush to push a message about Erosion 1 and Short Cat. See the document for configuration method: https://github.com/LmeSzinc/AzurLaneAutoScript/wiki/Onepush-configuration-%5BCN%5D"
     }
   },
   "OpsiAshBeacon": {
@@ -4455,18 +4463,6 @@
     "ForceRun": {
       "name": "Force run regardless of run interval",
       "help": "When enabled, it will consume additional AP. Generally not needed, just take it slowly."
-    },
-    "IfSkipSirenResearch": {
-      "name": "Skip Siren Research Device",
-      "help": "When enabled, Siren Research Devices of the corresponding coordinate level will be skipped to facilitate bug exploitation.\nPreliminary testing in several sea zones has been done, but a full monthly exploration has not been completed. Unknown issues may exist.",
-      "0": "Don't skip",
-      "6": "Skip level 6 only",
-      "65": "Skip level 6 and level 5",
-      "654": "Skip level 6, 5 and 4"
-    },
-    "SkipedSirenResearch": {
-      "name": "Sea zones with skipped Siren Research Devices",
-      "help": "This value is automatically recorded and does not need to be modified manually.\nIt will be reset when exploring at the beginning of the month, or when \"Last completed zone\" is changed to 0 and monthly exploration is run again."
     },
     "LastZone": {
       "name": "Last completed zone",
@@ -4695,10 +4691,19 @@
       "help": "After enabling, use purple coins to convert to yellow coins through the Siren Research Device\nSufficient nautical miles are needed to sustain the purple coin consumption"
     },
     "Siren_Mode": {
-      "name": "OpsiSirenBug.Siren_Mode.name",
-      "help": "OpsiSirenBug.Siren_Mode.help",
-      "resource": "resource",
-      "enemy": "enemy"
+      "name": "Interaction Mode with Siren Detection Device",
+      "help": "Choose how to interact with Siren devices. Detecting resources costs purple coins (Special Exchange Vouchers), detecting enemies costs Siren Energy Storage",
+      "resource": "Repeatedly attempt to detect hidden resources",
+      "enemy": "Repeatedly attempt to detect hidden enemies"
+    },
+    "Siren_Fleet": {
+      "name": "Fleet for Enemy Detection",
+      "help": "Select the fleet to use when detecting hidden enemies. 0 means use current fleet, 1-4 means use specified fleet",
+      "0": "Use current fleet",
+      "1": "Fleet 1",
+      "2": "Fleet 2",
+      "3": "Fleet 3",
+      "4": "Fleet 4"
     }
   },
   "OpsiCheckLeveling": {

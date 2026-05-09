@@ -96,7 +96,7 @@ class CoinTaskMixin:
             
         Notes:
             - 仅在启用智能调度时生效
-            - 需要在配置中设置 Error_OnePushConfig 才能发送推送
+            - 需要在配置中设置 OpsiGeneral_OpsiOnePushConfig或Error_OnePushConfig 才能发送推送
             - 使用 onepush 库发送通知到配置的推送渠道
             - 标题会自动格式化为 "[Alas <实例名>] 原标题" 的形式
 
@@ -109,9 +109,9 @@ class CoinTaskMixin:
         # 检查是否启用推送大世界相关邮件
         if not self.config.OpsiGeneral_NotifyOpsiMail:
             return False
-        
+
         # 检查是否配置了推送
-        push_config = self.config.Error_OnePushConfig
+        push_config = self.config.OpsiGeneral_OpsiOnePushConfig if self.config.OpsiGeneral_IndependentPush else self.config.Error_OnePushConfig
         if not self._is_push_config_valid(push_config):
             logger.warning("推送配置未设置或 provider 为 null，跳过推送。请在 Alas 设置 -> 错误处理 -> OnePush 配置中设置有效的推送渠道。")
             return False
@@ -126,7 +126,7 @@ class CoinTaskMixin:
         try:
             from module.notify import handle_notify as notify_handle_notify
             success = notify_handle_notify(
-                self.config.Error_OnePushConfig,
+                self.config.OpsiGeneral_OpsiOnePushConfig if self.config.OpsiGeneral_IndependentPush else self.config.Error_OnePushConfig,
                 title=formatted_title,
                 content=content
             )
@@ -763,7 +763,7 @@ class OpsiScheduling(CoinTaskMixin, OSMap):
         if not self._can_send_ap_notification('_last_ap_coins_insufficient_notification_time'):
             return
         
-        push_config = self.config.Error_OnePushConfig
+        push_config = self.config.OpsiGeneral_OpsiOnePushConfig if self.config.OpsiGeneral_IndependentPush else self.config.Error_OnePushConfig
         if not self._is_push_config_valid(push_config):
             logger.warning("推送配置未设置或 provider 为 null，跳过推送")
             return
@@ -793,7 +793,7 @@ class OpsiScheduling(CoinTaskMixin, OSMap):
         if not self._can_send_ap_notification('_last_ap_insufficient_notification_time'):
             return
         
-        push_config = self.config.Error_OnePushConfig
+        push_config = self.config.OpsiGeneral_OpsiOnePushConfig if self.config.OpsiGeneral_IndependentPush else self.config.Error_OnePushConfig
         if not self._is_push_config_valid(push_config):
             logger.warning("推送配置未设置或 provider 为 null，跳过推送")
             return
@@ -881,7 +881,7 @@ class OpsiScheduling(CoinTaskMixin, OSMap):
         if not self.config.OpsiGeneral_NotifyOpsiMail:
             return
         
-        push_config = self.config.Error_OnePushConfig
+        push_config = self.config.OpsiGeneral_OpsiOnePushConfig if self.config.OpsiGeneral_IndependentPush else self.config.Error_OnePushConfig
         if not self._is_push_config_valid(push_config):
             logger.warning("推送配置未设置或 provider 为 null，跳过推送")
             return
@@ -933,7 +933,7 @@ class OpsiScheduling(CoinTaskMixin, OSMap):
         if not self._can_send_ap_notification('_last_ap_threshold_notification_time'):
             return
         
-        push_config = self.config.Error_OnePushConfig
+        push_config = self.config.OpsiGeneral_OpsiOnePushConfig if self.config.OpsiGeneral_IndependentPush else self.config.Error_OnePushConfig
         if not self._is_push_config_valid(push_config):
             logger.warning("推送配置未设置或 provider 为 null，跳过推送")
             return

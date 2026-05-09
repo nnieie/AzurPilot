@@ -99,7 +99,11 @@ class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandle
         # For JP only
         ocr = Ocr(MAP_NAME, lang='jp', letter=(157, 173, 192), threshold=127, name='OCR_OS_MAP_NAME')
         name = ocr.ocr(self.device.image)
-        name = name.strip('\\/-—–－')
+        name = name.replace(' ', '')
+        # Normalize various dashes to standard hyphen
+        import re
+        name = re.sub(r'[\\/—–－−]', '-', name)
+        name = name.strip('-')
         self.is_zone_name_hidden = '安全' in name
         # Remove punctuations
         for char in '・':
@@ -109,12 +113,15 @@ class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandle
             name = name.split('異')[0]
         if 'セ' in name:
             name = name.split('セ')[0]
-        # Remove '安全海域' or '秘密海域' at the end of jp ocr.
-        name = _remove_zone_suffix(
-            name,
-            ('安全海域', '秘密海域', '異常海域', '要塞海域', '安全', '秘密', '異常', '要塞'),
-            trim_chars='-',
-        )
+        
+        if '-' in name:
+            name = name.split('-')[0]
+        else:
+            # Remove '安全海域' or '秘密海域' at the end of jp ocr.
+            name = _remove_zone_suffix(
+                name,
+                ('安全海域', '秘密海域', '異常海域', '要塞海域', '安全', '秘密', '異常', '要塞'),
+            )
         # Kanji '一', '力' and '卜' are not used, while Katakana 'ー', 'カ' and 'ト' are misread as Kanji sometimes.
         # Katakana 'ペ' may be misread as Hiragana 'ぺ'.
         name = name.replace('一', 'ー').replace('力', 'カ').replace('卜', 'ト').replace('ぺ', 'ペ')
@@ -132,17 +139,24 @@ class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandle
         # For TW only
         ocr = Ocr(MAP_NAME, lang='tw', letter=(198, 215, 239), threshold=127, name='OCR_OS_MAP_NAME')
         name = ocr.ocr(self.device.image)
-        name = name.strip('\\/-—–－')
+        name = name.replace(' ', '')
+        # Normalize various dashes to standard hyphen
+        import re
+        name = re.sub(r'[\\/—–－−一]', '-', name)
+        name = name.strip('-')
         self.is_zone_name_hidden = '安全' in name
         # Remove '塞壬要塞海域'
         if '塞' in name:
             name = name.split('塞')[0]
-        # Remove '安全海域', '隱秘海域', '深淵海域' at the end of tw ocr.
-        name = _remove_zone_suffix(
-            name,
-            ('安全海域', '隱秘海域', '深淵海域', '塞壬要塞海域', '安全', '隱秘', '深淵'),
-            trim_chars='一-',
-        )
+            
+        if '-' in name:
+            name = name.split('-')[0]
+        else:
+            # Remove '安全海域', '隱秘海域', '深淵海域' at the end of tw ocr.
+            name = _remove_zone_suffix(
+                name,
+                ('安全海域', '隱秘海域', '深淵海域', '塞壬要塞海域', '安全', '隱秘', '深淵'),
+            )
         return name
 
     @Config.when(SERVER=None)
@@ -150,7 +164,11 @@ class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandle
         # For CN only
         ocr = Ocr(MAP_NAME, lang='cnocr', letter=(214, 231, 255), threshold=127, name='OCR_OS_MAP_NAME')
         name = ocr.ocr(self.device.image)
-        name = name.strip('\\/-—–－')
+        name = name.replace(' ', '')
+        # Normalize various dashes to standard hyphen
+        import re
+        name = re.sub(r'[\\/—–－−]', '-', name)
+        name = name.strip('-')
         self.is_zone_name_hidden = '安全' in name
         if '-' in name:
             name = name.split('-')[0]

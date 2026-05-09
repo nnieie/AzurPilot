@@ -128,17 +128,19 @@ class Template(Resource):
         else:
             return self.image.shape[0:2][::-1]
 
-    def match(self, image, scaling=1.0, similarity=0.85):
+    def match(self, image, scaling=1.0, similarity=0.85, direct_match=False):
         """
         Args:
             image:
             scaling (int, float): Scale the template to match image
             similarity (float): 0 to 1.
+            direct_match (bool): If True, bypass lower_template_match_similarity clamping.
 
         Returns:
             bool: If matches.
         """
-        similarity = lower_template_match_similarity(similarity)
+        if not direct_match:
+            similarity = lower_template_match_similarity(similarity)
         scaling = 1 / scaling
         if scaling != 1.0:
             image = cv2.resize(image, None, fx=scaling, fy=scaling)

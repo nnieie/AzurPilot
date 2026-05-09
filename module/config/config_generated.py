@@ -664,6 +664,8 @@ class GeneratedConfig:
     OpsiGeneral_DoRandomMapEvent = True
     OpsiGeneral_AkashiShopFilter = 'ActionPoint'
     OpsiGeneral_NotifyOpsiMail = True
+    OpsiGeneral_IndependentPush = False
+    OpsiGeneral_OpsiOnePushConfig = 'provider: null'
 
     # Group `OpsiAshBeacon`
     OpsiAshBeacon_AttackMode = 'current'  # current, current_dossier
@@ -683,8 +685,6 @@ class GeneratedConfig:
     # Group `OpsiExplore`
     OpsiExplore_SpecialRadar = False
     OpsiExplore_ForceRun = False
-    OpsiExplore_IfSkipSirenResearch = 0  # 0, 6, 65, 654
-    OpsiExplore_SkipedSirenResearch = None
     OpsiExplore_LastZone = 0
     OpsiExplore_ExploreProgress = None
 
@@ -744,6 +744,7 @@ class GeneratedConfig:
     # Group `OpsiSirenBug`
     OpsiSirenBug_SirenResearch_Enable = True
     OpsiSirenBug_Siren_Mode = 'resource'  # resource, enemy
+    OpsiSirenBug_Siren_Fleet = 0  # 0, 1, 2, 3, 4
 
     # Group `OpsiCheckLeveling`
     OpsiCheckLeveling_TargetLevel = 0

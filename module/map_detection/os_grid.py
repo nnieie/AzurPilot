@@ -219,12 +219,12 @@ class OSGridPredictor(GridPredictor):
     def predict_enemy_genre(self):
         image = rgb2gray(self.relative_crop((-0.5, -1, 0.5, 0), shape=(60, 60)))
         for name, template in self._os_template_enemy.items():
-            if template.match(image, similarity=0.9):
+            if template.match(image, similarity=0.9, direct_match=True):
                 return name
 
         image = rgb2gray(self.relative_crop((-0.5, -2, 0.5, -1), shape=(60, 60)))
         for name, template in self._os_template_enemy_upper.items():
-            if template.match(image, similarity=0.9):
+            if template.match(image, similarity=0.9, direct_match=True):
                 return name
 
         return None
@@ -257,20 +257,20 @@ class OSGridPredictor(GridPredictor):
 
     def predict_resource(self):
         image = rgb2gray(self.relative_crop((-0.5, -1, 0.5, 0), shape=(60, 60)))
-        return TEMPLATE_OS_Resource.match(image, similarity=0.85)
+        return TEMPLATE_OS_Resource.match(image, similarity=0.85, direct_match=True)
 
     def predict_meowfficer(self):
         image = rgb2gray(self.image_trans)
-        return TEMPLATE_OS_Meowfficer.match(image, similarity=0.85)
+        return TEMPLATE_OS_Meowfficer.match(image, similarity=0.85, direct_match=True)
 
     def predict_ally(self):
         # Ally cargo ship in daily mission
         image = rgb2gray(self.relative_crop((-0.5, -0.5, 0.5, 0.5), shape=(60, 60)))
-        return TEMPLATE_OS_AllyCargo.match(image, similarity=0.85)
+        return TEMPLATE_OS_AllyCargo.match(image, similarity=0.85, direct_match=True)
 
     def predict_akashi(self):
         image = rgb2gray(self.relative_crop((-0.5, -1, 0.5, 0), shape=(60, 60)))
-        return TEMPLATE_SIREN_Akashi.match(image, similarity=0.85)
+        return TEMPLATE_SIREN_Akashi.match(image, similarity=0.85, direct_match=True)
 
     def predict_caught_by_siren(self):
         # Detect the red slash background of `In action`.
