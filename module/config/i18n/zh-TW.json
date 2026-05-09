@@ -542,7 +542,7 @@
     },
     "UsbCaptureAutoCalibration": {
       "name": "自動收集失敗樣本並更新USB校色",
-      "help": "開啟後，ADB兜底成功的失敗樣本會自動保存，並在後台校驗、擬合新的USB校色文件。只有安全檢查通過才會寫入，寫入後USB採集服務會自動熱重載，無需重啟腳本。"
+      "help": "開啟後，ADB兜底成功的失敗樣本會自動保存，並在後台校驗、擬合新的USB校色檔案。只有安全檢查通過才會寫入，寫入後USB採集服務會自動熱重載，無需重啟腳本。"
     },
     "UsbCaptureLockPreviewAspect": {
       "name": "鎖定USB預覽視窗比例",
