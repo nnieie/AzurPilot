@@ -4633,23 +4633,11 @@
       "name": "月底重置强制消耗行动力",
       "help": "在大世界重置前，自动将保留行动力设为0，以确保存余行动力被消耗。建议配合侵蚀1练级使用。"
     },
-    "SirenDetectorSearch_Enable": {
-      "name": "自动寻找塞壬探测装置",
-      "help": "在短猫相接任务中自动寻找塞壬探测装置，并记录找到的海域\n仅在中心海域中寻找，不会在其他区域寻找"
-    },
     "SirenDetectorSearch_HazardLevel": {
       "name": "塞壬探测装置侵蚀等级",
       "help": "在中心海域中按顺时针出击特定侵蚀等级的海域来寻找塞壬探测装置\n中心海域只有五和六级海域\n注意：只在中心海域（region 5）中选择，不会选择其他区域的海域",
       "5": "5",
       "6": "6"
-    },
-    "SirenDetectorSearch_StopAfterFound": {
-      "name": "寻找 X 个塞壬探测装置后停止",
-      "help": "寻找并记录到指定数量的塞壬探测装置后，停止搜索并回到正常短猫流程。\n统计和停止条件按当前所选侵蚀等级（5级/6级）分别计算，不会混算。\n警告：此项最小值为 1，不可填写 0。\n中心海域中 5 级海域有 4 个，6 级海域有 4 个。填写数量不能大于当前所选侵蚀等级的实际海域数量（最大 4）。"
-    },
-    "SirenDetectorSearch_FoundZones": {
-      "name": "已找到的塞壬探测装置海域",
-      "help": "已找到的塞壬探测装置海域，会按侵蚀等级分开记录并分开排除。若对应海域的塞壬探测装置已经被使用，可手动删除该海域记录。"
     }
   },
   "OpsiTarget": {
@@ -5239,6 +5227,9 @@
       "SortieCost": "出击消耗",
       "AkashiEncounters": "遇见明石次数",
       "AkashiRate": "遇见明石概率",
+      "SirenResearchDevices": "吊机次数",
+      "SirenResearchRate": "吊机概率",
+      "HazardLevel": "侵蚀等级",
       "AverageAP": "平均体力",
       "NetAP": "净赚体力",
       "LoopEfficiency": "循环效率",

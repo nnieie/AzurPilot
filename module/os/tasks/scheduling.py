@@ -28,6 +28,8 @@ OpsiScheduling - 智能调度模块
 import re
 from datetime import datetime, timedelta
 
+from module.statistics.opsi_runtime import record_ap_snapshot
+
 # 短猫每轮消耗的行动力（以侵蚀5为标准）
 MEOW_ROUND_AP_COST = 30
 # 短猫每轮平均耗时默认值（秒）。当统计模块不可用时用于兜底计算。
@@ -194,12 +196,10 @@ class CoinTaskMixin:
 
         # 保存体力快照到数据库（用于 WebUI 体力变化曲线图）
         instance_name = getattr(self.config, 'config_name', 'default')
-        try:
-            from module.statistics.cl1_database import db as cl1_db
-            source = 'cl1' if getattr(self, 'is_in_task_cl1_leveling', False) else 'meow'
-            cl1_db.async_add_ap_snapshot(instance_name, current_ap, source=source)
-        except Exception:
-            logger.exception('Failed to save AP snapshot')
+        # AP snapshots feed the WebUI timeline; keep the source decision here,
+        # and leave storage details to the runtime metrics layer.
+        source = 'cl1' if getattr(self, 'is_in_task_cl1_leveling', False) else 'meow'
+        record_ap_snapshot(self.config, current_ap, source=source)
 
         if self._can_send_ap_notification('_last_ap_notification_time'):
             previous_ap = None
@@ -271,6 +271,10 @@ class CoinTaskMixin:
         )
 
         logger.info(f'OperationCoinsReturnThreshold 配置值: {return_threshold_config}, CL1保留值: {cl1_preserve}')
+
+        if return_threshold_config == 0:
+            logger.info('OperationCoinsReturnThreshold 为 0，禁用黄币检查')
+            return None, cl1_preserve
         
         # 计算最终阈值：CL1 保留值 + 返回阈值
         return_threshold = (cl1_preserve or 0) + (return_threshold_config or 0)
@@ -422,7 +426,7 @@ class CoinTaskMixin:
                     meow_start_early = False
 
             if meow_start_early:
-                logger.info(f'MeowStartEarlyActive=True: skip OperationCoinsReturnThreshold yellow coin return check')
+                logger.info('MeowStartEarlyActive=True: skip OperationCoinsReturnThreshold yellow coin return check')
                 return False
         except Exception:
             # 配置接口异常时继续执行默认逻辑

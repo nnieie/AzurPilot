@@ -522,7 +522,7 @@ class IslandProjectRun(IslandUI):
 
             image = self.image_crop((0, 0, 910, 1280), copy=False)
             sim, click_button = self.get_character_template(character).match_result(image)
-            if sim > 0.9:
+            if sim > lower_template_match_similarity(0.9):
                 check_button = self.get_character_check_button(character)
                 return self._project_character_select(click_button, check_button)
             else:

@@ -2578,10 +2578,7 @@
       "TargetZone": 0,
       "StayInZone": false,
       "APPreserveUntilReset": false,
-      "SirenDetectorSearch_Enable": false,
-      "SirenDetectorSearch_HazardLevel": 5,
-      "SirenDetectorSearch_StopAfterFound": 1,
-      "SirenDetectorSearch_FoundZones": null
+      "SirenDetectorSearch_HazardLevel": 5
     },
     "OpsiSirenBug": {
       "SirenResearch_Enable": true,

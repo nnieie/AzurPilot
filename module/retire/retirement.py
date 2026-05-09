@@ -641,7 +641,7 @@ class Retirement(Enhancement, QuickRetireSettingHandler):
                 sim, button = template.match_result(
                     resize(self.device.image, size=(1189, 669)))
 
-                if sim > self.config.COMMON_CV_THRESHOLD:
+                if sim > lower_template_match_similarity(self.config.COMMON_CV_THRESHOLD):
                     return Button(button=tuple(_ * 155 // 144 for _ in button.button), area=button.area,
                                   color=button.color,
                                   name=f'TEMPLATE_{name}_RETIRE')
@@ -654,7 +654,7 @@ class Retirement(Enhancement, QuickRetireSettingHandler):
             sim, button = template.match_result(
                 resize(self.device.image, size=(1189, 669)))
 
-            if sim > self.config.COMMON_CV_THRESHOLD:
+            if sim > lower_template_match_similarity(self.config.COMMON_CV_THRESHOLD):
                 return Button(button=tuple(_ * 155 // 144 for _ in button.button), area=button.area, color=button.color,
                               name=f'TEMPLATE_{self.config.GemsFarming_CommonCV.upper()}_RETIRE')
 

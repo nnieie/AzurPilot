@@ -4633,23 +4633,11 @@
       "name": "OpsiMeowfficerFarming.APPreserveUntilReset.name",
       "help": "OpsiMeowfficerFarming.APPreserveUntilReset.help"
     },
-    "SirenDetectorSearch_Enable": {
-      "name": "OpsiMeowfficerFarming.SirenDetectorSearch_Enable.name",
-      "help": "OpsiMeowfficerFarming.SirenDetectorSearch_Enable.help"
-    },
     "SirenDetectorSearch_HazardLevel": {
       "name": "OpsiMeowfficerFarming.SirenDetectorSearch_HazardLevel.name",
       "help": "OpsiMeowfficerFarming.SirenDetectorSearch_HazardLevel.help",
       "5": "5",
       "6": "6"
-    },
-    "SirenDetectorSearch_StopAfterFound": {
-      "name": "OpsiMeowfficerFarming.SirenDetectorSearch_StopAfterFound.name",
-      "help": "OpsiMeowfficerFarming.SirenDetectorSearch_StopAfterFound.help"
-    },
-    "SirenDetectorSearch_FoundZones": {
-      "name": "OpsiMeowfficerFarming.SirenDetectorSearch_FoundZones.name",
-      "help": "OpsiMeowfficerFarming.SirenDetectorSearch_FoundZones.help"
     }
   },
   "OpsiTarget": {
@@ -5239,6 +5227,9 @@
       "SortieCost": "出击消耗",
       "AkashiEncounters": "遇见明石次数",
       "AkashiRate": "遇见明石概率",
+      "SirenResearchDevices": "吊机次数",
+      "SirenResearchRate": "吊机概率",
+      "HazardLevel": "侵蚀等级",
       "AverageAP": "平均体力",
       "NetAP": "净赚体力",
       "LoopEfficiency": "循环效率",

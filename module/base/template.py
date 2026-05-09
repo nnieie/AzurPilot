@@ -138,6 +138,7 @@ class Template(Resource):
         Returns:
             bool: If matches.
         """
+        similarity = lower_template_match_similarity(similarity)
         scaling = 1 / scaling
         if scaling != 1.0:
             image = cv2.resize(image, None, fx=scaling, fy=scaling)
@@ -171,6 +172,7 @@ class Template(Resource):
         Returns:
             bool: If matches.
         """
+        similarity = lower_template_match_similarity(similarity)
         if self.is_gif:
             # graying
             image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -189,6 +191,7 @@ class Template(Resource):
             return sim > similarity
 
     def match_luma(self, image, similarity=0.85):
+        similarity = lower_template_match_similarity(similarity)
         if self.is_gif:
             image = rgb2luma(image)
             return self._match_gif(image, self.image_luma, similarity)
@@ -254,6 +257,7 @@ class Template(Resource):
         Returns:
             list[Button]:
         """
+        similarity = lower_template_match_similarity(similarity)
         scaling = 1 / scaling
         if scaling != 1.0:
             image = cv2.resize(image, None, fx=scaling, fy=scaling)

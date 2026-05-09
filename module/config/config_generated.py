@@ -727,10 +727,7 @@ class GeneratedConfig:
     OpsiMeowfficerFarming_TargetZone = 0
     OpsiMeowfficerFarming_StayInZone = False
     OpsiMeowfficerFarming_APPreserveUntilReset = False
-    OpsiMeowfficerFarming_SirenDetectorSearch_Enable = False
     OpsiMeowfficerFarming_SirenDetectorSearch_HazardLevel = 5  # 5, 6
-    OpsiMeowfficerFarming_SirenDetectorSearch_StopAfterFound = 1
-    OpsiMeowfficerFarming_SirenDetectorSearch_FoundZones = None
 
     # Group `OpsiTarget`
     OpsiTarget_TargetFarming = False

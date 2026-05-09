@@ -4633,23 +4633,11 @@
       "name": "月末までアクティブに過ごしましょう",
       "help": "「X アクション ポイントを保持」設定で、オーバーワールド リセットまでの日数が減らなくなりました\n注: これらのアクションは、オンにすると、月をまたぐ日次タスクでのみ使用されます。この設定は、月をまたぐ日次タスクが有効になっていない場合は無効です。つまり、より高いメリットを得るには、これらのアクションを手動で使用する必要があります。"
     },
-    "SirenDetectorSearch_Enable": {
-      "name": "サイレン自動検知装置",
-      "help": "ショートキャット接続ミッション中にサイレン探知装置を自動検索し、発見した海域を記録します\n中部海域（海域5）のみを探索し、その他の海域は探索しない"
-    },
     "SirenDetectorSearch_HazardLevel": {
       "name": "サイレン検知装置の侵食レベル",
       "help": "中部海域では特定の浸食レベルの海域を時計回りに分類し、サイレン探知装置を見つけます。\n中部海域にはレベル5海域とレベル6海域しかありません。\n注：中部海域（地域5）のみが選択されており、他の地域の海域は選択されません。",
       "5": "5",
       "6": "6"
-    },
-    "SirenDetectorSearch_StopAfterFound": {
-      "name": "Xサイレン検知装置を見つけたら停止",
-      "help": "指定された数のサイレン検出デバイスを見つけて記録した後、検索を停止し、通常の short cat プロセスに戻ります (実際には、見つかった x 個のデバイスの数は、以下の記録テーブルによって決まります。記録テーブルが空の場合は、x 個のデバイスを見つけた後に停止します)。レコード内に y 個のデバイスがある場合、x-y デバイスが見つかった後に停止します。\n制限がないことを示すには 0 に設定すると、移動性が不十分になるまで検索が継続されます。"
-    },
-    "SirenDetectorSearch_FoundZones": {
-      "name": "サイレン探知装置の海域を発見",
-      "help": "サイレン探知装置が海域で発見された。該当海域のサイレン探知装置が使用されている場合、該当海域の記録を手動で削除することができます。"
     }
   },
   "OpsiTarget": {
@@ -5239,6 +5227,9 @@
       "SortieCost": "Sortie Cost",
       "AkashiEncounters": "Akashi Encounters",
       "AkashiRate": "Akashi Rate",
+      "SirenResearchDevices": "Siren Research Devices",
+      "SirenResearchRate": "Siren Research Rate",
+      "HazardLevel": "Corrosion Level",
       "AverageAP": "Average AP",
       "NetAP": "Net AP",
       "LoopEfficiency": "Loop Efficiency",

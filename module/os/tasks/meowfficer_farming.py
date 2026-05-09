@@ -53,7 +53,7 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
             if ':' in token:
                 level_text, zone_text = token.split(':', 1)
                 try:
-                    level = int(level_text.strip())
+                    int(level_text.strip())
                     zone_id = int(zone_text.strip())
                 except ValueError:
                     logger.warning(f'忽略非法分级海域记录: "{token}"')
@@ -219,27 +219,23 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
     def _meow_handle_traditional_zone(self):
         try:
             zone = self.name_to_zone(self.config.OpsiMeowfficerFarming_TargetZone)
-        except ScriptError:
+        except ScriptError as e:
             logger.warning(f'目标海域输入错误: {self.config.OpsiMeowfficerFarming_TargetZone}')
-            raise RequestHumanTakeover('输入海域无效，任务已停止')
+            raise RequestHumanTakeover('输入海域无效，任务已停止') from e
         else:
             logger.hr(f'OS meowfficer farming, zone_id={zone.zone_id}', level=1)
             self.globe_goto(zone, types='SAFE', refresh=True)
             self.fleet_set(self.config.OpsiFleet_Fleet)
-            # 开始短猫搜索计时
-            self._meow_searching_active = True
-            self._meow_time_recording_enabled = True
-            import time as time_module
-            self._meow_battle_timer = time_module.time()
-            self.on_meow_search_start()
-            if self.run_strategic_search():
-                self._solved_map_event = set()
-                self._solved_fleet_mechanism = False
-                self.clear_question()
-                self.map_rescan()
-            self.handle_after_auto_search()
-            # 结束短猫搜索计时
-            self.on_meow_search_end()
+            self.meow_search_metrics_start()
+            try:
+                if self.run_strategic_search():
+                    self._solved_map_event = set()
+                    self._solved_fleet_mechanism = False
+                    self.clear_question()
+                    self.map_rescan()
+                self.handle_after_auto_search()
+            finally:
+                self.meow_search_metrics_end()
             self.config.check_task_switch()
 
     def _meow_handle_stay_in_zone(self):
@@ -267,34 +263,28 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
         self.fleet_set(self.config.OpsiFleet_Fleet)
         self.os_order_execute(recon_scan=False, submarine_call=self.config.OpsiFleet_Submarine)
 
-        # 开始短猫搜索计时
-        self._meow_searching_active = True
-        self._meow_time_recording_enabled = True
-        import time as time_module
-        self._meow_battle_timer = time_module.time()
-        self.on_meow_search_start()
-
+        self.meow_search_metrics_start()
         search_completed = False
         try:
-            search_completed = self.run_strategic_search()
-        except TaskEnd:
-            raise
-        except Exception as e:
-            logger.warning(f'战略搜索异常: {e}')
+            try:
+                search_completed = self.run_strategic_search()
+            except TaskEnd:
+                raise
+            except Exception as e:
+                logger.warning(f'战略搜索异常: {e}')
 
-        if search_completed:
-            self._solved_map_event = set()
-            self._solved_fleet_mechanism = False
-            self.clear_question()
-            self.map_rescan()
+            if search_completed:
+                self._solved_map_event = set()
+                self._solved_fleet_mechanism = False
+                self.clear_question()
+                self.map_rescan()
 
-        try:
-            self.handle_after_auto_search()
-        except Exception:
-            logger.exception('handle_after_auto_search 发生异常')
-
-        # 结束短猫搜索计时
-        self.on_meow_search_end()
+            try:
+                self.handle_after_auto_search()
+            except Exception:
+                logger.exception('handle_after_auto_search 发生异常')
+        finally:
+            self.meow_search_metrics_end()
 
         self.config.check_task_switch()
         
@@ -384,12 +374,16 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
                         _restore_siren_search_state()
                         self.handle_after_auto_search()
 
-                    self.on_meow_search_end()
+                    self.meow_search_metrics_end()
                     self.config.check_task_switch()
                     return True
 
                 logger.info('探测装置搜索：全图扫描未发现装置')
-                self.run_auto_search()
+                self.meow_search_metrics_start()
+                try:
+                    self.run_auto_search()
+                finally:
+                    self.meow_search_metrics_end()
 
         _restore_siren_search_state()
 
@@ -413,19 +407,12 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
         self.fleet_set(self.config.OpsiFleet_Fleet)
         self.os_order_execute(recon_scan=False, submarine_call=self.config.OpsiFleet_Submarine)
 
-        # 开始短猫搜索计时
-        self._meow_searching_active = True
-        self._meow_time_recording_enabled = True
-        import time as time_module
-        self._meow_battle_timer = time_module.time()
-        self.on_meow_search_start()
-
-        self.run_auto_search()
-
-        self.handle_after_auto_search()
-
-        # 结束短猫搜索计时
-        self.on_meow_search_end()
+        self.meow_search_metrics_start()
+        try:
+            self.run_auto_search()
+            self.handle_after_auto_search()
+        finally:
+            self.meow_search_metrics_end()
 
         self.config.check_task_switch()
         

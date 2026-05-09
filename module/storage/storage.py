@@ -226,7 +226,7 @@ class StorageHandler(StorageUI):
 
             image = rgb2gray(self.device.image)
             sim, box_button = self._storage_box_template(rarity).match_result(image)
-            if sim > 0.9:
+            if sim > lower_template_match_similarity(0.9):
                 used += self._storage_use_one_box(box_button, amount)
                 continue
             else:

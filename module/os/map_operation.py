@@ -15,6 +15,15 @@ from module.os_handler.storage import StorageHandler
 from module.ui.assets import BACK_ARROW, OS_CHECK
 
 
+def _remove_zone_suffix(name, suffixes, trim_chars=''):
+    while trim_chars and any(name.endswith(char) for char in trim_chars):
+        name = name[:-1]
+    for suffix in suffixes:
+        if name.endswith(suffix):
+            return name[:-len(suffix)]
+    return name
+
+
 class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandler, OSFleetSelector):
     zone: Zone
     is_zone_name_hidden = False
@@ -101,7 +110,11 @@ class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandle
         if 'セ' in name:
             name = name.split('セ')[0]
         # Remove '安全海域' or '秘密海域' at the end of jp ocr.
-        name = name.rstrip('安全秘密異常要塞海域-')
+        name = _remove_zone_suffix(
+            name,
+            ('安全海域', '秘密海域', '異常海域', '要塞海域', '安全', '秘密', '異常', '要塞'),
+            trim_chars='-',
+        )
         # Kanji '一', '力' and '卜' are not used, while Katakana 'ー', 'カ' and 'ト' are misread as Kanji sometimes.
         # Katakana 'ペ' may be misread as Hiragana 'ぺ'.
         name = name.replace('一', 'ー').replace('力', 'カ').replace('卜', 'ト').replace('ぺ', 'ペ')
@@ -125,7 +138,11 @@ class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandle
         if '塞' in name:
             name = name.split('塞')[0]
         # Remove '安全海域', '隱秘海域', '深淵海域' at the end of tw ocr.
-        name = name.rstrip('安全隱秘塞壬要塞深淵海域一-')
+        name = _remove_zone_suffix(
+            name,
+            ('安全海域', '隱秘海域', '深淵海域', '塞壬要塞海域', '安全', '隱秘', '深淵'),
+            trim_chars='一-',
+        )
         return name
 
     @Config.when(SERVER=None)
@@ -138,7 +155,10 @@ class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandle
         if '-' in name:
             name = name.split('-')[0]
         else:
-            name = name.rstrip('安全隐秘塞壬要塞深渊海域-')
+            name = _remove_zone_suffix(
+                name,
+                ('安全海域', '隐秘海域', '深渊海域', '塞壬要塞海域', '安全', '隐秘', '深渊'),
+            )
         return name
 
     def get_current_zone(self):
@@ -155,7 +175,7 @@ class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandle
         try:
             self.zone = self.name_to_zone(name)
         except ScriptError as e:
-            raise MapDetectionError(*e.args)
+            raise MapDetectionError(*e.args) from e
         logger.attr('Zone', self.zone)
         self.zone_config_set()
         return self.zone

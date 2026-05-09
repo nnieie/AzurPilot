@@ -190,7 +190,7 @@ class OSGridPredictor(GridPredictor):
         area = area_pad((48, 48, 48 + 46, 48 + 46), pad=5)
         res = cv2.matchTemplate(ASSETS.tile_center_image, crop(self.image_homo, area=area, copy=False), cv2.TM_CCOEFF_NORMED)
         _, sim, _, _ = cv2.minMaxLoc(res)
-        if sim > 0.8:
+        if sim > lower_template_match_similarity(0.8):
             return True
 
         # tile = 135
@@ -318,7 +318,7 @@ class OSGridPredictor(GridPredictor):
         sim, button = TEMPLATE_FleetMechanism.match_result(image)
         point = (53, 37)
         distance = np.linalg.norm(np.subtract(button.area[:2], point))
-        if distance > 5 or sim < 0.3:
+        if distance > 5 or sim < lower_template_match_similarity(0.3):
             return False
 
         return True
