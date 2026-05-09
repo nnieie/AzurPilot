@@ -22,7 +22,7 @@ INVALID_PATH_CHARS = set('<>:"/\\|?*')
 DEFAULT_OPTIONS = {
     'enabled': False,
     'auto_calibration': False,
-    'consecutive_failures': 2,
+    'consecutive_failures': 1,
     'adb_cache_seconds': 0.75,
     'adb_min_interval': 1.0,
     'adb_miss_log_interval': 30.0,
@@ -174,6 +174,9 @@ class UsbCaptureGuard:
             return True
         if not self.enabled():
             return appear
+        candidate = self._fallback_candidate(button, mode)
+        if not candidate.get('eligible'):
+            return appear
 
         key = self._key(button, mode)
         count = self.failures.get(key, 0) + 1
@@ -208,6 +211,7 @@ class UsbCaptureGuard:
                     threshold=threshold,
                     area=getattr(button, 'area', None),
                     color=getattr(button, 'color', None),
+                    usb_candidate=candidate,
                     task=getattr(self.config, 'task', None),
                 )
             return appear
@@ -236,10 +240,12 @@ class UsbCaptureGuard:
             threshold=threshold,
             area=getattr(button, 'area', None),
             color=getattr(button, 'color', None),
+            usb_candidate=candidate,
             task=getattr(self.config, 'task', None),
             sample=(sample_info or {}).get('path'),
             sample_saved=bool(sample_info),
             raw_available=bool((sample_info or {}).get('raw_available')),
+            usable_for_calibration=bool((sample_info or {}).get('usable_for_calibration')),
             usb_shape=self._image_shape(usb_image),
             adb_shape=self._image_shape(adb),
         )
@@ -284,6 +290,30 @@ class UsbCaptureGuard:
 
     def _key(self, button, mode):
         return f'{mode}:{getattr(button, "name", str(button))}'
+
+    @staticmethod
+    def _fallback_candidate(button, mode):
+        if mode != 'match_template_color':
+            return {
+                'eligible': False,
+                'reason': 'mode_not_supported',
+                'mode': mode,
+            }
+
+        details = getattr(button, '_last_match_template_color', None)
+        if not isinstance(details, dict):
+            return {
+                'eligible': False,
+                'reason': 'missing_match_template_color_details',
+                'mode': mode,
+            }
+        eligible = bool(details.get('luma_match') and not details.get('color_match'))
+        return {
+            'eligible': eligible,
+            'reason': 'luma_match_color_mismatch' if eligible else 'not_color_false_negative',
+            'mode': mode,
+            'details': _jsonable(details),
+        }
 
     def _should_log_miss(self, key, count):
         now = time.time()
@@ -558,6 +588,7 @@ class UsbCaptureGuard:
             'offset': _jsonable(offset),
             'similarity': float(similarity),
             'threshold': float(threshold),
+            'usb_candidate': self._fallback_candidate(button, mode),
         }
         return self._save_image_sample(
             name=button_name,
@@ -603,7 +634,7 @@ class UsbCaptureGuard:
             data = {
                 'created_at': time.strftime('%Y-%m-%d %H:%M:%S'),
                 'config_name': self.config_name,
-                'task': getattr(self.config, 'task', None),
+                'task': str(getattr(self.config, 'task', None)),
                 'screenshot_method': getattr(self.config, 'Emulator_ScreenshotMethod', None),
                 'name': name,
                 'mode': mode,
@@ -619,6 +650,7 @@ class UsbCaptureGuard:
             if metadata:
                 data.update(metadata)
             data['sample_quality'] = sample_quality
+            data = _jsonable(data)
 
             with open(os.path.join(sample_dir, 'metadata.json'), 'w', encoding='utf-8') as file:
                 json.dump(data, file, indent=2, ensure_ascii=False)
