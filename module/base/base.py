@@ -9,7 +9,6 @@ from module.config.config import AzurLaneConfig
 from module.config.server import set_server, to_package
 from module.device.device import Device
 from module.device.method.utils import HierarchyButton
-from module.device.usb_capture_guard import usb_capture_guard_appear
 from module.logger import logger
 from module.map_detection.utils import fit_points
 from module.statistics.azurstats import AzurStats
@@ -224,21 +223,14 @@ class ModuleBase:
             if not self.interval_timer[button.name].reached():
                 return False
 
-        guard_mode = None
         if isinstance(button, HierarchyButton):
             appear = bool(button)
         elif offset:
             if isinstance(offset, bool):
                 offset = self.config.BUTTON_OFFSET
             appear = button.match(self.device.image, offset=offset, similarity=similarity)
-            guard_mode = 'match'
         else:
             appear = button.appear_on(self.device.image, threshold=threshold)
-            guard_mode = 'appear_on'
-
-        if guard_mode is not None:
-            appear = usb_capture_guard_appear(
-                self, button, appear, mode=guard_mode, offset=offset, similarity=similarity, threshold=threshold)
 
         if appear and interval:
             self.interval_timer[button.name].reset()
@@ -271,8 +263,6 @@ class ModuleBase:
 
         appear = button.match_template_color(
             self.device.image, offset=offset, similarity=similarity, threshold=threshold)
-        appear = usb_capture_guard_appear(
-            self, button, appear, mode='match_template_color', offset=offset, similarity=similarity, threshold=threshold)
 
         if appear and interval:
             self.interval_timer[button.name].reset()
@@ -453,8 +443,6 @@ class ModuleBase:
         elif isinstance(value, str):
             value = load_image(value)
 
-        width, height = image_size(value)
-        set_template_match_non_native_720p(width != 1280 or height != 720)
         self.device.image = value
 
     def set_server(self, server):

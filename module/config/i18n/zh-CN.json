@@ -536,14 +536,6 @@
       "name": "USB色彩校准C加速",
       "help": "开启后，lut3d色彩校准会强制加载dev_tools/usb_capture_lut_accel.dll。DLL缺失或加载失败会直接报错；关闭后使用Python/NumPy校准。"
     },
-    "UsbCaptureAdbFallback": {
-      "name": "USB识别失败时使用ADB截图兜底",
-      "help": "开启后，当USB画面连续识别不到同一个按钮或模板时，Alas会低频抓取一张ADB截图作为判断参考。只在截图方式为usb_capture时生效。"
-    },
-    "UsbCaptureAutoCalibration": {
-      "name": "自动收集失败样本并更新USB校色",
-      "help": "开启后，ADB兜底成功的失败样本会自动保存，并在后台校验、拟合新的USB校色文件。只有安全检查通过才会写入，写入后USB采集服务会自动热重载，无需重启脚本。"
-    },
     "UsbCaptureLockPreviewAspect": {
       "name": "锁定USB预览窗口比例",
       "help": "开启后，USB预览会保持1280x720比例显示，窗口比例不匹配时会出现黑边，避免画面被拉伸。"
@@ -4632,6 +4624,24 @@
     "APPreserveUntilReset": {
       "name": "月底重置强制消耗行动力",
       "help": "在大世界重置前，自动将保留行动力设为0，以确保存余行动力被消耗。建议配合侵蚀1练级使用。"
+    },
+    "SirenDetectorSearch_Enable": {
+      "name": "自动寻找塞壬探测装置",
+      "help": "在短猫相接任务中自动寻找塞壬探测装置，并记录找到的海域\n仅在中心海域中寻找，不会在其他区域寻找"
+    },
+    "SirenDetectorSearch_HazardLevel": {
+      "name": "塞壬探测装置侵蚀等级",
+      "help": "在中心海域中按顺时针出击特定侵蚀等级的海域来寻找塞壬探测装置\n中心海域只有五和六级海域\n注意：只在中心海域（region 5）中选择，不会选择其他区域的海域",
+      "5": "5",
+      "6": "6"
+    },
+    "SirenDetectorSearch_StopAfterFound": {
+      "name": "寻找 X 个塞壬探测装置后停止",
+      "help": "寻找并记录到指定数量的塞壬探测装置后，停止搜索并回到正常短猫流程。\n统计和停止条件按当前所选侵蚀等级（5级/6级）分别计算，不会混算。\n警告：此项最小值为 1，不可填写 0。\n中心海域中 5 级海域有 4 个，6 级海域有 4 个。填写数量不能大于当前所选侵蚀等级的实际海域数量（最大 4）。"
+    },
+    "SirenDetectorSearch_FoundZones": {
+      "name": "已找到的塞壬探测装置海域",
+      "help": "已找到的塞壬探测装置海域，会按侵蚀等级分开记录并分开排除。若对应海域的塞壬探测装置已经被使用，可手动删除该海域记录。"
     }
   },
   "OpsiTarget": {
@@ -5221,9 +5231,6 @@
       "SortieCost": "出击消耗",
       "AkashiEncounters": "遇见明石次数",
       "AkashiRate": "遇见明石概率",
-      "SirenResearchDevices": "吊机次数",
-      "SirenResearchRate": "吊机概率",
-      "HazardLevel": "侵蚀等级",
       "AverageAP": "平均体力",
       "NetAP": "净赚体力",
       "LoopEfficiency": "循环效率",

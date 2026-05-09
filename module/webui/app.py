@@ -64,7 +64,6 @@ from module.config.utils import (
     readable_time,
 )
 from module.config.utils import time_delta
-from module.device.usb_capture_guard_stats import format_usb_capture_guard_help
 from module.log_res.log_res import LogRes
 from module.logger import logger
 from module.log_res import LogRes
@@ -662,19 +661,6 @@ class AlasGUI(Frame):
                 akashi_rate = "-"
 
             try:
-                siren_research = int(s.get("siren_research_devices", 0) or 0)
-            except Exception:
-                siren_research = 0
-
-            try:
-                if isinstance(rounds, int) and rounds > 0:
-                    siren_research_rate = f"{siren_research / float(rounds) * 100:.2f}%"
-                else:
-                    siren_research_rate = "-"
-            except Exception:
-                siren_research_rate = "-"
-
-            try:
                 ap_bought = compute_monthly_cl1_akashi_ap(instance_name=instance_name)
             except Exception:
                 ap_bought = "-"
@@ -736,62 +722,66 @@ class AlasGUI(Frame):
                 today_exp_str = "-"
                 today_run_str = "-"
 
-            labels = [t("Gui.Stat.Month"), t("Gui.Stat.BattleCount"), t("Gui.Stat.BattleRounds"), t("Gui.Stat.SortieCost"), t("Gui.Stat.AkashiEncounters"), t("Gui.Stat.AkashiRate"), t("Gui.Stat.SirenResearchDevices"), t("Gui.Stat.SirenResearchRate"), t("Gui.Stat.AverageAP"), t("Gui.Stat.NetAP"), t("Gui.Stat.LoopEfficiency"), t("Gui.Stat.ExpEfficiencyHeader"), t("Gui.Stat.AvgBattleTimeHeader"), t("Gui.Stat.AvgRoundTime"), t("Gui.Stat.TodayBattlesHeader"), t("Gui.Stat.TodayExpHeader"), t("Gui.Stat.TodayRunHeader")]
+            labels = [t("Gui.Stat.Month"), t("Gui.Stat.BattleCount"), t("Gui.Stat.BattleRounds"), t("Gui.Stat.SortieCost"), t("Gui.Stat.AkashiEncounters"), t("Gui.Stat.AkashiRate"), t("Gui.Stat.AverageAP"), t("Gui.Stat.NetAP"), t("Gui.Stat.LoopEfficiency"), t("Gui.Stat.ExpEfficiencyHeader"), t("Gui.Stat.AvgBattleTimeHeader"), t("Gui.Stat.AvgRoundTime"), t("Gui.Stat.TodayBattlesHeader"), t("Gui.Stat.TodayExpHeader"), t("Gui.Stat.TodayRunHeader")]
 
-            values = [month, tb, rounds, sortie_cost, ak, akashi_rate, siren_research, siren_research_rate, avg_ap, net_ap, loop_eff, exp_per_hour_str, avg_cl1_battle_str, avg_cl1_round_str, today_battles, today_exp_str, today_run_str]
+            values = [month, tb, rounds, sortie_cost, ak, akashi_rate, avg_ap, net_ap, loop_eff, exp_per_hour_str, avg_cl1_battle_str, avg_cl1_round_str, today_battles, today_exp_str, today_run_str]
+
+            table = [labels, values]
 
             with use_scope("opsi_stats", clear=True):
                 put_html(build_title_block(t("Gui.Stat.OpsiDataCollectionTitle")))
                 put_row([put_text(t("Gui.Stat.MonthlyPurchasedAP", value=ap_bought))])
                 put_html(build_simple_table(labels, [values]))
 
-                # 防缓存: 每次渲染生成唯一时间戳，确保前端不会复用旧表格 DOM。
-                meow_refresh_token = int(time.time() * 1000)
-
                 # ========== 短猫统计数据 ==========
-                meow_rows = []
                 try:
                     from datetime import datetime
                     now = datetime.now()
-                    for hazard_level in (3, 5):
-                        meow_data = cl1_db.get_meow_stats(
-                            instance_name or "default",
-                            now.year,
-                            now.month,
-                            hazard_level=hazard_level,
-                        )
-                        meow_effective_rounds = float(meow_data.get("effective_rounds", 0) or 0)
-                        meow_rounds = round(meow_effective_rounds, 1)
-                        if abs(meow_rounds - int(meow_rounds)) < 1e-6:
-                            meow_rounds = int(meow_rounds)
+                    meow_data = cl1_db.get_meow_stats(instance_name or "default", now.year, now.month)
+                except Exception as e:
+                    meow_data = {}
 
-                        meow_avg_time = float(meow_data.get("avg_round_time", 0.0) or 0)
-                        meow_avg_battle_time = float(meow_data.get("avg_battle_time", 0.0) or 0)
-                        siren_count = int(meow_data.get("siren_research_devices", 0) or 0)
-                        siren_rate = float(meow_data.get("siren_research_rate", 0.0) or 0)
+                # 防缓存: 每次渲染生成唯一时间戳，确保前端不会复用旧表格 DOM。
+                meow_refresh_token = int(time.time() * 1000)
 
-                        avg_time_str = f"{meow_avg_time:.1f}{t('Gui.Stat.SecondUnit')}" if meow_avg_time > 0 else "-"
-                        avg_battle_time_str = f"{meow_avg_battle_time:.1f}{t('Gui.Stat.SecondUnit')}" if meow_avg_battle_time > 0 else "-"
-                        siren_rate_str = f"{siren_rate * 100:.2f}%" if meow_effective_rounds > 0 else "-"
+                meow_battle_count = int(meow_data.get("battle_count", 0) or 0)
+                meow_effective_rounds = float(meow_data.get("effective_rounds", 0) or 0)
 
-                        meow_rows.append([
-                            meow_data.get("month", "-"),
-                            hazard_level,
-                            int(meow_data.get("battle_count", 0) or 0),
-                            meow_rounds,
-                            avg_battle_time_str,
-                            avg_time_str,
-                            siren_count,
-                            siren_rate_str,
-                        ])
+                meow_avg_time = meow_data.get("avg_round_time", 0.0)
+                try:
+                    meow_avg_battle_time = exp_stats.get_average_meow_battle_time()
                 except Exception:
-                    meow_rows = []
+                    meow_avg_battle_time = meow_data.get("avg_battle_time", 0.0)
 
-                meow_labels = [t("Gui.Stat.Month"), t("Gui.Stat.HazardLevel"), t("Gui.Stat.BattleCount"), t("Gui.Stat.MeowRounds"), t("Gui.Stat.AvgBattleTimeHeader"), t("Gui.Stat.AvgMeowRoundTime"), t("Gui.Stat.SirenResearchDevices"), t("Gui.Stat.SirenResearchRate")]
+                try:
+                    meow_rounds = round(meow_effective_rounds, 1)
+                    if abs(meow_rounds - int(meow_rounds)) < 1e-6:
+                        meow_rounds = int(meow_rounds)
+                except Exception:
+                    meow_rounds = 0
+
+                if meow_data.get("round_times"):
+                    avg_time_str = f"{meow_avg_time:.1f}{t('Gui.Stat.SecondUnit')}"
+                else:
+                    avg_time_str = "-"
+
+                if meow_avg_battle_time > 0:
+                    avg_battle_time_str = f"{meow_avg_battle_time:.1f}{t('Gui.Stat.SecondUnit')}"
+                else:
+                    avg_battle_time_str = "-"
+
+                meow_values = [
+                    meow_data.get("month", "-"),
+                    meow_battle_count,
+                    meow_rounds,
+                    avg_battle_time_str,  # 平均单场战斗时间
+                    avg_time_str,         # 平均一轮短猫时长
+                ]
+                meow_labels = [t("Gui.Stat.Month"), t("Gui.Stat.BattleCount"), t("Gui.Stat.MeowRounds"), t("Gui.Stat.AvgBattleTimeHeader"), t("Gui.Stat.AvgMeowRoundTime")]
 
                 put_html(build_title_block(t("Gui.Stat.MeowDataCollectionTitle"), margin_top=20, margin_bottom=8))
                 put_html(f"<!-- meow-stats-refresh-token:{meow_refresh_token} -->")
-                put_html(build_simple_table(meow_labels, meow_rows))
+                put_html(build_simple_table(meow_labels, [meow_values]))
 
                 # ========== 短猫相接收获 ==========
                 put_scope("meow_loot_scope")
@@ -1566,8 +1556,6 @@ class AlasGUI(Frame):
             arg_help = t(f"{group_name}.{arg_name}.help")
             if arg_help == "" or not arg_help:
                 arg_help = None
-            if task == "Alas" and group_name == "Emulator":
-                arg_help = format_usb_capture_guard_help(getattr(self, 'alas_name', 'alas'), arg_name, arg_help)
             output_kwargs["help"] = arg_help
             # Invalid feedback
             output_kwargs["invalid_feedback"] = t("Gui.Text.InvalidFeedBack", value)

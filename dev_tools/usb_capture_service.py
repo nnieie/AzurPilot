@@ -513,9 +513,6 @@ class CaptureService:
         self.last_mouse_move_time = 0.0
         self.remote_control_retry_time = 0.0
         self.color_correction = None
-        self.color_correction_path = None
-        self.color_correction_mtime = None
-        self.last_color_correction_check = 0.0
         self.usb_capture_c_accel = True
         self.recent_frame_request_time = 0.0
         self.precorrect_interval = None
@@ -552,42 +549,10 @@ class CaptureService:
         cap = open_capture(device, backend, codec, width, height, fps, buffer_size=1)
         self.mode = mode_text(cap)
         print(f'Actual mode: {self.mode}', flush=True)
-        self.reload_color_correction(force=True)
+        self.color_correction = load_usb_color_correction(self.config_name, use_c_accel=self.usb_capture_c_accel)
+        if self.color_correction is not None:
+            print(f'USB color correction loaded: {self.color_correction["path"]}', flush=True)
         return cap
-
-    def color_correction_file_state(self):
-        path = color_correction_path(self.config_name)
-        legacy_path = legacy_color_correction_path(self.config_name)
-        if not os.path.exists(path) and os.path.exists(legacy_path):
-            path = legacy_path
-        if not os.path.exists(path):
-            return None, None
-        return path, os.path.getmtime(path)
-
-    def reload_color_correction(self, force=False):
-        path, mtime = self.color_correction_file_state()
-        if not force and path == self.color_correction_path and mtime == self.color_correction_mtime:
-            return
-        try:
-            correction = load_usb_color_correction(self.config_name, use_c_accel=self.usb_capture_c_accel)
-        except Exception as e:
-            print(f'USB color correction reload failed, keep previous calibration: {e}', flush=True)
-            return
-
-        self.color_correction = correction
-        self.color_correction_path = path
-        self.color_correction_mtime = mtime
-        if correction is not None:
-            print(f'USB color correction loaded: {correction["path"]}', flush=True)
-        elif path is not None:
-            print(f'USB color correction disabled: {path}', flush=True)
-
-    def maybe_reload_color_correction(self):
-        now = time.time()
-        if now - self.last_color_correction_check < 1.0:
-            return
-        self.last_color_correction_check = now
-        self.reload_color_correction()
 
     def convert_frame(self, frame):
         if frame.ndim == 2:
@@ -606,7 +571,6 @@ class CaptureService:
         return np.ascontiguousarray(resize_like_alas(frame, *DEFAULT_OUTPUT_SIZE))
 
     def correct_capture_frame(self, frame, profile=None):
-        self.maybe_reload_color_correction()
         start = time.perf_counter()
         if self.color_correction is not None and self.color_correction.get('model') == 'lut3d':
             frame = self.normalize_capture_frame_bgr(frame)
@@ -1271,47 +1235,8 @@ def send_minitouch_fast(device, builder):
     builder.clear()
 
 
-def _attach_existing_service(config_name='alas', preview=False, stop_event=None):
-    if not ping_service(config_name):
-        return False
-    if not preview:
-        return True
-
-    try:
-        set_preview(config_name, True)
-    except Exception:
-        return False
-
-    stop_event = stop_event or threading.Event()
-    try:
-        while not stop_event.is_set():
-            time.sleep(0.5)
-            if not ping_service(config_name):
-                return False
-        return True
-    finally:
-        try:
-            set_preview(config_name, False)
-        except Exception:
-            pass
-
-
 def run_service(config_name='alas', preview=False, stop_event=None):
-    deadline = time.time() + 2.0
-    while time.time() < deadline:
-        if _attach_existing_service(config_name=config_name, preview=preview, stop_event=stop_event):
-            return
-        time.sleep(0.1)
-
-    try:
-        CaptureService(config_name=config_name, preview=preview, stop_event=stop_event).run()
-    except OSError:
-        deadline = time.time() + 5.0
-        while time.time() < deadline:
-            if _attach_existing_service(config_name=config_name, preview=preview, stop_event=stop_event):
-                return
-            time.sleep(0.1)
-        raise
+    CaptureService(config_name=config_name, preview=preview, stop_event=stop_event).run()
 
 
 def main():

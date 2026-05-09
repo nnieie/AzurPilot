@@ -6,7 +6,6 @@ from module.os_handler.assets import *
 from module.os_handler.map_event import MapEventHandler
 from module.base.timer import Timer
 from module.exception import GameBugError
-from module.statistics.opsi_runtime import finish_battle_timer, start_battle_timer
 
 
 class ContinuousCombat(Exception):
@@ -237,9 +236,26 @@ class Combat(Combat_, MapEventHandler):
             in: is_combat_loading()
             out: combat status
         """
-        # Keep combat focused on state transitions; the metrics layer decides
-        # whether this task should produce CL1/short-meow timing samples.
-        battle_timer_source = start_battle_timer(self.config)
+        # 记录战斗开始时间用于统计 (侵蚀1 / 短猫任务)
+        _is_cl1_battle = False
+        _is_meow_battle = False
+        _instance_name = None
+        try:
+            if hasattr(self, 'config') and hasattr(self.config, 'task'):
+                task_cmd = self.config.task.command
+                if task_cmd == 'OpsiHazard1Leveling':
+                    _is_cl1_battle = True
+                    _instance_name = self.config.config_name if hasattr(self.config, 'config_name') else None
+                    from module.statistics.ship_exp_stats import get_ship_exp_stats
+                    get_ship_exp_stats(instance_name=_instance_name).on_battle_start()
+                elif task_cmd == 'OpsiMeowfficerFarming':
+                    _is_meow_battle = True
+                    _instance_name = self.config.config_name if hasattr(self.config, 'config_name') else None
+                    from module.statistics.ship_exp_stats import get_ship_exp_stats
+                    # 短猫战斗开始计时
+                    get_ship_exp_stats(instance_name=_instance_name).on_battle_start()
+        except Exception:
+            pass
         
         cl1_combat_timer = Timer(300, count=300)
         
@@ -271,14 +287,14 @@ class Combat(Combat_, MapEventHandler):
         if self.config.Submarine_Fleet:
             submarine_mode = self.config.Submarine_Mode
 
-        if battle_timer_source == 'cl1':
+        if _is_cl1_battle:
             cl1_combat_timer.start()
 
         success = True
         while 1:
             self.device.screenshot()
 
-            if battle_timer_source == 'cl1' and cl1_combat_timer.reached():
+            if _is_cl1_battle and cl1_combat_timer.reached():
                 logger.warning('CL1 combat timeout (5 minutes limit reached)')
                 raise GameBugError('CL1 combat timeout')
 
@@ -306,8 +322,13 @@ class Combat(Combat_, MapEventHandler):
             
         logger.info('Combat end.')
         
-        # Finish through the same metrics source so CL1 and short-meow samples
-        # cannot accidentally share a storage key.
-        finish_battle_timer(self.config, battle_timer_source)
+        # 记录战斗结束，统计耗时 (侵蚀1 / 短猫)
+        try:
+            if _is_cl1_battle or _is_meow_battle:
+                from module.statistics.ship_exp_stats import get_ship_exp_stats
+                source = "cl1" if _is_cl1_battle else "meow"
+                get_ship_exp_stats(instance_name=_instance_name).on_battle_end(source=source)
+        except Exception:
+            pass
         
         return success

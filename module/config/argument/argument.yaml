@@ -116,8 +116,6 @@ Emulator:
   UsbCaptureHeight: 720
   UsbCaptureFps: 30
   UsbCaptureCAccel: true
-  UsbCaptureAdbFallback: true
-  UsbCaptureAutoCalibration: true
   UsbCaptureLockPreviewAspect: true
   UsbCapturePreviewWidth: 960
   UsbCapturePreviewHeight: 540
@@ -1169,6 +1167,16 @@ OpsiMeowfficerFarming:
     value: 0
   StayInZone: false
   APPreserveUntilReset: false
+  SirenDetectorSearch_Enable: false
+  SirenDetectorSearch_HazardLevel:
+    value: 5
+    option: [5, 6]
+  SirenDetectorSearch_StopAfterFound:
+    value: 1
+    validate: ^[1-4]$
+  SirenDetectorSearch_FoundZones:
+    type: textarea
+    value: ""
 OpsiTarget:
   TargetFarming: false
   TargetZone:

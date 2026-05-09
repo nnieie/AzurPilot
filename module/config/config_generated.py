@@ -96,8 +96,6 @@ class GeneratedConfig:
     Emulator_UsbCaptureHeight = 720
     Emulator_UsbCaptureFps = 30
     Emulator_UsbCaptureCAccel = True
-    Emulator_UsbCaptureAdbFallback = True
-    Emulator_UsbCaptureAutoCalibration = True
     Emulator_UsbCaptureLockPreviewAspect = True
     Emulator_UsbCapturePreviewWidth = 960
     Emulator_UsbCapturePreviewHeight = 540
@@ -727,6 +725,10 @@ class GeneratedConfig:
     OpsiMeowfficerFarming_TargetZone = 0
     OpsiMeowfficerFarming_StayInZone = False
     OpsiMeowfficerFarming_APPreserveUntilReset = False
+    OpsiMeowfficerFarming_SirenDetectorSearch_Enable = False
+    OpsiMeowfficerFarming_SirenDetectorSearch_HazardLevel = 5  # 5, 6
+    OpsiMeowfficerFarming_SirenDetectorSearch_StopAfterFound = 1
+    OpsiMeowfficerFarming_SirenDetectorSearch_FoundZones = None
 
     # Group `OpsiTarget`
     OpsiTarget_TargetFarming = False

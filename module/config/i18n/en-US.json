@@ -536,14 +536,6 @@
       "name": "USB Color Calibration C Acceleration",
       "help": "When enabled, lut3d color calibration requires dev_tools/usb_capture_lut_accel.dll. Missing or failed DLL loading raises an error. When disabled, Python/NumPy calibration is used."
     },
-    "UsbCaptureAdbFallback": {
-      "name": "Use ADB Screenshot Fallback for USB Recognition",
-      "help": "When enabled, if the same button or template repeatedly fails on the USB frame, Alas captures a low-frequency ADB screenshot as a reference judge. Only works when ScreenshotMethod is usb_capture."
-    },
-    "UsbCaptureAutoCalibration": {
-      "name": "Auto Collect Failure Samples and Update USB Calibration",
-      "help": "When enabled, failure samples recovered by ADB fallback are saved and a background safety-checked USB color calibration is fitted. The calibration is written only when checks pass and the USB capture service hot-reloads it without restarting Alas."
-    },
     "UsbCaptureLockPreviewAspect": {
       "name": "Lock USB Preview Aspect Ratio",
       "help": "When enabled, the USB preview keeps the 1280x720 aspect ratio and uses black bars when the window shape does not match, avoiding stretched video."
@@ -4632,6 +4624,24 @@
     "APPreserveUntilReset": {
       "name": "Preserve Action Points Until End of Month",
       "help": "'Preserve X Action Points' setting will no longer decrease before Operation Siren reset.\nNote: Once enabled, these AP will only be consumed in cross-month daily tasks. This setting is invalid when cross-month daily tasks are not enabled, which means you need to manually use these AP to obtain higher benefits."
+    },
+    "SirenDetectorSearch_Enable": {
+      "name": "Auto Search Siren Detection Device",
+      "help": "Automatically search for Siren Detection Devices during the Meowfficer Farming mission and record found zones\nOnly searches in the Central Sea Zone (region 5), not in other regions"
+    },
+    "SirenDetectorSearch_HazardLevel": {
+      "name": "Siren Detection Device Corrosion Level",
+      "help": "In the Central Sea Zone, search zones with specific Corrosion levels clockwise to find Siren Detection Devices.\nThe Central Sea Zone only has Level 5 and Level 6 zones.\nNote: Only selects Central Sea Zone (region 5), zones in other regions will not be selected.",
+      "5": "5",
+      "6": "6"
+    },
+    "SirenDetectorSearch_StopAfterFound": {
+      "name": "Stop After Finding X Siren Detection Devices",
+      "help": "After finding and recording the specified number of Siren Detection Devices, stop the search and return to the normal Meowfficer Farming process. (The actual count is determined by the record table below. If the record table is empty, stops after finding X devices. If there are Y devices in the record, stops after finding X-Y devices.)\nSet to 0 for no limit, search will continue until AP is insufficient."
+    },
+    "SirenDetectorSearch_FoundZones": {
+      "name": "Found Siren Detection Device Zones",
+      "help": "Zones where Siren Detection Devices have been found. If the device in a zone has been used, you can manually delete that zone's record."
     }
   },
   "OpsiTarget": {
@@ -5221,9 +5231,6 @@
       "SortieCost": "Sortie Cost",
       "AkashiEncounters": "Akashi Encounters",
       "AkashiRate": "Akashi Rate",
-      "SirenResearchDevices": "Siren Research Devices",
-      "SirenResearchRate": "Siren Research Rate",
-      "HazardLevel": "Corrosion Level",
       "AverageAP": "Average AP",
       "NetAP": "Net AP",
       "LoopEfficiency": "Loop Efficiency",

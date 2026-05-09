@@ -103,13 +103,13 @@ class ZoneManager:
         elif isinstance(name, int):
             try:
                 return self.zones.select(zone_id=name)[0]
-            except IndexError as e:
-                raise ScriptError(f'Unable to find OS globe zone: {name}') from e
+            except IndexError:
+                raise ScriptError(f'Unable to find OS globe zone: {name}')
         elif isinstance(name, str) and name.isdigit():
             try:
                 return self.zones.select(zone_id=int(name))[0]
-            except IndexError as e:
-                raise ScriptError(f'Unable to find OS globe zone: {name}') from e
+            except IndexError:
+                raise ScriptError(f'Unable to find OS globe zone: {name}')
         else:
             def parse_name(n):
                 n = str(n).replace(' ', '').lower()

@@ -1,4 +1,3 @@
-import copy
 import re
 
 import numpy as np
@@ -8,7 +7,6 @@ from module.base.decorator import Config, cached_property
 from module.base.filter import Filter
 from module.base.timer import Timer
 from module.combat.assets import GET_ITEMS_1, GET_ITEMS_3, GET_SHIP
-from module.device.usb_capture_guard import usb_capture_guard_get_adb_image, usb_capture_guard_record_image_recovery
 from module.logger import logger
 from module.shop.assets import *
 from module.shop.shop_select_globals import *
@@ -172,7 +170,6 @@ class ShopBase(UI):
         """
         Detect items on image for testing purpose
         """
-        from_device = image is None
         if image is None:
             image = self.device.image
 
@@ -197,13 +194,6 @@ class ShopBase(UI):
             price=True,
             tag=False
         )
-        if from_device:
-            self._shop_guard_items(
-                shop_items=shop_items,
-                usb_image=image,
-                usb_items=shop_items.items,
-                context='detect',
-            )
 
         # Log final result on predicted items
         items = shop_items.items
@@ -289,20 +279,13 @@ class ShopBase(UI):
                 price=True,
                 tag=False
             )
-            items = shop_items.items
 
             if timeout.reached():
                 logger.warning('Items loading timeout; continue and assumed has loaded')
                 break
 
             # Check unloaded items, because AL loads items too slow.
-            if self._shop_known_count(items) == 0:
-                items, _ = self._shop_guard_items(
-                    shop_items=shop_items,
-                    usb_image=self.device.image,
-                    usb_items=items,
-                    context='loading',
-                )
+            items = shop_items.items
             known = len([item for item in items if item.is_known_item])
             logger.attr('Item detected', known)
             if known == 0 or known != record:
@@ -314,13 +297,6 @@ class ShopBase(UI):
             # End
             if self.shop_has_loaded(items):
                 break
-
-        self._shop_guard_items(
-            shop_items=shop_items,
-            usb_image=self.device.image,
-            usb_items=shop_items.items,
-            context='final',
-        )
 
         # Log final result on predicted items
         items = shop_items.items
@@ -335,117 +311,6 @@ class ShopBase(UI):
         else:
             logger.info('No shop items found')
             return []
-
-    @staticmethod
-    def _shop_item_is_known(item):
-        value = getattr(item, 'is_known_item', False)
-        return value() if callable(value) else bool(value)
-
-    @classmethod
-    def _shop_known_count(cls, items):
-        return len([item for item in items if cls._shop_item_is_known(item)])
-
-    @classmethod
-    def _shop_items_score(cls, items):
-        known = cls._shop_known_count(items)
-        priced = len([item for item in items if getattr(item, 'price', 0) > 0])
-        books = len([
-            item for item in items
-            if getattr(item, 'group', None) == 'book'
-            and getattr(item, 'sub_genre', None)
-            and getattr(item, 'tier', None)
-        ])
-        return known, priced, books, len(items)
-
-    @staticmethod
-    def _shop_items_signature(items):
-        return [str(item) for item in items]
-
-    @staticmethod
-    def _shop_focus_areas(items):
-        focus = []
-        for item in items:
-            button = getattr(item, '_button', None)
-            area = getattr(button, 'area', None)
-            if area is None:
-                continue
-            focus.append({
-                'name': str(item),
-                'area': list(area),
-            })
-        return focus
-
-    @staticmethod
-    def _shop_items_clone(shop_items):
-        clone = copy.copy(shop_items)
-        clone.items = []
-        for name in (
-                'colors',
-                'templates',
-                'templates_hit',
-                'cost_templates',
-                'cost_templates_hit',
-        ):
-            if hasattr(shop_items, name):
-                setattr(clone, name, dict(getattr(shop_items, name)))
-        return clone
-
-    @staticmethod
-    def _shop_predict_items(shop_items, image):
-        return shop_items.predict(
-            image,
-            name=True,
-            amount=False,
-            cost=True,
-            price=True,
-            tag=False,
-        )
-
-    def _shop_guard_items(self, shop_items, usb_image, usb_items, context='shop'):
-        adb_image = usb_capture_guard_get_adb_image(self, usb_image=usb_image)
-        if adb_image is None:
-            return usb_items, False
-
-        judge = self._shop_items_clone(shop_items)
-        try:
-            adb_items = self._shop_predict_items(judge, adb_image)
-        except Exception as e:
-            logger.warning(f'USB capture guard shop item judge failed: {e}')
-            return usb_items, False
-
-        usb_score = self._shop_items_score(usb_items)
-        adb_score = self._shop_items_score(adb_items)
-        usb_signature = self._shop_items_signature(usb_items)
-        adb_signature = self._shop_items_signature(adb_items)
-
-        if not adb_items or adb_score < usb_score or adb_signature == usb_signature:
-            return usb_items, False
-
-        shop_items.items = adb_items
-        logger.warning(
-            f'USB capture guard using ADB shop item result ({context}), '
-            f'USB={usb_signature}, ADB={adb_signature}'
-        )
-        usb_capture_guard_record_image_recovery(
-            self,
-            name='SHOP_ITEMS',
-            mode=f'shop_items_{context}',
-            usb_image=usb_image,
-            adb_image=adb_image,
-            metadata={
-                'context': context,
-                'usb_items': usb_signature,
-                'adb_items': adb_signature,
-                'usb_score': usb_score,
-                'adb_score': adb_score,
-                'focus_areas': self._shop_focus_areas(adb_items),
-                'grid': getattr(getattr(shop_items, 'grids', None), 'name', None),
-                'template_area': getattr(shop_items, 'template_area', None),
-                'cost_area': getattr(shop_items, 'cost_area', None),
-                'price_area': getattr(shop_items, 'price_area', None),
-            },
-        )
-        return shop_items.items, True
 
     def shop_check_item(self, item):
         """

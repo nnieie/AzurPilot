@@ -1,14 +1,7 @@
 name: Sync Fork with Upstream
 
 on:
-  schedule:
-    - cron: '0 */12 * * *'
   workflow_dispatch:
-  push:
-    branches:
-      - master
-    paths-ignore:
-      - '.github/workflows/**'
 
 jobs:
   sync:

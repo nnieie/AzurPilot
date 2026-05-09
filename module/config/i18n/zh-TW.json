@@ -536,14 +536,6 @@
       "name": "USB色彩校準C加速",
       "help": "開啟後，lut3d色彩校準會強制載入dev_tools/usb_capture_lut_accel.dll。DLL缺失或載入失敗會直接報錯；關閉後使用Python/NumPy校準。"
     },
-    "UsbCaptureAdbFallback": {
-      "name": "USB識別失敗時使用ADB截圖兜底",
-      "help": "開啟後，當USB畫面連續識別不到同一個按鈕或模板時，Alas會低頻抓取一張ADB截圖作為判斷參考。只在截圖方式為usb_capture時生效。"
-    },
-    "UsbCaptureAutoCalibration": {
-      "name": "自動收集失敗樣本並更新USB校色",
-      "help": "開啟後，ADB兜底成功的失敗樣本會自動保存，並在後台校驗、擬合新的USB校色檔案。只有安全檢查通過才會寫入，寫入後USB採集服務會自動熱重載，無需重啟腳本。"
-    },
     "UsbCaptureLockPreviewAspect": {
       "name": "鎖定USB預覽視窗比例",
       "help": "開啟後，USB預覽會保持1280x720比例顯示，視窗比例不符合時會出現黑邊，避免畫面被拉伸。"
@@ -4632,6 +4624,24 @@
     "APPreserveUntilReset": {
       "name": "OpsiMeowfficerFarming.APPreserveUntilReset.name",
       "help": "OpsiMeowfficerFarming.APPreserveUntilReset.help"
+    },
+    "SirenDetectorSearch_Enable": {
+      "name": "OpsiMeowfficerFarming.SirenDetectorSearch_Enable.name",
+      "help": "OpsiMeowfficerFarming.SirenDetectorSearch_Enable.help"
+    },
+    "SirenDetectorSearch_HazardLevel": {
+      "name": "OpsiMeowfficerFarming.SirenDetectorSearch_HazardLevel.name",
+      "help": "OpsiMeowfficerFarming.SirenDetectorSearch_HazardLevel.help",
+      "5": "5",
+      "6": "6"
+    },
+    "SirenDetectorSearch_StopAfterFound": {
+      "name": "OpsiMeowfficerFarming.SirenDetectorSearch_StopAfterFound.name",
+      "help": "OpsiMeowfficerFarming.SirenDetectorSearch_StopAfterFound.help"
+    },
+    "SirenDetectorSearch_FoundZones": {
+      "name": "OpsiMeowfficerFarming.SirenDetectorSearch_FoundZones.name",
+      "help": "OpsiMeowfficerFarming.SirenDetectorSearch_FoundZones.help"
     }
   },
   "OpsiTarget": {
@@ -5221,9 +5231,6 @@
       "SortieCost": "出击消耗",
       "AkashiEncounters": "遇见明石次数",
       "AkashiRate": "遇见明石概率",
-      "SirenResearchDevices": "吊机次数",
-      "SirenResearchRate": "吊机概率",
-      "HazardLevel": "侵蚀等级",
       "AverageAP": "平均体力",
       "NetAP": "净赚体力",
       "LoopEfficiency": "循环效率",

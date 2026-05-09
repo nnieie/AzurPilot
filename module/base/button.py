@@ -213,7 +213,6 @@ class Button(Resource):
         Returns:
             bool.
         """
-        similarity = lower_template_match_similarity(similarity)
         self.ensure_template()
 
         if isinstance(offset, tuple):
@@ -251,7 +250,6 @@ class Button(Resource):
         Returns:
             bool.
         """
-        similarity = lower_template_match_similarity(similarity)
         self.ensure_template()
         self.ensure_binary_template()
 
@@ -300,10 +298,8 @@ class Button(Resource):
         Returns:
             bool.
         """
-        similarity = lower_template_match_similarity(similarity)
         self.ensure_template()
         self.ensure_luma_template()
-        self._last_match_luma_similarity = None
 
         if isinstance(offset, tuple):
             if len(offset) == 2:
@@ -316,22 +312,17 @@ class Button(Resource):
 
         if self.is_gif:
             image_luma = rgb2luma(image)
-            best_sim = None
             for template in self.image_luma:
                 res = cv2.matchTemplate(template, image_luma, cv2.TM_CCOEFF_NORMED)
                 _, sim, _, point = cv2.minMaxLoc(res)
-                best_sim = sim if best_sim is None else max(best_sim, sim)
                 self._button_offset = area_offset(self._button, offset[:2] + np.array(point))
                 if sim > similarity:
-                    self._last_match_luma_similarity = float(sim)
                     return True
-            self._last_match_luma_similarity = None if best_sim is None else float(best_sim)
         else:
             image_luma = rgb2luma(image)
             res = cv2.matchTemplate(self.image_luma, image_luma, cv2.TM_CCOEFF_NORMED)
             _, sim, _, point = cv2.minMaxLoc(res)
             self._button_offset = area_offset(self._button, offset[:2] + np.array(point))
-            self._last_match_luma_similarity = float(sim)
             return sim > similarity
 
     def match_template_color(self, image, offset=(20, 20), similarity=0.85, threshold=30):
@@ -347,38 +338,12 @@ class Button(Resource):
         Returns:
             bool.
         """
-        self._last_match_template_color = {
-            'luma_match': False,
-            'luma_similarity': None,
-            'color_match': None,
-            'observed_color': None,
-            'expected_color': self.color,
-            'area': self.area,
-            'button_offset': None,
-            'offset': offset,
-            'similarity': similarity,
-            'threshold': threshold,
-        }
         if self.match_luma(image, offset=offset, similarity=similarity):
             diff = np.subtract(self.button, self._button)[:2]
             area = area_offset(self.area, offset=diff)
             color = get_color(image, area)
-            color_match = color_similar(color1=color, color2=self.color, threshold=threshold)
-            self._last_match_template_color = {
-                'luma_match': True,
-                'luma_similarity': getattr(self, '_last_match_luma_similarity', None),
-                'color_match': bool(color_match),
-                'observed_color': tuple(int(v) for v in color),
-                'expected_color': tuple(int(v) for v in self.color),
-                'area': tuple(int(v) for v in area),
-                'button_offset': tuple(int(v) for v in self.button),
-                'offset': offset,
-                'similarity': similarity,
-                'threshold': threshold,
-            }
-            return color_match
+            return color_similar(color1=color, color2=self.color, threshold=threshold)
         else:
-            self._last_match_template_color['luma_similarity'] = getattr(self, '_last_match_luma_similarity', None)
             return False
 
     def crop(self, area, image=None, name=None):

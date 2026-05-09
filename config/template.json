@@ -82,8 +82,6 @@
       "UsbCaptureHeight": 720,
       "UsbCaptureFps": 30,
       "UsbCaptureCAccel": true,
-      "UsbCaptureAdbFallback": true,
-      "UsbCaptureAutoCalibration": true,
       "UsbCaptureLockPreviewAspect": true,
       "UsbCapturePreviewWidth": 960,
       "UsbCapturePreviewHeight": 540,
@@ -2577,7 +2575,11 @@
       "HazardLevel": 5,
       "TargetZone": 0,
       "StayInZone": false,
-      "APPreserveUntilReset": false
+      "APPreserveUntilReset": false,
+      "SirenDetectorSearch_Enable": false,
+      "SirenDetectorSearch_HazardLevel": 5,
+      "SirenDetectorSearch_StopAfterFound": 1,
+      "SirenDetectorSearch_FoundZones": null
     },
     "OpsiSirenBug": {
       "SirenResearch_Enable": true,

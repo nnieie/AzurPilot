@@ -192,7 +192,6 @@ def match_template(image, template, area, offset=30, similarity=0.85):
     Returns:
         similarity (float):
     """
-    similarity = lower_template_match_similarity(similarity)
     if isinstance(offset, tuple):
         offset = np.array((-offset[0], -offset[1], offset[0], offset[1]))
     else:
