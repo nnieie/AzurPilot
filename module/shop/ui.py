@@ -3,6 +3,7 @@ from module.base.decorator import cached_property
 from module.handler.assets import POPUP_CONFIRM
 from module.logger import logger
 from module.shop.assets import *
+from module.shop.debug import ShopDebugSession
 from module.ui.assets import ACADEMY_GOTO_MUNITIONS, SHOP_BACK_ARROW
 from module.ui.navbar import Navbar
 from module.ui.page import page_academy, page_munitions
@@ -11,6 +12,35 @@ from module.ui.ui import UI
 
 
 class ShopUI(UI):
+    def shop_debug_start(self, label='shop'):
+        if getattr(self.config, 'Emulator_ScreenshotMethod', None) != 'usb_capture':
+            return
+        if not hasattr(self, '_shop_debug_session'):
+            try:
+                self._shop_debug_session = ShopDebugSession(self, label=label)
+                self._shop_debug_session.start()
+            except Exception as e:
+                if hasattr(self, '_shop_debug_session'):
+                    del self._shop_debug_session
+                logger.warning(f'Shop debug session start failed: {e}')
+
+    def shop_debug_stop(self):
+        session = getattr(self, '_shop_debug_session', None)
+        if session is not None:
+            try:
+                session.stop()
+            except Exception as e:
+                logger.warning(f'Shop debug session stop failed: {e}')
+            del self._shop_debug_session
+
+    def shop_debug_capture_entry(self, phase='entry'):
+        session = getattr(self, '_shop_debug_session', None)
+        if session is not None:
+            try:
+                session.capture_entry(self, phase=phase)
+            except Exception as e:
+                logger.warning(f'Shop debug screenshot capture failed: {e}')
+
     @cached_property
     def _shop_bottom_navbar(self):
         """
@@ -128,6 +158,7 @@ class ShopUI(UI):
         """
         if self.ui_get_current_page() == page_munitions:
             logger.info(f'Already at {page_munitions}')
+            self.shop_debug_capture_entry(phase='already_at_munitions')
             return
 
         self.ui_ensure(page_academy)
@@ -145,3 +176,5 @@ class ShopUI(UI):
             # Large offset cause it camera in academy can be move around
             if self.appear_then_click(ACADEMY_GOTO_MUNITIONS, offset=(200, 200), interval=5):
                 continue
+
+        self.shop_debug_capture_entry(phase='entered_munitions')
