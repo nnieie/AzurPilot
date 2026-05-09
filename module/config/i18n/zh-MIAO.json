@@ -4632,12 +4632,6 @@
     "APPreserveUntilReset": {
       "name": "月底重置强制消耗行动力 (´⊙ω⊙`)",
       "help": "重置前自动将保留行动力设为0，确保积余被消耗。建议配合侵蚀1练级喵。"
-    },
-    "SirenDetectorSearch_HazardLevel": {
-      "name": "塞壬探测装置侵蚀等级 (;ﾟ∇ﾟ)",
-      "help": "中心海域按顺时针出击特定侵蚀等级寻装置。中心只有5和6级。注意只在region 5选择。",
-      "5": "5喵",
-      "6": "6喵"
     }
   },
   "OpsiTarget": {

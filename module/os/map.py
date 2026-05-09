@@ -1215,21 +1215,6 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                 logger.info(f'[地图检测] 移动结果: {result}')
                 record_siren_research_device(self)
 
-                # ========== 方案 B: 装置类型判断（仅在支持的模式下） ==========
-                # 检查是否在 Meowfficer 搜索模式下，并进行装置类型判断
-                try:
-                    if hasattr(self, 'config') and hasattr(self.config, 'OpsiMeowfficerFarming_SirenDetectorSearch_Enable'):
-                        if self.config.OpsiMeowfficerFarming_SirenDetectorSearch_Enable:
-                            if hasattr(self, 'handle_siren_device_interaction_result'):
-                                logger.hr('【方案B】装置类型判断开始', level=2)
-                                device_type = self.handle_siren_device_interaction_result(result)
-                                if device_type == 'reconnaissance':
-                                    logger.info('【方案B】装置已判定为信息收集装置，不进行搜索记录')
-                                elif device_type == 'detection':
-                                    logger.info('【方案B】装置已判定为探测装置，已进行搜索记录')
-                except Exception as e:
-                    logger.warning(f'【方案B】装置判断过程出现异常: {e}')
-
                 # ========== 配置检查 ==========
                 if not self._is_siren_research_enabled:
                     logger.warning('[配置检查] 塞壬研究装置功能已禁用,标记但不处理')
@@ -1422,10 +1407,6 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                 self._solved_map_event.add('is_scanning_device')
                 return True
 
-            if self.config.task.command == 'OpsiMeowfficerFarming' and self.config.OpsiMeowfficerFarming_SirenDetectorSearch_Enable:
-                self._solved_map_event.add('is_scanning_device')
-                return True
-            
             # ========== 移动并处理 ==========
             logger.info(f'[移动装置] 开始移动到装置位置: {grid}')
             self.device.click(grid)

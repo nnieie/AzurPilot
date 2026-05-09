@@ -1169,9 +1169,6 @@ OpsiMeowfficerFarming:
     value: 0
   StayInZone: false
   APPreserveUntilReset: false
-  SirenDetectorSearch_HazardLevel:
-    value: 5
-    option: [5, 6]
 OpsiTarget:
   TargetFarming: false
   TargetZone:

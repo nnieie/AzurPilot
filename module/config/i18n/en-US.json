@@ -4632,12 +4632,6 @@
     "APPreserveUntilReset": {
       "name": "Preserve Action Points Until End of Month",
       "help": "'Preserve X Action Points' setting will no longer decrease before Operation Siren reset.\nNote: Once enabled, these AP will only be consumed in cross-month daily tasks. This setting is invalid when cross-month daily tasks are not enabled, which means you need to manually use these AP to obtain higher benefits."
-    },
-    "SirenDetectorSearch_HazardLevel": {
-      "name": "Siren Detection Device Corrosion Level",
-      "help": "In the Central Sea Zone, search zones with specific Corrosion levels clockwise to find Siren Detection Devices.\nThe Central Sea Zone only has Level 5 and Level 6 zones.\nNote: Only selects Central Sea Zone (region 5), zones in other regions will not be selected.",
-      "5": "5",
-      "6": "6"
     }
   },
   "OpsiTarget": {

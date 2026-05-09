@@ -4632,12 +4632,6 @@
     "APPreserveUntilReset": {
       "name": "OpsiMeowfficerFarming.APPreserveUntilReset.name",
       "help": "OpsiMeowfficerFarming.APPreserveUntilReset.help"
-    },
-    "SirenDetectorSearch_HazardLevel": {
-      "name": "OpsiMeowfficerFarming.SirenDetectorSearch_HazardLevel.name",
-      "help": "OpsiMeowfficerFarming.SirenDetectorSearch_HazardLevel.help",
-      "5": "5",
-      "6": "6"
     }
   },
   "OpsiTarget": {
