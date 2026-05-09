@@ -31,6 +31,7 @@ dev_tools/usb_capture_lut_accel.obj
 dev_tools/usb_capture_lut_accel.exp
 dev_tools/usb_capture_lut_accel.lib
 config/usb_color
+tmp/
 
 # Created by .ignore support plugin (hsz.mobi)
 

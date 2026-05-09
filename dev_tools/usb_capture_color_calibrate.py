@@ -12,10 +12,13 @@ fit one transform from multiple manually selected screens.
 Examples:
     toolkit\\python.exe dev_tools\\usb_capture_color_calibrate.py --config-name "alas (1)"
     toolkit\\python.exe dev_tools\\usb_capture_color_calibrate.py --generate-chart
+    toolkit\\python.exe dev_tools\\usb_capture_color_calibrate.py --config-name "alas (1)" --asset-fit --captures 4
     toolkit\\python.exe dev_tools\\usb_capture_color_calibrate.py --config-name "alas (1)" --frame-fit --captures 8
 """
 
 import argparse
+import ast
+import glob
 import json
 import os
 import sys
@@ -46,6 +49,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Calibrate USB capture colors using ADB screencap as reference.')
     parser.add_argument('--config-name', default=os.environ.get('ALAS_CONFIG_NAME', 'alas'))
     parser.add_argument('--frame-fit', action='store_true', help='Use legacy full-frame RGB matrix fitting instead of patch profiling.')
+    parser.add_argument('--asset-fit', action='store_true', help='Fit from visible Alas Button area/color assets on real game screens.')
     parser.add_argument('--generate-chart', action='store_true', help='Generate the patch profiling chart(s) and exit.')
     parser.add_argument('--chart-output', default='dev_tools/usb_capture_patch_chart.png', help='Patch chart output path.')
     parser.add_argument('--chart-page', type=int, default=1, help='Patch chart page number. Default: 1')
@@ -66,6 +70,13 @@ def parse_args():
     parser.add_argument('--max-worse-ratio', type=float, default=1.05, help='Reject if any full-frame MAE worsens by this ratio. Default: 1.05')
     parser.add_argument('--max-worse-delta', type=float, default=1.0, help='Reject if any full-frame MAE worsens by this delta. Default: 1.0')
     parser.add_argument('--protected-color-delta', type=float, default=32.0, help='Reject if key UI colors drift beyond this max-channel delta. Default: 32')
+    parser.add_argument('--asset-match-threshold', type=float, default=10.0, help='ADB max-channel threshold for selecting visible Button assets. Default: 10')
+    parser.add_argument('--asset-weight', type=float, default=24.0, help='Base fitting weight for visible Button assets. Default: 24')
+    parser.add_argument('--asset-failed-weight-multiplier', type=float, default=3.0, help='Extra fitting weight for visible assets that USB currently fails. Default: 3')
+    parser.add_argument('--asset-pixel-samples', type=int, default=32, help='Per failed visible asset, add up to this many aligned pixels to the fit. Default: 32')
+    parser.add_argument('--no-asset-auto-dampen', action='store_true', help='Disable automatic LUT strength reduction when asset regressions are detected.')
+    parser.add_argument('--asset-min-samples', type=int, default=8, help='Minimum visible Button assets required for --asset-fit. Default: 8')
+    parser.add_argument('--asset-max-buttons', type=int, default=0, help='Limit parsed Button assets for debugging. Default: 0 (unlimited)')
     return parser.parse_args()
 
 
@@ -384,7 +395,7 @@ def transform_color_lut(color, luts):
     return np.asarray([luts[channel][color[channel]] for channel in range(3)], dtype=np.float32)
 
 
-def fit_lut3d(usb_values, adb_values, size=17, power=2.0):
+def fit_lut3d(usb_values, adb_values, size=17, power=2.0, sample_weights=None):
     size = max(5, min(33, int(size)))
     grid_axis = np.linspace(0, 255, size, dtype=np.float32)
     rr, gg, bb = np.meshgrid(grid_axis, grid_axis, grid_axis, indexing='ij')
@@ -392,7 +403,13 @@ def fit_lut3d(usb_values, adb_values, size=17, power=2.0):
 
     points = usb_values.astype(np.float32)
     targets = adb_values.astype(np.float32)
-    weights = np.ones((points.shape[0],), dtype=np.float32)
+    if sample_weights is None:
+        weights = np.ones((points.shape[0],), dtype=np.float32)
+    else:
+        weights = np.asarray(sample_weights, dtype=np.float32).reshape(-1)
+        if weights.shape[0] != points.shape[0]:
+            raise ValueError('sample_weights length must match usb_values length')
+        weights = np.clip(weights, 0.1, 256.0)
 
     # Keep the very dark and very bright neutral axis stable. This avoids
     # fixing yellow by turning black UI masks into gray.
@@ -470,6 +487,22 @@ def apply_patch_model(image, model, correction):
     if model == 'channel_lut':
         return apply_channel_luts(image, correction)
     return apply_lut3d(image, correction)
+
+
+def identity_patch_model(model, correction):
+    if model == 'channel_lut':
+        return np.stack([np.arange(256, dtype=np.uint8)] * 3, axis=0)
+    size = correction.shape[0]
+    grid_axis = np.linspace(0, 255, size, dtype=np.uint8)
+    rr, gg, bb = np.meshgrid(grid_axis, grid_axis, grid_axis, indexing='ij')
+    return np.stack([rr, gg, bb], axis=-1).astype(np.uint8)
+
+
+def blend_patch_model(model, correction, strength):
+    strength = float(np.clip(strength, 0.0, 1.0))
+    identity = identity_patch_model(model, correction).astype(np.float32)
+    blended = identity * (1.0 - strength) + correction.astype(np.float32) * strength
+    return np.clip(np.rint(blended), 0, 255).astype(np.uint8)
 
 
 def transform_patch_color(color, model, correction):
@@ -654,6 +687,478 @@ def capture_usb(args):
     return capture_usb_direct(args.config_name, warmup=args.warmup)
 
 
+def server_key_from_config(config_name):
+    config = load_alas_config(os.path.join('config', f'{config_name}.json'))
+    value = str(config.get('Server', '') or config.get('ServerName', '') or 'cn').strip().lower()
+    if value.startswith('cn'):
+        return 'cn'
+    if value.startswith('en'):
+        return 'en'
+    if value.startswith('jp'):
+        return 'jp'
+    if value.startswith('tw'):
+        return 'tw'
+    return 'cn'
+
+
+def select_server_value(value, server):
+    if isinstance(value, dict):
+        for key in (server, 'cn', 'en', 'jp', 'tw'):
+            if key in value:
+                return value[key]
+        if value:
+            return next(iter(value.values()))
+        return None
+    return value
+
+
+def tuple_ints(value, length):
+    if not isinstance(value, (tuple, list)) or len(value) != length:
+        return None
+    try:
+        return tuple(int(v) for v in value)
+    except (TypeError, ValueError):
+        return None
+
+
+def parse_button_assets(server, max_buttons=0):
+    assets = []
+    seen = set()
+    for path in sorted(glob.glob(os.path.join('module', '**', 'assets.py'), recursive=True)):
+        with open(path, 'r', encoding='utf-8') as file:
+            try:
+                tree = ast.parse(file.read(), filename=path)
+            except SyntaxError:
+                continue
+
+        for node in tree.body:
+            if not isinstance(node, ast.Assign) or not isinstance(node.value, ast.Call):
+                continue
+            func = node.value.func
+            if not (isinstance(func, ast.Name) and func.id == 'Button'):
+                continue
+            if len(node.targets) != 1 or not isinstance(node.targets[0], ast.Name):
+                continue
+
+            kwargs = {}
+            for keyword in node.value.keywords:
+                if keyword.arg not in ('area', 'color'):
+                    continue
+                try:
+                    kwargs[keyword.arg] = ast.literal_eval(keyword.value)
+                except (ValueError, SyntaxError):
+                    kwargs[keyword.arg] = None
+
+            area = tuple_ints(select_server_value(kwargs.get('area'), server), 4)
+            color = tuple_ints(select_server_value(kwargs.get('color'), server), 3)
+            if area is None or color is None:
+                continue
+
+            x0, y0, x1, y1 = area
+            width, height = DEFAULT_OUTPUT_SIZE
+            if not (0 <= x0 < x1 <= width and 0 <= y0 < y1 <= height):
+                continue
+
+            name = node.targets[0].id
+            key = (name, area, color)
+            if key in seen:
+                continue
+            seen.add(key)
+            assets.append({
+                'name': name,
+                'source': path.replace('\\', '/'),
+                'area': area,
+                'color': color,
+                'pixels': int((x1 - x0) * (y1 - y0)),
+            })
+            if max_buttons and len(assets) >= max_buttons:
+                return assets
+    return assets
+
+
+def max_channel_delta(color1, color2):
+    diff = np.asarray(color1, dtype=np.float32) - np.asarray(color2, dtype=np.float32)
+    return float(np.max(np.abs(diff)))
+
+
+def asset_sample_weight(asset, base_weight):
+    # Small Button color-check areas are exactly where USB color drift hurts the
+    # most, so let them dominate over large, forgiving UI regions.
+    pixels = max(1, int(asset.get('pixels', 1)))
+    scale = float(np.clip(np.sqrt(100.0 / pixels), 0.5, 4.0))
+    return float(base_weight) * scale
+
+
+def sample_visible_assets(adb, usb, assets, args):
+    usb_values = []
+    adb_values = []
+    weights = []
+    results = []
+    for asset in assets:
+        area = asset['area']
+        expected = np.asarray(asset['color'], dtype=np.float32)
+        adb_mean = mean_rect(adb, area)
+        adb_delta = max_channel_delta(adb_mean, expected)
+        if adb_delta > args.asset_match_threshold:
+            continue
+
+        usb_mean = mean_rect(usb, area)
+        usb_delta = max_channel_delta(usb_mean, expected)
+        weight = asset_sample_weight(asset, args.asset_weight)
+        usb_pass = usb_delta <= args.asset_match_threshold
+        if not usb_pass:
+            weight *= max(1.0, float(args.asset_failed_weight_multiplier))
+
+        usb_values.append(usb_mean)
+        adb_values.append(adb_mean)
+        weights.append(weight)
+        pixel_samples = 0
+        if not usb_pass and args.asset_pixel_samples > 0:
+            x0, y0, x1, y1 = area
+            usb_region = usb[y0:y1, x0:x1].reshape(-1, 3).astype(np.float32)
+            adb_region = adb[y0:y1, x0:x1].reshape(-1, 3).astype(np.float32)
+            count = min(int(args.asset_pixel_samples), usb_region.shape[0])
+            if count > 0:
+                indexes = np.linspace(0, usb_region.shape[0] - 1, count, dtype=np.int32)
+                usb_values.extend(usb_region[indexes])
+                adb_values.extend(adb_region[indexes])
+                weights.extend([max(1.0, min(weight, args.asset_weight) / 4.0)] * count)
+                pixel_samples = int(count)
+        results.append({
+            'name': asset['name'],
+            'source': asset['source'],
+            'area': list(area),
+            'pixels': asset['pixels'],
+            'expected': expected.round(3).tolist(),
+            'adb': adb_mean.round(3).tolist(),
+            'usb': usb_mean.round(3).tolist(),
+            'adb_delta': round(adb_delta, 3),
+            'usb_delta': round(usb_delta, 3),
+            'weight': round(weight, 3),
+            'pixel_samples': pixel_samples,
+            'usb_pass': usb_pass,
+        })
+    return (
+        np.asarray(usb_values, dtype=np.float32),
+        np.asarray(adb_values, dtype=np.float32),
+        np.asarray(weights, dtype=np.float32),
+        results,
+    )
+
+
+def expand_weighted_samples(usb_values, adb_values, weights):
+    repeats = np.clip(np.rint(weights), 1, 64).astype(np.int16)
+    return np.repeat(usb_values, repeats, axis=0), np.repeat(adb_values, repeats, axis=0)
+
+
+def validate_asset_results(usb, corrected, samples, args):
+    before_pass = 0
+    after_pass = 0
+    fixed = []
+    regressions = []
+    failures = []
+    detailed = []
+    for sample in samples:
+        area = tuple(sample['area'])
+        expected = np.asarray(sample['expected'], dtype=np.float32)
+        before_mean = mean_rect(usb, area)
+        after_mean = mean_rect(corrected, area)
+        before_delta = max_channel_delta(before_mean, expected)
+        after_delta = max_channel_delta(after_mean, expected)
+        before_ok = before_delta <= args.asset_match_threshold
+        after_ok = after_delta <= args.asset_match_threshold
+        before_pass += int(before_ok)
+        after_pass += int(after_ok)
+        if not before_ok and after_ok:
+            fixed.append(sample['name'])
+        if before_ok and not after_ok:
+            regressions.append(sample['name'])
+        if not after_ok:
+            failures.append((after_delta, sample['name']))
+        detailed.append({
+            'name': sample['name'],
+            'area': sample['area'],
+            'expected': sample['expected'],
+            'before': before_mean.round(3).tolist(),
+            'after': after_mean.round(3).tolist(),
+            'before_delta': round(before_delta, 3),
+            'after_delta': round(after_delta, 3),
+            'before_pass': before_ok,
+            'after_pass': after_ok,
+        })
+
+    failures.sort(reverse=True)
+    return {
+        'visible': len(samples),
+        'before_pass': before_pass,
+        'after_pass': after_pass,
+        'fixed': fixed,
+        'regressions': regressions,
+        'failures': [{'name': name, 'after_delta': round(delta, 3)} for delta, name in failures[:12]],
+        'results': detailed,
+    }
+
+
+def summarize_asset_correction(args, captures, model, correction):
+    total_visible = 0
+    total_before_pass = 0
+    total_after_pass = 0
+    regressions = []
+    fixed = []
+    for capture in captures:
+        corrected = apply_patch_model(capture['usb'], model, correction)
+        validation = validate_asset_results(capture['usb'], corrected, capture['samples'], args)
+        total_visible += validation['visible']
+        total_before_pass += validation['before_pass']
+        total_after_pass += validation['after_pass']
+        regressions.extend((capture['index'], name) for name in validation['regressions'])
+        fixed.extend((capture['index'], name) for name in validation['fixed'])
+    return {
+        'visible': total_visible,
+        'before_pass': total_before_pass,
+        'after_pass': total_after_pass,
+        'regressions': regressions,
+        'fixed': fixed,
+    }
+
+
+def choose_asset_correction(args, captures, model, correction):
+    if args.no_asset_auto_dampen:
+        return correction, 1.0, summarize_asset_correction(args, captures, model, correction)
+
+    strengths = [1.0, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7, 0.65, 0.6, 0.55, 0.5, 0.45, 0.4, 0.35, 0.3, 0.25]
+    candidates = []
+    for strength in strengths:
+        candidate = correction if strength == 1.0 else blend_patch_model(model, correction, strength)
+        summary = summarize_asset_correction(args, captures, model, candidate)
+        candidates.append((strength, candidate, summary))
+
+    no_regression = [item for item in candidates if not item[2]['regressions']]
+    if no_regression:
+        # Prefer the strongest no-regression model among those with the best
+        # pass count, so fixes like SORTING_CLICK survive whenever possible.
+        best_after = max(item[2]['after_pass'] for item in no_regression)
+        viable = [item for item in no_regression if item[2]['after_pass'] == best_after]
+        strength, candidate, summary = max(viable, key=lambda item: item[0])
+        if strength < 1.0:
+            print(
+                f'Auto-dampened asset LUT strength to {strength:.2f}: '
+                f'before={summary["before_pass"]}, after={summary["after_pass"]}, regressions=0'
+            )
+        return candidate, strength, summary
+
+    strength, candidate, summary = max(
+        candidates,
+        key=lambda item: (item[2]['after_pass'] - len(item[2]['regressions']) * 4, item[0]),
+    )
+    return candidate, strength, summary
+
+
+def run_asset_calibration(args, output, legacy_output):
+    server = server_key_from_config(args.config_name)
+    assets = parse_button_assets(server, max_buttons=args.asset_max_buttons)
+    if not assets:
+        raise RuntimeError('No Button assets were found for asset calibration')
+    print(f'Loaded {len(assets)} Button assets for server={server}')
+
+    timestamp = time.strftime('%Y%m%d_%H%M%S')
+    snapshot_dir = os.path.join(args.snapshot_dir, args.config_name.replace(os.sep, '_'), timestamp)
+    captures = []
+    usb_sets = []
+    adb_sets = []
+    weight_sets = []
+
+    if args.captures > 1:
+        print('Use different stable game pages for stronger asset calibration, e.g. dock, retirement, map, battle result.')
+
+    for index in range(args.captures):
+        if args.captures > 1:
+            print()
+            input(f'[{index + 1}/{args.captures}] Display a stable game page, then press Enter...')
+            if args.capture_delay > 0:
+                time.sleep(args.capture_delay)
+        else:
+            if args.capture_delay > 0:
+                time.sleep(args.capture_delay)
+
+        adb = capture_adb(args.config_name)
+        usb = ensure_output_size(capture_usb(args))
+        usb_values, adb_values, weights, samples = sample_visible_assets(adb, usb, assets, args)
+        print(
+            f'Captured asset page {index + 1}/{args.captures}: '
+            f'{len(samples)} visible assets, {usb_values.shape[0]} fit samples, '
+            f'{sum(1 for s in samples if s["usb_pass"])} already pass USB color check'
+        )
+        if samples:
+            names = ', '.join(sample['name'] for sample in samples[:10])
+            print(f'  Visible sample preview: {names}')
+        captures.append({
+            'index': index + 1,
+            'adb': adb,
+            'usb': usb,
+            'samples': samples,
+        })
+        if len(samples):
+            usb_sets.append(usb_values)
+            adb_sets.append(adb_values)
+            weight_sets.append(weights)
+
+    if not usb_sets:
+        raise RuntimeError('No visible Button assets matched the ADB reference screen')
+
+    usb_all = np.concatenate(usb_sets, axis=0)
+    adb_all = np.concatenate(adb_sets, axis=0)
+    weights_all = np.concatenate(weight_sets, axis=0)
+    visible_asset_count = sum(len(capture['samples']) for capture in captures)
+    if visible_asset_count < args.asset_min_samples:
+        raise RuntimeError(
+            f'Only {visible_asset_count} visible Button assets matched ADB; '
+            f'need at least {args.asset_min_samples}. Try --captures with more pages.'
+        )
+
+    if args.model == 'channel_lut':
+        fit_usb, fit_adb = expand_weighted_samples(usb_all, adb_all, weights_all)
+        print(f'Fitting per-channel LUT with {usb_all.shape[0]} visible assets ({fit_usb.shape[0]} weighted samples)...')
+        correction = fit_channel_luts(fit_usb, fit_adb)
+    else:
+        print(f'Fitting 3D LUT with {usb_all.shape[0]} visible assets...')
+        correction = fit_lut3d(
+            usb_all,
+            adb_all,
+            size=args.lut3d_size,
+            power=args.lut3d_power,
+            sample_weights=weights_all,
+        )
+
+    correction, asset_lut_strength, _ = choose_asset_correction(args, captures, args.model, correction)
+
+    before = metrics_pixels('Asset before', usb_all, adb_all)
+    if args.model == 'channel_lut':
+        corrected_assets = np.stack([
+            correction[channel][np.clip(np.rint(usb_all[:, channel]), 0, 255).astype(np.uint8)]
+            for channel in range(3)
+        ], axis=1).astype(np.float32)
+    else:
+        corrected_assets = apply_lut3d(
+            np.clip(np.rint(usb_all), 0, 255).astype(np.uint8).reshape(-1, 1, 3),
+            correction,
+        ).reshape(-1, 3).astype(np.float32)
+    after = metrics_pixels('Asset after ', corrected_assets, adb_all)
+
+    capture_results = []
+    total_visible = 0
+    total_before_pass = 0
+    total_after_pass = 0
+    all_regressions = []
+    for capture in captures:
+        index = capture['index']
+        adb = capture['adb']
+        usb = capture['usb']
+        corrected = apply_patch_model(usb, args.model, correction)
+
+        print(f'Capture {index} full-frame metrics:')
+        full_before = metrics('  Before', usb, adb)
+        full_after = metrics('  After ', corrected, adb)
+
+        validation = validate_asset_results(usb, corrected, capture['samples'], args)
+        total_visible += validation['visible']
+        total_before_pass += validation['before_pass']
+        total_after_pass += validation['after_pass']
+        all_regressions.extend(f'capture {index}: {name}' for name in validation['regressions'])
+        print(
+            f'Capture {index} asset checks: visible={validation["visible"]}, '
+            f'before={validation["before_pass"]}, after={validation["after_pass"]}, '
+            f'fixed={len(validation["fixed"])}, regressions={len(validation["regressions"])}'
+        )
+        if validation['fixed']:
+            print('  Fixed: ' + ', '.join(validation['fixed'][:12]))
+        if validation['failures']:
+            print('  Still off: ' + ', '.join(item['name'] for item in validation['failures'][:8]))
+
+        prefix = f'capture_{index:02d}'
+        adb_path = os.path.join(snapshot_dir, f'{prefix}_adb.png')
+        usb_path = os.path.join(snapshot_dir, f'{prefix}_usb_raw.png')
+        corrected_path = os.path.join(snapshot_dir, f'{prefix}_usb_corrected.png')
+        save_image(adb_path, adb)
+        save_image(usb_path, usb)
+        save_image(corrected_path, corrected)
+
+        capture_results.append({
+            'index': index,
+            'visible_assets': len(capture['samples']),
+            'samples': capture['samples'],
+            'metrics': {
+                'before': full_before,
+                'after': full_after,
+            },
+            'asset_validation': validation,
+            'snapshots': {
+                'adb': adb_path.replace('\\', '/'),
+                'usb_raw': usb_path.replace('\\', '/'),
+                'usb_corrected': corrected_path.replace('\\', '/'),
+            },
+        })
+
+    data = {
+        'enabled': True,
+        'config_name': args.config_name,
+        'created_at': time.strftime('%Y-%m-%d %H:%M:%S'),
+        'model': args.model,
+        'asset_fit': True,
+        'server': server,
+        'captures': args.captures,
+        'assets_loaded': len(assets),
+        'assets': {
+            'visible': total_visible,
+            'before_pass': total_before_pass,
+            'after_pass': total_after_pass,
+            'match_threshold': args.asset_match_threshold,
+            'base_weight': args.asset_weight,
+            'failed_weight_multiplier': args.asset_failed_weight_multiplier,
+            'pixel_samples_per_failed_asset': args.asset_pixel_samples,
+            'lut_strength': asset_lut_strength,
+        },
+        'metrics': {
+            'before': before,
+            'after': after,
+        },
+        'capture_results': capture_results,
+    }
+    if args.model == 'channel_lut':
+        data['luts'] = correction.tolist()
+    else:
+        data['lut_size'] = int(correction.shape[0])
+        data['lut'] = correction.tolist()
+
+    safety_failures = []
+    if after['mae'] >= before['mae']:
+        safety_failures.append(f'asset MAE did not improve: {before["mae"]:.2f} -> {after["mae"]:.2f}')
+    if total_after_pass < total_before_pass:
+        safety_failures.append(f'asset pass count worsened: {total_before_pass} -> {total_after_pass}')
+    if all_regressions:
+        safety_failures.append('asset regressions: ' + ', '.join(all_regressions[:20]))
+    safety_failures.extend(patch_safety_check(args, args.model, correction, before, after, capture_results))
+
+    if safety_failures:
+        print('Safety check failed:')
+        for failure in safety_failures:
+            print(f'  - {failure}')
+        data['safety'] = {'passed': False, 'failures': safety_failures}
+        if not args.force:
+            data['enabled'] = False
+            print('Calibration was written disabled. Use --force only if you really want to apply it.')
+    else:
+        data['safety'] = {'passed': True, 'failures': []}
+
+    os.makedirs(os.path.dirname(output), exist_ok=True)
+    with open(output, 'w', encoding='utf-8') as file:
+        json.dump(data, file, indent=2, ensure_ascii=False)
+    if os.path.exists(legacy_output):
+        os.remove(legacy_output)
+    print(f'Wrote calibration: {output}')
+    print('Restart USB capture service or stop/start USB preview for the calibration to take effect.')
+
+
 def run_patch_calibration(args, output, legacy_output):
     timestamp = time.strftime('%Y%m%d_%H%M%S')
     snapshot_dir = os.path.join(args.snapshot_dir, args.config_name.replace(os.sep, '_'), timestamp)
@@ -830,6 +1335,9 @@ def main():
         write_disabled(output)
         if os.path.exists(legacy_output):
             os.remove(legacy_output)
+        return
+    if args.asset_fit:
+        run_asset_calibration(args, output, legacy_output)
         return
     if not args.frame_fit:
         run_patch_calibration(args, output, legacy_output)
