@@ -15,7 +15,7 @@ import numpy as np
 
 from module.base.decorator import cached_property
 from module.base.timer import Timer
-from module.base.utils import get_color, image_size, limit_in, save_image
+from module.base.utils import get_color, image_size, limit_in, save_image, set_template_match_non_native_720p
 from module.device.method.adb import Adb
 from module.device.method.ascreencap import AScreenCap
 from module.device.method.droidcast import DroidCast
@@ -97,6 +97,7 @@ class Screenshot(Adb, WSA, DroidCast, AScreenCap, Scrcpy, NemuIpc, LDOpenGL, Usb
             self.image = method()
 
             width, height = image_size(self.image)
+            set_template_match_non_native_720p(width != 1280 or height != 720)
             if width != 1280 or height != 720:
                 method_type, interp = self.get_next_resize_method()
                 if method_type == 'cv':
@@ -319,4 +320,3 @@ class Screenshot(Adb, WSA, DroidCast, AScreenCap, Scrcpy, NemuIpc, LDOpenGL, Usb
         else:
             self._screen_black_checked = True
             return True
-
