@@ -1073,9 +1073,11 @@
       "war_archives_20220428_cn": "檔案 吟ずる瑠璃の楽章",
       "war_archives_20220526_cn": "檔案 诚閃の剣 搖光の城",
       "war_archives_20220728_cn": "檔案 鋼鷲の冒険譚",
+      "war_archives_20220818_cn": "檔案 結像点作戦",
       "war_archives_20220915_cn": "檔案 赫の涙月 菫の暁風",
       "war_archives_20221222_cn": "檔案 積重なる事象の幻界",
       "war_archives_20230223_cn": "檔案 黙示の遺構",
+      "war_archives_20230803_cn": "檔案 燃ゆる聖都の回想曲",
       "war_archives_20231026_cn": "檔案 テンペスタと若返りの泉"
     },
     "Mode": {
@@ -4759,6 +4761,30 @@
       "help": "完全な経験が検出されると、このタスクは指定された時間延期されます。"
     }
   },
+  "OpsiFleetAutoChange": {
+    "_info": {
+      "name": "OpsiFleetAutoChange._info.name",
+      "help": "OpsiFleetAutoChange._info.help"
+    },
+    "Enable": {
+      "name": "OpsiFleetAutoChange.Enable.name",
+      "help": "OpsiFleetAutoChange.Enable.help",
+      "True": "True",
+      "False": "False"
+    },
+    "CooldownHours": {
+      "name": "OpsiFleetAutoChange.CooldownHours.name",
+      "help": "OpsiFleetAutoChange.CooldownHours.help",
+      "12": "12",
+      "24": "24",
+      "48": "48",
+      "72": "72"
+    },
+    "LastRun": {
+      "name": "OpsiFleetAutoChange.LastRun.name",
+      "help": "OpsiFleetAutoChange.LastRun.help"
+    }
+  },
   "OpsiScheduling": {
     "_info": {
       "name": "インテリジェントスケジューリング",
@@ -5225,9 +5251,15 @@
       "ViewLineShort": "Line",
       "DataPointsCount": "{count} data points",
       "CandlesCount": "{count} candles",
+      "ViewLabel": "📊 View:",
+      "DetailLabel": "📈 Detail:",
       "ViewLineButton": "Intraday (Detailed)",
       "ViewDayButton": "Day View (Hourly K)",
       "ViewMonthButton": "Month View (Daily K)",
+      "DetailChartTitle": "Daily AP Fluctuation Detail (24h)",
+      "ToggleDetailChart": "Detail Chart",
+      "DetailChartOn": "✓ On",
+      "DetailChartOff": "○ Off",
       "LoadOpsiStatsFailed": "Failed to load OpSi stats: {e}",
       "LoadExpStatsFailed": "Failed to load EXP stats: {e}",
       "DailyExpCheckTitle": "Daily EXP Check",

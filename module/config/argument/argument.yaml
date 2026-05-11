@@ -1218,6 +1218,15 @@ OpsiCheckLeveling:
   CustomCheckPositions:
     value: ''
   DelayAfterFull: false
+OpsiFleetAutoChange:
+  Enable:
+    type: checkbox
+    value: false
+    option: [true, false]
+  CooldownHours:
+    value: 24
+    option: [12, 24, 48, 72]
+  LastRun: 2020-01-01 00:00:00
 OpsiScheduling:
   UseSmartSchedulingOperationCoinsPreserve:
     type: checkbox

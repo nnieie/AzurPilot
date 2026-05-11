@@ -136,6 +136,20 @@ class OSStatus(UI):
         self._shop_purple_coins = self.get_purple_coins()
         logger.info(f'Yellow coins: {self._shop_yellow_coins}, purple coins: {self._shop_purple_coins}')
 
+        # 记录凭证快照到数据库（用于 WebUI 凭证变化曲线图）
+        try:
+            instance_name = getattr(self.config, 'config_name', 'default')
+            source = 'cl1' if self.is_in_task_cl1_leveling else ('meow' if self.is_in_task_meow else 'other')
+            from module.statistics.cl1_database import db as cl1_db
+            cl1_db.add_coins_snapshot(
+                instance_name,
+                self._shop_yellow_coins,
+                self._shop_purple_coins,
+                source=source
+            )
+        except Exception:
+            logger.exception('Failed to record coins snapshot')
+
     def cl1_task_call(self):
         if self.is_cl1_enabled and self.cl1_enough_yellow_coins:
             self.config.task_call('OpsiHazard1Leveling')

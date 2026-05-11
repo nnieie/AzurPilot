@@ -1,11 +1,16 @@
 import configparser
 import os
 import shutil
+import subprocess
 
 from deploy.Windows.config import DeployConfig
 from deploy.Windows.logger import Progress, logger
 from deploy.Windows.utils import cached_property
 from deploy.git_over_cdn.client import GitOverCdnClient
+
+
+def _cmd(*args):
+    return subprocess.list2cmdline([str(arg) for arg in args])
 
 
 class GitConfigParser(configparser.ConfigParser):
@@ -78,7 +83,7 @@ class GitManager(DeployConfig):
             logger.warning(f'.git/HEAD is unreadable: {e}')
             return False
 
-        if not self.execute(f'"{self.git}" status', allow_failure=True, output=False):
+        if not self.execute(_cmd(self.git, 'status'), allow_failure=True, output=False):
             logger.warning('git status failed, repository may be corrupted')
             return False
 
@@ -101,13 +106,11 @@ class GitManager(DeployConfig):
                 raise
 
         logger.info(f'Initializing repository: {repo} branch: {branch}')
-        self.execute(f'"{self.git}" init')
-        # Check if remote exists before adding
-        self.execute(f'"{self.git}" remote add "{source}" "{repo}"', allow_failure=True)
-        # Set remote URL just in case it already exists
-        self.execute(f'"{self.git}" remote set-url "{source}" "{repo}"')
-        self.execute(f'"{self.git}" fetch "{source}" "{branch}"')
-        self.execute(f'"{self.git}" reset --hard "{source}/{branch}"')
+        self.execute(_cmd(self.git, 'init'))
+        self.execute(_cmd(self.git, 'remote', 'add', source, repo), allow_failure=True)
+        self.execute(_cmd(self.git, 'remote', 'set-url', source, repo))
+        self.execute(_cmd(self.git, 'fetch', source, branch))
+        self.execute(_cmd(self.git, 'reset', '--hard', f'{source}/{branch}'))
 
     def git_repository_init(
             self, repo, source='origin', branch='master',
@@ -117,50 +120,49 @@ class GitManager(DeployConfig):
             self.git_repository_repair(repo, source=source, branch=branch)
 
         logger.hr('Git Init', 1)
-        if not self.execute(f'"{self.git}" init', allow_failure=True):
+        if not self.execute(_cmd(self.git, 'init'), allow_failure=True):
             self.remove('./.git/config')
             self.remove('./.git/index')
             self.remove('./.git/HEAD')
             self.remove('./.git/ORIG_HEAD')
-            self.execute(f'"{self.git}" init')
+            self.execute(_cmd(self.git, 'init'))
         Progress.GitInit()
 
         logger.hr('Set Git Proxy', 1)
         if proxy:
             if not self.git_config.check('http', 'proxy', value=proxy):
-                self.execute(f'"{self.git}" config --local http.proxy "{proxy}"')
+                self.execute(_cmd(self.git, 'config', '--local', 'http.proxy', proxy))
             if not self.git_config.check('https', 'proxy', value=proxy):
-                self.execute(f'"{self.git}" config --local https.proxy "{proxy}"')
+                self.execute(_cmd(self.git, 'config', '--local', 'https.proxy', proxy))
         else:
             if not self.git_config.check('http', 'proxy', value=None):
-                self.execute(f'"{self.git}" config --local --unset http.proxy', allow_failure=True)
+                self.execute(_cmd(self.git, 'config', '--local', '--unset', 'http.proxy'), allow_failure=True)
             if not self.git_config.check('https', 'proxy', value=None):
-                self.execute(f'"{self.git}" config --local --unset https.proxy', allow_failure=True)
+                self.execute(_cmd(self.git, 'config', '--local', '--unset', 'https.proxy'), allow_failure=True)
 
         if ssl_verify:
             if not self.git_config.check('http', 'sslVerify', value='true'):
-                self.execute(f'"{self.git}" config --local http.sslVerify true', allow_failure=True)
+                self.execute(_cmd(self.git, 'config', '--local', 'http.sslVerify', 'true'), allow_failure=True)
         else:
             if not self.git_config.check('http', 'sslVerify', value='false'):
-                self.execute(f'"{self.git}" config --local http.sslVerify false', allow_failure=True)
+                self.execute(_cmd(self.git, 'config', '--local', 'http.sslVerify', 'false'), allow_failure=True)
 
         logger.hr('Set Git User-Agent', 1)
-        self.execute(f'"{self.git}" config http.userAgent "ALAS/1.5.8 AzurPilot"')
+        self.execute(_cmd(self.git, 'config', 'http.userAgent', 'ALAS/1.5.8 AzurPilot'))
 
         Progress.GitSetConfig()
 
         logger.hr('Set Git Repository', 1)
         if not self.git_config.check(f'remote "{source}"', 'url', value=repo):
-            if not self.execute(f'"{self.git}" remote set-url "{source}" "{repo}"', allow_failure=True):
-                self.execute(f'"{self.git}" remote add "{source}" "{repo}"')
+            if not self.execute(_cmd(self.git, 'remote', 'set-url', source, repo), allow_failure=True):
+                self.execute(_cmd(self.git, 'remote', 'add', source, repo))
         Progress.GitSetRepo()
 
         logger.hr('Fetch Repository Branch', 1)
-        self.execute(f'"{self.git}" fetch "{source}" "{branch}"')
+        self.execute(_cmd(self.git, 'fetch', source, branch))
         Progress.GitFetch()
 
         logger.hr('Pull Repository Branch', 1)
-        # Remove git lock
         for lock_file in [
             './.git/index.lock',
             './.git/HEAD.lock',
@@ -170,32 +172,29 @@ class GitManager(DeployConfig):
                 logger.info(f'Lock file {lock_file} exists, removing')
                 os.remove(lock_file)
         if keep_changes:
-            if self.execute(f'"{self.git}" stash', allow_failure=True):
-                self.execute(f'"{self.git}" pull --ff-only "{source}" "{branch}"')
-                if self.execute(f'"{self.git}" stash pop', allow_failure=True):
+            if self.execute(_cmd(self.git, 'stash'), allow_failure=True):
+                self.execute(_cmd(self.git, 'pull', '--ff-only', source, branch))
+                if self.execute(_cmd(self.git, 'stash', 'pop'), allow_failure=True):
                     pass
                 else:
-                    # No local changes to existing files, untracked files not included
                     logger.info('Stash pop failed, there seems to be no local changes, skip instead')
             else:
                 logger.info('Stash failed, this may be the first installation, drop changes instead')
-                self.execute(f'"{self.git}" reset --hard "{source}/{branch}"')
-                self.execute(f'"{self.git}" pull --ff-only "{source}" "{branch}"')
+                self.execute(_cmd(self.git, 'reset', '--hard', f'{source}/{branch}'))
+                self.execute(_cmd(self.git, 'pull', '--ff-only', source, branch))
         else:
-            self.execute(f'"{self.git}" reset --hard "{source}/{branch}"')
+            self.execute(_cmd(self.git, 'reset', '--hard', f'{source}/{branch}'))
             Progress.GitReset()
-            # Since `git fetch` is already called, checkout is faster
-            if not self.execute(f'"{self.git}" checkout "{branch}"', allow_failure=True):
-                self.execute(f'"{self.git}" pull --ff-only "{source}" "{branch}"')
+            if not self.execute(_cmd(self.git, 'checkout', branch), allow_failure=True):
+                self.execute(_cmd(self.git, 'pull', '--ff-only', source, branch))
             Progress.GitCheckout()
 
         logger.hr('Show Version', 1)
-        self.execute(f'"{self.git}" --no-pager log --no-merges -1')
+        self.execute(_cmd(self.git, '--no-pager', 'log', '--no-merges', '-1'))
         Progress.GitShowVersion()
 
     @property
     def goc_client(self):
-        # Resolve repo first to get the actual project name (e.g. AzurLaneAutoScript) instead of git.nanoda.work
         repo = self.resolve_repository_url(self.Repository)
         repo_name = repo.strip('/').split('/')[-1]
         url = f'https://vip.123pan.cn/1815343254/pack/LmeSzinc_{repo_name}_{self.Branch}'
@@ -203,7 +202,7 @@ class GitManager(DeployConfig):
             url=url,
             folder=self.root_filepath,
             source='origin',
-            branch='master',
+            branch=self.Branch,
             git=self.git,
         )
         client.logger = logger

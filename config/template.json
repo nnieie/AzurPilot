@@ -1176,7 +1176,7 @@
     },
     "Campaign": {
       "Name": "D3",
-      "Event": "war_archives_20230223_cn",
+      "Event": "war_archives_20230803_cn",
       "Mode": "normal",
       "UseClearMode": true,
       "UseFleetLock": true,
@@ -2634,6 +2634,11 @@
       "EnableCustomCheck": false,
       "CustomCheckPositions": null,
       "DelayAfterFull": false
+    },
+    "OpsiFleetAutoChange": {
+      "Enable": false,
+      "CooldownHours": 24,
+      "LastRun": "2020-01-01 00:00:00"
     },
     "Storage": {
       "Storage": {}

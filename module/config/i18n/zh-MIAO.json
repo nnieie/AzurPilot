@@ -1073,9 +1073,11 @@
       "war_archives_20220428_cn": "archives Rondo at Rainbows End",
       "war_archives_20220526_cn": "archives Pledge of the Radiant Court",
       "war_archives_20220728_cn": "archives Aquilifers Ballade",
+      "war_archives_20220818_cn": "archives Operation Convergence",
       "war_archives_20220915_cn": "archives Violet Tempest Blooming Lycoris",
       "war_archives_20221222_cn": "archives Parallel Superimposition",
       "war_archives_20230223_cn": "archives Revelations of Dust",
+      "war_archives_20230803_cn": "archives Anthem of Remembrance",
       "war_archives_20231026_cn": "archives Tempesta and the Fountain of Youth"
     },
     "Mode": {
@@ -4759,6 +4761,30 @@
       "help": "检测到满经验后将本任务推迟指定时间喵。"
     }
   },
+  "OpsiFleetAutoChange": {
+    "_info": {
+      "name": "OpsiFleetAutoChange._info.name",
+      "help": "OpsiFleetAutoChange._info.help"
+    },
+    "Enable": {
+      "name": "OpsiFleetAutoChange.Enable.name",
+      "help": "OpsiFleetAutoChange.Enable.help",
+      "True": "True",
+      "False": "False"
+    },
+    "CooldownHours": {
+      "name": "OpsiFleetAutoChange.CooldownHours.name",
+      "help": "OpsiFleetAutoChange.CooldownHours.help",
+      "12": "12",
+      "24": "24",
+      "48": "48",
+      "72": "72"
+    },
+    "LastRun": {
+      "name": "OpsiFleetAutoChange.LastRun.name",
+      "help": "OpsiFleetAutoChange.LastRun.help"
+    }
+  },
   "OpsiScheduling": {
     "_info": {
       "name": "智能调度+（雪风特调） (｡>﹏<｡)",
@@ -5225,9 +5251,15 @@
       "ViewLineShort": "分时喵",
       "DataPointsCount": "共 {count} 个点",
       "CandlesCount": "共 {count} 根K线",
+      "ViewLabel": "📊 視圖喵:",
+      "DetailLabel": "📈 詳情喵:",
       "ViewLineButton": "分时(详细波动)喵",
       "ViewDayButton": "天视图(小时K)喵",
       "ViewMonthButton": "月视图(日K)喵",
+      "DetailChartTitle": "单日体力波动详情 (24小时) 喵~",
+      "ToggleDetailChart": "详情图喵",
+      "DetailChartOn": "✓ 开启喵",
+      "DetailChartOff": "○ 关闭喵",
       "LoadOpsiStatsFailed": "加载 OpSi 统计失败: {e}",
       "LoadExpStatsFailed": "加载经验统计失败: {e}",
       "DailyExpCheckTitle": "每日经验检测喵",

@@ -759,6 +759,11 @@ class GeneratedConfig:
     OpsiCheckLeveling_CustomCheckPositions = None
     OpsiCheckLeveling_DelayAfterFull = False
 
+    # Group `OpsiFleetAutoChange`
+    OpsiFleetAutoChange_Enable = False  # True, False
+    OpsiFleetAutoChange_CooldownHours = 24  # 12, 24, 48, 72
+    OpsiFleetAutoChange_LastRun = datetime.datetime(2020, 1, 1, 0, 0)
+
     # Group `OpsiScheduling`
     OpsiScheduling_UseSmartSchedulingOperationCoinsPreserve = True  # True, False
     OpsiScheduling_OperationCoinsPreserve = 40000

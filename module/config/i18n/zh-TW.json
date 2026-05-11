@@ -1073,9 +1073,11 @@
       "war_archives_20220428_cn": "檔案 虹彩的終幕曲",
       "war_archives_20220526_cn": "檔案 泠誓光庭",
       "war_archives_20220728_cn": "檔案 雄鷹的敘事歌",
+      "war_archives_20220818_cn": "檔案 遠匯點作戰",
       "war_archives_20220915_cn": "檔案 紫絳槿嵐",
       "war_archives_20221222_cn": "檔案 定向折疊",
       "war_archives_20230223_cn": "檔案 湮燼塵墟",
+      "war_archives_20230803_cn": "檔案 奏響鳶尾之歌",
       "war_archives_20231026_cn": "檔案 飓風與青春之泉"
     },
     "Mode": {
@@ -4759,6 +4761,30 @@
       "help": "當檢測到滿經驗後，將本任務推遲指定的時間"
     }
   },
+  "OpsiFleetAutoChange": {
+    "_info": {
+      "name": "OpsiFleetAutoChange._info.name",
+      "help": "OpsiFleetAutoChange._info.help"
+    },
+    "Enable": {
+      "name": "OpsiFleetAutoChange.Enable.name",
+      "help": "OpsiFleetAutoChange.Enable.help",
+      "True": "True",
+      "False": "False"
+    },
+    "CooldownHours": {
+      "name": "OpsiFleetAutoChange.CooldownHours.name",
+      "help": "OpsiFleetAutoChange.CooldownHours.help",
+      "12": "12",
+      "24": "24",
+      "48": "48",
+      "72": "72"
+    },
+    "LastRun": {
+      "name": "OpsiFleetAutoChange.LastRun.name",
+      "help": "OpsiFleetAutoChange.LastRun.help"
+    }
+  },
   "OpsiScheduling": {
     "_info": {
       "name": "智慧排程",
@@ -5225,9 +5251,15 @@
       "ViewLineShort": "分时",
       "DataPointsCount": "共 {count} 个点",
       "CandlesCount": "共 {count} 根K线",
+      "ViewLabel": "📊 視圖:",
+      "DetailLabel": "📈 詳情:",
       "ViewLineButton": "分时(详细波动)",
       "ViewDayButton": "天视图(小时K)",
       "ViewMonthButton": "月视图(日K)",
+      "DetailChartTitle": "單日體力波動詳情 (24小時)",
+      "ToggleDetailChart": "詳情圖",
+      "DetailChartOn": "✓ 開啟",
+      "DetailChartOff": "○ 關閉",
       "LoadOpsiStatsFailed": "加载 OpSi 统计失败: {e}",
       "LoadExpStatsFailed": "加载经验统计失败: {e}",
       "DailyExpCheckTitle": "每日经验检测",
