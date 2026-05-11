@@ -86,13 +86,13 @@ class Combat(Combat_, MapEventHandler):
                 #     self.emotion.reduce(fleet_index)
                 break
 
+    def _get_exp_info_sleep(self):
+        return (1.5, 2) if self.__os_combat_drop else (0.25, 0.5)
+
     def handle_exp_info(self):
         if self.is_combat_executing():
             return False
-        if self.__os_combat_drop:
-            sleep = (1.5, 2)
-        else:
-            sleep = (0.25, 0.5)
+        sleep = self._get_exp_info_sleep()
         if self.appear_then_click(EXP_INFO_S):
             self.device.sleep(sleep)
             return True
@@ -192,36 +192,38 @@ class Combat(Combat_, MapEventHandler):
                 logger.info('Continuous combat detected')
                 continue
 
-    def handle_auto_search_battle_status(self, drop=None):
-        if self.appear(BATTLE_STATUS_C, interval=self.battle_status_click_interval):
-            logger.warning('Battle Status C')
-            # raise GameStuckError('Battle status C')
+    def _handle_single_battle_status(self, status_button, status_letter, drop):
+        if self.appear(status_button, interval=self.battle_status_click_interval):
+            if status_letter == 'S':
+                logger.info(f'Battle Status {status_letter}')
+            else:
+                logger.warning(f'Battle Status {status_letter}')
             if drop:
                 drop.handle_add(self)
             else:
                 self.device.sleep((0.25, 0.5))
-            self.device.click(BATTLE_STATUS_C)
+            self.device.click(status_button)
             return True
-        if self.appear(BATTLE_STATUS_D, interval=self.battle_status_click_interval):
-            logger.warning('Battle Status D')
-            # raise GameStuckError('Battle Status D')
-            if drop:
-                drop.handle_add(self)
-            else:
-                self.device.sleep((0.25, 0.5))
-            self.device.click(BATTLE_STATUS_D)
-            return True
+        return False
 
+    def handle_auto_search_battle_status(self, drop=None):
+        for status_button, status_letter in [
+            (BATTLE_STATUS_S, 'S'),
+            (BATTLE_STATUS_A, 'A'),
+            (BATTLE_STATUS_B, 'B'),
+            (BATTLE_STATUS_C, 'C'),
+            (BATTLE_STATUS_D, 'D'),
+        ]:
+            if self._handle_single_battle_status(status_button, status_letter, drop):
+                return True
         return False
 
     def handle_auto_search_exp_info(self):
-        if self.appear_then_click(EXP_INFO_C):
-            self.device.sleep((0.25, 0.5))
-            return True
-        if self.appear_then_click(EXP_INFO_D):
-            self.device.sleep((0.25, 0.5))
-            return True
-
+        sleep = self._get_exp_info_sleep()
+        for exp_info_button in [EXP_INFO_S, EXP_INFO_A, EXP_INFO_B, EXP_INFO_C, EXP_INFO_D]:
+            if self.appear_then_click(exp_info_button):
+                self.device.sleep(sleep)
+                return True
         return False
 
     def auto_search_combat(self, drop=None):

@@ -652,16 +652,16 @@
       "help": "Error.LlmAnalysis.help"
     },
     "LlmApiKey": {
-      "name": "Error.LlmApiKey.name",
-      "help": "Error.LlmApiKey.help"
+      "name": "LLM API Key",
+      "help": "Purchase model service and get an API key from https://platform.deepseek.com/ or https://platform.xiaomimimo.com/."
     },
     "LlmApiBase": {
-      "name": "Error.LlmApiBase.name",
-      "help": "Error.LlmApiBase.help"
+      "name": "LLM API Base",
+      "help": "Enter the provider's OpenAI-compatible Base URL. Refer to https://platform.deepseek.com/ or https://platform.xiaomimimo.com/ for setup instructions."
     },
     "LlmModel": {
-      "name": "Error.LlmModel.name",
-      "help": "Error.LlmModel.help"
+      "name": "LLM Model",
+      "help": "Enter a model name supported by your purchased service, as shown on https://platform.deepseek.com/ or https://platform.xiaomimimo.com/."
     }
   },
   "Optimization": {
@@ -1817,6 +1817,10 @@
       "only_05_hour": "0.5 hour + when no project available",
       "only_no_project": "When no project available",
       "do_not_use": "Do not use"
+    },
+    "CubePreserve": {
+      "name": "Preserve X Cubes",
+      "help": "When current cubes are less than or equal to this value, Research will temporarily skip projects that consume cubes.\n0 disables this protection."
     },
     "UseCoin": {
       "name": "Use Coins",
@@ -4372,7 +4376,19 @@
     },
     "NotifyOpsiMail": {
       "name": "Push Operation Siren notifications",
-      "help": "Push notifications about Corrosion 1 and Meowfficer farming. Requires the \"Error Push\" function to be enabled. May be noisy due to high volume of messages."
+      "help": "Send notifications about Corrosion 1 and Meowfficer farming through OnePush. Launcher notifications are controlled separately by \"Launcher notifications\". May be noisy due to high message volume."
+    },
+    "LauncherPush": {
+      "name": "Launcher notifications",
+      "help": "Send Operation Siren notifications to the launcher and Windows notification channel. Disabling this only affects launcher notifications and does not affect OnePush."
+    },
+    "IndependentPush": {
+      "name": "Independent push of Siren Operation information",
+      "help": "The \"Push Siren Operation Related Information\" function needs to be enabled simultaneously.\nTo disable it, navigate to Smart Port Settings > Debug Settings > Error Push Settings, and the \"Error Push\" function needs to be enabled simultaneously.\nTo enable it, use the Siren Action Push Settings. If you need to separate the pushed content, please enable this function"
+    },
+    "OpsiOnePushConfig": {
+      "name": "Operation Siren notifications push settings",
+      "help": "The settings will take effect only when the \"Siren Operation Information Independent Push\" function is enabled. Use Onepush to push a message about Erosion 1 and Short Cat. See the document for configuration method: https://github.com/LmeSzinc/AzurLaneAutoScript/wiki/Onepush-configuration-%5BCN%5D"
     }
   },
   "OpsiAshBeacon": {
@@ -5251,7 +5267,7 @@
       "MeowRounds": "Meow Rounds",
       "AvgMeowRoundTime": "Avg Meow Round Time",
       "MeowLootTitle": "Meow Session Loot",
-      "NoMeowDataNotice": "No data yet. Set \"OpSi drop screenshot\" to \"Upload\" first.",
+      "NoMeowDataNotice": "No local Meowfficer farming loot data yet. It will be generated automatically after a run.",
       "MeowAdvanceAdviceTitle": "Meow Early Start Advice",
       "CurrentAP": "Current AP: {value}",
       "ApPerRound": "AP per round: {value} AP",

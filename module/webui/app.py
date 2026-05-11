@@ -220,6 +220,7 @@ class AlasGUI(Frame):
         self._announcement_result = None
         self._announcement_fetching = False
         self._announcement_force = False
+        self._update_notified = False
         self.simulator = OSSimulator()
         self._simulator_logger_pm = None
         self._overview_log = None
@@ -503,7 +504,7 @@ class AlasGUI(Frame):
                             c['close'] = p['ap']
                             c['count'] += 1
                     view_title = t("Gui.Stat.ViewTitleMonth")
-                    
+
                 if not candles:
                     with use_scope("ap_chart", clear=True):
                         put_html(build_muted_notice(t("Gui.Stat.CannotAggregateKline")))
@@ -698,7 +699,7 @@ class AlasGUI(Frame):
                 avg_cl1_round_time = exp_stats.get_average_round_time()
                 exp_per_hour = exp_stats.get_exp_per_hour()
                 today_stats = exp_stats.get_today_stats()
-                
+
                 # 今日统计
                 if today_stats:
                     today_battles = today_stats.get('battle_count', 0)
@@ -710,7 +711,7 @@ class AlasGUI(Frame):
                     today_battles = 0
                     today_exp_str = "-"
                     today_run_str = "-"
-                
+
                 avg_cl1_battle_str = f"{avg_cl1_battle_time:.1f}{t('Gui.Stat.SecondUnit')}"
                 avg_cl1_round_str = f"{avg_cl1_round_time:.1f}{t('Gui.Stat.SecondUnit')}"
                 exp_per_hour_str = f"{exp_per_hour:.0f}/{t('Gui.Stat.HourUnit')}"
@@ -1062,16 +1063,16 @@ class AlasGUI(Frame):
                     with use_scope("ship_exp_table", clear=True):
                         put_html(build_muted_notice(t("Gui.Stat.NoShipExpData")))
                     return
-                
+
                 current_battles = get_opsi_stats_func(instance_name=instance_name).summary().get('total_battles', 0)
                 target_level = stats.data.get('target_level', 125)
                 avg_battle_time = stats.get_average_battle_time()
                 exp_per_hour = stats.get_exp_per_hour()
                 today_stats = stats.get_today_stats()
-                
+
                 # 从daily_stats获取今日战斗场次
                 today_battles = today_stats.get('battle_count', 0) if today_stats else 0
-                
+
                 labels = [
                     t("Gui.Stat.ShipSlot"),
                     t("Gui.Stat.Level"),
@@ -1083,7 +1084,7 @@ class AlasGUI(Frame):
                     t("Gui.Stat.SortiesNeeded"),
                     t("Gui.Stat.EstimatedTime"),
                 ]
-                
+
                 rows = []
                 for ship in stats.data.get('ships', []):
                     progress = stats.calculate_progress(ship, target_level, current_battles)
@@ -1099,18 +1100,18 @@ class AlasGUI(Frame):
                         progress['battles_needed'],
                         progress['time_needed']
                     ])
-                
+
                 with use_scope("ship_exp_table", clear=True):
                     put_html(build_title_block(t("Gui.Stat.ShipExpProgressTitle"), margin_top=16, margin_bottom=8))
                     put_text(t("Gui.Stat.LastCheckTime", value=stats.data.get('last_check_time', '-')))
-                    
+
                     # 显示效率统计
                     put_row([
                         put_text(t("Gui.Stat.AvgBattleTime", value=f"{avg_battle_time:.1f}", unit=t("Gui.Stat.SecondUnit"))),
                         put_text(t("Gui.Stat.AvgOpsiRoundTime", value=f"{stats.get_average_round_time():.1f}", unit=t("Gui.Stat.SecondUnit"))),
                         put_text(t("Gui.Stat.ExpEfficiency", value=f"{exp_per_hour:.0f}", unit=t("Gui.Stat.HourUnit"))),
                     ])
-                    
+
                     # 显示今日统计
                     if today_stats:
                         run_minutes = int(today_stats.get('total_run_time', 0) // 60)
@@ -1121,9 +1122,9 @@ class AlasGUI(Frame):
                         ])
                     else:
                         put_text(t("Gui.Stat.NoTodayBattleData"))
-                    
+
                     put_html(build_simple_table(labels, rows, extra_style=' margin-top:8px;'))
-                    
+
                     put_button(t("Gui.Stat.Refresh"), onclick=_render_ship_exp, color="off")
             except Exception as e:
                 with use_scope("ship_exp_table", clear=True):
@@ -1192,7 +1193,7 @@ class AlasGUI(Frame):
                             padding: 0 !important;
                         }
                     </style>
-                    <div id="commission_income_container" style="padding: 0; width: 100%; box-sizing: border-box;">
+                    <div id="commission_income_container" class="commission-income-summary" style="padding: 0; width: 100%; box-sizing: border-box;">
                     '''
 
                     html += f'<div style="font-size: 1rem; font-weight: 500; color: inherit; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid rgba(128, 128, 128, 0.2);">{t("Gui.Stat.CommissionIncomeTitle")}</div>'
@@ -1205,15 +1206,15 @@ class AlasGUI(Frame):
                         display_name = item_name_map.get(row['name'], row['name'])
                         icon_path = item_icon_map.get(row['name'], '')
                         total_str = f'+{row["total"]:,}' if row['total'] > 0 else '0'
-                        
+
                         icon_html = (
                             f'<div style="width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; background: {row["color"]}1a; border-radius: 8px; flex-shrink: 0;">'
                             f'<img src="{icon_path}" style="width: 24px; height: 24px; object-fit: contain; background: transparent;">'
                             f'</div>'
                         ) if icon_path else f'<div style="width: 12px; height: 12px; border-radius: 50%; background: {row["color"]}; flex-shrink: 0;"></div>'
-                        
+
                         html += f'''
-                        <div style="display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: rgba(128, 128, 128, 0.05); border-radius: 6px; border: 1px solid rgba(128, 128, 128, 0.15);">
+                        <div class="commission-income-metric-card" style="display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: rgba(128, 128, 128, 0.05); border-radius: 6px; border: 1px solid rgba(128, 128, 128, 0.15);">
                             {icon_html}
                             <div style="display: flex; flex-direction: column; gap: 1px;">
                                 <span style="font-size: 0.78rem; opacity: 0.65;">{display_name}</span>
@@ -1234,11 +1235,11 @@ class AlasGUI(Frame):
                         {'label': t("Gui.Stat.CommissionIncomeMonth"), 'value': 'month', 'color': 'primary' if period == 'month' else 'secondary'},
                     ], onclick=on_period_click, small=True, scope="commission_income")
 
-                    html2 = '<div style="width: 100% !important; max-width: none !important; display: block !important; box-sizing: border-box;">'
+                    html2 = '<div class="commission-income-table-wrap" style="width: 100% !important; max-width: none !important; display: block !important; box-sizing: border-box;">'
                     if not has_data:
                         html2 += f'<p style="margin: 12px 0; opacity: 0.6; font-size: 13px;">{t("Gui.Stat.CommissionIncomeNoData")}</p>'
                     else:
-                        html2 += '<table style="width: 100% !important; max-width: none !important; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed; display: table;">'
+                        html2 += '<table class="commission-income-table" style="width: 100% !important; max-width: none !important; border-collapse: collapse; font-size: 0.85rem; table-layout: fixed; display: table;">'
                         html2 += '<colgroup><col style="width: 40%;"><col style="width: 20%;"><col style="width: 20%;"><col style="width: 20%;"></colgroup>'
                         html2 += '<thead><tr>'
                         html2 += f'<th style="text-align: left; padding: 8px 10px; background: rgba(128, 128, 128, 0.1); border-bottom: 1px solid rgba(128, 128, 128, 0.2); font-weight: 500; opacity: 0.8; font-size: 0.8rem;">{t("Gui.Stat.CommissionIncomeHeaderItem")}</th>'
@@ -1252,13 +1253,13 @@ class AlasGUI(Frame):
                                 continue
                             display_name = item_name_map.get(row['name'], row['name'])
                             icon_path = item_icon_map.get(row['name'], '')
-                            
+
                             icon_html = (
                                 f'<div style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; background: {row["color"]}1a; border-radius: 4px; flex-shrink: 0;">'
                                 f'<img src="{icon_path}" style="width: 18px; height: 18px; object-fit: contain; background: transparent;">'
                                 f'</div>'
                             ) if icon_path else f'<div style="width: 8px; height: 8px; border-radius: 50%; background: {row["color"]}; flex-shrink: 0;"></div>'
-                            
+
                             html2 += '<tr style="border-bottom: 1px solid rgba(128, 128, 128, 0.1);">'
                             html2 += f'<td style="padding: 7px 10px;"><div style="display: flex; align-items: center; gap: 6px;">{icon_html}{display_name}</div></td>'
                             html2 += f'<td style="padding: 7px 10px; text-align: right; font-family: monospace;">{row["total"]:,}</td>'
@@ -1272,7 +1273,7 @@ class AlasGUI(Frame):
 
                     put_button(t("Gui.Stat.Refresh"), onclick=_render_commission_income, color="secondary", small=True, scope="commission_income")
 
-                    html3 = '<div style="width: 100% !important; max-width: none !important; display: block !important; box-sizing: border-box;">'
+                    html3 = '<div class="commission-income-recent" style="width: 100% !important; max-width: none !important; display: block !important; box-sizing: border-box;">'
                     if recent:
                         html3 += f'<div style="height: 1px; background: rgba(128, 128, 128, 0.2); margin: 24px 0;"></div>'
                         html3 += f'<div style="font-size: 0.9rem; font-weight: 500; color: inherit; margin-bottom: 10px;">{t("Gui.Stat.CommissionIncomeRecentTitle")}</div>'
@@ -1295,13 +1296,13 @@ class AlasGUI(Frame):
                                 meta = COMMISSION_ITEM_META.get(mapped_name, {'color': '#888'})
                                 icon_path = item_icon_map.get(mapped_name, '')
                                 display = item_name_map.get(mapped_name, mapped_name)
-                                
+
                                 icon_html = (
                                     f'<div style="width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; background: {meta["color"]}1a; border-radius: 4px; margin-right: 6px; vertical-align: middle;">'
                                     f'<img src="{icon_path}" style="width: 16px; height: 16px; object-fit: contain; background: transparent;">'
                                     f'</div>'
                                 ) if icon_path else f'<span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: {meta["color"]}; margin-right: 4px;"></span>'
-                                
+
                                 item_parts.append(
                                     f'<span style="display: inline-flex; align-items: center; margin-right: 12px; height: 24px;">'
                                     f'{icon_html}'
@@ -1311,7 +1312,7 @@ class AlasGUI(Frame):
                                 )
                             items_str = ''.join(item_parts) if item_parts else '<span style="opacity: 0.6;">--</span>'
                             html3 += (
-                                f'<div style="display: flex; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(128, 128, 128, 0.1);">'
+                                f'<div class="commission-income-recent-row" style="display: flex; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(128, 128, 128, 0.1);">'
                                 f'<span style="opacity: 0.65; min-width: 80px; font-size: 12px;">{time_str}</span>'
                                 f'<span style="flex: 1;">{items_str}</span>'
                                 f'</div>'
@@ -1357,7 +1358,7 @@ class AlasGUI(Frame):
         for group, arg_dict in deep_iter(self.ALAS_ARGS[task], depth=1):
             if self.set_group(group, arg_dict, config, task):
                 self.set_navigator(group)
-                
+
     def _os_simulator(self):
         self.simulator.set_config(self.alas_config)
         self._last_os_simulator_figure = None
@@ -1403,9 +1404,9 @@ class AlasGUI(Frame):
                 put_scope("scheduler_btn"),
             ]
         )
-        
+
         put_scope("figure_display")
-        
+
         put_scope(
             "logs",
             [
@@ -1530,7 +1531,7 @@ class AlasGUI(Frame):
             available_events = deep_get(self.ALAS_ARGS, keys=f'{task}.{group_name}.{arg_name}.option_{server}')
             if available_events is not None:
                 options = [opt for opt in options if opt in available_events]
-            
+
             server_options = output_kwargs.get(f"option_{server}")
             if output_kwargs["widget_type"] == "select" and isinstance(server_options, list) and server_options:
                 options = server_options
@@ -2572,17 +2573,35 @@ class AlasGUI(Frame):
 
         put_button(label=t("重启Alas"), onclick=_force_restart)
 
-        def _test_notify():
-            from module.webui.api import _notification_queue
+        def _test_notify_update():
+            from module.notify.notify import notify_webui
             instance = getattr(self, "alas_name", "alas")
-            _notification_queue.put_nowait({
-                "instance": instance,
-                "title": f"测试喵~ {instance} 测试~",
-                "content": f"这是一条测试通知喵~",
-            })
-            toast("已发送测试通知", color="success")
+            notify_webui(
+                instance=instance,
+                title="发现更新喵！",
+                content="测试更新推送逻辑，启动器应显示专用标题。",
+                updata=True
+            )
+            toast("已发送更新测试通知", color="success")
 
-        put_button(label="消息推送测试", onclick=_test_notify)
+        def _test_notify_announcement():
+            from module.notify.notify import notify_webui
+            instance = getattr(self, "alas_name", "alas")
+            notify_webui(
+                instance=instance,
+                title="新公告喵！",
+                content="测试公告推送逻辑，启动器应显示专用标题。",
+                updata=False
+            )
+            toast("已发送公告测试通知", color="info")
+
+        put_buttons(
+            buttons=[
+                {"label": "测试更新推送 (updata=True)", "value": "update", "color": "danger"},
+                {"label": "测试公告推送 (updata=False)", "value": "announcement", "color": "info"},
+            ],
+            onclick=[_test_notify_update, _test_notify_announcement]
+        )
 
     @use_scope("content", clear=True)
     def dev_remote(self) -> None:
@@ -2652,7 +2671,7 @@ class AlasGUI(Frame):
         def handle_preview_click():
             close_popup()
             toast("success", color="success")
-            
+
         with use_scope("ROOT"):
             popup("更新提醒", [
                 put_html(f'''
@@ -2664,7 +2683,7 @@ class AlasGUI(Frame):
                         </div>
                         <div style="font-size: 1.8rem; font-weight: 800; color: inherit; margin-bottom: 10px;">有可用更新！</div>
                         <div style="font-size: 0.95rem; opacity: 0.8; margin-bottom: 25px; line-height: 1.5;">发现新版本，建议立即更新以<br>获得最佳的脚本运行体验。</div>
-                        
+
                         <div style="background: rgba(128, 128, 128, 0.05); border-radius: 10px; padding: 15px; margin: 0 15px 25px; text-align: left; border: 1px solid rgba(128, 128, 128, 0.15);">
                             <div style="font-weight: 700; color: inherit; margin-bottom: 5px;">✨ 温馨提示:</div>
                             <div style="font-size: 0.85rem; color: inherit;">
@@ -2673,7 +2692,7 @@ class AlasGUI(Frame):
                         </div>
                     </div>
                 '''),
-                put_buttons([{"label": "立即更新 / Update Now", "value": "update", "color": "danger"}], 
+                put_buttons([{"label": "立即更新 / Update Now", "value": "update", "color": "danger"}],
                            onclick=[handle_preview_click]).style("text-align: center; width: 100%; padding-bottom: 20px; border-top: none;")
             ], size="large", implicit_close=True)
 
@@ -2938,6 +2957,10 @@ class AlasGUI(Frame):
             logger.info(f"Pushing announcement: {data.get('title')}")
             run_js(f"window.alasShowAnnouncement({title_json}, {content_json}, {announcement_id_json}, {url_json}, {force_json});")
 
+            # Pushing to launcher
+            from module.notify.notify import notify_webui
+            notify_webui(instance='Alas', title=data.get('title', ''), content=data.get('content', ''), updata=False)
+
             self._last_announcement_id = announcement_id
 
         elif force:
@@ -2980,7 +3003,7 @@ class AlasGUI(Frame):
             "var s=document.createElement('script');"
             "s.src='/static/assets/gui/js/alas-utils.js';"
             "document.head.appendChild(s);"
-        
+
         )
 
 
@@ -3024,6 +3047,18 @@ class AlasGUI(Frame):
             self.dev_update()
 
         def show_update_toast():
+            if self._update_notified:
+                return
+            self._update_notified = True
+
+            from module.notify.notify import notify_webui
+            notify_webui(
+                instance='Alas',
+                title=t("Gui.Toast.ClickToUpdate"),
+                content="检测到了新更新喵~ 指挥官快来更新喵~",
+                updata=True
+            )
+
             gradient = 'linear-gradient(90deg, #00b894, #0984e3)'
             toast(t("Gui.Toast.ClickToUpdate"), duration=0, position="right", color=gradient, onclick=goto_update)
 
@@ -3089,7 +3124,7 @@ class AlasGUI(Frame):
                                     </div>
                                     <div style="font-size: 1.8rem; font-weight: 800; color: inherit; margin-bottom: 10px;">有可用更新！</div>
                                     <div style="font-size: 0.95rem; opacity: 0.8; margin-bottom: 25px; line-height: 1.5;">发现新版本，建议立即更新以获得最佳的脚本运行体验。</div>
-                                    
+
                                     <div style="background: rgba(128, 128, 128, 0.05); border-radius: 10px; padding: 15px; margin: 0 15px 25px; text-align: left; border: 1px solid rgba(128, 128, 128, 0.15);">
                                         <div style="font-weight: 700; color: inherit; margin-bottom: 5px;">✨ 温馨提示:</div>
                                         <div style="font-size: 0.85rem; color: inherit;">
@@ -3098,7 +3133,7 @@ class AlasGUI(Frame):
                                     </div>
                                 </div>
                             '''),
-                            put_buttons([{"label": "立即更新 / Update Now", "value": "update", "color": "danger"}], 
+                            put_buttons([{"label": "立即更新 / Update Now", "value": "update", "color": "danger"}],
                                        onclick=[handle_update_click]).style("text-align: center; width: 100%; padding-bottom: 20px; border-top: none;")
                         ], size="large", implicit_close=True)
                     th._task.delay = 60
@@ -3107,7 +3142,7 @@ class AlasGUI(Frame):
                 yield
 
         self.task_handler.add(update_popup_checker(), delay=5)
-        
+
         # 公告检查功能（非阻塞）
         def announcement_checker():
             from module.base.api_client import ApiClient
@@ -3129,7 +3164,7 @@ class AlasGUI(Frame):
 
         # 添加公告检查任务（初始延迟5秒）
         self.task_handler.add(announcement_checker(), delay=5)
-        
+
         # 启动任务处理器
         self.task_handler.start()
 

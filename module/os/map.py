@@ -8,7 +8,7 @@ import inflection
 from module.base.timer import Timer
 from module.config.config import TaskEnd
 from module.config.utils import get_os_reset_remain
-from module.exception import CampaignEnd, GameTooManyClickError, MapWalkError, RequestHumanTakeover, ScriptError
+from module.exception import CampaignEnd, GameTooManyClickError, MapDetectionError, MapWalkError, RequestHumanTakeover, ScriptError
 from module.handler.login import LoginHandler, MAINTENANCE_ANNOUNCE
 from module.logger import logger
 from module.map.map import Map
@@ -1378,19 +1378,20 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                             self.globe_goto(prev, types='DANGEROUS')
                             continue
                 break
-            
-            if drop.count <= 1:
-                drop.clear()
 
             drop.set_combat_count(self._auto_search_battle_count)
 
-        # Rescan
-        self._solved_map_event = set()
-        self._solved_fleet_mechanism = False
-        if question:
-            self.clear_question(drop=drop)
-        if rescan:
-            self.map_rescan(rescan_mode=rescan, drop=drop)
+            # Rescan needs to stay inside the drop context. Some OpSi rewards
+            # appear only while clearing question marks or rescanning the map.
+            self._solved_map_event = set()
+            self._solved_fleet_mechanism = False
+            if question:
+                self.clear_question(drop=drop)
+            if rescan:
+                self.map_rescan(rescan_mode=rescan, drop=drop)
+
+            if drop.count <= 1:
+                drop.clear()
 
         return finished_combat
 
@@ -1586,7 +1587,13 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         logger.hr('Map rescan current', level=2)
         self.map_data_init(map_=None)
         self.handle_info_bar()
-        self.update()
+        try:
+            self.update()
+        except MapDetectionError:
+            # Map is likely cleared, homography cannot detect valid tiles
+            logger.warning('MAP RESCAN CURRENT Homography failed (score below 0.8), '
+                           'map may be cleared or detection is unstable, unhandled events may be missed')
+            return False
         if self.map_rescan_current(drop=drop):
             logger.info(f'Map rescan once end, result={True}')
             return True

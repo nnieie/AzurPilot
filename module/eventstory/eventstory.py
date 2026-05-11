@@ -1,5 +1,5 @@
 from module.base.timer import Timer
-from module.base.utils import rgb2gray
+from module.base.utils import rgb2gray, lower_template_match_similarity
 from module.campaign.campaign_ui import CampaignUI
 from module.combat.combat import Combat
 from module.eventstory.assets import *

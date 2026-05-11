@@ -1811,6 +1811,7 @@
     },
     "Research": {
       "UseCube": "only_05_hour",
+      "CubePreserve": 0,
       "UseCoin": "always_use",
       "UsePart": "always_use",
       "AllowDelay": true,
@@ -2335,7 +2336,10 @@
       "RepairPackThreshold": 0.9,
       "DoRandomMapEvent": true,
       "AkashiShopFilter": "ActionPoint",
-      "NotifyOpsiMail": true
+      "NotifyOpsiMail": true,
+      "LauncherPush": true,
+      "IndependentPush": false,
+      "OpsiOnePushConfig": "provider: null"
     },
     "Storage": {
       "Storage": {}

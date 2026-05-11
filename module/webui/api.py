@@ -298,11 +298,7 @@ _notification_queue = asyncio.Queue()
 async def api_notify(request):
     """POST /api/notify — 接收通知推送到 SSE"""
     data = await request.json()
-    await _notification_queue.put({
-        'instance': data.get('instance', ''),
-        'title': data.get('title', ''),
-        'content': data.get('content', ''),
-    })
+    await _notification_queue.put(data)
     return JSONResponse({'success': True})
 
 

@@ -587,6 +587,9 @@ Research:
   UseCube:
     value: only_05_hour
     option: [always_use, only_05_hour, only_no_project, do_not_use]
+  CubePreserve:
+    value: 0
+    validate: [0, 999999]
   UseCoin:
     value: always_use
     option: [always_use, only_05_hour, only_no_project, do_not_use]
@@ -1080,6 +1083,12 @@ OpsiGeneral:
   AkashiShopFilter: |-
     ActionPoint
   NotifyOpsiMail: true
+  LauncherPush: true
+  IndependentPush: false
+  OpsiOnePushConfig:
+    type: textarea
+    mode: yaml
+    value: "provider: null"
 OpsiAshBeacon:
   AttackMode:
     value: current

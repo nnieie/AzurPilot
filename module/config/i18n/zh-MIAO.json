@@ -653,15 +653,15 @@
     },
     "LlmApiKey": {
       "name": "LLM 的 API Key (。・ω・。)",
-      "help": "OpenAI兼容接口的密钥喵。"
+      "help": "请自行前往 https://platform.deepseek.com/ 或 https://platform.xiaomimimo.com/ 购买模型服务并获取 API Key 喵。"
     },
     "LlmApiBase": {
       "name": "LLM API Base (・ω・｀)",
-      "help": "OpenAI兼容接口的基础URL喵。"
+      "help": "填写模型服务提供商的 OpenAI 兼容 Base URL，可参考 https://platform.deepseek.com/ 或 https://platform.xiaomimimo.com/ 的接入说明喵。"
     },
     "LlmModel": {
       "name": "LLM 模型选择 (∩・ω・)∩",
-      "help": "使用的模型名，比如 gpt-4o-mini 喵。"
+      "help": "填写已购买服务支持的模型名称，请以 https://platform.deepseek.com/ 或 https://platform.xiaomimimo.com/ 平台展示为准喵。"
     }
   },
   "Optimization": {
@@ -1817,6 +1817,10 @@
       "only_05_hour": "0.5小时+无项目可做时喵",
       "only_no_project": "无项目可做时喵",
       "do_not_use": "不使用喵"
+    },
+    "CubePreserve": {
+      "name": "保留 X 个魔方喵",
+      "help": "当当前魔方数量小于等于该值时，科研暂时不选择消耗魔方的项目喵。\n0 表示关闭喵。"
     },
     "UseCoin": {
       "name": "使用物资喵",
@@ -4372,7 +4376,19 @@
     },
     "NotifyOpsiMail": {
       "name": "推送大世界相关信息 (｀・ω・´)っ",
-      "help": "推送侵蚀1和短猫信息，需同时开启错误推送，信息较多可能较吵喵。"
+      "help": "使用 OnePush 推送侵蚀1和短猫信息喵。启动器推送由“启动器推送”单独控制喵。信息较多可能较吵喵。"
+    },
+    "LauncherPush": {
+      "name": "启动器推送 (｀・ω・´)っ",
+      "help": "将大世界相关信息推送到启动器和 Windows 通知喵。关闭后仅影响启动器推送，不影响 OnePush 推送喵。"
+    },
+    "IndependentPush": {
+      "name": "大世界信息独立推送 (。・ω・。)",
+      "help": "发需要同时开启“推送大世界相关信息”功能喵。\n关闭时使用智慧港区设置 —> 调试设置 —> 错误推送设置，需要同时开启“错误推送”功能喵。\n开启时使用大世界推送设置，需要分离推送内容时请开启此功能喵。"
+    },
+    "OpsiOnePushConfig": {
+      "name": "大世界推送设置 (｀・ω・´)っ",
+      "help": "“大世界信息独立推送”功能开启时设置才生效喵。使用 Onepush 推送一条关于侵蚀1和短猫的信息喵。配置方法见文档喵：https://github.com/LmeSzinc/AzurLaneAutoScript/wiki/Onepush-configuration-%5BCN%5D"
     }
   },
   "OpsiAshBeacon": {
@@ -5251,7 +5267,7 @@
       "MeowRounds": "出击轮次喵",
       "AvgMeowRoundTime": "平均一轮短猫时长喵",
       "MeowLootTitle": "短猫相接收获喵",
-      "NoMeowDataNotice": "暂无数据，请将\"大世界掉落截图\"设置为\"上传\"喵",
+      "NoMeowDataNotice": "暂无本地短猫收获数据，完成一次短猫相接后会自动生成喵",
       "MeowAdvanceAdviceTitle": "短猫提前开始建议喵",
       "CurrentAP": "当前AP: {value}",
       "ApPerRound": "每轮消耗: {value} AP",

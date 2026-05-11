@@ -653,15 +653,15 @@
     },
     "LlmApiKey": {
       "name": "LLM API キー",
-      "help": "OpenAI 互換インターフェースの API キー。"
+      "help": "https://platform.deepseek.com/ または https://platform.xiaomimimo.com/ でモデルサービスを購入し、API キーを取得してください。"
     },
     "LlmApiBase": {
       "name": "LLM API ベース URL",
-      "help": "OpenAI 互換インターフェースのベース URL。"
+      "help": "モデルサービス提供元の OpenAI 互換 Base URL を入力してください。接続方法は https://platform.deepseek.com/ または https://platform.xiaomimimo.com/ の説明を参照してください。"
     },
     "LlmModel": {
       "name": "LLM モデル",
-      "help": "使用する LLM モデル名（例：gpt-4o-mini）。"
+      "help": "購入済みサービスで利用できるモデル名を入力してください。利用可能な名称は https://platform.deepseek.com/ または https://platform.xiaomimimo.com/ の表示に従ってください。"
     }
   },
   "Optimization": {
@@ -1817,6 +1817,10 @@
       "only_05_hour": "0.5時間＋実行可能なプロジェクトがない場合",
       "only_no_project": "実行可能なプロジェクトがない場合",
       "do_not_use": "使用しない"
+    },
+    "CubePreserve": {
+      "name": "X個のキューブを保持",
+      "help": "現在のキューブ数がこの値以下の場合、研究ではキューブを消費するプロジェクトを一時的に選択しません。\n0で無効。"
     },
     "UseCoin": {
       "name": "資金を使用する",
@@ -4372,7 +4376,19 @@
     },
     "NotifyOpsiMail": {
       "name": "セイレーン作戦関連情報をプッシュ",
-      "help": "侵食1とショートキャットの情報をプッシュするには、同時に「エラープッシュ」機能をオンにする必要があります。情報量が多いので騒がしいかもしれません。"
+      "help": "侵食1とショートキャットの情報を OnePush で通知します。ランチャー通知は「ランチャー通知」で個別に制御します。情報量が多いため騒がしい場合があります。"
+    },
+    "LauncherPush": {
+      "name": "ランチャー通知",
+      "help": "セイレーン作戦関連情報をランチャーと Windows 通知へ送信します。オフにしても OnePush 通知には影響しません。"
+    },
+    "IndependentPush": {
+      "name": "セイレーン作戦情報の独立プッシュ",
+      "help": "「セイレーン作戦関連情報のプッシュ通知」機能を同時に有効にする必要があります。\nオフの場合は、スマート港湾エリア設定 —> デバッグ設定 —> エラープッシュ設定を使用し、「エラープッシュ」機能を同時に有効にする必要があります。\nオンの場合は、セイレーン作戦プッシュ設定を使用し、プッシュ内容を分離する必要がある場合はこの機能を有効にしてください"
+    },
+    "OpsiOnePushConfig": {
+      "name": "セイレーン作戦プッシュ通知設定",
+      "help": "「塞壬行動信息獨立推送」功能開啟時設置才生效。Onepushを使用して、侵食1と短毛猫に関する情報を1つプッシュします。設定方法はドキュメントを参照してください：https://github.com/LmeSzinc/AzurLaneAutoScript/wiki/Onepush-configuration-%5BCN%5D"
     }
   },
   "OpsiAshBeacon": {
@@ -5251,7 +5267,7 @@
       "MeowRounds": "Meow Rounds",
       "AvgMeowRoundTime": "Avg Meow Round Time",
       "MeowLootTitle": "Meow Session Loot",
-      "NoMeowDataNotice": "No data yet. Set \"OpSi drop screenshot\" to \"Upload\" first.",
+      "NoMeowDataNotice": "No local Meowfficer farming loot data yet. It will be generated automatically after a run.",
       "MeowAdvanceAdviceTitle": "Meow Early Start Advice",
       "CurrentAP": "Current AP: {value}",
       "ApPerRound": "AP per round: {value} AP",

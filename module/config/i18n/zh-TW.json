@@ -652,16 +652,16 @@
       "help": "Error.LlmAnalysis.help"
     },
     "LlmApiKey": {
-      "name": "Error.LlmApiKey.name",
-      "help": "Error.LlmApiKey.help"
+      "name": "LLM API Key",
+      "help": "請自行前往 https://platform.deepseek.com/ 或 https://platform.xiaomimimo.com/ 購買模型服務並取得 API Key。"
     },
     "LlmApiBase": {
-      "name": "Error.LlmApiBase.name",
-      "help": "Error.LlmApiBase.help"
+      "name": "LLM API Base",
+      "help": "填寫模型服務提供商的 OpenAI 相容 Base URL，可參考 https://platform.deepseek.com/ 或 https://platform.xiaomimimo.com/ 的接入說明。"
     },
     "LlmModel": {
-      "name": "Error.LlmModel.name",
-      "help": "Error.LlmModel.help"
+      "name": "LLM 模型",
+      "help": "填寫已購買服務支援的模型名稱，請以 https://platform.deepseek.com/ 或 https://platform.xiaomimimo.com/ 平台展示為準。"
     }
   },
   "Optimization": {
@@ -958,7 +958,7 @@
       "event_20201002_en": "Counterattack Within the Fjord",
       "event_20201012_cn": "復刻劃破海空之翼",
       "event_20201029_cn": "激唱的UNIVERSE",
-      "event_20201126_cn": "假日航線",
+      "event_20201126_cn": "復刻假日航線",
       "event_20201229_cn": "復刻-負象限作戰",
       "event_20210121_cn": "復刻神聖的悲喜劇",
       "event_20210225_cn": "復刻破曉冰華",
@@ -1817,6 +1817,10 @@
       "only_05_hour": "0.5小時+無專案可做時",
       "only_no_project": "無專案可做時",
       "do_not_use": "不使用"
+    },
+    "CubePreserve": {
+      "name": "保留 X 個魔方",
+      "help": "當目前魔方數量小於等於該值時，科研暫時不選擇消耗魔方的專案。\n0 表示關閉。"
     },
     "UseCoin": {
       "name": "使用物資",
@@ -4372,7 +4376,19 @@
     },
     "NotifyOpsiMail": {
       "name": "推送大世界相關資訊",
-      "help": "推送關於侵蝕1和短貓的資訊，需要同時開啟“錯誤推送”功能，由於資訊較多，可能會比較吵"
+      "help": "使用 OnePush 推送關於侵蝕1和短貓的資訊。啟動器推送由「啟動器推送」單獨控制。由於資訊較多，可能會比較吵"
+    },
+    "LauncherPush": {
+      "name": "啟動器推送",
+      "help": "將大世界相關資訊推送到啟動器和 Windows 通知。關閉後僅影響啟動器推送，不影響 OnePush 推送。"
+    },
+    "IndependentPush": {
+      "name": "大世界信息獨立推送",
+      "help": "需要同時開啟「推送大世界相關資訊」功能。\n關閉時使用智慧港區設定 —> 調試設定 —> 錯誤推送設定，需要同時開啟「錯誤推送」功能。\n開啟時使用大世界推送設定，需要分離推送內容時請開啟此功能"
+    },
+    "OpsiOnePushConfig": {
+      "name": "大世界推送設定",
+      "help": "“大世界信息獨立推送”功能開啟時設定才生效。使用 Onepush 推送一條關於侵蝕1和短貓的資訊。配置方法見文檔：https://github.com/LmeSzinc/AzurLaneAutoScript/wiki/Onepush-configuration-%5BCN%5D"
     }
   },
   "OpsiAshBeacon": {
@@ -5251,7 +5267,7 @@
       "MeowRounds": "出击轮次",
       "AvgMeowRoundTime": "平均一轮短猫时长",
       "MeowLootTitle": "短猫相接收获",
-      "NoMeowDataNotice": "暂无数据，请将\"大世界掉落截图\"设置为\"上传\"",
+      "NoMeowDataNotice": "暫無本地短貓收穫數據，完成一次短貓相接後會自動生成",
       "MeowAdvanceAdviceTitle": "短猫提前开始建议",
       "CurrentAP": "当前AP: {value}",
       "ApPerRound": "每轮消耗: {value} AP",

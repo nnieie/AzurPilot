@@ -653,15 +653,15 @@
     },
     "LlmApiKey": {
       "name": "LLM API Key",
-      "help": "OpenAI 兼容接口的 API Key。"
+      "help": "请自行前往 https://platform.deepseek.com/ 或 https://platform.xiaomimimo.com/ 购买模型服务并获取 API Key。"
     },
     "LlmApiBase": {
       "name": "LLM API Base",
-      "help": "OpenAI 兼容接口的 Base URL。"
+      "help": "填写模型服务提供商的 OpenAI 兼容 Base URL，可参考 https://platform.deepseek.com/ 或 https://platform.xiaomimimo.com/ 的接入说明。"
     },
     "LlmModel": {
       "name": "LLM 模型",
-      "help": "使用的 LLM 模型名称，例如 gpt-4o-mini。"
+      "help": "填写已购买服务支持的模型名称，请以 https://platform.deepseek.com/ 或 https://platform.xiaomimimo.com/ 平台展示为准。"
     }
   },
   "Optimization": {
@@ -1817,6 +1817,10 @@
       "only_05_hour": "0.5小时+无项目可做时",
       "only_no_project": "无项目可做时",
       "do_not_use": "不使用"
+    },
+    "CubePreserve": {
+      "name": "保留 X 个魔方",
+      "help": "当当前魔方数量小于等于该值时，科研暂时不选择消耗魔方的项目。\n0 表示关闭。"
     },
     "UseCoin": {
       "name": "使用物资",
@@ -4372,7 +4376,19 @@
     },
     "NotifyOpsiMail": {
       "name": "推送大世界相关信息",
-      "help": "推送关于侵蚀1和短猫的信息，需要同时开启“错误推送”功能，由于信息较多，可能会比较吵"
+      "help": "使用 OnePush 推送关于侵蚀1和短猫的信息。启动器推送由“启动器推送”单独控制。由于信息较多，可能会比较吵"
+    },
+    "LauncherPush": {
+      "name": "启动器推送",
+      "help": "将大世界相关信息推送到启动器和 Windows 通知。关闭后仅影响启动器推送，不影响 OnePush 推送。"
+    },
+    "IndependentPush": {
+      "name": "大世界信息独立推送",
+      "help": "需要同时开启“推送大世界相关信息”功能。\n关闭时使用智慧港区设置 —> 调试设置 —> 错误推送设置，需要同时开启“错误推送”功能。\n开启时使用大世界推送设置，需要分离推送内容时请开启此功能"
+    },
+    "OpsiOnePushConfig": {
+      "name": "大世界推送设置",
+      "help": "“大世界信息独立推送”功能开启时设置才生效。使用 Onepush 推送一条关于侵蚀1和短猫的信息。配置方法见文档：https://github.com/LmeSzinc/AzurLaneAutoScript/wiki/Onepush-configuration-%5BCN%5D"
     }
   },
   "OpsiAshBeacon": {
@@ -5251,7 +5267,7 @@
       "MeowRounds": "出击轮次",
       "AvgMeowRoundTime": "平均一轮短猫时长",
       "MeowLootTitle": "短猫相接收获",
-      "NoMeowDataNotice": "暂无数据，请将\"大世界掉落截图\"设置为\"上传\"",
+      "NoMeowDataNotice": "暂无本地短猫收获数据，完成一次短猫相接后会自动生成",
       "MeowAdvanceAdviceTitle": "短猫提前开始建议",
       "CurrentAP": "当前AP: {value}",
       "ApPerRound": "每轮消耗: {value} AP",
