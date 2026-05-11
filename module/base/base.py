@@ -263,6 +263,10 @@ class ModuleBase:
 
         appear = button.match_template_color(
             self.device.image, offset=offset, similarity=similarity, threshold=threshold)
+        if not appear:
+            from module.device.usb_capture_guard import match_template_color as usb_capture_guard_match_template_color
+            appear = usb_capture_guard_match_template_color(
+                self, button, offset=offset, similarity=similarity, threshold=threshold)
 
         if appear and interval:
             self.interval_timer[button.name].reset()

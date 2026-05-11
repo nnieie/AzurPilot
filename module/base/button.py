@@ -42,6 +42,10 @@ class Button(Resource):
         self._match_init = False
         self._match_binary_init = False
         self._match_luma_init = False
+        self._match_luma_similarity = None
+        self._match_template_color_luma_ok = None
+        self._match_template_color_color = None
+        self._match_template_color_color_diff = None
         self.image = None
         self.image_binary = None
         self.image_luma = None
@@ -311,17 +315,24 @@ class Button(Resource):
         image = crop(image, offset + self.area, copy=False)
 
         if self.is_gif:
+            best_sim = None
             image_luma = rgb2luma(image)
             for template in self.image_luma:
                 res = cv2.matchTemplate(template, image_luma, cv2.TM_CCOEFF_NORMED)
                 _, sim, _, point = cv2.minMaxLoc(res)
+                if best_sim is None or sim > best_sim:
+                    best_sim = sim
                 self._button_offset = area_offset(self._button, offset[:2] + np.array(point))
                 if sim > similarity:
+                    self._match_luma_similarity = sim
                     return True
+            self._match_luma_similarity = best_sim
+            return False
         else:
             image_luma = rgb2luma(image)
             res = cv2.matchTemplate(self.image_luma, image_luma, cv2.TM_CCOEFF_NORMED)
             _, sim, _, point = cv2.minMaxLoc(res)
+            self._match_luma_similarity = sim
             self._button_offset = area_offset(self._button, offset[:2] + np.array(point))
             return sim > similarity
 
@@ -338,11 +349,18 @@ class Button(Resource):
         Returns:
             bool.
         """
+        self._match_template_color_luma_ok = False
+        self._match_template_color_color = None
+        self._match_template_color_color_diff = None
+
         if self.match_luma(image, offset=offset, similarity=similarity):
+            self._match_template_color_luma_ok = True
             diff = np.subtract(self.button, self._button)[:2]
             area = area_offset(self.area, offset=diff)
             color = get_color(image, area)
-            return color_similar(color1=color, color2=self.color, threshold=threshold)
+            self._match_template_color_color = color
+            self._match_template_color_color_diff = color_similarity(color1=color, color2=self.color)
+            return self._match_template_color_color_diff <= threshold
         else:
             return False
 
