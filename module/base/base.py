@@ -231,6 +231,9 @@ class ModuleBase:
             appear = button.match(self.device.image, offset=offset, similarity=similarity)
         else:
             appear = button.appear_on(self.device.image, threshold=threshold)
+            if not appear:
+                from module.device.usb_capture_guard import appear_on as usb_capture_guard_appear_on
+                appear = usb_capture_guard_appear_on(self, button, threshold=threshold)
 
         if appear and interval:
             self.interval_timer[button.name].reset()

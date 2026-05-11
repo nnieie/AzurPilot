@@ -8,6 +8,7 @@ import os
 import time
 from datetime import datetime
 
+from module.base.utils import color_similarity, get_color
 from module.logger import logger
 
 
@@ -26,6 +27,12 @@ def _safe_float(value):
     if value is None:
         return None
     return round(float(value), 6)
+
+
+def _safe_color(value):
+    if value is None:
+        return None
+    return [_safe_float(channel) for channel in value]
 
 
 def _task_name(config):
@@ -70,6 +77,19 @@ def _near_threshold_reason(button, similarity, threshold):
     return None
 
 
+def _appear_on_near_threshold(button, image, threshold):
+    try:
+        observed = get_color(image, button.area)
+        expected = button.color
+        diff = color_similarity(observed, expected)
+    except Exception:
+        return None, None, None
+
+    if 0 < diff - threshold <= COLOR_MARGIN:
+        return 'color_near_threshold', observed, diff
+    return None, observed, diff
+
+
 def _adb_cached_screenshot(device):
     now = time.time()
     image = getattr(device, '_usb_capture_guard_adb_image', None)
@@ -86,6 +106,62 @@ def _adb_cached_screenshot(device):
     device._usb_capture_guard_adb_image = image
     device._usb_capture_guard_adb_image_time = time.time()
     return image, 'fresh', 0
+
+
+def appear_on(main, button, threshold):
+    """
+    Return True only when ADB confirms a USB near-threshold color false negative.
+    """
+    if not _is_usb_capture(main):
+        return False
+
+    reason, observed, diff = _appear_on_near_threshold(button, main.device.image, threshold)
+    if reason is None:
+        return False
+
+    payload = {
+        'event': 'near_threshold_fallback',
+        'config': getattr(main.config, 'config_name', None),
+        'task': _task_name(main.config),
+        'button': getattr(button, 'name', str(button)),
+        'mode': 'appear_on',
+        'reason': reason,
+        'usb_color': _safe_color(observed),
+        'expected_color': _safe_color(getattr(button, 'color', None)),
+        'usb_color_diff': _safe_float(diff),
+        'color_threshold': threshold,
+    }
+
+    try:
+        adb_image, source, age = _adb_cached_screenshot(main.device)
+        payload['adb_source'] = source
+        payload['adb_age_seconds'] = _safe_float(age)
+        if adb_image is None:
+            payload['result'] = 'skip'
+            _write_guard_log(payload)
+            return False
+
+        appear = button.appear_on(adb_image, threshold=threshold)
+        _, adb_color, adb_diff = _appear_on_near_threshold(button, adb_image, threshold)
+        payload['adb_color'] = _safe_color(adb_color)
+        payload['adb_color_diff'] = _safe_float(adb_diff)
+        payload['result'] = 'hit' if appear else 'miss'
+        _write_guard_log(payload)
+
+        if appear:
+            logger.info(
+                f'USB capture guard confirmed {button.name}: '
+                f'{reason}, usb_diff={payload["usb_color_diff"]}, '
+                f'adb_diff={payload["adb_color_diff"]}')
+            return True
+
+        return False
+    except Exception as e:
+        payload['result'] = 'error'
+        payload['error'] = repr(e)
+        _write_guard_log(payload)
+        logger.warning(f'USB capture guard failed for {button.name}: {e}')
+        return False
 
 
 def match_template_color(main, button, offset, similarity, threshold):
