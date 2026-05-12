@@ -395,13 +395,30 @@ class Camera(MapOperation):
         location = location_ensure(location)
         logger.info('Focus to: %s' % location2node(location))
 
+        stalled = 0
         while 1:
             vector = np.array(location) - self.camera
+            distance = np.linalg.norm(vector)
             swipe = tuple(np.min([np.abs(vector), swipe_limit], axis=0) * np.sign(vector))
+            camera_before = self.camera
             has_swiped = self.map_swipe(swipe)
 
             if not has_swiped:
                 break
+
+            new_distance = np.linalg.norm(np.array(location) - self.camera)
+            if self.camera == camera_before or new_distance >= distance:
+                stalled += 1
+                logger.warning(
+                    f'Focus to {location2node(location)} stalled: '
+                    f'{location2node(camera_before)} -> {location2node(self.camera)}, '
+                    f'distance {distance:.2f} -> {new_distance:.2f}'
+                )
+                if stalled >= 3:
+                    logger.warning(f'Focus to {location2node(location)} stopped after stalled swipes')
+                    break
+            else:
+                stalled = 0
 
     def full_scan(self, queue=None, must_scan=None, battle_count=0, mystery_count=0, siren_count=0, carrier_count=0,
                   mode='normal'):
