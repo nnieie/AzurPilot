@@ -16,6 +16,7 @@ from module.os_handler.assets import (
     FAVORITE_BUTTON,
     FAVORITE_TEMPLATE,
     FLEET_DEPLOY_BUTTON,
+    FLEET_DEPLOYMENT,
     FLEET_SLOT_1_BUTTON,
     FLEET_SLOT_1_TEMPLATE,
     FLEET_SLOT_2_BUTTON,
@@ -328,7 +329,7 @@ class OpsiFleetAutoChange(CoinTaskMixin, DockMixin, OSMap):
 
         timeout = 10
         enter_timeout = 0
-        while not self.appear(FLEET_SLOT_1_TEMPLATE, offset=(20, 20)):
+        while not self.appear(FLEET_DEPLOYMENT, offset=(20, 20)):
             self.device.screenshot()
             enter_timeout += 1
             if enter_timeout > timeout * 2:
@@ -409,7 +410,7 @@ class OpsiFleetAutoChange(CoinTaskMixin, DockMixin, OSMap):
         self.device.screenshot()
 
         return_timeout = 0
-        while not self.appear(FLEET_SLOT_1_TEMPLATE, offset=(20, 20)):
+        while not self.appear(FLEET_DEPLOYMENT, offset=(20, 20)):
             self.device.screenshot()
             return_timeout += 1
             if return_timeout > timeout * 2:
