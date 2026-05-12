@@ -184,7 +184,7 @@ Error:
 Optimization:
   OcrDevice: 
     value: auto
-    option: [auto, cpu, gpu]
+    option: [auto, cpu, gpu, ane]
   ScreenshotInterval: 0.3
   CombatScreenshotInterval: 1.0
   TaskHoardingDuration: 0
@@ -313,6 +313,7 @@ Campaign:
   Use2xBook: false
   AmbushEvade: true
   UseRecommendFleet: false
+  DefeatWithdraw: true
 StopCondition:
   OilLimit: 1000
   CoinLimit: 0

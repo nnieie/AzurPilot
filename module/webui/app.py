@@ -623,7 +623,7 @@ class AlasGUI(Frame):
                         coins_legend_html += '<span style="display:flex; align-items:center; gap:4px;"><span style="width:12px; height:2px; background:#ce93d8; border-radius:1px; border-top:1px dashed #ce93d8;"></span>紫币</span>'
 
             chart_id = f"ap_cv_{id(self)}"
-            detail_controls_display = 'display:flex;' if is_detail_mode else 'display:none;'
+            detail_controls_display = 'display:flex;' if current_view in ('line', 'detail') else 'display:none;'
 
             html_tpl = read_webapp_template('ap_chart_panel.html')
             html = html_tpl.format(

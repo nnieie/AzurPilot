@@ -125,7 +125,7 @@ class GeneratedConfig:
     Error_LlmModel = 'Nvidia/qwen/qwen2.5-coder-32b-instruct'
 
     # Group `Optimization`
-    Optimization_OcrDevice = 'auto'  # auto, cpu, gpu
+    Optimization_OcrDevice = 'auto'  # auto, cpu, gpu, ane
     Optimization_ScreenshotInterval = 0.3
     Optimization_CombatScreenshotInterval = 1.0
     Optimization_TaskHoardingDuration = 0
@@ -190,6 +190,7 @@ class GeneratedConfig:
     Campaign_Use2xBook = False
     Campaign_AmbushEvade = True
     Campaign_UseRecommendFleet = False
+    Campaign_DefeatWithdraw = True
 
     # Group `StopCondition`
     StopCondition_OilLimit = 1000

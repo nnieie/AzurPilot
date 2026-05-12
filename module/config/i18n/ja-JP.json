@@ -670,11 +670,12 @@
       "help": ""
     },
     "OcrDevice": {
-      "name": "Optimization.OcrDevice.name",
-      "help": "Optimization.OcrDevice.help",
-      "auto": "auto",
-      "cpu": "cpu",
-      "gpu": "gpu"
+      "name": "OCR设备选择",
+      "help": "",
+      "auto": "自動",
+      "cpu": "CPU",
+      "gpu": "GPU",
+      "ane": "ANE (Apple)"
     },
     "ScreenshotInterval": {
       "name": "スクリーンショット速度をX秒に1枚に減速",
@@ -1109,6 +1110,10 @@
     "UseRecommendFleet": {
       "name": "自動編成",
       "help": "ゲーム内蔵の推奨編成を使用してハードステージの編成を自動的に完了します"
+    },
+    "DefeatWithdraw": {
+      "name": "道中での戦闘で敗北し撤退",
+      "help": "道中戦闘で敗北した際の処理方法。オンの場合は海域から直接退出し、オフの場合は別のチームが引き継いで後続の戦闘を試みる。"
     }
   },
   "StopCondition": {

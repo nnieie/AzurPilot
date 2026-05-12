@@ -671,10 +671,11 @@
     },
     "OcrDevice": {
       "name": "OCR设备选择 (´・ω・`)",
-      "help": "OCR跑在CPU或GPU上。没独显别选GPU喵。自动：显存>1G用GPU否则CPU。非Windows无GPU。",
+      "help": "OCR跑在CPU/GPU/ANE上。GPU仅用于Windows DirectML，ANE仅用于macOS Apple Neural Engine。自动：Apple Silicon Mac用ANE，Windows显存>1G用GPU，否则CPU。",
       "auto": "自动判断 (｀・ω・´)",
       "cpu": "CPU喵",
-      "gpu": "GPU喵"
+      "gpu": "GPU喵",
+      "ane": "ANE (Apple)喵"
     },
     "ScreenshotInterval": {
       "name": "放慢截图至 X 秒一张 (´-ω-`)zzz",
@@ -1109,6 +1110,10 @@
     "UseRecommendFleet": {
       "name": "自动配队困难图 (｀・ω・´)ゞ",
       "help": "使用游戏推荐阵容自动完成困难配队喵~"
+    },
+    "DefeatWithdraw": {
+      "name": "道中战斗失败撤退 (｀・ω・´)",
+      "help": "道中战斗战败时的处理方式喵。开启时直接退出海域，关闭时尝试由另一队接管后续战斗喵。"
     }
   },
   "StopCondition": {

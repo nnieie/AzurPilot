@@ -340,123 +340,75 @@
         oc.scale(dpr, dpr);
 
         if (chartType === 'line') {
+            var visibleStart = Math.max(0, Math.floor(panOffset));
+            var visibleCount = Math.ceil(nn / zoomLevel);
+            var visibleEnd = Math.min(nn, visibleStart + visibleCount);
+            var visibleNn = visibleEnd - visibleStart;
+
+            var dMin = Infinity, dMax = -Infinity;
+            for (var i = visibleStart; i < visibleEnd; i++) {
+                if (ap[i] < dMin) dMin = ap[i];
+                if (ap[i] > dMax) dMax = ap[i];
+            }
+            if (dMin === Infinity) dMin = 0;
+            if (dMax === -Infinity) dMax = 100;
+            var drng = dMax - dMin || 1;
+            dMin -= drng * 0.1;
+            dMax += drng * 0.1;
+
+            var xScale = gW / Math.max(visibleNn - 1, 1);
+            var idx = Math.round(visibleStart + (mx_ - pad.l) / xScale);
+            idx = Math.max(0, Math.min(nn - 1, idx));
+            var px = pad.l + (idx - visibleStart) * xScale;
+            var py = pad.t + gH - (ap[idx] - dMin) / (dMax - dMin) * gH;
+
+            oc.strokeStyle = "rgba(255,255,255,0.18)";
+            oc.lineWidth = 1;
+            oc.setLineDash([4, 3]);
+            oc.beginPath(); oc.moveTo(px, pad.t); oc.lineTo(px, pad.t + gH); oc.stroke();
+            oc.beginPath(); oc.moveTo(pad.l, py); oc.lineTo(W - pad.r, py); oc.stroke();
+            oc.setLineDash([]);
+
+            oc.beginPath(); oc.arc(px, py, 6, 0, Math.PI * 2);
+            oc.fillStyle = "rgba(100,181,246,0.3)"; oc.fill();
+            oc.beginPath(); oc.arc(px, py, 4, 0, Math.PI * 2);
+            oc.fillStyle = "#64b5f6"; oc.fill();
+            oc.strokeStyle = "#fff"; oc.lineWidth = 2; oc.stroke();
+            oc.setTransform(1, 0, 0, 1, 0, 0);
+
+            var diff = idx > 0 ? (ap[idx] - ap[idx - 1]) : 0;
+            var isUp = diff >= 0;
+            var dc = isUp ? "#ef5350" : "#26a69a";
+            var ds = (isUp ? "+" : "") + diff;
+            var tooltipRows = [
+                { style: { color: "#888", marginBottom: "4px", fontWeight: "600" }, parts: [{ type: 'text', value: labels[idx] }] },
+                { parts: [{ type: 'text', value: "体力: " }, { type: 'bold', value: String(ap[idx]), style: { color: "#64b5f6" } }] },
+                { parts: [{ type: 'text', value: "单次变化: " }, { type: 'bold', value: ds, style: { color: dc } }] }
+            ];
+
             if (isDetailMode) {
-                var visibleStart = Math.max(0, Math.floor(panOffset));
-                var visibleCount = Math.ceil(nn / zoomLevel);
-                var visibleEnd = Math.min(nn, visibleStart + visibleCount);
-                var visibleNn = visibleEnd - visibleStart;
-
-                var dMin = Infinity, dMax = -Infinity;
-                for (var i = visibleStart; i < visibleEnd; i++) {
-                    if (ap[i] < dMin) dMin = ap[i];
-                    if (ap[i] > dMax) dMax = ap[i];
-                }
-                if (dMin === Infinity) dMin = 0;
-                if (dMax === -Infinity) dMax = 100;
-                var drng = dMax - dMin || 1;
-                dMin -= drng * 0.1;
-                dMax += drng * 0.1;
-
-                var xScale = gW / visibleNn;
-                var idx = Math.floor(panOffset + (mx_ - pad.l) / xScale);
-                idx = Math.max(0, Math.min(nn - 1, idx));
-                var px = pad.l + (idx - visibleStart) * xScale;
-                var py = pad.t + gH - (ap[idx] - dMin) / (dMax - dMin) * gH;
-
-                oc.strokeStyle = "rgba(255,255,255,0.18)";
-                oc.lineWidth = 1;
-                oc.setLineDash([4, 3]);
-                oc.beginPath(); oc.moveTo(px, pad.t); oc.lineTo(px, pad.t + gH); oc.stroke();
-                oc.beginPath(); oc.moveTo(pad.l, py); oc.lineTo(W - pad.r, py); oc.stroke();
-                oc.setLineDash([]);
-
-                oc.beginPath(); oc.arc(px, py, 6, 0, Math.PI * 2);
-                oc.fillStyle = "rgba(100,181,246,0.3)"; oc.fill();
-                oc.beginPath(); oc.arc(px, py, 4, 0, Math.PI * 2);
-                oc.fillStyle = "#64b5f6"; oc.fill();
-                oc.strokeStyle = "#fff"; oc.lineWidth = 2; oc.stroke();
-                oc.setTransform(1, 0, 0, 1, 0, 0);
-
-                var diff = idx > 0 ? (ap[idx] - ap[idx - 1]) : 0;
-                var isUp = diff >= 0;
-                var dc = isUp ? "#ef5350" : "#26a69a";
-                var ds = (isUp ? "+" : "") + diff;
                 var source = sources && sources[idx] ? sources[idx] : '-';
                 var sourceColor = source === 'cl1' ? '#64b5f6' : (source === 'meow' ? '#ff9800' : '#888');
-
-                var tooltipRows = [
-                    { style: { color: "#888", marginBottom: "4px", fontWeight: "600" }, parts: [{ type: 'text', value: labels[idx] }] },
-                    { parts: [{ type: 'text', value: "体力: " }, { type: 'bold', value: String(ap[idx]), style: { color: "#64b5f6" } }] },
-                    { parts: [{ type: 'text', value: "单次变化: " }, { type: 'bold', value: ds, style: { color: dc } }] },
-                    { parts: [{ type: 'text', value: "来源: " }, { type: 'bold', value: source, style: { color: sourceColor } }] }
-                ];
-
-                if (showCoins && yellowCoinsLen > 0 && idx < yellowCoinsLen && yellowCoins[idx] !== null && yellowCoins[idx] !== undefined) {
-                    var yc = yellowCoins[idx];
-                    var ycDiff = idx > 0 && yellowCoins[idx - 1] !== null && yellowCoins[idx - 1] !== undefined ? (yc - yellowCoins[idx - 1]) : 0;
-                    var ycColor = ycDiff >= 0 ? "#ef5350" : "#26a69a";
-                    var ycDiffStr = (ycDiff >= 0 ? "+" : "") + ycDiff;
-                    tooltipRows.push({ parts: [{ type: 'text', value: "黄币: " }, { type: 'bold', value: String(yc), style: { color: "#ffd54f" } }, { type: 'text', value: " (" + ycDiffStr + ")", style: { color: ycColor } }] });
-                }
-
-                if (showCoins && purpleCoinsLen > 0 && idx < purpleCoinsLen && purpleCoins[idx] !== null && purpleCoins[idx] !== undefined) {
-                    var pc = purpleCoins[idx];
-                    var pcDiff = idx > 0 && purpleCoins[idx - 1] !== null && purpleCoins[idx - 1] !== undefined ? (pc - purpleCoins[idx - 1]) : 0;
-                    var pcColor = pcDiff >= 0 ? "#ef5350" : "#26a69a";
-                    var pcDiffStr = (pcDiff >= 0 ? "+" : "") + pcDiff;
-                    tooltipRows.push({ parts: [{ type: 'text', value: "紫币: " }, { type: 'bold', value: String(pc), style: { color: "#ce93d8" } }, { type: 'text', value: " (" + pcDiffStr + ")", style: { color: pcColor } }] });
-                }
-
-                setTooltipContent(tipEl, tooltipRows);
-            } else {
-                var ratio = (mx_ - pad.l) / gW;
-                var idx = Math.round(ratio * (nn - 1));
-                idx = Math.max(0, Math.min(nn - 1, idx));
-                var px = xOfLine(idx), py = yOf(ap[idx]);
-
-                oc.strokeStyle = "rgba(255,255,255,0.18)";
-                oc.lineWidth = 1;
-                oc.setLineDash([4, 3]);
-                oc.beginPath(); oc.moveTo(px, pad.t); oc.lineTo(px, pad.t + gH); oc.stroke();
-                oc.beginPath(); oc.moveTo(pad.l, py); oc.lineTo(W - pad.r, py); oc.stroke();
-                oc.setLineDash([]);
-
-                oc.beginPath(); oc.arc(px, py, 6, 0, Math.PI * 2);
-                oc.fillStyle = "rgba(100,181,246,0.3)"; oc.fill();
-                oc.beginPath(); oc.arc(px, py, 4, 0, Math.PI * 2);
-                oc.fillStyle = "#64b5f6"; oc.fill();
-                oc.strokeStyle = "#fff"; oc.lineWidth = 2; oc.stroke();
-                oc.setTransform(1, 0, 0, 1, 0, 0);
-
-                var diff = idx > 0 ? (ap[idx] - ap[idx - 1]) : 0;
-                var isUp = diff >= 0;
-                var dc = isUp ? "#ef5350" : "#26a69a";
-                var ds = (isUp ? "+" : "") + diff;
-
-                var tooltipRows = [
-                    { style: { color: "#888", marginBottom: "4px", fontWeight: "600" }, parts: [{ type: 'text', value: labels[idx] }] },
-                    { parts: [{ type: 'text', value: "体力: " }, { type: 'bold', value: String(ap[idx]), style: { color: "#64b5f6" } }] },
-                    { parts: [{ type: 'text', value: "单次变化: " }, { type: 'bold', value: ds, style: { color: dc } }] }
-                ];
-
-                if (showCoins && yellowCoinsLen > 0 && idx < yellowCoinsLen && yellowCoins[idx] !== null && yellowCoins[idx] !== undefined) {
-                    var yc = yellowCoins[idx];
-                    var ycDiff = idx > 0 && yellowCoins[idx - 1] !== null && yellowCoins[idx - 1] !== undefined ? (yc - yellowCoins[idx - 1]) : 0;
-                    var ycColor = ycDiff >= 0 ? "#ef5350" : "#26a69a";
-                    var ycDiffStr = (ycDiff >= 0 ? "+" : "") + ycDiff;
-                    tooltipRows.push({ parts: [{ type: 'text', value: "黄币: " }, { type: 'bold', value: String(yc), style: { color: "#ffd54f" } }, { type: 'text', value: " (" + ycDiffStr + ")", style: { color: ycColor } }] });
-                }
-
-                if (showCoins && purpleCoinsLen > 0 && idx < purpleCoinsLen && purpleCoins[idx] !== null && purpleCoins[idx] !== undefined) {
-                    var pc = purpleCoins[idx];
-                    var pcDiff = idx > 0 && purpleCoins[idx - 1] !== null && purpleCoins[idx - 1] !== undefined ? (pc - purpleCoins[idx - 1]) : 0;
-                    var pcColor = pcDiff >= 0 ? "#ef5350" : "#26a69a";
-                    var pcDiffStr = (pcDiff >= 0 ? "+" : "") + pcDiff;
-                    tooltipRows.push({ parts: [{ type: 'text', value: "紫币: " }, { type: 'bold', value: String(pc), style: { color: "#ce93d8" } }, { type: 'text', value: " (" + pcDiffStr + ")", style: { color: pcColor } }] });
-                }
-
-                setTooltipContent(tipEl, tooltipRows);
+                tooltipRows.push({ parts: [{ type: 'text', value: "来源: " }, { type: 'bold', value: source, style: { color: sourceColor } }] });
             }
+
+            if (showCoins && yellowCoinsLen > 0 && idx < yellowCoinsLen && yellowCoins[idx] !== null && yellowCoins[idx] !== undefined) {
+                var yc = yellowCoins[idx];
+                var ycDiff = idx > 0 && yellowCoins[idx - 1] !== null && yellowCoins[idx - 1] !== undefined ? (yc - yellowCoins[idx - 1]) : 0;
+                var ycColor = ycDiff >= 0 ? "#ef5350" : "#26a69a";
+                var ycDiffStr = (ycDiff >= 0 ? "+" : "") + ycDiff;
+                tooltipRows.push({ parts: [{ type: 'text', value: "黄币: " }, { type: 'bold', value: String(yc), style: { color: "#ffd54f" } }, { type: 'text', value: " (" + ycDiffStr + ")", style: { color: ycColor } }] });
+            }
+
+            if (showCoins && purpleCoinsLen > 0 && idx < purpleCoinsLen && purpleCoins[idx] !== null && purpleCoins[idx] !== undefined) {
+                var pc = purpleCoins[idx];
+                var pcDiff = idx > 0 && purpleCoins[idx - 1] !== null && purpleCoins[idx - 1] !== undefined ? (pc - purpleCoins[idx - 1]) : 0;
+                var pcColor = pcDiff >= 0 ? "#ef5350" : "#26a69a";
+                var pcDiffStr = (pcDiff >= 0 ? "+" : "") + pcDiff;
+                tooltipRows.push({ parts: [{ type: 'text', value: "紫币: " }, { type: 'bold', value: String(pc), style: { color: "#ce93d8" } }, { type: 'text', value: " (" + pcDiffStr + ")", style: { color: pcColor } }] });
+            }
+
+            setTooltipContent(tipEl, tooltipRows);
         } else {
             var idx = Math.floor((mx_ - pad.l) / candleSpace);
             idx = Math.max(0, Math.min(nn - 1, idx));
@@ -529,7 +481,7 @@
         oc.clearRect(0, 0, ovCv.width, ovCv.height);
     });
 
-    if (isDetailMode) {
+    if (chartType === 'line') {
         var zoomLevel = 1.0;
         var panOffset = 0;
         var maxZoom = 5.0;
@@ -583,7 +535,7 @@
             ctx.textAlign = "center";
             ctx.textBaseline = "top";
 
-            var xScale = gW / visibleNn;
+            var xScale = gW / Math.max(visibleNn - 1, 1);
             function dxOf(i) { return pad.l + (i - visibleStart) * xScale; }
             function dyOf(v) { return pad.t + gH - (v - dMin) / (dMax - dMin) * gH; }
 
@@ -650,7 +602,7 @@
             if (!isDragging) return;
             var dx = e.clientX - dragStartX;
             var visibleCount = Math.ceil(nn / zoomLevel);
-            var xScale = gW / visibleCount;
+            var xScale = gW / Math.max(visibleCount - 1, 1);
             var newPan = dragStartPan - dx / xScale;
             var maxPan = Math.max(0, nn - visibleCount);
             panOffset = Math.max(0, Math.min(maxPan, newPan));
@@ -673,10 +625,10 @@
             if (newZoom !== zoomLevel) {
                 var visibleCountBefore = Math.ceil(nn / zoomLevel);
                 var visibleCountAfter = Math.ceil(nn / newZoom);
-                var xScaleBefore = gW / visibleCountBefore;
+                var xScaleBefore = gW / Math.max(visibleCountBefore - 1, 1);
                 var mouseIdx = panOffset + (mx - pad.l) / xScaleBefore;
                 zoomLevel = newZoom;
-                var xScaleAfter = gW / visibleCountAfter;
+                var xScaleAfter = gW / Math.max(visibleCountAfter - 1, 1);
                 panOffset = Math.max(0, mouseIdx - (mx - pad.l) / xScaleAfter);
                 var maxPan = Math.max(0, nn - visibleCountAfter);
                 panOffset = Math.max(0, Math.min(maxPan, panOffset));

@@ -68,25 +68,10 @@ class Updater(DeployConfig, GitManager, PipManager):
 
     def _check_cloud_update(self) -> bool:
         """检查云端更新开关"""
-        try:
-            resp = requests.get("https://alas-apiv2.nanoda.work/api/updata", timeout=5)
-            if resp.status_code == 200:
-                data = resp.text.strip().lower()
-                if data == 'true':
-                    return True
-                elif data == 'false':
-                    return False
-                else:
-                    try:
-                        import json
-                        res = json.loads(data)
-                        if isinstance(res, bool):
-                            return res
-                    except:
-                        pass
-        except Exception as e:
-            logger.warning(f"Failed to fetch cloud update flag: {e}")
-        return False
+        cloud_update = self.cloud_auto_update_enabled()
+        if cloud_update is None:
+            raise ExecutionError
+        return cloud_update
 
     def _check_update(self) -> bool:
         self.state = "checking"

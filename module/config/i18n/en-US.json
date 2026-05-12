@@ -672,9 +672,10 @@
     "OcrDevice": {
       "name": "Optimization.OcrDevice.name",
       "help": "Optimization.OcrDevice.help",
-      "auto": "auto",
-      "cpu": "cpu",
-      "gpu": "gpu"
+      "auto": "Auto",
+      "cpu": "CPU",
+      "gpu": "GPU",
+      "ane": "ANE (Apple)"
     },
     "ScreenshotInterval": {
       "name": "Slow Down Screenshot Speed to X Seconds per Frame",
@@ -1109,6 +1110,10 @@
     "UseRecommendFleet": {
       "name": "Auto Fleet Composition",
       "help": "Use the game's built-in recommended fleet to automatically compose hard mode fleets"
+    },
+    "DefeatWithdraw": {
+      "name": "Retreat after defeat in Mob",
+      "help": "The handling method for defeat in Mob during the journey. Upon initiation, exit the sea area directly; upon termination, attempt to have another team take over the subsequent battle."
     }
   },
   "StopCondition": {

@@ -671,10 +671,11 @@
     },
     "OcrDevice": {
       "name": "OCR设备",
-      "help": "选择OCR设备，不推荐任何没有独立显卡的用户使用GPU，除非你知道自己在做什么\n非Windows系统目前不支持GPU\n自动选择：当显存超过1G时使用GPU，否则使用CPU",
+      "help": "选择OCR设备，不推荐任何没有独立显卡的用户使用GPU，除非你知道自己在做什么\nGPU 仅用于 Windows DirectML，ANE 仅用于 macOS Apple Neural Engine\n自动选择：Apple Silicon Mac 使用 ANE，Windows 显存超过1G时使用GPU，否则使用CPU",
       "auto": "自动选择",
       "cpu": "CPU",
-      "gpu": "GPU"
+      "gpu": "GPU",
+      "ane": "ANE (Apple)"
     },
     "ScreenshotInterval": {
       "name": "放慢截图速度至 X 秒一张",
@@ -1109,6 +1110,10 @@
     "UseRecommendFleet": {
       "name": "自动配队",
       "help": "使用游戏内置的推荐阵容自动完成困难图配队"
+    },
+    "DefeatWithdraw": {
+      "name": "道中战斗失败撤退",
+      "help": "道中战斗战败时的处理方式。开启时直接退出海域，关闭时尝试由另一队接管后续战斗。"
     }
   },
   "StopCondition": {
