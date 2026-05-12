@@ -17,9 +17,9 @@ jobs:
     steps:
       - name: Sync master with upstream
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.SYNC_TOKEN || github.token }}
         run: |
           gh repo sync "${{ github.repository }}" --source wess09/AzurPilot --branch master
 
           echo "## 同步成功" >> $GITHUB_STEP_SUMMARY
-          echo "已使用 GitHub CLI 将 ${{ github.repository }}:master 同步到 wess09/AzurPilot:master。" >> $GITHUB_STEP_SUMMARY
+          echo "已使用 GitHub CLI 将 ${{ github.repository }}:master 从 wess09/AzurPilot:master 同步。" >> $GITHUB_STEP_SUMMARY
