@@ -1,12 +1,13 @@
 name: Sync Fork with Upstream
 
 on:
-  push:
-    branches:
-      - master
   schedule:
     - cron: '5 */12 * * *'
   workflow_dispatch:
+
+concurrency:
+  group: sync-upstream-master
+  cancel-in-progress: false
 
 jobs:
   sync:
@@ -15,11 +16,36 @@ jobs:
       contents: write
 
     steps:
-      - name: Sync master with upstream
-        env:
-          GH_TOKEN: ${{ secrets.SYNC_TOKEN || github.token }}
-        run: |
-          gh repo sync "${{ github.repository }}" --source wess09/AzurPilot --branch master
+      - name: Checkout fork
+        uses: actions/checkout@v5
+        with:
+          ref: master
+          fetch-depth: 0
+          token: ${{ secrets.SYNC_TOKEN || github.token }}
 
-          echo "## 同步成功" >> $GITHUB_STEP_SUMMARY
-          echo "已使用 GitHub CLI 将 ${{ github.repository }}:master 从 wess09/AzurPilot:master 同步。" >> $GITHUB_STEP_SUMMARY
+      - name: Merge upstream/master
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config pull.rebase false
+
+          git remote add upstream https://github.com/wess09/AzurPilot.git
+          git fetch upstream master
+
+          if git merge-base --is-ancestor upstream/master HEAD; then
+            echo "Already contains upstream/master."
+          else
+            git merge --no-edit -X ours upstream/master
+          fi
+
+          if git diff --quiet origin/master..HEAD; then
+            echo "No new merge commit to push."
+          else
+            git push origin HEAD:master
+          fi
+
+          echo "## 同步成功" >> "$GITHUB_STEP_SUMMARY"
+          echo "已将 wess09/AzurPilot:master 合并到 ${{ github.repository }}:master。" >> "$GITHUB_STEP_SUMMARY"
+          echo "发生同一位置冲突时，默认保留 fork 当前分支的改动。" >> "$GITHUB_STEP_SUMMARY"
