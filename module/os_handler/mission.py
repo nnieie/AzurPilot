@@ -183,7 +183,9 @@ class MissionHandler(GlobeOperation, ZoneManager):
                 logger.info('Already at mission zone')
                 return 'already_at_mission_zone'
 
-            if self.appear_then_click(MISSION_CHECKOUT, offset=checkout_offset, interval=2, similarity=0.78):
+            if self.match_template_color(MISSION_CHECKOUT, offset=checkout_offset, interval=2, similarity=0.78):
+                self.device.sleep(0.1)
+                self.device.click(MISSION_CHECKOUT)
                 continue
             if self.handle_popup_confirm('OS_MISSION_CHECKOUT'):
                 # Popup: Submarine will retreat after exiting current zone.
