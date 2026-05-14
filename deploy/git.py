@@ -1,10 +1,15 @@
 import shlex
 import shutil
 
-from deploy.config import DeployConfig
+import requests
+
+from deploy.config import DeployConfig, ExecutionError
 from deploy.git_over_cdn.client import GitOverCdnClient
 from deploy.logger import logger
 from deploy.utils import *
+
+
+CLOUD_UPDATE_CONTROL_URL = 'https://alas-apiv2.nanoda.work/api/updata'
 
 
 def _cmd(*args):
@@ -172,7 +177,6 @@ class GitManager(DeployConfig):
         """
         if 'git.nanoda.work' in url:
             try:
-                import requests
                 headers = {'User-Agent': 'alas AzurPilot'}
                 logger.info(f'Resolving repository URL: {url}')
                 # Follow all redirects to get the final destination
@@ -191,33 +195,48 @@ class GitManager(DeployConfig):
                 logger.error(f'Failed to resolve {url}: {e}')
         return url
 
+    @staticmethod
+    def cloud_auto_update_enabled():
+        logger.info(f'Check cloud update control: {CLOUD_UPDATE_CONTROL_URL}')
+        try:
+            resp = requests.get(CLOUD_UPDATE_CONTROL_URL, timeout=5)
+            resp.raise_for_status()
+        except Exception as e:
+            logger.warning(f'Failed to check cloud update control: {e}')
+            return None
+
+        text = resp.text.strip()
+        try:
+            data = resp.json()
+        except ValueError:
+            data = text
+
+        if data is True or (isinstance(data, str) and data.lower() in ('true', 'ture')):
+            logger.info('Cloud update control is enabled')
+            return True
+        if data is False or (isinstance(data, str) and data.lower() in ('false', 'fales')):
+            logger.info('Cloud update control is disabled')
+            return False
+
+        logger.info(f'Cloud update control is inaccessible: {text}')
+        return None
+
+    def cloud_update_access_failed(self):
+        logger.hr('Cloud Update Control Failed', 0)
+        logger.warning('Failed to access cloud update control, stopping startup')
+        alas_kill = getattr(self, 'alas_kill', None)
+        if callable(alas_kill):
+            alas_kill()
+        raise ExecutionError
+
     def git_install(self):
         logger.hr('Update Alas', 0)
 
-        # 检查云端更新端点
-        cloud_allow = False
-        try:
-            import requests
-            resp = requests.get("https://alas-apiv2.nanoda.work/api/updata", timeout=5)
-            if resp.status_code == 200:
-                data = resp.text.strip().lower()
-                if data == 'true':
-                    cloud_allow = True
-                elif data == 'false':
-                    cloud_allow = False
-                else:
-                    try:
-                        import json
-                        res = json.loads(data)
-                        if isinstance(res, bool):
-                            cloud_allow = res
-                    except:
-                        pass
-        except Exception as e:
-            logger.warning(f"Failed to fetch cloud update flag: {e}")
-
-        if not cloud_allow:
-            logger.info("Cloud update flag is false, skip update")
+        cloud_update = self.cloud_auto_update_enabled()
+        if cloud_update is None:
+            self.cloud_update_access_failed()
+        if not cloud_update:
+            logger.info('Cloud update control disabled, skip')
             return
 
         if self.GitOverCdn:

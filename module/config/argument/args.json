@@ -14173,6 +14173,14 @@
         "type": "checkbox",
         "value": true
       },
+      "SkipHpCheck": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
       "Cl1Filter": {
         "type": "textarea",
         "value": "ActionPoint"

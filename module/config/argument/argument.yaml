@@ -1199,6 +1199,11 @@ OpsiHazard1Leveling:
   OperationCoinsPreserve: 40000
   MinimumActionPointReserve: 200
   ExecuteFixedPatrolScan: true
+  # Sacrifice run: skip HP check
+  SkipHpCheck:
+    type: checkbox
+    value: false
+    option: [true, false]
   Cl1Filter: |-
     ActionPoint
   RecordNonCL1AP: true

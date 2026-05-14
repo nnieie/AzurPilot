@@ -426,11 +426,20 @@ class OpsiFleetAutoChange(CoinTaskMixin, DockMixin, OSMap):
         logger.info("确认出发")
 
         self.device.click(DEPART_IMMEDIATELY_BUTTON)
-        self.device.screenshot()
 
-        if self.appear(DEPART_CONFIRM_TEMPLATE, offset=(20, 20)):
-            logger.info("检测到出发确认弹窗，点击确认")
-            self.device.click(DEPART_CONFIRM_BUTTON)
+        confirm_timeout = 0
+        confirm_max_timeout = 10
+        while confirm_timeout < confirm_max_timeout * 2:
+            self.device.screenshot()
+
+            if self.appear(DEPART_CONFIRM_TEMPLATE, offset=(20, 20)):
+                logger.info("检测到出发确认弹窗，点击确认")
+                self.device.click(DEPART_CONFIRM_BUTTON)
+                break
+
+            confirm_timeout += 1
+        else:
+            logger.info("未检测到出发确认弹窗，继续执行")
 
         for _ in range(5):
             self.device.screenshot()

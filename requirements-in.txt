@@ -2,7 +2,7 @@ numpy
 scipy
 pillow
 opencv-python>=4.8.0
-imageio
+imageio==2.26.0
 imageio-ffmpeg
 adbutils==0.11.0
 uiautomator2==2.16.17

@@ -74,6 +74,11 @@
     ctx.scale(dpr, dpr);
     var oc = ovCv.getContext("2d");
 
+    // 硬币刻度标签布局常量
+    var COIN_TICK_X = 8;            // 右侧刻度标签相对 pad.r 的水平偏移
+    var COIN_TICK_BASELINE = 4;     // 单币时文字基线垂直偏移
+    var COIN_TICK_STACK_GAP = 12;   // 双币堆叠时紫币相对黄币的垂直偏移
+
     var pad = {t: 20, r: showCoins ? 72 : 20, b: 52, l: 52};
     var gW = W - pad.l - pad.r, gH = H - pad.t - pad.b;
 
@@ -93,31 +98,74 @@
     allMin -= rng * 0.08;
     allMax += rng * 0.08;
 
-    var coinsMin = Infinity, coinsMax = -Infinity;
+    // ---- 黄币独立范围 ----
+    var yellowMin = Infinity, yellowMax = -Infinity;
     var yellowCoinsLen = yellowCoins ? yellowCoins.length : 0;
-    var purpleCoinsLen = purpleCoins ? purpleCoins.length : 0;
-    var hasCoins = showCoins && chartType === 'line' && (yellowCoinsLen > 0 || purpleCoinsLen > 0);
-    if (showCoins && chartType === 'line') {
+    var hasYellowCoins = showCoins && chartType === 'line' && yellowCoinsLen > 0;
+    if (hasYellowCoins) {
         for (var i = 0; i < yellowCoinsLen; i++) {
             if (yellowCoins[i] === null || yellowCoins[i] === undefined) continue;
-            if (yellowCoins[i] < coinsMin) coinsMin = yellowCoins[i];
-            if (yellowCoins[i] > coinsMax) coinsMax = yellowCoins[i];
+            if (yellowCoins[i] < yellowMin) yellowMin = yellowCoins[i];
+            if (yellowCoins[i] > yellowMax) yellowMax = yellowCoins[i];
         }
-        for (var i = 0; i < purpleCoinsLen; i++) {
-            if (purpleCoins[i] === null || purpleCoins[i] === undefined) continue;
-            if (purpleCoins[i] < coinsMin) coinsMin = purpleCoins[i];
-            if (purpleCoins[i] > coinsMax) coinsMax = purpleCoins[i];
-        }
-        if (coinsMin === Infinity) coinsMin = 0;
-        if (coinsMax === -Infinity) coinsMax = 1000;
-        var coinsRng = coinsMax - coinsMin || 1;
-        coinsMin -= coinsRng * 0.08;
-        coinsMax += coinsRng * 0.08;
+        if (yellowMin === Infinity) yellowMin = 0;
+        if (yellowMax === -Infinity) yellowMax = 1000;
+        var yellowRng = yellowMax - yellowMin || 1;
+        yellowMin -= yellowRng * 0.08;
+        yellowMax += yellowRng * 0.08;
     }
 
+    // ---- 紫币独立范围 ----
+    var purpleMin = Infinity, purpleMax = -Infinity;
+    var purpleCoinsLen = purpleCoins ? purpleCoins.length : 0;
+    var hasPurpleCoins = showCoins && chartType === 'line' && purpleCoinsLen > 0;
+    if (hasPurpleCoins) {
+        for (var i = 0; i < purpleCoinsLen; i++) {
+            if (purpleCoins[i] === null || purpleCoins[i] === undefined) continue;
+            if (purpleCoins[i] < purpleMin) purpleMin = purpleCoins[i];
+            if (purpleCoins[i] > purpleMax) purpleMax = purpleCoins[i];
+        }
+        if (purpleMin === Infinity) purpleMin = 0;
+        if (purpleMax === -Infinity) purpleMax = 1000;
+        var purpleRng = purpleMax - purpleMin || 1;
+        purpleMin -= purpleRng * 0.08;
+        purpleMax += purpleRng * 0.08;
+    }
+
+    var hasCoins = hasYellowCoins || hasPurpleCoins;
+
+    // 硬币绘制参数化配置（颜色 / 范围 / 垂直偏移），driven by drawCoinTicks
+    var COIN_CONFIGS = [
+        { has: hasYellowCoins, color: "#ffd54f", dataMin: yellowMin, dataMax: yellowMax, offsetY: 0 },
+        { has: hasPurpleCoins, color: "#ce93d8", dataMin: purpleMin,  dataMax: purpleMax,  offsetY: hasYellowCoins ? COIN_TICK_STACK_GAP : 0 }
+    ];
+
     function xOfLine(i) { return pad.l + (i / Math.max(nn - 1, 1)) * gW; }
-    function yOf(v) { return pad.t + gH - (v - allMin) / (allMax - allMin) * gH; }
-    function yOfCoins(v) { return pad.t + gH - (v - coinsMin) / (coinsMax - coinsMin) * gH; }
+    // 通用 Y 坐标映射：将 value 从 [rangeMin, rangeMax] 映射到绘图区域（所有纵向映射的唯一来源）
+    function yScale(value, rangeMin, rangeMax) {
+        return pad.t + gH - (value - rangeMin) / (rangeMax - rangeMin) * gH;
+    }
+    function yOf(v) { return yScale(v, allMin, allMax); }
+    function yOfYellow(v) { return yScale(v, yellowMin, yellowMax); }
+    function yOfPurple(v) { return yScale(v, purpleMin, purpleMax); }
+
+    function drawCoinTicks(ctx, yOfMain, mainMin, mainMax) {
+        if (!hasCoins) return;
+        ctx.font = "10px -apple-system, sans-serif";
+        ctx.textAlign = "left";
+        for (var i = 0; i <= 5; i++) {
+            var mainVal = mainMin + (mainMax - mainMin) * (i / 5);
+            var y = yOfMain(mainVal);
+            for (var ci = 0; ci < COIN_CONFIGS.length; ci++) {
+                var cfg = COIN_CONFIGS[ci];
+                if (!cfg.has) continue;
+                var val = cfg.dataMin + (cfg.dataMax - cfg.dataMin) * (i / 5);
+                ctx.fillStyle = cfg.color;
+                ctx.fillText(Math.round(val), W - pad.r + COIN_TICK_X, y + COIN_TICK_BASELINE + cfg.offsetY);
+            }
+        }
+    }
+
     function drawCoinsLine(xOf, start, end) {
         if (!hasCoins) return;
 
@@ -125,33 +173,33 @@
         ctx.lineJoin = "round";
         ctx.setLineDash([4, 2]);
 
-        if (yellowCoinsLen > 0) {
+        if (hasYellowCoins) {
             ctx.beginPath();
             ctx.strokeStyle = "#ffd54f";
-            var startedYellowCoins = false;
+            var startedYellow = false;
             for (var i = start; i < end && i < yellowCoinsLen; i++) {
                 if (yellowCoins[i] === null || yellowCoins[i] === undefined) {
-                    startedYellowCoins = false;
+                    startedYellow = false;
                     continue;
                 }
-                var x = xOf(i), y = yOfCoins(yellowCoins[i]);
-                if (!startedYellowCoins) { ctx.moveTo(x, y); startedYellowCoins = true; }
+                var x = xOf(i), y = yOfYellow(yellowCoins[i]);
+                if (!startedYellow) { ctx.moveTo(x, y); startedYellow = true; }
                 else ctx.lineTo(x, y);
             }
             ctx.stroke();
         }
 
-        if (purpleCoinsLen > 0) {
+        if (hasPurpleCoins) {
             ctx.beginPath();
             ctx.strokeStyle = "#ce93d8";
-            var startedPurpleCoins = false;
+            var startedPurple = false;
             for (var i = start; i < end && i < purpleCoinsLen; i++) {
                 if (purpleCoins[i] === null || purpleCoins[i] === undefined) {
-                    startedPurpleCoins = false;
+                    startedPurple = false;
                     continue;
                 }
-                var x = xOf(i), y = yOfCoins(purpleCoins[i]);
-                if (!startedPurpleCoins) { ctx.moveTo(x, y); startedPurpleCoins = true; }
+                var x = xOf(i), y = yOfPurple(purpleCoins[i]);
+                if (!startedPurple) { ctx.moveTo(x, y); startedPurple = true; }
                 else ctx.lineTo(x, y);
             }
             ctx.stroke();
@@ -180,15 +228,7 @@
         ctx.fillText(Math.round(v), pad.l - 8, y);
     }
 
-    if (hasCoins) {
-        ctx.fillStyle = "#999";
-        ctx.textAlign = "left";
-        for (var i = 0; i <= 5; i++) {
-            var v = coinsMin + (coinsMax - coinsMin) * (i / 5);
-            var y = yOfCoins(v);
-            ctx.fillText(Math.round(v), W - pad.r + 8, y);
-        }
-    }
+    drawCoinTicks(ctx, yOf, allMin, allMax);
 
     var avgY = yOf(avg);
     ctx.save();
@@ -360,7 +400,7 @@
             var idx = Math.round(visibleStart + (mx_ - pad.l) / xScale);
             idx = Math.max(0, Math.min(nn - 1, idx));
             var px = pad.l + (idx - visibleStart) * xScale;
-            var py = pad.t + gH - (ap[idx] - dMin) / (dMax - dMin) * gH;
+            var py = yScale(ap[idx], dMin, dMax);
 
             oc.strokeStyle = "rgba(255,255,255,0.18)";
             oc.lineWidth = 1;
@@ -392,7 +432,7 @@
                 tooltipRows.push({ parts: [{ type: 'text', value: "来源: " }, { type: 'bold', value: source, style: { color: sourceColor } }] });
             }
 
-            if (showCoins && yellowCoinsLen > 0 && idx < yellowCoinsLen && yellowCoins[idx] !== null && yellowCoins[idx] !== undefined) {
+            if (hasYellowCoins && idx < yellowCoinsLen && yellowCoins[idx] !== null && yellowCoins[idx] !== undefined) {
                 var yc = yellowCoins[idx];
                 var ycDiff = idx > 0 && yellowCoins[idx - 1] !== null && yellowCoins[idx - 1] !== undefined ? (yc - yellowCoins[idx - 1]) : 0;
                 var ycColor = ycDiff >= 0 ? "#ef5350" : "#26a69a";
@@ -400,7 +440,7 @@
                 tooltipRows.push({ parts: [{ type: 'text', value: "黄币: " }, { type: 'bold', value: String(yc), style: { color: "#ffd54f" } }, { type: 'text', value: " (" + ycDiffStr + ")", style: { color: ycColor } }] });
             }
 
-            if (showCoins && purpleCoinsLen > 0 && idx < purpleCoinsLen && purpleCoins[idx] !== null && purpleCoins[idx] !== undefined) {
+            if (hasPurpleCoins && idx < purpleCoinsLen && purpleCoins[idx] !== null && purpleCoins[idx] !== undefined) {
                 var pc = purpleCoins[idx];
                 var pcDiff = idx > 0 && purpleCoins[idx - 1] !== null && purpleCoins[idx - 1] !== undefined ? (pc - purpleCoins[idx - 1]) : 0;
                 var pcColor = pcDiff >= 0 ? "#ef5350" : "#26a69a";
@@ -515,29 +555,21 @@
             ctx.textBaseline = "middle";
             for (var i = 0; i <= 5; i++) {
                 var v = dMin + (dMax - dMin) * (i / 5);
-                var y = pad.t + gH - (v - dMin) / (dMax - dMin) * gH;
+                var y = yScale(v, dMin, dMax);
                 ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
                 ctx.fillText(Math.round(v), pad.l - 8, y);
             }
 
-            if (hasCoins) {
-                ctx.fillStyle = "#999";
-                ctx.textAlign = "left";
-                for (var i = 0; i <= 5; i++) {
-                    var v = coinsMin + (coinsMax - coinsMin) * (i / 5);
-                    var y = yOfCoins(v);
-                    ctx.fillText(Math.round(v), W - pad.r + 8, y);
-                }
-            }
+            var xScale = gW / Math.max(visibleNn - 1, 1);
+            function dxOf(i) { return pad.l + (i - visibleStart) * xScale; }
+            function dyOf(v) { return yScale(v, dMin, dMax); }
+
+            drawCoinTicks(ctx, dyOf, dMin, dMax);
 
             ctx.fillStyle = "#666";
             ctx.font = "10px -apple-system, sans-serif";
             ctx.textAlign = "center";
             ctx.textBaseline = "top";
-
-            var xScale = gW / Math.max(visibleNn - 1, 1);
-            function dxOf(i) { return pad.l + (i - visibleStart) * xScale; }
-            function dyOf(v) { return pad.t + gH - (v - dMin) / (dMax - dMin) * gH; }
 
             var dgrad = ctx.createLinearGradient(0, pad.t, 0, pad.t + gH);
             dgrad.addColorStop(0, "rgba(100,181,246,0.15)");

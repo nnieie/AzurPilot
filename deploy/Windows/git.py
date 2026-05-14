@@ -241,6 +241,10 @@ class GitManager(DeployConfig):
             Progress.GitShowVersion()
             return
 
+        if self.GitOverCdn:
+            if self.goc_client.update():
+                return
+
         # Resolve repository URL before any git operations
         repo = self.resolve_repository_url(self.Repository)
 
