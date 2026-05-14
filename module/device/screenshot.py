@@ -75,8 +75,10 @@ class Screenshot(Adb, WSA, DroidCast, AScreenCap, Scrcpy, NemuIpc, LDOpenGL, Usb
             'usb_capture': self.screenshot_usb_capture,
         }
 
-    @cached_property
+    @property
     def screenshot_method_override(self) -> str:
+        if getattr(self.config, 'Scheduler_ForceAdbNcScreenshot', False):
+            return 'ADB_nc'
         return ''
 
     def screenshot(self):

@@ -361,6 +361,12 @@
     "ServerUpdate": {
       "name": "Server refresh time",
       "help": "After some tasks run successfully, the next run will be postponed until the server refresh time\nAutomatically converts time zones, generally no modification is required"
+    },
+    "ForceAdbNcScreenshot": {
+      "name": "Force ADB_nc screenshots",
+      "help": "When enabled, this task ignores the global screenshot method and always captures screenshots with ADB_nc. Use this to avoid recognition issues caused by USB capture card color shifts.",
+      "True": "Enabled",
+      "False": "False"
     }
   },
   "Emulator": {

@@ -361,6 +361,12 @@
     "ServerUpdate": {
       "name": "服务器刷新时刻 (๑•̀ㅂ•́)و✧",
       "help": "有些任务完成后等到服务器刷新再跑，自动换算时区喵~"
+    },
+    "ForceAdbNcScreenshot": {
+      "name": "强制使用 ADB_nc 截图喵",
+      "help": "开启后，当前任务会忽略全局截图方案，强制使用 ADB_nc 进行截图。可用于绕过 USB 采集卡偏色导致的识别问题喵。",
+      "True": "已启用",
+      "False": "False"
     }
   },
   "Emulator": {

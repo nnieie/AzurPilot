@@ -81,6 +81,7 @@ class GeneratedConfig:
     Scheduler_SuccessInterval = 0
     Scheduler_FailureInterval = 120
     Scheduler_ServerUpdate = '00:00'
+    Scheduler_ForceAdbNcScreenshot = False  # True, False
 
     # Group `Emulator`
     Emulator_Serial = 'auto'

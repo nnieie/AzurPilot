@@ -361,6 +361,12 @@
     "ServerUpdate": {
       "name": "伺服器重新整理時間",
       "help": "一些任務執行成功後，將推遲下一次執行至伺服器重新整理時間\n自動換算時區，一般不需要修改"
+    },
+    "ForceAdbNcScreenshot": {
+      "name": "強制使用 ADB_nc 截圖",
+      "help": "開啟後，當前任務會忽略全域截圖方案，強制使用 ADB_nc 進行截圖。可用於繞過 USB 採集卡偏色導致的識別問題。",
+      "True": "已啟用",
+      "False": "False"
     }
   },
   "Emulator": {

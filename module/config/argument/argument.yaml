@@ -73,6 +73,10 @@ Scheduler:
   ServerUpdate:
     value: 00:00
     display: hide
+  ForceAdbNcScreenshot:
+    type: checkbox
+    value: false
+    option: [true, false]
 Emulator:
   Serial:
     value: auto
