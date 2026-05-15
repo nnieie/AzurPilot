@@ -2561,49 +2561,45 @@ class AlasGUI(Frame):
 
         with use_scope("logs"):
             if "Maa" in self.ALAS_ARGS:
-                (
-                    put_scope(
-                        "log-bar",
-                        [
-                            put_text(t("Gui.Overview.Log")).style(
-                                "font-size: 1.25rem; margin: auto .5rem auto;"
-                            ),
-                            put_scope(
-                                "log-bar-btns",
-                                [
-                                    put_scope("log_scroll_btn"),
-                                ],
-                            ),
-                        ],
-                    ),
+                put_scope(
+                    "log-bar",
+                    [
+                        put_text(t("Gui.Overview.Log")).style(
+                            "font-size: 1.25rem; margin: auto .5rem auto;"
+                        ),
+                        put_scope(
+                            "log-bar-btns",
+                            [
+                                put_scope("log_scroll_btn"),
+                            ],
+                        ),
+                    ],
                 )
             else:
-                (
-                    put_scope(
-                        "log-bar",
-                        [
-                            put_text(t("Gui.Overview.Log")).style(
-                                "font-size: 1.25rem; margin: auto .5rem auto;"
-                            ),
-                            put_scope(
-                                "log-bar-btns",
-                                [
-                                    put_scope("log_scroll_btn"),
-                                    put_button(
-                                        label="截图预览",
-                                        onclick=lambda: run_js(
-                                            f"window.alasToggleLivePreview({json.dumps(self.alas_name)});"
-                                        ),
-                                        color="off",
+                put_scope(
+                    "log-bar",
+                    [
+                        put_text(t("Gui.Overview.Log")).style(
+                            "font-size: 1.25rem; margin: auto .5rem auto;"
+                        ),
+                        put_scope(
+                            "log-bar-btns",
+                            [
+                                put_scope("log_scroll_btn"),
+                                put_button(
+                                    label="截图预览",
+                                    onclick=lambda: run_js(
+                                        f"window.alasToggleLivePreview({json.dumps(self.alas_name)});"
                                     ),
-                                    put_scope("usb_capture_preview_btn"),
-                                    put_scope("dashboard_btn"),
-                                ],
-                            ),
-                        ],
-                    ),
-                    put_html('<hr class="hr-group">'),
-                    put_scope("dashboard"),
+                                    color="off",
+                                ),
+                                put_scope("usb_capture_preview_btn"),
+                                put_scope("dashboard_btn"),
+                            ],
+                        ),
+                        put_html('<hr class="hr-group">'),
+                        put_scope("dashboard"),
+                    ],
                 )
             # version
             local_commit = updater.get_commit(short_sha1=True)
