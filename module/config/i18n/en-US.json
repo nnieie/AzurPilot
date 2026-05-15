@@ -2082,16 +2082,7 @@
     },
     "Option1": {
       "name": "Slot 1 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Wheat",
-      "2": "Corn",
-      "3": "Grass",
-      "4": "Coffee Beans",
-      "5": "Rice",
-      "6": "Cabbage",
-      "7": "Potato",
-      "8": "Soybean"
+      "help": ""
     },
     "Character1": {
       "name": "Slot 1 character",
@@ -2099,16 +2090,7 @@
     },
     "Option2": {
       "name": "Slot 2 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Wheat",
-      "2": "Corn",
-      "3": "Grass",
-      "4": "Coffee Beans",
-      "5": "Rice",
-      "6": "Cabbage",
-      "7": "Potato",
-      "8": "Soybean"
+      "help": ""
     },
     "Character2": {
       "name": "Slot 2 character",
@@ -2116,16 +2098,7 @@
     },
     "Option3": {
       "name": "Slot 3 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Wheat",
-      "2": "Corn",
-      "3": "Grass",
-      "4": "Coffee Beans",
-      "5": "Rice",
-      "6": "Cabbage",
-      "7": "Potato",
-      "8": "Soybean"
+      "help": ""
     },
     "Character3": {
       "name": "Slot 3 character",
@@ -2133,16 +2106,7 @@
     },
     "Option4": {
       "name": "Slot 4 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Wheat",
-      "2": "Corn",
-      "3": "Grass",
-      "4": "Coffee Beans",
-      "5": "Rice",
-      "6": "Cabbage",
-      "7": "Potato",
-      "8": "Soybean"
+      "help": ""
     },
     "Character4": {
       "name": "Slot 4 character",
@@ -2210,24 +2174,7 @@
     },
     "Option1": {
       "name": "Slot 1 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Shellfish",
-      "2": "Catfish",
-      "3": "Carp",
-      "4": "Crucian Carp",
-      "5": "River Shrimp",
-      "6": "Crayfish",
-      "7": "Sea Bass",
-      "8": "Crab",
-      "9": "Squid",
-      "10": "Spanish Mackerel",
-      "11": "Tuna",
-      "12": "Salmon",
-      "13": "Red Snapper",
-      "14": "Black Snapper",
-      "15": "Yellowfin Tuna",
-      "16": "Sea Cucumber"
+      "help": ""
     },
     "Character1": {
       "name": "Slot 1 character",
@@ -2235,24 +2182,7 @@
     },
     "Option2": {
       "name": "Slot 2 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Shellfish",
-      "2": "Catfish",
-      "3": "Carp",
-      "4": "Crucian Carp",
-      "5": "River Shrimp",
-      "6": "Crayfish",
-      "7": "Sea Bass",
-      "8": "Crab",
-      "9": "Squid",
-      "10": "Spanish Mackerel",
-      "11": "Tuna",
-      "12": "Salmon",
-      "13": "Red Snapper",
-      "14": "Black Snapper",
-      "15": "Yellowfin Tuna",
-      "16": "Sea Cucumber"
+      "help": ""
     },
     "Character2": {
       "name": "Slot 2 character",
@@ -2260,24 +2190,7 @@
     },
     "Option3": {
       "name": "Slot 3 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Shellfish",
-      "2": "Catfish",
-      "3": "Carp",
-      "4": "Crucian Carp",
-      "5": "River Shrimp",
-      "6": "Crayfish",
-      "7": "Sea Bass",
-      "8": "Crab",
-      "9": "Squid",
-      "10": "Spanish Mackerel",
-      "11": "Tuna",
-      "12": "Salmon",
-      "13": "Red Snapper",
-      "14": "Black Snapper",
-      "15": "Yellowfin Tuna",
-      "16": "Sea Cucumber"
+      "help": ""
     },
     "Character3": {
       "name": "Slot 3 character",
@@ -2295,14 +2208,7 @@
     },
     "Option1": {
       "name": "Slot 1 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Coal",
-      "2": "Copper Ore",
-      "3": "Aluminum Ore",
-      "4": "Iron Ore",
-      "5": "Sulfur Ore",
-      "6": "Silver Ore"
+      "help": ""
     },
     "Character1": {
       "name": "Slot 1 character",
@@ -2310,14 +2216,7 @@
     },
     "Option2": {
       "name": "Slot 2 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Coal",
-      "2": "Copper Ore",
-      "3": "Aluminum Ore",
-      "4": "Iron Ore",
-      "5": "Sulfur Ore",
-      "6": "Silver Ore"
+      "help": ""
     },
     "Character2": {
       "name": "Slot 2 character",
@@ -2325,14 +2224,7 @@
     },
     "Option3": {
       "name": "Slot 3 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Coal",
-      "2": "Copper Ore",
-      "3": "Aluminum Ore",
-      "4": "Iron Ore",
-      "5": "Sulfur Ore",
-      "6": "Silver Ore"
+      "help": ""
     },
     "Character3": {
       "name": "Slot 3 character",
@@ -2340,14 +2232,7 @@
     },
     "Option4": {
       "name": "Slot 4 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Coal",
-      "2": "Copper Ore",
-      "3": "Aluminum Ore",
-      "4": "Iron Ore",
-      "5": "Sulfur Ore",
-      "6": "Silver Ore"
+      "help": ""
     },
     "Character4": {
       "name": "Slot 4 character",
@@ -2365,12 +2250,7 @@
     },
     "Option1": {
       "name": "Slot 1 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Natural Wood",
-      "2": "Practical Wood",
-      "3": "Selected Wood",
-      "4": "Elegant Wood"
+      "help": ""
     },
     "Character1": {
       "name": "Slot 1 character",
@@ -2378,12 +2258,7 @@
     },
     "Option2": {
       "name": "Slot 2 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Natural Wood",
-      "2": "Practical Wood",
-      "3": "Selected Wood",
-      "4": "Elegant Wood"
+      "help": ""
     },
     "Character2": {
       "name": "Slot 2 character",
@@ -2391,12 +2266,7 @@
     },
     "Option3": {
       "name": "Slot 3 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Natural Wood",
-      "2": "Practical Wood",
-      "3": "Selected Wood",
-      "4": "Elegant Wood"
+      "help": ""
     },
     "Character3": {
       "name": "Slot 3 character",
@@ -2404,12 +2274,7 @@
     },
     "Option4": {
       "name": "Slot 4 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Natural Wood",
-      "2": "Practical Wood",
-      "3": "Selected Wood",
-      "4": "Elegant Wood"
+      "help": ""
     },
     "Character4": {
       "name": "Slot 4 character",
@@ -2427,15 +2292,7 @@
     },
     "Option1": {
       "name": "Slot 1 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Apple",
-      "2": "Tangerine",
-      "3": "Banana",
-      "4": "Mango",
-      "5": "Lemon",
-      "6": "Avocado",
-      "7": "Rubber"
+      "help": ""
     },
     "Character1": {
       "name": "Slot 1 character",
@@ -2443,15 +2300,7 @@
     },
     "Option2": {
       "name": "Slot 2 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Apple",
-      "2": "Tangerine",
-      "3": "Banana",
-      "4": "Mango",
-      "5": "Lemon",
-      "6": "Avocado",
-      "7": "Rubber"
+      "help": ""
     },
     "Character2": {
       "name": "Slot 2 character",
@@ -2459,15 +2308,7 @@
     },
     "Option3": {
       "name": "Slot 3 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Apple",
-      "2": "Tangerine",
-      "3": "Banana",
-      "4": "Mango",
-      "5": "Lemon",
-      "6": "Avocado",
-      "7": "Rubber"
+      "help": ""
     },
     "Character3": {
       "name": "Slot 3 character",
@@ -2475,15 +2316,7 @@
     },
     "Option4": {
       "name": "Slot 4 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Apple",
-      "2": "Tangerine",
-      "3": "Banana",
-      "4": "Mango",
-      "5": "Lemon",
-      "6": "Avocado",
-      "7": "Rubber"
+      "help": ""
     },
     "Character4": {
       "name": "Slot 4 character",
@@ -2501,17 +2334,7 @@
     },
     "Option1": {
       "name": "Slot 1 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Asparagus",
-      "2": "Pineapple",
-      "3": "Flax",
-      "4": "Strawberry",
-      "5": "Cotton",
-      "6": "Tea",
-      "7": "Lavender",
-      "8": "Carrot",
-      "9": "Onion"
+      "help": ""
     },
     "Character1": {
       "name": "Slot 1 character",
@@ -2519,17 +2342,7 @@
     },
     "Option2": {
       "name": "Slot 2 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Asparagus",
-      "2": "Pineapple",
-      "3": "Flax",
-      "4": "Strawberry",
-      "5": "Cotton",
-      "6": "Tea",
-      "7": "Lavender",
-      "8": "Carrot",
-      "9": "Onion"
+      "help": ""
     },
     "Character2": {
       "name": "Slot 2 character",
@@ -2547,20 +2360,7 @@
     },
     "Option1": {
       "name": "Slot 1 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Cold Double Bamboo Shoots",
-      "2": "Stir-fried Asparagus with Shrimp",
-      "3": "Tofu",
-      "4": "Braised Tofu with Minced Meat",
-      "5": "Omurice",
-      "6": "Cabbage Tofu Soup",
-      "7": "Vegetable Salad",
-      "8": "Fish and Chips",
-      "9": "Steamed Fish with Onions",
-      "10": "Buddha Jumps Over the Wall",
-      "11": "Classic Tofu Set",
-      "12": "Mianyu Set Meal"
+      "help": ""
     },
     "Character1": {
       "name": "Slot 1 character",
@@ -2568,20 +2368,7 @@
     },
     "Option2": {
       "name": "Slot 2 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Cold Double Bamboo Shoots",
-      "2": "Stir-fried Asparagus with Shrimp",
-      "3": "Tofu",
-      "4": "Braised Tofu with Minced Meat",
-      "5": "Omurice",
-      "6": "Cabbage Tofu Soup",
-      "7": "Vegetable Salad",
-      "8": "Fish and Chips",
-      "9": "Steamed Fish with Onions",
-      "10": "Buddha Jumps Over the Wall",
-      "11": "Classic Tofu Set",
-      "12": "Mianyu Set Meal"
+      "help": ""
     },
     "Character2": {
       "name": "Slot 2 character",
@@ -2599,19 +2386,7 @@
     },
     "Option1": {
       "name": "Slot 1 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Fresh Pineapple Juice",
-      "2": "Winter Jasmine Tea",
-      "3": "Apple Juice",
-      "4": "Banana Mango Juice",
-      "5": "Honey Lemonade",
-      "6": "Strawberry Honey Nectar",
-      "7": "Lavender Tea",
-      "8": "Strawberry Honey Smoothie",
-      "9": "Sunshine Honey Water",
-      "10": "Floral Fruit Tea",
-      "11": "Colorful Fruit Paradise"
+      "help": ""
     },
     "Character1": {
       "name": "Slot 1 character",
@@ -2619,19 +2394,7 @@
     },
     "Option2": {
       "name": "Slot 2 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Fresh Pineapple Juice",
-      "2": "Winter Jasmine Tea",
-      "3": "Apple Juice",
-      "4": "Banana Mango Juice",
-      "5": "Honey Lemonade",
-      "6": "Strawberry Honey Nectar",
-      "7": "Lavender Tea",
-      "8": "Strawberry Honey Smoothie",
-      "9": "Sunshine Honey Water",
-      "10": "Floral Fruit Tea",
-      "11": "Colorful Fruit Paradise"
+      "help": ""
     },
     "Character2": {
       "name": "Slot 2 character",
@@ -2649,18 +2412,7 @@
     },
     "Option1": {
       "name": "Slot 1 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Corn Cup",
-      "2": "Apple Pie",
-      "3": "Orange Pie",
-      "4": "Mango Sticky Rice",
-      "5": "Banana Crepe",
-      "6": "Strawberry Charlotte",
-      "7": "Paella",
-      "8": "Sweet and Savory Combo",
-      "9": "Orchard Duo",
-      "10": "Berry Orange Dessert Set"
+      "help": ""
     },
     "Character1": {
       "name": "Slot 1 character",
@@ -2668,18 +2420,7 @@
     },
     "Option2": {
       "name": "Slot 2 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Corn Cup",
-      "2": "Apple Pie",
-      "3": "Orange Pie",
-      "4": "Mango Sticky Rice",
-      "5": "Banana Crepe",
-      "6": "Strawberry Charlotte",
-      "7": "Paella",
-      "8": "Sweet and Savory Combo",
-      "9": "Orchard Duo",
-      "10": "Berry Orange Dessert Set"
+      "help": ""
     },
     "Character2": {
       "name": "Slot 2 character",
@@ -2697,17 +2438,7 @@
     },
     "Option1": {
       "name": "Slot 1 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Charcoal grilled skewers",
-      "2": "Poultry and potato platter",
-      "3": "Stir-fried poultry",
-      "4": "Carrot Thick Egg Omelette",
-      "5": "Hamburger rice",
-      "6": "Lemon Shrimp",
-      "7": "Stir-fried crayfish",
-      "8": "BBQ carnival",
-      "9": "Energy Double Package"
+      "help": ""
     },
     "Character1": {
       "name": "Slot 1 character",
@@ -2715,17 +2446,7 @@
     },
     "Option2": {
       "name": "Slot 2 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Charcoal grilled skewers",
-      "2": "Poultry and potato platter",
-      "3": "Stir-fried poultry",
-      "4": "Carrot Thick Egg Omelette",
-      "5": "Hamburger rice",
-      "6": "Lemon Shrimp",
-      "7": "Stir-fried crayfish",
-      "8": "BBQ carnival",
-      "9": "Energy Double Package"
+      "help": ""
     },
     "Character2": {
       "name": "Slot 2 character",
@@ -2743,14 +2464,7 @@
     },
     "Option1": {
       "name": "Slot 1 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Paper",
-      "2": "Notepad",
-      "3": "Tables and Chairs",
-      "4": "Selected Barrels",
-      "5": "Filing Cabinet",
-      "6": "Decorative Painting"
+      "help": ""
     },
     "Character1": {
       "name": "Slot 1 character",
@@ -2758,14 +2472,7 @@
     },
     "Option2": {
       "name": "Slot 2 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Paper",
-      "2": "Notepad",
-      "3": "Tables and Chairs",
-      "4": "Selected Barrels",
-      "5": "Filing Cabinet",
-      "6": "Decorative Painting"
+      "help": ""
     },
     "Character2": {
       "name": "Slot 2 character",
@@ -2783,14 +2490,7 @@
     },
     "Option1": {
       "name": "Slot 1 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Charcoal",
-      "2": "Cable",
-      "3": "Nails",
-      "4": "Sulfuric Acid",
-      "5": "Gunpowder",
-      "6": "Cutlery"
+      "help": ""
     },
     "Character1": {
       "name": "Slot 1 character",
@@ -2798,14 +2498,7 @@
     },
     "Option2": {
       "name": "Slot 2 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Charcoal",
-      "2": "Cable",
-      "3": "Nails",
-      "4": "Sulfuric Acid",
-      "5": "Gunpowder",
-      "6": "Cutlery"
+      "help": ""
     },
     "Character2": {
       "name": "Slot 2 character",
@@ -2823,12 +2516,7 @@
     },
     "Option1": {
       "name": "Slot 1 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Ink Cartridge",
-      "2": "Clock",
-      "3": "Battery",
-      "4": "Water Purification Filter"
+      "help": ""
     },
     "Character1": {
       "name": "Slot 1 character",
@@ -2836,12 +2524,7 @@
     },
     "Option2": {
       "name": "Slot 2 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Ink Cartridge",
-      "2": "Clock",
-      "3": "Battery",
-      "4": "Water Purification Filter"
+      "help": ""
     },
     "Character2": {
       "name": "Slot 2 character",
@@ -2859,17 +2542,7 @@
     },
     "Option1": {
       "name": "Slot 1 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Dried Herbs Pack",
-      "2": "Spring Bouquet",
-      "3": "Cloth",
-      "4": "Leather",
-      "5": "Rope",
-      "6": "Gloves",
-      "7": "Sachet",
-      "8": "Shoes",
-      "9": "Bandage"
+      "help": ""
     },
     "Character1": {
       "name": "Slot 1 character",
@@ -2877,17 +2550,7 @@
     },
     "Option2": {
       "name": "Slot 2 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Dried shepherd's purse in bags",
-      "2": "spring bouquet",
-      "3": "cloth",
-      "4": "leather",
-      "5": "rope",
-      "6": "Gloves",
-      "7": "sachet",
-      "8": "shoes",
-      "9": "bandage"
+      "help": ""
     },
     "Character2": {
       "name": "Slot 2 character",
@@ -2905,17 +2568,7 @@
     },
     "Option1": {
       "name": "Slot 1 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Omelet",
-      "2": "iced coffee",
-      "3": "Cheese",
-      "4": "latté",
-      "5": "citrus coffee",
-      "6": "Strawberry milk green",
-      "7": "Morning vitality combination",
-      "8": "Wake up package",
-      "9": "Fruity Double Cup"
+      "help": ""
     },
     "Character1": {
       "name": "Slot 2 character",
@@ -2923,17 +2576,7 @@
     },
     "Option2": {
       "name": "Slot 2 production item",
-      "help": "",
-      "0": "Not producing",
-      "1": "Omelet",
-      "2": "iced coffee",
-      "3": "Cheese",
-      "4": "latté",
-      "5": "citrus coffee",
-      "6": "Strawberry milk green",
-      "7": "Morning vitality combination",
-      "8": "Wake up package",
-      "9": "Fruity Double Cup"
+      "help": ""
     },
     "Character2": {
       "name": "Slot 2 character",

@@ -1,5 +1,39 @@
 import module.config.server as server
 
+CHARACTER_NAME_MAP = {
+    'manjuu': {'cn': '工作啾', 'en': 'Manjuu', 'jp': 'ワークマンジュウ'},
+    'saratoga': {'cn': '萨拉托加', 'en': 'Saratoga', 'jp': 'サラトガ'},
+    'new_jersey': {'cn': '新泽西', 'en': 'New Jersey', 'jp': 'ニュージャージー'},
+    'tashkent': {'cn': '塔什干', 'en': 'Tashkent', 'jp': 'タシュケント'},
+    'lemalin': {'cn': '恶毒', 'en': "Le Malin", 'jp': 'ル・マラン'},
+    'shimakaze': {'cn': '岛风', 'en': 'Shimakaze', 'jp': '島風'},
+    'akashi': {'cn': '明石', 'en': 'Akashi', 'jp': '明石'},
+    'ying_swei': {'cn': '应瑞', 'en': 'Ying Swei', 'jp': '応瑞'},
+    'chao_ho': {'cn': '肇和', 'en': 'Chao Ho', 'jp': '肇和'},
+    'william_d_porter': {'cn': '威廉·D·波特', 'en': 'William D. Porter', 'jp': 'ウィリアム・D・ポーター'},
+    'chen_hai': {'cn': '镇海', 'en': 'Chen Hai', 'jp': '鎮海'},
+    'unicorn': {'cn': '独角兽', 'en': 'Unicorn', 'jp': 'ユニコーン'},
+    'cheshire': {'cn': '柴郡', 'en': 'Cheshire', 'jp': 'チェシャー'},
+    'amagi_chan': {'cn': '小天城', 'en': 'Amagi-chan', 'jp': '小天城'},
+    'helena': {'cn': '海伦娜', 'en': 'Helena', 'jp': 'ヘレナ'},
+    'atago': {'cn': '爱宕', 'en': 'Atago', 'jp': '愛宕'},
+    'friedrich_der_grobe': {'cn': '腓特烈大帝', 'en': 'Friedrich der Große', 'jp': 'フリードリヒ・デア・グローセ'},
+    'laffey': {'cn': '拉菲', 'en': 'Laffey', 'jp': 'ラフィー'},
+    'javelin': {'cn': '标枪', 'en': 'Javelin', 'jp': 'ジャベリン'},
+    'hood': {'cn': '胡德', 'en': 'Hood', 'jp': 'フッド'},
+    'takao': {'cn': '高雄', 'en': 'Takao', 'jp': '高雄'},
+    'taihou': {'cn': '大凤', 'en': 'Taihou', 'jp': '大鳳'},
+    'prinz_eugen': {'cn': '欧根亲王', 'en': 'Prinz Eugen', 'jp': 'プリンツ・オイゲン'},
+    'august_von_parseval': {'cn': '奥古斯特·冯·帕塞瓦尔', 'en': 'August von Parseval', 'jp': 'アウグスト・フォン・パルセヴァル'},
+    'fei_yun': {'cn': '飞云', 'en': 'Fei Yun', 'jp': '飛雲'},
+    'yat_sen': {'cn': '逸仙', 'en': 'Yat Sen', 'jp': '逸仙'},
+    'leonardo_da_vinci': {'cn': '莱昂纳多·达·芬奇', 'en': 'Leonardo da Vinci', 'jp': 'レオナルド・ダ・ヴィンチ'},
+    'nubia': {'cn': '领洋者-娜比娅', 'en': 'Nubia', 'jp': 'ヌビア'},
+    'tb': {'cn': '领航员-TB', 'en': 'TB', 'jp': 'TB'},
+    'aplo': {'cn': '探索者-艾普洛', 'en': 'Aplo', 'jp': 'アプロ'},
+}
+
+
 __name_to_slot_cn = {
     '丰壤农田': 4, '悠然牧场': 4, '啾啾渔场': 3, '沉石矿山': 4, '翠土林场': 4, '坠香果园': 4,
     '青芽苗圃': 2, '有鱼餐馆': 2, '白熊饮品': 2, '啾啾简餐': 2, '乌鱼烤肉': 2, '木料加工设备': 2,
