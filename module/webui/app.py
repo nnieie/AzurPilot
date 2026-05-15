@@ -1994,7 +1994,7 @@ class AlasGUI(Frame):
                                 <span style="font-size: 0.78rem; opacity: 0.65;">{display_name}</span>
                                 <span style="font-size: 1.15rem; font-weight: 400; color: inherit;">{total_str}</span>
                             </div>
-                        </div>"""
+                        </div>'''
                     html += "</div>"
 
                     put_html(html)
@@ -2596,16 +2596,15 @@ class AlasGUI(Frame):
                                         ),
                                         color="off",
                                     ),
-                                    color="off",
-                                ),
-                                put_scope("usb_capture_preview_btn"),
-                                put_scope("dashboard_btn"),
-                            ],
-                        ),
-                        put_html('<hr class="hr-group">'),
-                        put_scope("dashboard"),
-                    ],
-                ),
+                                    put_scope("usb_capture_preview_btn"),
+                                    put_scope("dashboard_btn"),
+                                ],
+                            ),
+                        ],
+                    ),
+                    put_html('<hr class="hr-group">'),
+                    put_scope("dashboard"),
+                )
             # version
             local_commit = updater.get_commit(short_sha1=True)
             version = local_commit[0] if local_commit and local_commit[0] else "Unknown"
@@ -3575,7 +3574,7 @@ class AlasGUI(Frame):
                             </div>
                         </div>
                     </div>
-                '''),
+                """),
                 put_buttons([{"label": "立即更新 / Update Now", "value": "update", "color": "danger"}],
                            onclick=[handle_preview_click]).style("text-align: center; width: 100%; padding-bottom: 20px; border-top: none;")
             ], size="large", implicit_close=True)
@@ -4144,7 +4143,7 @@ class AlasGUI(Frame):
                                         </div>
                                     </div>
                                 </div>
-                            '''),
+                            """),
                             put_buttons([{"label": "立即更新 / Update Now", "value": "update", "color": "danger"}],
                                        onclick=[handle_update_click]).style("text-align: center; width: 100%; padding-bottom: 20px; border-top: none;")
                         ], size="large", implicit_close=True)
