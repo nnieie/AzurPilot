@@ -10600,76 +10600,32 @@
         "value": false
       },
       "Option1": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character1": {
         "type": "input",
         "value": "工作啾"
       },
       "Option2": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character2": {
         "type": "input",
         "value": "工作啾"
       },
       "Option3": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character3": {
         "type": "input",
         "value": "工作啾"
       },
       "Option4": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character4": {
         "type": "input",
@@ -10736,81 +10692,24 @@
         "value": false
       },
       "Option1": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8,
-          9,
-          10,
-          11,
-          12,
-          13,
-          14,
-          15,
-          16
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character1": {
         "type": "input",
         "value": "工作啾"
       },
       "Option2": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8,
-          9,
-          10,
-          11,
-          12,
-          13,
-          14,
-          15,
-          16
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character2": {
         "type": "input",
         "value": "工作啾"
       },
       "Option3": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8,
-          9,
-          10,
-          11,
-          12,
-          13,
-          14,
-          15,
-          16
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character3": {
         "type": "input",
@@ -10823,68 +10722,32 @@
         "value": false
       },
       "Option1": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character1": {
         "type": "input",
         "value": "工作啾"
       },
       "Option2": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character2": {
         "type": "input",
         "value": "工作啾"
       },
       "Option3": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character3": {
         "type": "input",
         "value": "工作啾"
       },
       "Option4": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character4": {
         "type": "input",
@@ -10897,60 +10760,32 @@
         "value": false
       },
       "Option1": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character1": {
         "type": "input",
         "value": "工作啾"
       },
       "Option2": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character2": {
         "type": "input",
         "value": "工作啾"
       },
       "Option3": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character3": {
         "type": "input",
         "value": "工作啾"
       },
       "Option4": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character4": {
         "type": "input",
@@ -10963,72 +10798,32 @@
         "value": false
       },
       "Option1": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character1": {
         "type": "input",
         "value": "工作啾"
       },
       "Option2": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character2": {
         "type": "input",
         "value": "工作啾"
       },
       "Option3": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character3": {
         "type": "input",
         "value": "工作啾"
       },
       "Option4": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character4": {
         "type": "input",
@@ -11041,40 +10836,16 @@
         "value": false
       },
       "Option1": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8,
-          9
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character1": {
         "type": "input",
         "value": "工作啾"
       },
       "Option2": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8,
-          9
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character2": {
         "type": "input",
@@ -11087,46 +10858,16 @@
         "value": false
       },
       "Option1": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8,
-          9,
-          10,
-          11,
-          12
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character1": {
         "type": "input",
         "value": "工作啾"
       },
       "Option2": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8,
-          9,
-          10,
-          11,
-          12
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character2": {
         "type": "input",
@@ -11139,44 +10880,16 @@
         "value": false
       },
       "Option1": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8,
-          9,
-          10,
-          11
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character1": {
         "type": "input",
         "value": "工作啾"
       },
       "Option2": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8,
-          9,
-          10,
-          11
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character2": {
         "type": "input",
@@ -11189,42 +10902,16 @@
         "value": false
       },
       "Option1": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8,
-          9,
-          10
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character1": {
         "type": "input",
         "value": "工作啾"
       },
       "Option2": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8,
-          9,
-          10
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character2": {
         "type": "input",
@@ -11237,40 +10924,16 @@
         "value": false
       },
       "Option1": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8,
-          9
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character1": {
         "type": "input",
         "value": "工作啾"
       },
       "Option2": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8,
-          9
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character2": {
         "type": "input",
@@ -11283,34 +10946,16 @@
         "value": false
       },
       "Option1": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character1": {
         "type": "input",
         "value": "工作啾"
       },
       "Option2": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character2": {
         "type": "input",
@@ -11323,34 +10968,16 @@
         "value": false
       },
       "Option1": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character1": {
         "type": "input",
         "value": "工作啾"
       },
       "Option2": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character2": {
         "type": "input",
@@ -11363,30 +10990,16 @@
         "value": false
       },
       "Option1": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character1": {
         "type": "input",
         "value": "工作啾"
       },
       "Option2": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character2": {
         "type": "input",
@@ -11399,40 +11012,16 @@
         "value": false
       },
       "Option1": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8,
-          9
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character1": {
         "type": "input",
         "value": "工作啾"
       },
       "Option2": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8,
-          9
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character2": {
         "type": "input",
@@ -11445,40 +11034,16 @@
         "value": false
       },
       "Option1": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8,
-          9
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character1": {
         "type": "input",
         "value": "工作啾"
       },
       "Option2": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8,
-          9
-        ]
+        "type": "input",
+        "value": ""
       },
       "Character2": {
         "type": "input",

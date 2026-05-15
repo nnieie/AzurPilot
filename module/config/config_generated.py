@@ -400,13 +400,13 @@ class GeneratedConfig:
 
     # Group `Island1`
     Island1_Receive = False
-    Island1_Option1 = 0  # 0, 1, 2, 3, 4, 5, 6, 7, 8
+    Island1_Option1 = None
     Island1_Character1 = '工作啾'
-    Island1_Option2 = 0  # 0, 1, 2, 3, 4, 5, 6, 7, 8
+    Island1_Option2 = None
     Island1_Character2 = '工作啾'
-    Island1_Option3 = 0  # 0, 1, 2, 3, 4, 5, 6, 7, 8
+    Island1_Option3 = None
     Island1_Character3 = '工作啾'
-    Island1_Option4 = 0  # 0, 1, 2, 3, 4, 5, 6, 7, 8
+    Island1_Option4 = None
     Island1_Character4 = '工作啾'
 
     # Group `Island2`
@@ -422,114 +422,114 @@ class GeneratedConfig:
 
     # Group `Island3`
     Island3_Receive = False
-    Island3_Option1 = 0  # 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16
+    Island3_Option1 = None
     Island3_Character1 = '工作啾'
-    Island3_Option2 = 0  # 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16
+    Island3_Option2 = None
     Island3_Character2 = '工作啾'
-    Island3_Option3 = 0  # 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16
+    Island3_Option3 = None
     Island3_Character3 = '工作啾'
 
     # Group `Island4`
     Island4_Receive = False
-    Island4_Option1 = 0  # 0, 1, 2, 3, 4, 5, 6
+    Island4_Option1 = None
     Island4_Character1 = '工作啾'
-    Island4_Option2 = 0  # 0, 1, 2, 3, 4, 5, 6
+    Island4_Option2 = None
     Island4_Character2 = '工作啾'
-    Island4_Option3 = 0  # 0, 1, 2, 3, 4, 5, 6
+    Island4_Option3 = None
     Island4_Character3 = '工作啾'
-    Island4_Option4 = 0  # 0, 1, 2, 3, 4, 5, 6
+    Island4_Option4 = None
     Island4_Character4 = '工作啾'
 
     # Group `Island5`
     Island5_Receive = False
-    Island5_Option1 = 0  # 0, 1, 2, 3, 4
+    Island5_Option1 = None
     Island5_Character1 = '工作啾'
-    Island5_Option2 = 0  # 0, 1, 2, 3, 4
+    Island5_Option2 = None
     Island5_Character2 = '工作啾'
-    Island5_Option3 = 0  # 0, 1, 2, 3, 4
+    Island5_Option3 = None
     Island5_Character3 = '工作啾'
-    Island5_Option4 = 0  # 0, 1, 2, 3, 4
+    Island5_Option4 = None
     Island5_Character4 = '工作啾'
 
     # Group `Island6`
     Island6_Receive = False
-    Island6_Option1 = 0  # 0, 1, 2, 3, 4, 5, 6, 7
+    Island6_Option1 = None
     Island6_Character1 = '工作啾'
-    Island6_Option2 = 0  # 0, 1, 2, 3, 4, 5, 6, 7
+    Island6_Option2 = None
     Island6_Character2 = '工作啾'
-    Island6_Option3 = 0  # 0, 1, 2, 3, 4, 5, 6, 7
+    Island6_Option3 = None
     Island6_Character3 = '工作啾'
-    Island6_Option4 = 0  # 0, 1, 2, 3, 4, 5, 6, 7
+    Island6_Option4 = None
     Island6_Character4 = '工作啾'
 
     # Group `Island7`
     Island7_Receive = False
-    Island7_Option1 = 0  # 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+    Island7_Option1 = None
     Island7_Character1 = '工作啾'
-    Island7_Option2 = 0  # 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+    Island7_Option2 = None
     Island7_Character2 = '工作啾'
 
     # Group `Island8`
     Island8_Receive = False
-    Island8_Option1 = 0  # 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+    Island8_Option1 = None
     Island8_Character1 = '工作啾'
-    Island8_Option2 = 0  # 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+    Island8_Option2 = None
     Island8_Character2 = '工作啾'
 
     # Group `Island9`
     Island9_Receive = False
-    Island9_Option1 = 0  # 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+    Island9_Option1 = None
     Island9_Character1 = '工作啾'
-    Island9_Option2 = 0  # 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+    Island9_Option2 = None
     Island9_Character2 = '工作啾'
 
     # Group `Island10`
     Island10_Receive = False
-    Island10_Option1 = 0  # 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+    Island10_Option1 = None
     Island10_Character1 = '工作啾'
-    Island10_Option2 = 0  # 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+    Island10_Option2 = None
     Island10_Character2 = '工作啾'
 
     # Group `Island11`
     Island11_Receive = False
-    Island11_Option1 = 0  # 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+    Island11_Option1 = None
     Island11_Character1 = '工作啾'
-    Island11_Option2 = 0  # 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+    Island11_Option2 = None
     Island11_Character2 = '工作啾'
 
     # Group `Island12`
     Island12_Receive = False
-    Island12_Option1 = 0  # 0, 1, 2, 3, 4, 5, 6
+    Island12_Option1 = None
     Island12_Character1 = '工作啾'
-    Island12_Option2 = 0  # 0, 1, 2, 3, 4, 5, 6
+    Island12_Option2 = None
     Island12_Character2 = '工作啾'
 
     # Group `Island13`
     Island13_Receive = False
-    Island13_Option1 = 0  # 0, 1, 2, 3, 4, 5, 6
+    Island13_Option1 = None
     Island13_Character1 = '工作啾'
-    Island13_Option2 = 0  # 0, 1, 2, 3, 4, 5, 6
+    Island13_Option2 = None
     Island13_Character2 = '工作啾'
 
     # Group `Island14`
     Island14_Receive = False
-    Island14_Option1 = 0  # 0, 1, 2, 3, 4
+    Island14_Option1 = None
     Island14_Character1 = '工作啾'
-    Island14_Option2 = 0  # 0, 1, 2, 3, 4
+    Island14_Option2 = None
     Island14_Character2 = '工作啾'
 
     # Group `Island15`
     Island15_Receive = False
-    Island15_Option1 = 0  # 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+    Island15_Option1 = None
     Island15_Character1 = '工作啾'
-    Island15_Option2 = 0  # 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+    Island15_Option2 = None
     Island15_Character2 = '工作啾'
 
     # Group `Island16`
     Island16_Receive = False
-    Island16_Option1 = 0  # 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+    Island16_Option1 = None
     Island16_Character1 = '工作啾'
-    Island16_Option2 = 0  # 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+    Island16_Option2 = None
     Island16_Character2 = '工作啾'
 
     # Group `GeneralShop`

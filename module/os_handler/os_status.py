@@ -1,8 +1,6 @@
 # 此文件用于管理大世界（Operation Siren）模式下的状态信息。
 # 负责海域代币（黄币/紫币）的数值追踪、任务类型识别以及子任务冷却（CD）状态的实时计算。
-import os
 import threading
-
 import typing as t
 from datetime import datetime, timedelta
 
@@ -17,7 +15,7 @@ from module.combat.assets import GET_ITEMS_1, GET_ITEMS_2, GET_SHIP
 from module.os_shop.assets import OS_SHOP_CHECK, OS_SHOP_PURPLE_COINS, SHOP_PURPLE_COINS, SHOP_YELLOW_COINS
 from module.ui.ui import UI
 from module.log_res.log_res import LogRes
-from module.base.utils import crop, crop_to_text, save_image
+
 
 if server.server != 'jp':
     OCR_SHOP_YELLOW_COINS = Digit(SHOP_YELLOW_COINS, letter=(239, 239, 239), threshold=160, name='OCR_SHOP_YELLOW_COINS')

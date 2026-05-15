@@ -529,7 +529,8 @@ class IslandProjectRun(IslandUI):
         logger.info('Island select role')
         timeout = Timer(5, count=3).start()
         swipe_count = 0
-        target_name = character  # use config value directly (user can type on-screen name)
+        target_name = CHARACTER_NAME_MAP.get(character, {}).get(server.server,
+                       CHARACTER_NAME_MAP.get(character, {}).get('cn', character))
         det_ocr = AlOcr(name='zhcn' if server.server == 'cn' else 'en')
         for _ in self.loop():
             if timeout.reached():
@@ -544,7 +545,10 @@ class IslandProjectRun(IslandUI):
             else:
                 logger.info(f'No character {name} was found, use manjuu')
                 character = 'manjuu'
-                target_name = character
+                target_name = CHARACTER_NAME_MAP.get(character, {}).get(server.server,
+                               CHARACTER_NAME_MAP.get(character, {}).get('cn', character))
+                self.drag_page((0, -300), (200, 300, 700, 550), 0.3)
+                self.device.sleep(0.5)
             continue
 
     @staticmethod
@@ -556,28 +560,21 @@ class IslandProjectRun(IslandUI):
         return globals().get(f'PROJECT_{character.upper()}_CHECK', PRODUCT_MANJUU_CHECK)
 
     def _group_character_cards(self, det_results):
-        """
-        Group OCR detection results into character cards.
-        A card consists of a character name and an optional "工作中" (Working) label.
-
-        Args:
-            det_results (list): List of (text, box, score) from AlOcr.det()
-
-        Returns:
-            list[dict]: List of cards with 'name', 'name_box', 'card_box', 'working'
-        """
         working_label = '工作中'
         working_boxes = []
+        stamina_boxes = []
         others = []
         for txt, box, score in det_results:
             if working_label in txt:
                 working_boxes.append(box)
+            elif re.search(r'\d+/\d+', txt):
+                stamina_boxes.append((txt, box))
             else:
                 others.append({'txt': txt, 'box': box, 'score': score})
 
         cards = []
         used_working = set()
-        # Sort others by y then x to process in order
+        used_stamina = set()
         others.sort(key=lambda x: (np.mean(x['box'], axis=0)[1], np.mean(x['box'], axis=0)[0]))
 
         for item in others:
@@ -588,23 +585,29 @@ class IslandProjectRun(IslandUI):
             for i, w_box in enumerate(working_boxes):
                 if i in used_working: continue
                 wc = np.mean(w_box, axis=0)
-                # Working label is above the name and horizontally aligned
-                # Vertical distance: name is at bottom, working is middle
                 if abs(wc[0] - bc[0]) < 60 and 30 < bc[1] - wc[1] < 150:
                     associated_working = w_box
                     used_working.add(i)
                     break
 
+            stamina = None
+            for i, (stxt, sbox) in enumerate(stamina_boxes):
+                if i in used_stamina: continue
+                sc = np.mean(sbox, axis=0)
+                if abs(sc[0] - bc[0]) < 100 and abs(sc[1] - bc[1]) < 80:
+                    m = re.search(r'(\d+)/(\d+)', stxt)
+                    if m:
+                        stamina = int(m.group(1))
+                        used_stamina.add(i)
+                        break
+
             if associated_working:
-                # Merge boxes for the card
                 all_pts = np.array(box + associated_working)
                 x_min, y_min = np.min(all_pts, axis=0)
                 x_max, y_max = np.max(all_pts, axis=0)
-                # Expand to cover the whole card area (roughly)
                 card_box = [[x_min - 10, y_min - 20], [x_max + 10, y_min - 20], [x_max + 10, y_max + 10], [x_min - 10, y_max + 10]]
                 working = True
             else:
-                # Expand name box upwards to represent the card
                 x_min, y_min = np.min(box, axis=0)
                 x_max, y_max = np.max(box, axis=0)
                 card_box = [[x_min - 10, y_min - 100], [x_max + 10, y_min - 100], [x_max + 10, y_max + 10], [x_min - 10, y_max + 10]]
@@ -614,7 +617,8 @@ class IslandProjectRun(IslandUI):
                 'name': txt,
                 'name_box': box,
                 'card_box': card_box,
-                'working': working
+                'working': working,
+                'stamina': stamina,
             })
         return cards
 
@@ -830,10 +834,13 @@ class IslandProjectRun(IslandUI):
         proj_id = project.id
         for proj_slot in range(1, project.slot + 1):
             option = self.config.__getattribute__(f'Island{proj_id}_Option{proj_slot}')
-            if option == 0:
+            if not option or option == 0 or option == '不生产':
                 slot_option.append(None)
                 continue
-            slot_option.append(deep_get(items_data, [proj_id, option]))
+            if isinstance(option, int):
+                slot_option.append(deep_get(items_data, [proj_id, option]))
+            else:
+                slot_option.append(option)
         return slot_option
 
     def island_project_run(self, names, trial=2):

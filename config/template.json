@@ -1999,13 +1999,13 @@
     },
     "Island1": {
       "Receive": false,
-      "Option1": 0,
+      "Option1": null,
       "Character1": "工作啾",
-      "Option2": 0,
+      "Option2": null,
       "Character2": "工作啾",
-      "Option3": 0,
+      "Option3": null,
       "Character3": "工作啾",
-      "Option4": 0,
+      "Option4": null,
       "Character4": "工作啾"
     },
     "Island2": {
@@ -2021,114 +2021,114 @@
     },
     "Island3": {
       "Receive": false,
-      "Option1": 0,
+      "Option1": null,
       "Character1": "工作啾",
-      "Option2": 0,
+      "Option2": null,
       "Character2": "工作啾",
-      "Option3": 0,
+      "Option3": null,
       "Character3": "工作啾"
     },
     "Island4": {
       "Receive": false,
-      "Option1": 0,
+      "Option1": null,
       "Character1": "工作啾",
-      "Option2": 0,
+      "Option2": null,
       "Character2": "工作啾",
-      "Option3": 0,
+      "Option3": null,
       "Character3": "工作啾",
-      "Option4": 0,
+      "Option4": null,
       "Character4": "工作啾"
     },
     "Island5": {
       "Receive": false,
-      "Option1": 0,
+      "Option1": null,
       "Character1": "工作啾",
-      "Option2": 0,
+      "Option2": null,
       "Character2": "工作啾",
-      "Option3": 0,
+      "Option3": null,
       "Character3": "工作啾",
-      "Option4": 0,
+      "Option4": null,
       "Character4": "工作啾"
     },
     "Island6": {
       "Receive": false,
-      "Option1": 0,
+      "Option1": null,
       "Character1": "工作啾",
-      "Option2": 0,
+      "Option2": null,
       "Character2": "工作啾",
-      "Option3": 0,
+      "Option3": null,
       "Character3": "工作啾",
-      "Option4": 0,
+      "Option4": null,
       "Character4": "工作啾"
     },
     "Island7": {
       "Receive": false,
-      "Option1": 0,
+      "Option1": null,
       "Character1": "工作啾",
-      "Option2": 0,
+      "Option2": null,
       "Character2": "工作啾"
     },
     "Island8": {
       "Receive": false,
-      "Option1": 0,
+      "Option1": null,
       "Character1": "工作啾",
-      "Option2": 0,
+      "Option2": null,
       "Character2": "工作啾"
     },
     "Island9": {
       "Receive": false,
-      "Option1": 0,
+      "Option1": null,
       "Character1": "工作啾",
-      "Option2": 0,
+      "Option2": null,
       "Character2": "工作啾"
     },
     "Island10": {
       "Receive": false,
-      "Option1": 0,
+      "Option1": null,
       "Character1": "工作啾",
-      "Option2": 0,
+      "Option2": null,
       "Character2": "工作啾"
     },
     "Island11": {
       "Receive": false,
-      "Option1": 0,
+      "Option1": null,
       "Character1": "工作啾",
-      "Option2": 0,
+      "Option2": null,
       "Character2": "工作啾"
     },
     "Island12": {
       "Receive": false,
-      "Option1": 0,
+      "Option1": null,
       "Character1": "工作啾",
-      "Option2": 0,
+      "Option2": null,
       "Character2": "工作啾"
     },
     "Island13": {
       "Receive": false,
-      "Option1": 0,
+      "Option1": null,
       "Character1": "工作啾",
-      "Option2": 0,
+      "Option2": null,
       "Character2": "工作啾"
     },
     "Island14": {
       "Receive": false,
-      "Option1": 0,
+      "Option1": null,
       "Character1": "工作啾",
-      "Option2": 0,
+      "Option2": null,
       "Character2": "工作啾"
     },
     "Island15": {
       "Receive": false,
-      "Option1": 0,
+      "Option1": null,
       "Character1": "工作啾",
-      "Option2": 0,
+      "Option2": null,
       "Character2": "工作啾"
     },
     "Island16": {
       "Receive": false,
-      "Option1": 0,
+      "Option1": null,
       "Character1": "工作啾",
-      "Option2": 0,
+      "Option2": null,
       "Character2": "工作啾"
     },
     "Storage": {
