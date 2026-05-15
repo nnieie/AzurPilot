@@ -791,6 +791,19 @@ class AzurLaneAutoScript:
         logger.set_file_logger(self.config_name)
         logger.info(f'启动调度器循环: {self.config_name}')
 
+        from module.config.utils import is_oobe_needed
+
+        if is_oobe_needed():
+            logger.critical(
+                "未检测到配置文件。\n"
+                "请先运行 WebUI 完成初次设置:\n"
+                "    python gui.py\n"
+                "No configuration files detected.\n"
+                "Please run the WebUI first:\n"
+                "    python gui.py"
+            )
+            exit(1)
+
         # 初始化计数器
         consecutive_global_failures = 0
         MAX_GLOBAL_FAILURES = 3     # 3次及以上，4次及以上会执行长达5分钟的防网络波动等待

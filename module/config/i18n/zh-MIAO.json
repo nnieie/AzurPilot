@@ -1772,6 +1772,12 @@
       "slot_2": "使用于2号位喵",
       "slot_3": "使用于3号位喵",
       "slot_4": "使用于4号位喵"
+    },
+    "SkillAutoSwitch": {
+      "name": "自动换技能喵",
+      "help": "自动换到下一个还没学完的技能继续学喵",
+      "True": "开启喵",
+      "False": "关闭喵"
     }
   },
   "ControlExpOverflow": {
@@ -2089,24 +2095,7 @@
     },
     "Character1": {
       "name": "第 1 格勤劳的舰娘 (｡•̀ᴗ-)✧",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉·D·波特喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "腓特烈大帝喵"
+      "help": ""
     },
     "Option2": {
       "name": "第 2 格种啥喵",
@@ -2123,24 +2112,7 @@
     },
     "Character2": {
       "name": "第 2 格勤劳的舰娘",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     },
     "Option3": {
       "name": "第 3 格种啥喵",
@@ -2157,24 +2129,7 @@
     },
     "Character3": {
       "name": "第 3 格勤劳的舰娘",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     },
     "Option4": {
       "name": "第 4 格种啥喵",
@@ -2191,24 +2146,7 @@
     },
     "Character4": {
       "name": "第 4 格勤劳的舰娘",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     }
   },
   "Island2": {
@@ -2228,24 +2166,7 @@
     },
     "Character1": {
       "name": "第 1 格牧童喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     },
     "Option2": {
       "name": "第 2 格生产啥喵",
@@ -2255,24 +2176,7 @@
     },
     "Character2": {
       "name": "第 2 格牧童喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     },
     "Option3": {
       "name": "第 3 格生产啥喵",
@@ -2282,24 +2186,7 @@
     },
     "Character3": {
       "name": "第 3 格牧童喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     },
     "Option4": {
       "name": "第 4 格生产啥喵",
@@ -2309,24 +2196,7 @@
     },
     "Character4": {
       "name": "第 4 格牧童喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     }
   },
   "Island3": {
@@ -2361,24 +2231,7 @@
     },
     "Character1": {
       "name": "第 1 格渔夫喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     },
     "Option2": {
       "name": "第 2 格养啥鱼喵",
@@ -2403,24 +2256,7 @@
     },
     "Character2": {
       "name": "第 2 格渔夫喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     },
     "Option3": {
       "name": "第 3 格养啥鱼喵",
@@ -2445,24 +2281,7 @@
     },
     "Character3": {
       "name": "第 3 格渔夫喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     }
   },
   "Island4": {
@@ -2487,24 +2306,7 @@
     },
     "Character1": {
       "name": "第 1 格矿工喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     },
     "Option2": {
       "name": "第 2 格挖啥矿喵",
@@ -2519,24 +2321,7 @@
     },
     "Character2": {
       "name": "第 2 格矿工喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     },
     "Option3": {
       "name": "第 3 格挖啥矿喵",
@@ -2551,24 +2336,7 @@
     },
     "Character3": {
       "name": "第 3 格矿工喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     },
     "Option4": {
       "name": "第 4 格挖啥矿喵",
@@ -2583,24 +2351,7 @@
     },
     "Character4": {
       "name": "第 4 格矿工喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     }
   },
   "Island5": {
@@ -2623,24 +2374,7 @@
     },
     "Character1": {
       "name": "第 1 格樵夫喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     },
     "Option2": {
       "name": "第 2 格伐啥木喵",
@@ -2653,24 +2387,7 @@
     },
     "Character2": {
       "name": "第 2 格樵夫喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     },
     "Option3": {
       "name": "第 3 格伐啥木喵",
@@ -2683,24 +2400,7 @@
     },
     "Character3": {
       "name": "第 3 格樵夫喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     },
     "Option4": {
       "name": "第 4 格伐啥木喵",
@@ -2713,24 +2413,7 @@
     },
     "Character4": {
       "name": "第 4 格樵夫喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     }
   },
   "Island6": {
@@ -2756,24 +2439,7 @@
     },
     "Character1": {
       "name": "第 1 格果农喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     },
     "Option2": {
       "name": "第 2 格种啥果喵",
@@ -2789,24 +2455,7 @@
     },
     "Character2": {
       "name": "第 2 格果农喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     },
     "Option3": {
       "name": "第 3 格种啥果喵",
@@ -2822,24 +2471,7 @@
     },
     "Character3": {
       "name": "第 3 格果农喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     },
     "Option4": {
       "name": "第 4 格种啥果喵",
@@ -2855,24 +2487,7 @@
     },
     "Character4": {
       "name": "第 4 格果农喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     }
   },
   "Island7": {
@@ -2900,24 +2515,7 @@
     },
     "Character1": {
       "name": "第 1 格园丁喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     },
     "Option2": {
       "name": "第 2 格种啥芽喵",
@@ -2935,24 +2533,7 @@
     },
     "Character2": {
       "name": "第 2 格园丁喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     }
   },
   "Island8": {
@@ -2983,24 +2564,7 @@
     },
     "Character1": {
       "name": "第 1 格大厨喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     },
     "Option2": {
       "name": "第 2 格做啥菜喵",
@@ -3021,24 +2585,7 @@
     },
     "Character2": {
       "name": "第 2 格大厨喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     }
   },
   "Island9": {
@@ -3068,24 +2615,7 @@
     },
     "Character1": {
       "name": "第 1 格调酒师喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     },
     "Option2": {
       "name": "第 2 格调啥饮喵",
@@ -3105,24 +2635,7 @@
     },
     "Character2": {
       "name": "第 2 格调酒师喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     }
   },
   "Island10": {
@@ -3151,24 +2664,7 @@
     },
     "Character1": {
       "name": "第 1 格糕点师喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     },
     "Option2": {
       "name": "第 2 格做啥甜喵",
@@ -3187,24 +2683,7 @@
     },
     "Character2": {
       "name": "第 2 格糕点师喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     }
   },
   "Island11": {
@@ -3232,24 +2711,7 @@
     },
     "Character1": {
       "name": "第 1 格烤肉师喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     },
     "Option2": {
       "name": "第 2 格烤啥肉喵",
@@ -3267,24 +2729,7 @@
     },
     "Character2": {
       "name": "第 2 格烤肉师喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     }
   },
   "Island12": {
@@ -3309,24 +2754,7 @@
     },
     "Character1": {
       "name": "第 1 格木匠喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     },
     "Option2": {
       "name": "第 2 格做啥木喵",
@@ -3341,24 +2769,7 @@
     },
     "Character2": {
       "name": "第 2 格木匠喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     }
   },
   "Island13": {
@@ -3383,24 +2794,7 @@
     },
     "Character1": {
       "name": "第 1 格工人喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     },
     "Option2": {
       "name": "第 2 格制造啥喵",
@@ -3415,24 +2809,7 @@
     },
     "Character2": {
       "name": "第 2 格工人喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     }
   },
   "Island14": {
@@ -3455,24 +2832,7 @@
     },
     "Character1": {
       "name": "第 1 格技师喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     },
     "Option2": {
       "name": "第 2 格组装啥喵",
@@ -3485,24 +2845,7 @@
     },
     "Character2": {
       "name": "第 2 格技师喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     }
   },
   "Island15": {
@@ -3530,24 +2873,7 @@
     },
     "Character1": {
       "name": "第 1 格裁缝喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     },
     "Option2": {
       "name": "第 2 格手作啥喵",
@@ -3565,24 +2891,7 @@
     },
     "Character2": {
       "name": "第 2 格裁缝喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     }
   },
   "Island16": {
@@ -3610,24 +2919,7 @@
     },
     "Character1": {
       "name": "第 1 格咖啡师喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     },
     "Option2": {
       "name": "第 2 格制作啥饮喵",
@@ -3645,24 +2937,7 @@
     },
     "Character2": {
       "name": "第 2 格咖啡师喵",
-      "help": "",
-      "manjuu": "工作啾喵",
-      "saratoga": "萨拉托加喵",
-      "new_jersey": "新泽西喵",
-      "tashkent": "塔什干喵",
-      "lemalin": "恶毒喵",
-      "shimakaze": "岛风喵",
-      "akashi": "明石喵",
-      "ying_swei": "应瑞喵",
-      "chao_ho": "肇和喵",
-      "william_d_porter": "威廉喵",
-      "chen_hai": "镇海喵",
-      "unicorn": "独角兽喵",
-      "cheshire": "柴郡喵",
-      "amagi_chan": "小天城喵",
-      "helena": "海伦娜喵",
-      "atago": "爱宕喵",
-      "friedrich_der_grobe": "大帝喵"
+      "help": ""
     }
   },
   "GeneralShop": {
@@ -4379,6 +3654,10 @@
       "name": "血量< X 使用维修箱 (｡•́︿•̀｡)",
       "help": "仅打开修船开关且打完深渊、要塞、月度Boss后尝试。0.0~1.0"
     },
+    "RepairPackThresholdHazard1": {
+      "name": "OpsiGeneral.RepairPackThresholdHazard1.name",
+      "help": "OpsiGeneral.RepairPackThresholdHazard1.help"
+    },
     "DoRandomMapEvent": {
       "name": "完成地图随机事件 (。・ω・。)",
       "help": "自律后重新扫描地图：买明石商店、用塞壬信息收集/探测装置、解锁双舰队机关喵。"
@@ -4728,6 +4007,10 @@
     "RecordNonCL1AP": {
       "name": "统计非侵蚀1来源体力 (。・ω・。)",
       "help": "开启则统计所有来源体力，关闭仅统计侵蚀1任务中体力，忽略其他任务或手动操作体力获取喵。"
+    },
+    "PreserveVirtualAsset": {
+      "name": "OpsiHazard1Leveling.PreserveVirtualAsset.name",
+      "help": "OpsiHazard1Leveling.PreserveVirtualAsset.help"
     }
   },
   "OpsiSirenBug": {
@@ -4859,6 +4142,10 @@
     "MeowStartEarlyEnable": {
       "name": "启用月末行动力自动清理 (｀・ω・´)",
       "help": "根据历史短猫耗时和当前行动力，自动判断是否提前短猫清月末过剩行动力。基准是下月重置时间，不是每日刷新喵。"
+    },
+    "VirtualAssetPreserve": {
+      "name": "OpsiScheduling.VirtualAssetPreserve.name",
+      "help": "OpsiScheduling.VirtualAssetPreserve.help"
     }
   },
   "IslandSeasonTask": {
@@ -5001,6 +4288,32 @@
     "RestartIntervalHours": {
       "name": "重启间隔（小时） (´-ω-`)zzz",
       "help": ""
+    }
+  },
+  "EmulatorManager": {
+    "_info": {
+      "name": "EmulatorManager._info.name",
+      "help": "EmulatorManager._info.help"
+    },
+    "RemoteSSHHost": {
+      "name": "EmulatorManager.RemoteSSHHost.name",
+      "help": "EmulatorManager.RemoteSSHHost.help"
+    },
+    "RemoteSSHPort": {
+      "name": "EmulatorManager.RemoteSSHPort.name",
+      "help": "EmulatorManager.RemoteSSHPort.help"
+    },
+    "RemoteSSHUser": {
+      "name": "EmulatorManager.RemoteSSHUser.name",
+      "help": "EmulatorManager.RemoteSSHUser.help"
+    },
+    "RemoteSSHPublicKey": {
+      "name": "EmulatorManager.RemoteSSHPublicKey.name",
+      "help": "EmulatorManager.RemoteSSHPublicKey.help"
+    },
+    "RemoteCommand": {
+      "name": "EmulatorManager.RemoteCommand.name",
+      "help": "EmulatorManager.RemoteCommand.help"
     }
   },
   "OpsiSimulatorParameters": {
@@ -5366,6 +4679,9 @@
       "CommissionIncomeTotalCommissions": "委托总次数: {value}喵",
       "CommissionIncomeRecentTitle": "最近委托记录喵"
     },
+    "Tactical": {
+      "SkillAutoSwitch": "Gui.Tactical.SkillAutoSwitch"
+    },
     "OpsiScheduling": {
       "UseSmartSchedulingOperationCoinsPreserve": "获取X个凭证喵",
       "OperationCoinsPreserve": "侵蚀1保留凭证喵",
@@ -5380,6 +4696,28 @@
     "Misc": {
       "Enabled": "已开启喵",
       "Disabled": "未开启喵"
+    },
+    "OOBE": {
+      "WelcomeTitle": "欢迎使用 ALAS 喵！(｡>﹏<｡)",
+      "WelcomeDescription": "指挥官，快来和雪风一起完成初次设置喵~ (ฅ´ω`ฅ)",
+      "WelcomeSelectLanguage": "选择哪种语言喵？(･ω･)ﾉ",
+      "ServerTitle": "选择要去的服务器喵 (=^･ω･^=)",
+      "ServerCN": "国服喵 (｀・ω・´)",
+      "ServerEN": "国际服 (EN) 喵",
+      "ServerJP": "日服 (JP) 喵",
+      "ServerTW": "台服 (TW) 喵",
+      "EmulatorTitle": "模拟器设置板板 (´-ω-`)",
+      "EmulatorSerial": "模拟器序列号 / 地址喵 (。・ω・。)",
+      "EmulatorPackage": "包名选择喵",
+      "ReviewTitle": "确认并创建喵！(๑•̀ㅂ•́)و✧",
+      "ReviewConfigName": "配置名称喵",
+      "ReviewLanguage": "语言喵",
+      "ReviewServer": "服务器喵",
+      "ReviewSerial": "序列号喵",
+      "ReviewPackage": "包名喵",
+      "ButtonNext": "下一步喵！",
+      "ButtonBack": "上一步喵",
+      "ButtonCreate": "创建并完成喵！(=｀ω´=)"
     }
   }
 }

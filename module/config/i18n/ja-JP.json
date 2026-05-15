@@ -1772,6 +1772,12 @@
       "slot_2": "2番目で使用",
       "slot_3": "3番目で使用",
       "slot_4": "4番目で使用"
+    },
+    "SkillAutoSwitch": {
+      "name": "自動スキル切替",
+      "help": "次の未学習スキルに自動的に切り替えて学習します",
+      "True": "オン",
+      "False": "オフ"
     }
   },
   "ControlExpOverflow": {
@@ -2089,24 +2095,7 @@
     },
     "Character1": {
       "name": "第1マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     },
     "Option2": {
       "name": "第2マスの生産品",
@@ -2123,24 +2112,7 @@
     },
     "Character2": {
       "name": "第2マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     },
     "Option3": {
       "name": "第3マスの生産品",
@@ -2157,24 +2129,7 @@
     },
     "Character3": {
       "name": "第3マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     },
     "Option4": {
       "name": "第4マスの生産品",
@@ -2191,24 +2146,7 @@
     },
     "Character4": {
       "name": "第4マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     }
   },
   "Island2": {
@@ -2228,24 +2166,7 @@
     },
     "Character1": {
       "name": "第1マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     },
     "Option2": {
       "name": "第2マスの生産品",
@@ -2255,24 +2176,7 @@
     },
     "Character2": {
       "name": "第2マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     },
     "Option3": {
       "name": "第3マスの生産品",
@@ -2282,24 +2186,7 @@
     },
     "Character3": {
       "name": "第3マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     },
     "Option4": {
       "name": "第4マスの生産品",
@@ -2309,24 +2196,7 @@
     },
     "Character4": {
       "name": "第4マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     }
   },
   "Island3": {
@@ -2361,24 +2231,7 @@
     },
     "Character1": {
       "name": "第1マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     },
     "Option2": {
       "name": "第2マスの生産品",
@@ -2403,24 +2256,7 @@
     },
     "Character2": {
       "name": "第2マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     },
     "Option3": {
       "name": "第3マスの生産品",
@@ -2445,24 +2281,7 @@
     },
     "Character3": {
       "name": "第3マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     }
   },
   "Island4": {
@@ -2487,24 +2306,7 @@
     },
     "Character1": {
       "name": "第1マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     },
     "Option2": {
       "name": "第2マスの生産品",
@@ -2519,24 +2321,7 @@
     },
     "Character2": {
       "name": "第2マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     },
     "Option3": {
       "name": "第3マスの生産品",
@@ -2551,24 +2336,7 @@
     },
     "Character3": {
       "name": "第3マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     },
     "Option4": {
       "name": "第4マスの生産品",
@@ -2583,24 +2351,7 @@
     },
     "Character4": {
       "name": "第4マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     }
   },
   "Island5": {
@@ -2623,24 +2374,7 @@
     },
     "Character1": {
       "name": "第1マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     },
     "Option2": {
       "name": "第2マスの生産品",
@@ -2653,24 +2387,7 @@
     },
     "Character2": {
       "name": "第2マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     },
     "Option3": {
       "name": "第3マスの生産品",
@@ -2683,24 +2400,7 @@
     },
     "Character3": {
       "name": "第3マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     },
     "Option4": {
       "name": "第4マスの生産品",
@@ -2713,24 +2413,7 @@
     },
     "Character4": {
       "name": "第4マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     }
   },
   "Island6": {
@@ -2756,24 +2439,7 @@
     },
     "Character1": {
       "name": "第1マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     },
     "Option2": {
       "name": "第2マスの生産品",
@@ -2789,24 +2455,7 @@
     },
     "Character2": {
       "name": "第2マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     },
     "Option3": {
       "name": "第3マスの生産品",
@@ -2822,24 +2471,7 @@
     },
     "Character3": {
       "name": "第3マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     },
     "Option4": {
       "name": "第4マスの生産品",
@@ -2855,24 +2487,7 @@
     },
     "Character4": {
       "name": "第4マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     }
   },
   "Island7": {
@@ -2888,71 +2503,37 @@
       "name": "第1マスの生産品",
       "help": "",
       "0": "生産しない",
-      "1": "トマト",
-      "2": "キュウリ",
+      "1": "アスパラガス",
+      "2": "パイナップル",
       "3": "亜麻",
-      "4": "イチゴ",
-      "5": "綿花",
-      "6": "茶葉",
+      "4": "いちご",
+      "5": "コットン",
+      "6": "お茶",
       "7": "ラベンダー",
       "8": "ニンジン",
       "9": "タマネギ"
     },
     "Character1": {
       "name": "第1マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     },
     "Option2": {
       "name": "第2マスの生産品",
       "help": "",
       "0": "生産しない",
-      "1": "トマト",
-      "2": "キュウリ",
+      "1": "アスパラガス",
+      "2": "パイナップル",
       "3": "亜麻",
-      "4": "イチゴ",
-      "5": "綿花",
-      "6": "茶葉",
+      "4": "いちご",
+      "5": "コットン",
+      "6": "お茶",
       "7": "ラベンダー",
       "8": "ニンジン",
       "9": "タマネギ"
     },
     "Character2": {
       "name": "第2マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     }
   },
   "Island8": {
@@ -2968,77 +2549,43 @@
       "name": "第1マスの生産品",
       "help": "",
       "0": "生産しない",
-      "1": "ヒユナ入りおにぎり",
-      "2": "トマトと卵の炒め",
+      "1": "冷やし二重たけのこ",
+      "2": "アスパラガスとエビの炒め物",
       "3": "豆腐",
-      "4": "肉末豆腐",
+      "4": "豆腐の豚ひき肉焼き",
       "5": "オムライス",
-      "6": "白菜豆腐スープ",
-      "7": "野菜サラダ",
+      "6": "キャベツと豆腐のスープ",
+      "7": "グリーンサラダ",
       "8": "フィッシュアンドチップス",
-      "9": "玉ねぎ蒸し魚",
-      "10": "佛跳牆",
-      "11": "クラシック豆腐セット",
-      "12": "和風定食"
+      "9": "魚の玉ねぎ蒸し",
+      "10": "仏陀が壁を飛び越える",
+      "11": "定番豆腐セット",
+      "12": "綿魚定食"
     },
     "Character1": {
       "name": "第1マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     },
     "Option2": {
       "name": "第2マスの生産品",
       "help": "",
       "0": "生産しない",
-      "1": "ヒユナ入りおにぎり",
-      "2": "トマトと卵の炒め",
+      "1": "冷やし二重たけのこ",
+      "2": "アスパラガスとエビの炒め物",
       "3": "豆腐",
-      "4": "肉末豆腐",
+      "4": "豆腐の豚ひき肉焼き",
       "5": "オムライス",
-      "6": "白菜豆腐スープ",
-      "7": "野菜サラダ",
+      "6": "キャベツと豆腐のスープ",
+      "7": "グリーンサラダ",
       "8": "フィッシュアンドチップス",
-      "9": "玉ねぎ蒸し魚",
-      "10": "佛跳牆",
-      "11": "クラシック豆腐セット",
-      "12": "和風定食"
+      "9": "魚の玉ねぎ蒸し",
+      "10": "仏陀が壁を飛び越える",
+      "11": "定番豆腐セット",
+      "12": "綿魚定食"
     },
     "Character2": {
       "name": "第2マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     }
   },
   "Island9": {
@@ -3054,75 +2601,41 @@
       "name": "第1マスの生産品",
       "help": "",
       "0": "生産しない",
-      "1": "キュウリジュース",
-      "2": "スイカジュース",
+      "1": "絞りたてのパイナップルジュース",
+      "2": "冬のジャスミン茶",
       "3": "リンゴジュース",
       "4": "バナナマンゴージュース",
-      "5": "ハチミツレモン水",
-      "6": "ストロベリーレモンドリンク",
+      "5": "ハニーレモネード",
+      "6": "いちご蜂蜜ネクター",
       "7": "ラベンダーティー",
-      "8": "ストロベリーハニーフラッペ",
-      "9": "フローラルでフルーティー",
-      "10": "カラフルフルーツパラダイス",
-      "11": "サンシャインハニーウォーター"
+      "8": "ストロベリーハニースムージー",
+      "9": "サンシャインハニーウォーター",
+      "10": "フローラルでフルーティー",
+      "11": "カラフルフルーツパラダイス"
     },
     "Character1": {
       "name": "第1マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     },
     "Option2": {
       "name": "第2マスの生産品",
       "help": "",
       "0": "生産しない",
-      "1": "キュウリジュース",
-      "2": "スイカジュース",
+      "1": "絞りたてのパイナップルジュース",
+      "2": "冬のジャスミン茶",
       "3": "リンゴジュース",
       "4": "バナナマンゴージュース",
-      "5": "ハチミツレモン水",
-      "6": "ストロベリーレモンドリンク",
+      "5": "ハニーレモネード",
+      "6": "いちご蜂蜜ネクター",
       "7": "ラベンダーティー",
-      "8": "ストロベリーハニーフラッペ",
-      "9": "フローラルでフルーティー",
-      "10": "カラフルフルーツパラダイス",
-      "11": "サンシャインハニーウォーター"
+      "8": "ストロベリーハニースムージー",
+      "9": "サンシャインハニーウォーター",
+      "10": "フローラルでフルーティー",
+      "11": "カラフルフルーツパラダイス"
     },
     "Character2": {
       "name": "第2マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     }
   },
   "Island10": {
@@ -3151,24 +2664,7 @@
     },
     "Character1": {
       "name": "第1マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     },
     "Option2": {
       "name": "第2マスの生産品",
@@ -3187,24 +2683,7 @@
     },
     "Character2": {
       "name": "第2マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     }
   },
   "Island11": {
@@ -3232,24 +2711,7 @@
     },
     "Character1": {
       "name": "第1マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     },
     "Option2": {
       "name": "第2マスの生産品",
@@ -3267,24 +2729,7 @@
     },
     "Character2": {
       "name": "第2マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     }
   },
   "Island12": {
@@ -3309,24 +2754,7 @@
     },
     "Character1": {
       "name": "第1マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     },
     "Option2": {
       "name": "第2マスの生産品",
@@ -3341,24 +2769,7 @@
     },
     "Character2": {
       "name": "第2マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     }
   },
   "Island13": {
@@ -3383,24 +2794,7 @@
     },
     "Character1": {
       "name": "第1マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     },
     "Option2": {
       "name": "第2マスの生産品",
@@ -3415,24 +2809,7 @@
     },
     "Character2": {
       "name": "第2マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     }
   },
   "Island14": {
@@ -3455,24 +2832,7 @@
     },
     "Character1": {
       "name": "第1マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     },
     "Option2": {
       "name": "第2マスの生産品",
@@ -3485,24 +2845,7 @@
     },
     "Character2": {
       "name": "第2マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     }
   },
   "Island15": {
@@ -3518,71 +2861,37 @@
       "name": "第1マスの生産品",
       "help": "",
       "0": "生産しない",
-      "1": "ジャスミン精油",
-      "2": "夏の花束",
-      "3": "布地",
-      "4": "革",
+      "1": "袋に入った乾燥ナズナ",
+      "2": "春の花束",
+      "3": "布",
+      "4": "レザー",
       "5": "ロープ",
       "6": "手袋",
-      "7": "香袋",
+      "7": "小袋",
       "8": "靴",
       "9": "包帯"
     },
     "Character1": {
       "name": "第1マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     },
     "Option2": {
       "name": "第2マスの生産品",
       "help": "",
       "0": "生産しない",
-      "1": "ジャスミン精油",
-      "2": "夏の花束",
-      "3": "布地",
-      "4": "革",
+      "1": "袋に入った乾燥ナズナ",
+      "2": "春の花束",
+      "3": "布",
+      "4": "レザー",
       "5": "ロープ",
       "6": "手袋",
-      "7": "香袋",
+      "7": "小袋",
       "8": "靴",
       "9": "包帯"
     },
     "Character2": {
       "name": "第2マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     }
   },
   "Island16": {
@@ -3610,24 +2919,7 @@
     },
     "Character1": {
       "name": "第2マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     },
     "Option2": {
       "name": "第2マスの生産品",
@@ -3645,24 +2937,7 @@
     },
     "Character2": {
       "name": "第2マスのキャラクター",
-      "help": "",
-      "manjuu": "饅頭仕事中",
-      "saratoga": "サラトガ",
-      "new_jersey": "ニュージャージー",
-      "tashkent": "タシケント",
-      "lemalin": "ル・マラン",
-      "shimakaze": "島風",
-      "akashi": "明石",
-      "ying_swei": "応瑞",
-      "chao_ho": "肇和",
-      "william_d_porter": "ウィリアム・D・ポーター",
-      "chen_hai": "鎮海",
-      "unicorn": "ユニコーン",
-      "cheshire": "チェシャー",
-      "amagi_chan": "天城ちゃん",
-      "helena": "ヘレナ",
-      "atago": "愛宕",
-      "friedrich_der_grobe": "フリードリヒ大王"
+      "help": ""
     }
   },
   "GeneralShop": {
@@ -4379,6 +3654,10 @@
       "name": "いずれかの船のHPがX以下になったら、修理ボックスを使用して船を修理してください。",
       "help": "「修理ボックスを使用して船を修理する」がオンになっている場合にのみ有効です\nアビス、セイレン要塞、マンスリーボスを倒した後にのみ修理を試みてください。\n0.0～1.0"
     },
+    "RepairPackThresholdHazard1": {
+      "name": "いずれかの船のHPがX以下になったら、修理ボックスを使用して船を修理してください（侵蝕1）。",
+      "help": "「修理ボックスを使用して船を修理する」がオンの場合のみ有効です\n「侵蝕1レベリング+」中のみ修理を試みます。\n0.0～1.0"
+    },
     "DoRandomMapEvent": {
       "name": "マップ上のランダムイベントを完了する",
       "help": "自主索敵完了後、再度マップをスキャンし、明石ストアを購入し、サイレン情報収集装置を使用し、サイレン探知装置を使用し、2つの艦隊のメカニズムをアンロックします。"
@@ -4728,6 +4007,10 @@
     "RecordNonCL1AP": {
       "name": "統計非侵食 1 ソース体力",
       "help": "オンにすると、すべてのソース（明石店での購入など）のスタミナ獲得データがカウントされます。オフにすると侵食1レベリングタスクのみ体力データがカウントされ、他のタスクや手動操作で得た体力は無視されます。"
+    },
+    "PreserveVirtualAsset": {
+      "name": "X ポイントの仮想資産を保持",
+      "help": "仮想資産 = モビリティ × 1700/30 + 黄色のコイン + (月末までの時間/10分) × 1700/30\n仮想資産が X 未満の場合、黄色のコイン補給タスクが実行されます。0 は無制限を意味します。"
     }
   },
   "OpsiSirenBug": {
@@ -4859,6 +4142,10 @@
     "MeowStartEarlyEnable": {
       "name": "月末にモビリティの自動クリーンアップを有効にする",
       "help": "過去の AP 消費率に基づいて、月末に過剰なモビリティをクリーンアップするためにショート キャット タスクを事前に開始する必要があるかどうかを自動的に判断します。"
+    },
+    "VirtualAssetPreserve": {
+      "name": "侵食1レベル X ポイント仮想資産を保持",
+      "help": "仮想資産 = モビリティ × 1700/30 + 黄色のコイン + (月末までの時間/10分) × 1700/30。仮想資産が X 未満の場合、黄色のコイン補給タスクが実行されます。"
     }
   },
   "IslandSeasonTask": {
@@ -5001,6 +4288,32 @@
     "RestartIntervalHours": {
       "name": "再起動間隔 (時間)",
       "help": "数時間ごとにシミュレーターを自動的に再起動します。"
+    }
+  },
+  "EmulatorManager": {
+    "_info": {
+      "name": "EmulatorManager._info.name",
+      "help": "EmulatorManager._info.help"
+    },
+    "RemoteSSHHost": {
+      "name": "EmulatorManager.RemoteSSHHost.name",
+      "help": "EmulatorManager.RemoteSSHHost.help"
+    },
+    "RemoteSSHPort": {
+      "name": "EmulatorManager.RemoteSSHPort.name",
+      "help": "EmulatorManager.RemoteSSHPort.help"
+    },
+    "RemoteSSHUser": {
+      "name": "EmulatorManager.RemoteSSHUser.name",
+      "help": "EmulatorManager.RemoteSSHUser.help"
+    },
+    "RemoteSSHPublicKey": {
+      "name": "EmulatorManager.RemoteSSHPublicKey.name",
+      "help": "EmulatorManager.RemoteSSHPublicKey.help"
+    },
+    "RemoteCommand": {
+      "name": "EmulatorManager.RemoteCommand.name",
+      "help": "EmulatorManager.RemoteCommand.help"
     }
   },
   "OpsiSimulatorParameters": {
@@ -5366,6 +4679,9 @@
       "CommissionIncomeTotalCommissions": "Gui.Stat.CommissionIncomeTotalCommissions",
       "CommissionIncomeRecentTitle": "Gui.Stat.CommissionIncomeRecentTitle"
     },
+    "Tactical": {
+      "SkillAutoSwitch": "Gui.Tactical.SkillAutoSwitch"
+    },
     "OpsiScheduling": {
       "UseSmartSchedulingOperationCoinsPreserve": "Gui.OpsiScheduling.UseSmartSchedulingOperationCoinsPreserve",
       "OperationCoinsPreserve": "Gui.OpsiScheduling.OperationCoinsPreserve",
@@ -5380,6 +4696,28 @@
     "Misc": {
       "Enabled": "Enabled",
       "Disabled": "Disabled"
+    },
+    "OOBE": {
+      "WelcomeTitle": "AzurPilotへようこそ",
+      "WelcomeDescription": "初期設定を完了しましょう。",
+      "WelcomeSelectLanguage": "言語を選択",
+      "ServerTitle": "サーバーを選択",
+      "ServerCN": "中国大陸版 (CN)",
+      "ServerEN": "グローバル版 (EN)",
+      "ServerJP": "日本版 (JP)",
+      "ServerTW": "台湾版 (TW)",
+      "EmulatorTitle": "エミュレータ設定",
+      "EmulatorSerial": "シリアル番号 / アドレス",
+      "EmulatorPackage": "パッケージ名",
+      "ReviewTitle": "確認して作成",
+      "ReviewConfigName": "設定名",
+      "ReviewLanguage": "言語",
+      "ReviewServer": "サーバー",
+      "ReviewSerial": "シリアル番号",
+      "ReviewPackage": "パッケージ名",
+      "ButtonNext": "次へ",
+      "ButtonBack": "戻る",
+      "ButtonCreate": "作成して完了"
     }
   }
 }

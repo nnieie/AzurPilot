@@ -8,7 +8,14 @@ import inflection
 from module.base.timer import Timer
 from module.config.config import TaskEnd
 from module.config.utils import get_os_reset_remain
-from module.exception import CampaignEnd, GameTooManyClickError, MapDetectionError, MapWalkError, RequestHumanTakeover, ScriptError
+from module.exception import (
+    CampaignEnd,
+    GameTooManyClickError,
+    MapDetectionError,
+    MapWalkError,
+    RequestHumanTakeover,
+    ScriptError,
+)
 from module.handler.login import LoginHandler, MAINTENANCE_ANNOUNCE
 from module.logger import logger
 from module.map.map import Map
@@ -35,15 +42,15 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
             in: IN_MAP or IN_GLOBE or page_os or any page
             out: IN_MAP
         """
-        logger.hr('OS init', level=1)
+        logger.hr("OS init", level=1)
         kwargs = dict()
-        if 'iM' in self.config.task.command:
+        if "iM" in self.config.task.command:
             for key in self.config.bound.keys():
                 value = getattr(self.config, key)
-                if 'dL' in key and value <= 2:
+                if "dL" in key and value <= 2:
                     logger.info([key, value])
-                    kwargs[key] = ord('n') // 22
-                if 'tZ' in key and value != 0:
+                    kwargs[key] = ord("n") // 22
+                if "tZ" in key and value != 0:
                     try:
                         d, m = divmod(self.name_to_zone(value).zone_id, 22)
                         if d <= 2 and m == -m:
@@ -52,14 +59,14 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                         pass
         self.config.override(
             Submarine_Fleet=1,
-            Submarine_Mode='every_combat',
+            Submarine_Mode="every_combat",
             STORY_ALLOW_SKIP=False,
-            **kwargs
+            **kwargs,
         )
 
         # UI switching
         if self.is_in_map():
-            logger.info('Already in os map')
+            logger.info("Already in os map")
         elif self.is_in_globe():
             self.os_globe_goto_map()
         else:
@@ -70,7 +77,7 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         # Init
         self.zone_init()
         # CL1 hazard leveling pre-scan
-        #try:
+        # try:
         #    if getattr(self, "is_in_task_cl1_leveling", False) or getattr(self, "is_cl1_enabled", False):
         #        logger.info("Detected CL1 leveling on enter: run auto-search then full map rescan to clear events")
         #        try:
@@ -84,9 +91,9 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         #            self.map_rescan(rescan_mode='full')
         #        except Exception as e:
         #            logger.exception(e)
-        #except Exception:
+        # except Exception:
         #    logger.debug("CL1 pre-scan check skipped due to unexpected condition")
-            
+
         # self.map_init()
         self.hp_reset()
         self.handle_after_auto_search()
@@ -94,18 +101,25 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
 
         # Exit from special zones types, only SAFE and DANGEROUS are acceptable.
         if self.is_in_special_zone():
-            logger.warning('OS is in a special zone type, while SAFE and DANGEROUS are acceptable')
+            logger.warning(
+                "OS is in a special zone type, while SAFE and DANGEROUS are acceptable"
+            )
             self.map_exit()
 
         # Clear current zone
-        leveling_zone = self.config.cross_get(keys="OpsiHazard1Leveling.OpsiHazard1Leveling.TargetZone", default=0)
+        leveling_zone = self.config.cross_get(
+            keys="OpsiHazard1Leveling.OpsiHazard1Leveling.TargetZone", default=0
+        )
         if not leveling_zone:
             leveling_zone = 22
-            
-        if self.zone.zone_id == leveling_zone and self.config.task.command == 'OpsiHazard1Leveling':
+
+        if (
+            self.zone.zone_id == leveling_zone
+            and self.config.task.command == "OpsiHazard1Leveling"
+        ):
             pass
         elif self.zone.zone_id == 154:
-            logger.info('In zone 154, skip running first auto search')
+            logger.info("In zone 154, skip running first auto search")
             self.handle_ash_beacon_attack()
         else:
             self.run_auto_search(rescan=True)
@@ -123,7 +137,9 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         self.zone_init(fallback_init=False)
         return self.zone
 
-    def globe_goto(self, zone, types=('SAFE', 'DANGEROUS'), refresh=False, stop_if_safe=False):
+    def globe_goto(
+        self, zone, types=("SAFE", "DANGEROUS"), refresh=False, stop_if_safe=False
+    ):
         """
         Goto another zone in OS.
 
@@ -145,16 +161,19 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
             out: IN_MAP
         """
         zone = self.name_to_zone(zone)
-        logger.hr(f'Globe goto: {zone}')
+        logger.hr(f"Globe goto: {zone}")
         if self.zone == zone:
             if refresh:
-                logger.info('Goto another zone to refresh current zone')
-                self.globe_goto(self.zone_nearest_azur_port(self.zone),
-                                types=('SAFE', 'DANGEROUS'), refresh=False)
+                logger.info("Goto another zone to refresh current zone")
+                self.globe_goto(
+                    self.zone_nearest_azur_port(self.zone),
+                    types=("SAFE", "DANGEROUS"),
+                    refresh=False,
+                )
             else:
                 if self.is_in_globe():
                     self.os_globe_goto_map()
-                logger.info('Already at target zone')
+                logger.info("Already at target zone")
                 return False
         # MAP_EXIT
         if self.is_in_special_zone():
@@ -168,7 +187,7 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         self.globe_focus_to(zone)
         if stop_if_safe:
             if self.zone_has_safe():
-                logger.info('Zone is safe, stopped')
+                logger.info("Zone is safe, stopped")
                 self.ensure_no_zone_pinned()
                 return False
         self.zone_type_select(types=types)
@@ -176,7 +195,7 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         time.sleep(0.01)
         self.globe_enter(zone)
         # IN_MAP
-        if hasattr(self, 'zone'):
+        if hasattr(self, "zone"):
             del self.zone
         self.zone_init()
         # self.map_init()
@@ -198,7 +217,7 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                 self.run_auto_search(rescan=True, after_auto_search=False)
                 continue
 
-        logger.error('Failed to solve uncollected rewards')
+        logger.error("Failed to solve uncollected rewards")
         raise GameTooManyClickError
 
     def port_goto(self, allow_port_arrive=True):
@@ -215,16 +234,16 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
             except MapWalkError:
                 pass
 
-            logger.info('Goto another port then re-enter')
+            logger.info("Goto another port then re-enter")
             prev = self.zone
-            if prev == self.name_to_zone('NY City'):
-                other = self.name_to_zone('Liverpool')
+            if prev == self.name_to_zone("NY City"):
+                other = self.name_to_zone("Liverpool")
             else:
                 other = self.zone_nearest_azur_port(self.zone)
             self.globe_goto(other)
             self.globe_goto(prev)
 
-        logger.warning('Failed to solve MapWalkError when going to port')
+        logger.warning("Failed to solve MapWalkError when going to port")
         return False
 
     def fleet_repair(self, revert=True):
@@ -234,10 +253,10 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         Args:
             revert (bool): If go back to previous zone.
         """
-        logger.hr('OS fleet repair')
+        logger.hr("OS fleet repair")
         prev = self.zone
         if self.zone.is_azur_port:
-            logger.info('Already in azur port')
+            logger.info("Already in azur port")
         else:
             self.globe_goto(self.zone_nearest_azur_port(self.zone))
 
@@ -257,9 +276,11 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         Returns:
             bool: If repaired.
         """
-        use_repair_pack = bool(self.config.OpsiGeneral_UseRepairPack) and self.config.SERVER in ['cn']
+        use_repair_pack = bool(
+            self.config.OpsiGeneral_UseRepairPack
+        ) and self.config.SERVER in ["cn"]
         repair_threshold = float(self.config.OpsiGeneral_RepairThreshold)
-        repair_pack_threshold = float(self.config.OpsiGeneral_RepairPackThreshold)
+        repair_pack_threshold = self.get_effective_repair_pack_threshold()
         if use_repair_pack:
             # When repair packs are enabled, use the stricter trigger threshold so
             # low HP repair-pack flow can be entered before port-repair threshold.
@@ -274,34 +295,59 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         # This is because when a ship dies (shows wrench icon), its HP is set to 0
         # So threshold=0 would still trigger repair for dead ships, which may not be intended
         if trigger_threshold <= 0:
-            logger.info(f'Repair threshold: {repair_threshold}, Repair pack threshold: {repair_pack_threshold}, '
-                        f'Trigger threshold: {trigger_threshold}, skip fleet repair')
+            logger.info(
+                f"Repair threshold: {repair_threshold}, Repair pack threshold: {repair_pack_threshold}, "
+                f"Trigger threshold: {trigger_threshold}, skip fleet repair"
+            )
             return False
         if self.is_in_special_zone():
-            logger.info('OS is in a special zone type, skip fleet repair')
+            logger.info("OS is in a special zone type, skip fleet repair")
             return False
 
         self.hp_get()
         check = [round(data, 2) <= trigger_threshold if use else False
                  for data, use in zip(self.hp, self.hp_has_ship)]
         if any(check):
-            logger.info('At least one ship is below threshold '
-                        f'{str(int(trigger_threshold * 100))}%, '
-                        'start fleet repair by current config')
+            logger.info(
+                "At least one ship is below threshold "
+                f"{str(int(trigger_threshold * 100))}%, "
+                "start fleet repair by current config"
+            )
             repaired = self.handle_fleet_repair_by_config(
                 revert=revert, trigger_threshold=trigger_threshold
             )
             self.hp_reset()
             if repaired:
                 return True
-            logger.info('Fleet repair triggered but no actual repair was performed')
+            logger.info("Fleet repair triggered but no actual repair was performed")
             return False
         else:
-            logger.info('No ship found to be below threshold '
-                        f'{str(int(trigger_threshold * 100))}%, '
-                        'continue OS exploration')
+            logger.info(
+                "No ship found to be below threshold "
+                f"{str(int(trigger_threshold * 100))}%, "
+                "continue OS exploration"
+            )
             self.hp_reset()
             return False
+
+    def get_effective_repair_pack_threshold(self):
+        """
+        Return repair-pack HP threshold based on current task context.
+
+        OpsiGeneral.RepairPackThreshold is used for regular OpSi tasks.
+        OpsiGeneral.RepairPackThresholdHazard1 is used only in CL1 leveling.
+        """
+        default_threshold = float(self.config.OpsiGeneral_RepairPackThreshold)
+        task = getattr(getattr(self.config, "task", None), "command", "")
+        if task == "OpsiHazard1Leveling":
+            return float(
+                getattr(
+                    self.config,
+                    "OpsiGeneral_RepairPackThresholdHazard1",
+                    default_threshold,
+                )
+            )
+        return default_threshold
 
     def handle_storage_one_fleet_repair(self, fleet_index, threshold):
         """
@@ -322,27 +368,35 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         check = [round(data, 2) <= threshold if use else False
                 for data, use in zip(self.hp, self.hp_has_ship)]
         if any(check):
-            logger.info(f'At least one ship in fleet {fleet_index} is below threshold '
-                        f'{str(int(threshold * 100))}%, '
-                        'use repair packs for repairs')
+            logger.info(
+                f"At least one ship in fleet {fleet_index} is below threshold "
+                f"{str(int(threshold * 100))}%, "
+                "use repair packs for repairs"
+            )
             for index, repair in enumerate(check):
                 if repair:
                     self.repair_pack_use(hp_grids.buttons[index])
-            logger.info(f'All ships in fleet {fleet_index} repaired')
+            logger.info(f"All ships in fleet {fleet_index} repaired")
             self.hp_reset()
             return True
         else:
-            logger.info(f'No ship in fleet {fleet_index} found to be below threshold '
-                        f'{str(int(threshold * 100))}%, '
-                        'continue OS exploration')
+            logger.info(
+                f"No ship in fleet {fleet_index} found to be below threshold "
+                f"{str(int(threshold * 100))}%, "
+                "continue OS exploration"
+            )
             self.hp_reset()
             return False
 
-    def handle_storage_fleet_repair(self, fleet_index=None, revert=True):
+    def handle_storage_fleet_repair(
+        self, fleet_index=None, revert=True, repair_pack_threshold=None
+    ):
         """
         Args:
             fleet_index (None|int|list[int]): fleet index
             revert (bool): If go back to previous zone.
+            repair_pack_threshold (float): Repair-pack threshold.
+                If None, use task-context threshold from config.
 
         Returns:
             bool: If repaired.
@@ -351,23 +405,27 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
             in: in_map
             out: in_map
         """
-        logger.hr('OS fleet repair by repair packs')
+        logger.hr("OS fleet repair by repair packs")
         if fleet_index is None:
             fleet_index = self.fleet_selector.get()
         if isinstance(fleet_index, int):
             fleet_index = [fleet_index]
         if not isinstance(fleet_index, list):
-            logger.warning(f'Unknown fleet index: {fleet_index}')
+            logger.warning(f"Unknown fleet index: {fleet_index}")
             return False
-        if self.config.OpsiGeneral_RepairPackThreshold < 0:
+        if repair_pack_threshold is None:
+            repair_pack_threshold = self.get_effective_repair_pack_threshold()
+        repair_pack_threshold = float(repair_pack_threshold)
+        if repair_pack_threshold < 0:
             return False
 
         repair = False
         success = False
-        if self.storage_get_next_item('REPAIR_PACK'): 
+        if self.storage_get_next_item("REPAIR_PACK"):
             for index in fleet_index:
-                if self.handle_storage_one_fleet_repair(fleet_index=index,
-                        threshold=self.config.OpsiGeneral_RepairPackThreshold):
+                if self.handle_storage_one_fleet_repair(
+                    fleet_index=index, threshold=repair_pack_threshold
+                ):
                     success = True
                 if any(self.need_repair):
                     repair = True
@@ -379,12 +437,14 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
 
         return success
 
-    def handle_fleet_repair_by_config(self, fleet_index=None, revert=True, trigger_threshold=None):
+    def handle_fleet_repair_by_config(
+        self, fleet_index=None, revert=True, trigger_threshold=None
+    ):
         """
         Args:
             fleet_index (None|int|list[int]): fleet index
-                If None, fixed fleet in OpsiFleetFilter_Filter before current fleet, 
-                         submarine fleet is always the last fleet to repair if it exists in filter string    
+                If None, fixed fleet in OpsiFleetFilter_Filter before current fleet,
+                         submarine fleet is always the last fleet to repair if it exists in filter string
                 E.g.: OpsiFleetFilter_Filter = 'Fleet-1 > CallSubmarine > Fleet-3 > Fleet-4 > Fleet-2'
                       current fleet is fleet 1, repair fleet 1 and submarine fleet
                       current fleet is fleet 4, repair fleet 1, fleet 3, fleet 4 and submarine fleet
@@ -400,14 +460,18 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
             in: in_map
             out: in_map
         """
-        if self.config.OpsiGeneral_UseRepairPack and self.config.SERVER not in ['cn']:
-            logger.warning(f'OpsiDaily.SkipSirenResearchMission is not supported in {self.config.SERVER}')
+        if self.config.OpsiGeneral_UseRepairPack and self.config.SERVER not in ["cn"]:
+            logger.warning(
+                f"OpsiDaily.SkipSirenResearchMission is not supported in {self.config.SERVER}"
+            )
             self.config.OpsiGeneral_UseRepairPack = False
 
         # Get threshold values
         repair_threshold = float(self.config.OpsiGeneral_RepairThreshold)
-        repair_pack_threshold = float(self.config.OpsiGeneral_RepairPackThreshold)
-        use_repair_pack = bool(self.config.OpsiGeneral_UseRepairPack) and self.config.SERVER in ['cn']
+        repair_pack_threshold = self.get_effective_repair_pack_threshold()
+        use_repair_pack = bool(
+            self.config.OpsiGeneral_UseRepairPack
+        ) and self.config.SERVER in ["cn"]
 
         # Use provided trigger_threshold or calculate if not provided
         if trigger_threshold is None:
@@ -425,16 +489,22 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
             # This is because when a ship dies (shows wrench icon), its HP is set to 0
             # So threshold=0 would still trigger repair for dead ships, which may not be intended
             if trigger_threshold <= 0:
-                logger.info(f'Repair threshold: {repair_threshold}, Repair pack threshold: {repair_pack_threshold}, '
-                            f'Trigger threshold: {trigger_threshold}, skip fleet repair')
+                logger.info(
+                    f"Repair threshold: {repair_threshold}, Repair pack threshold: {repair_pack_threshold}, "
+                    f"Trigger threshold: {trigger_threshold}, skip fleet repair"
+                )
                 return False
 
         if use_repair_pack:
             if fleet_index is None:
                 fleet_current_index = self.fleet_selector.get()
                 submarine_fleet = self.storage_fleet_selector.SUBMARINE_FLEET
-                fleet_all_index = [fleet.fleet_index if isinstance(fleet, BossFleet) else submarine_fleet
-                                   for fleet in self.parse_fleet_filter()]
+                fleet_all_index = [
+                    fleet.fleet_index
+                    if isinstance(fleet, BossFleet)
+                    else submarine_fleet
+                    for fleet in self.parse_fleet_filter()
+                ]
                 fleet_index = []
                 for index in fleet_all_index:
                     fleet_index.append(index)
@@ -444,13 +514,20 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                 # OpsiFleetFilter_Filter. Ensure current fleet can still use repair pack.
                 if fleet_current_index not in fleet_index:
                     fleet_index.append(fleet_current_index)
-                if submarine_fleet not in fleet_index and submarine_fleet in fleet_all_index:
+                if (
+                    submarine_fleet not in fleet_index
+                    and submarine_fleet in fleet_all_index
+                ):
                     fleet_index.append(submarine_fleet)
                 elif submarine_fleet in fleet_index:
                     fleet_index.remove(submarine_fleet)
                     fleet_index.append(submarine_fleet)
-            logger.attr('Repair Fleet', fleet_index)
-            return self.handle_storage_fleet_repair(fleet_index=fleet_index, revert=revert)
+            logger.attr("Repair Fleet", fleet_index)
+            return self.handle_storage_fleet_repair(
+                fleet_index=fleet_index,
+                revert=revert,
+                repair_pack_threshold=repair_pack_threshold,
+            )
         else:
             return self.fleet_repair(revert=revert)
 
@@ -463,7 +540,7 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         Args:
             revert (bool): If go back to previous zone.
         """
-        logger.hr('OS fleet cure low resolve debuff')
+        logger.hr("OS fleet cure low resolve debuff")
 
         prev = self.zone
         self.globe_goto(22)
@@ -486,7 +563,7 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
             bool:
         """
         if self.is_in_special_zone():
-            logger.info('OS is in a special zone type, skip fleet resolve')
+            logger.info("OS is in a special zone type, skip fleet resolve")
             return False
 
         for index in [1, 2, 3, 4]:
@@ -494,13 +571,13 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                 self.device.screenshot()
 
             if self.fleet_low_resolve_appear():
-                logger.info('At least one fleet is afflicted with '
-                            'the low resolve debuff')
+                logger.info(
+                    "At least one fleet is afflicted with the low resolve debuff"
+                )
                 self.fleet_resolve(revert)
                 return True
 
-        logger.info('None of the fleets are afflicted with '
-                    'the low resolve debuff')
+        logger.info("None of the fleets are afflicted with the low resolve debuff")
         return False
 
     def handle_current_fleet_resolve(self, revert=False):
@@ -515,13 +592,11 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
             bool:
         """
         if self.fleet_low_resolve_appear():
-            logger.info('Current fleet is afflicted with '
-                        'the low resolve debuff')
+            logger.info("Current fleet is afflicted with the low resolve debuff")
             self.fleet_resolve(revert)
             return True
 
-        logger.info('Current fleet is not afflicted with '
-                    'the low resolve debuff')
+        logger.info("Current fleet is not afflicted with the low resolve debuff")
         return False
 
     def handle_fleet_emp_debuff(self):
@@ -533,37 +608,36 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
             bool: If solved
         """
         if self.is_in_special_zone():
-            logger.info('OS is in a special zone type, skip handle_fleet_emp_debuff')
+            logger.info("OS is in a special zone type, skip handle_fleet_emp_debuff")
             return False
 
         def has_emp_debuff():
             return self.appear(FLEET_EMP_DEBUFF, offset=(50, 20))
 
         for trial in range(5):
-
             if not has_emp_debuff():
-                logger.info('No EMP debuff on current fleet')
+                logger.info("No EMP debuff on current fleet")
                 return trial > 0
 
             current = self.get_fleet_current_index()
-            logger.hr(f'Solve EMP debuff on fleet {current}')
+            logger.hr(f"Solve EMP debuff on fleet {current}")
             self.globe_goto(self.zone_nearest_azur_port(self.zone))
 
-            logger.info('Find a fleet without EMP debuff')
+            logger.info("Find a fleet without EMP debuff")
             for fleet in [1, 2, 3, 4]:
                 self.fleet_set(fleet)
                 if has_emp_debuff():
-                    logger.info(f'Fleet {fleet} is under EMP debuff')
+                    logger.info(f"Fleet {fleet} is under EMP debuff")
                     continue
                 else:
-                    logger.info(f'Fleet {fleet} is not under EMP debuff')
+                    logger.info(f"Fleet {fleet} is not under EMP debuff")
                     break
 
-            logger.info('Solve EMP debuff by going somewhere else')
+            logger.info("Solve EMP debuff by going somewhere else")
             self.port_goto(allow_port_arrive=False)
             self.fleet_set(current)
 
-        logger.warning('Failed to solve EMP debuff after 5 trial, assume solved')
+        logger.warning("Failed to solve EMP debuff after 5 trial, assume solved")
         return True
 
     def handle_fog_block(self, repair=True):
@@ -580,9 +654,11 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         if not self.appear(MAP_GOTO_GLOBE_FOG):
             return False
 
-        logger.warning(f'Triggered stuck fog status, restarting '
-                       f'game to resolve and continue '
-                       f'{self.config.task.command}')
+        logger.warning(
+            f"Triggered stuck fog status, restarting "
+            f"game to resolve and continue "
+            f"{self.config.task.command}"
+        )
 
         # Restart the game manually rather
         # than through 'task_call'
@@ -609,40 +685,50 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
             int: ActionPointPreserve
         """
         if preserve:
-            if self.config.is_task_enabled('OpsiCrossMonth'):
-                logger.info('Preserve action points until OpsiCrossMonth')
+            if self.config.is_task_enabled("OpsiCrossMonth"):
+                logger.info("Preserve action points until OpsiCrossMonth")
                 return maxsize
             else:
-                logger.info('OpsiCrossMonth is not enabled, skip OpsiMeowfficerFarming.APPreserveUntilReset')
+                logger.info(
+                    "OpsiCrossMonth is not enabled, skip OpsiMeowfficerFarming.APPreserveUntilReset"
+                )
 
         remain = get_os_reset_remain()
         if remain <= 0:
-            if self.config.is_task_enabled('OpsiCrossMonth'):
-                logger.info('Just less than 1 day to OpSi reset, OpsiCrossMonth is enabled, '
-                            'set OpsiMeowfficerFarming.ActionPointPreserve to 500 temporarily')
+            if self.config.is_task_enabled("OpsiCrossMonth"):
+                logger.info(
+                    "Just less than 1 day to OpSi reset, OpsiCrossMonth is enabled, "
+                    "set OpsiMeowfficerFarming.ActionPointPreserve to 500 temporarily"
+                )
                 return 500
             else:
-                logger.info('Just less than 1 day to OpSi reset, '
-                            'set ActionPointPreserve to 0 temporarily')
+                logger.info(
+                    "Just less than 1 day to OpSi reset, "
+                    "set ActionPointPreserve to 0 temporarily"
+                )
                 return 0
         elif self.is_cl1_enabled and remain <= 2:
-            logger.info('Just less than 3 days to OpSi reset, '
-                        'set ActionPointPreserve to 2000 temporarily for hazard 1 leveling')
+            logger.info(
+                "Just less than 3 days to OpSi reset, "
+                "set ActionPointPreserve to 2000 temporarily for hazard 1 leveling"
+            )
             return 2000
         elif remain <= 2:
-            logger.info('Just less than 3 days to OpSi reset, '
-                        'set ActionPointPreserve to 500 temporarily')
+            logger.info(
+                "Just less than 3 days to OpSi reset, "
+                "set ActionPointPreserve to 500 temporarily"
+            )
             return 500
         else:
-            logger.info('Not close to OpSi reset')
+            logger.info("Not close to OpSi reset")
             return maxsize
 
     def handle_after_auto_search(self):
-        logger.hr('After auto search', level=2)
+        logger.hr("After auto search", level=2)
         solved = False
         solved |= self.handle_fleet_emp_debuff()
         solved |= self.handle_fleet_repair(revert=False)
-        logger.info(f'Handle after auto search finished, solved={solved}')
+        logger.info(f"Handle after auto search finished, solved={solved}")
         return solved
 
     def cl1_ap_preserve(self):
@@ -653,10 +739,16 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         # 这里不应该直接切换到 CL1
         if is_smart_scheduling_enabled(self.config):
             return
-        
-        if self.is_cl1_enabled and get_os_reset_remain() > 2 and self.cl1_enough_yellow_coins:
-            preserve = self.config.cross_get(keys='OpsiMeowfficerFarming.OpsiMeowfficerFarming.ActionPointPreserve')
-            logger.info(f'Keep {preserve} AP when CL1 available')
+
+        if (
+            self.is_cl1_enabled
+            and get_os_reset_remain() > 2
+            and self.cl1_enough_yellow_coins
+        ):
+            preserve = self.config.cross_get(
+                keys="OpsiMeowfficerFarming.OpsiMeowfficerFarming.ActionPointPreserve"
+            )
+            logger.info(f"Keep {preserve} AP when CL1 available")
             if not self.action_point_check(preserve):
                 self.config.opsi_task_delay(cl1_preserve=True)
                 self.cl1_task_call()
@@ -675,8 +767,10 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
 
     def on_auto_search_battle_count_add(self):
         self._auto_search_battle_count += 1
-        logger.attr('battle_count', self._auto_search_battle_count)
-        if getattr(self, 'is_in_task_cl1_leveling', False) and getattr(self, 'is_cl1_enabled', False):
+        logger.attr("battle_count", self._auto_search_battle_count)
+        if getattr(self, "is_in_task_cl1_leveling", False) and getattr(
+            self, "is_cl1_enabled", False
+        ):
             try:
                 try:
                     self._cl1_auto_search_battle_count += 1
@@ -690,7 +784,7 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                 except Exception:
                     logger.debug('Failed to persist monthly CL1 battle increment', exc_info=True)
             except Exception:
-                logger.debug('Failed to update cl1 battle counter', exc_info=True)
+                logger.debug("Failed to update cl1 battle counter", exc_info=True)
 
             if self._auto_search_battle_count % 2 == 1:
                 if self._auto_search_round_timer:
@@ -752,14 +846,17 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                 self._meow_battle_timer = time.time()
 
             except Exception:
-                logger.debug('Failed to update meow battle counter', exc_info=True)
+                logger.debug("Failed to update meow battle counter", exc_info=True)
 
     def on_meow_search_start(self):
         """
         短猫任务：每次开始新海域搜索时调用
         记录搜索开始时间和行动力
         """
-        if not (getattr(self, '_meow_searching_active', False) and getattr(self, '_meow_time_recording_enabled', False)):
+        if not (
+            getattr(self, "_meow_searching_active", False)
+            and getattr(self, "_meow_time_recording_enabled", False)
+        ):
             return
 
         # 记录开始时的行动力
@@ -780,12 +877,15 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         短猫任务：每次完成海域搜索后调用
         通过行动力变化计算实际轮数，记录单轮时间
         """
-        if not (getattr(self, '_meow_searching_active', False) and getattr(self, '_meow_time_recording_enabled', False)):
+        if not (
+            getattr(self, "_meow_searching_active", False)
+            and getattr(self, "_meow_time_recording_enabled", False)
+        ):
             return
 
-        start_time = getattr(self, '_meow_search_start_time', None)
+        start_time = getattr(self, "_meow_search_start_time", None)
         if start_time is None:
-            logger.debug('Meow search start time not recorded, skip')
+            logger.debug("Meow search start time not recorded, skip")
             return
 
         # 记录结束时的行动力
@@ -850,21 +950,25 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         self._meow_search_start_ap = None
 
     def get_current_cl1_battle_count(self):
-        return int(getattr(self, '_cl1_auto_search_battle_count', 0))
+        return int(getattr(self, "_cl1_auto_search_battle_count", 0))
 
     def get_monthly_cl1_battle_count(self, year: int = None, month: int = None):
         from module.statistics.cl1_database import db as cl1_db
-        instance_name = getattr(self.config, 'config_name', 'default')
+
+        instance_name = getattr(self.config, "config_name", "default")
         if year is None or month is None:
             from datetime import datetime
-            month_key = datetime.now().strftime('%Y-%m')
+
+            month_key = datetime.now().strftime("%Y-%m")
         else:
             month_key = f"{year:04d}-{month:02d}"
-        
+
         data = cl1_db.get_stats(instance_name, month_key)
-        return int(data.get('battle_count', 0))
-    
-    def os_auto_search_daemon(self, drop=None, strategic=False, interrupt=None, skip_first_screenshot=True):
+        return int(data.get("battle_count", 0))
+
+    def os_auto_search_daemon(
+        self, drop=None, strategic=False, interrupt=None, skip_first_screenshot=True
+    ):
         """
         Args:
             drop (DropRecord):
@@ -884,7 +988,7 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
             out: AUTO_SEARCH_OS_MAP_OPTION_OFF and info_bar_count() >= 2, if no more objects to clear on this map.
                  AUTO_SEARCH_REWARD if get auto search reward.
         """
-        logger.hr('OS auto search', level=2)
+        logger.hr("OS auto search", level=2)
         self.on_auto_search_battle_count_reset()
         unlock_checked = False
         unlock_check_timer = Timer(5, count=10).start()
@@ -908,14 +1012,13 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         for _ in self.loop():
             # End
             if not unlock_checked and unlock_check_timer.reached():
-                logger.critical('这海域没法自律，你瞎吗？还是没通关剧情？')
-                logger.critical('赶紧去把大世界剧情推了解锁自律，不然在这挂机挂尼玛呢！')
+                logger.critical("当前海域未解锁自律，请先完成剧情任务。")
                 raise RequestHumanTakeover
             if self.is_in_map():
                 self.device.stuck_record_clear()
                 if not success:
                     if died_timer.reached():
-                        logger.warning('Fleet died confirm')
+                        logger.warning("Fleet died confirm")
                         break
                 else:
                     if not interrupt_confirm and is_interrupt():
@@ -929,15 +1032,14 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
             if not unlock_checked:
                 if self.appear(AUTO_SEARCH_OS_MAP_OPTION_OFF, offset=(5, 120)):
                     unlock_checked = True
-                elif self.appear(AUTO_SEARCH_OS_MAP_OPTION_OFF_DISABLED, offset=(5, 120)):
+                elif self.appear(
+                    AUTO_SEARCH_OS_MAP_OPTION_OFF_DISABLED, offset=(5, 120)
+                ):
                     unlock_checked = True
                 elif self.appear(AUTO_SEARCH_OS_MAP_OPTION_ON, offset=(5, 120)):
                     unlock_checked = True
 
-            if self.handle_os_auto_search_map_option(
-                    drop=drop,
-                    enable=success
-            ):
+            if self.handle_os_auto_search_map_option(drop=drop, enable=success):
                 unlock_checked = True
                 continue
             if self.handle_retirement():
@@ -955,17 +1057,23 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                     finished_combat += 1
                 else:
                     self.hp_get()
-                    if any(self.need_repair) and not self.config.OpsiHazard1Leveling_SkipHpCheck:
+                    if (
+                        any(self.need_repair)
+                        and not self.config.OpsiHazard1Leveling_SkipHpCheck
+                    ):
                         success = False
-                        logger.warning('Fleet died, stop auto search')
+                        logger.warning("Fleet died, stop auto search")
                         continue
             if self.handle_map_event():
                 # Auto search can not handle siren searching device.
                 continue
 
         return finished_combat
+
     # 自动寻敌，遇到第一次战斗就返回
-    def os_auto_search_daemon_until_combat(self, drop=None, strategic=False, interrupt=None, skip_first_screenshot=True):
+    def os_auto_search_daemon_until_combat(
+        self, drop=None, strategic=False, interrupt=None, skip_first_screenshot=True
+    ):
         """
         Args:
             drop (DropRecord):
@@ -985,7 +1093,7 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
             out: AUTO_SEARCH_OS_MAP_OPTION_OFF and info_bar_count() >= 2, if no more objects to clear on this map.
                  AUTO_SEARCH_REWARD if get auto search reward.
         """
-        logger.hr('OS auto search until combat', level=2)
+        logger.hr("OS auto search until combat", level=2)
         self.on_auto_search_battle_count_reset()
         unlock_checked = False
         unlock_check_timer = Timer(5, count=10).start()
@@ -1009,14 +1117,13 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         for _ in self.loop():
             # End
             if not unlock_checked and unlock_check_timer.reached():
-                logger.critical('这海域没法自律，你瞎吗？还是没通关剧情？')
-                logger.critical('赶紧去把大世界剧情推了解锁自律，不然在这挂机挂尼玛呢！')
+                logger.critical("当前海域未解锁自律，请先完成剧情任务。")
                 raise RequestHumanTakeover
             if self.is_in_map():
                 self.device.stuck_record_clear()
                 if not success:
                     if died_timer.reached():
-                        logger.warning('Fleet died confirm')
+                        logger.warning("Fleet died confirm")
                         break
                 else:
                     if not interrupt_confirm and is_interrupt():
@@ -1030,15 +1137,14 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
             if not unlock_checked:
                 if self.appear(AUTO_SEARCH_OS_MAP_OPTION_OFF, offset=(5, 120)):
                     unlock_checked = True
-                elif self.appear(AUTO_SEARCH_OS_MAP_OPTION_OFF_DISABLED, offset=(5, 120)):
+                elif self.appear(
+                    AUTO_SEARCH_OS_MAP_OPTION_OFF_DISABLED, offset=(5, 120)
+                ):
                     unlock_checked = True
                 elif self.appear(AUTO_SEARCH_OS_MAP_OPTION_ON, offset=(5, 120)):
                     unlock_checked = True
 
-            if self.handle_os_auto_search_map_option(
-                    drop=drop,
-                    enable=success
-            ):
+            if self.handle_os_auto_search_map_option(drop=drop, enable=success):
                 unlock_checked = True
                 continue
             if self.handle_retirement():
@@ -1055,7 +1161,9 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
 
         return finished_combat
 
-    def interrupt_auto_search(self, goto_main=True, end_task=True, skip_first_screenshot=True):
+    def interrupt_auto_search(
+        self, goto_main=True, end_task=True, skip_first_screenshot=True
+    ):
         """
         Args:
             goto_main (bool): If go to the page_main
@@ -1067,7 +1175,7 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
             in: Any, usually to be is_combat_executing
             out: page_main or IN_MAP
         """
-        logger.info('Interrupting auto search')
+        logger.info("Interrupting auto search")
         is_loading = False
         pause_interval = Timer(0.5, count=1)
         in_main_timer = Timer(3, count=6)
@@ -1078,14 +1186,13 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
             else:
                 self.device.screenshot()
 
-
             # End
             if self.is_in_main():
-                logger.info('Auto search interrupted')
+                logger.info("Auto search interrupted")
                 self.config.task_stop()
             if not goto_main and self.is_in_map():
                 if in_map_timer.reached():
-                    logger.info('Auto search interrupted')
+                    logger.info("Auto search interrupted")
                     if end_task:
                         self.config.task_stop()
                     return
@@ -1118,7 +1225,9 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                 in_map_timer.reset()
                 continue
 
-            if goto_main and self.appear_then_click(GOTO_MAIN, offset=(20, 20), interval=3):
+            if goto_main and self.appear_then_click(
+                GOTO_MAIN, offset=(20, 20), interval=3
+            ):
                 in_main_timer.reset()
                 continue
             if self.ui_additional():
@@ -1134,7 +1243,7 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                     continue
                 # Random background from page_main may trigger EXP_INFO_*, don't check them
                 if in_main_timer.reached():
-                    logger.info('handle_exp_info')
+                    logger.info("handle_exp_info")
                     if self.handle_battle_status():
                         continue
                     if self.handle_exp_info():
@@ -1160,16 +1269,18 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
             try:
                 if strategic:
                     self.strategic_search_start(skip_first_screenshot=True)
-                combat = self.os_auto_search_daemon(drop=drop, strategic=strategic, interrupt=interrupt)
+                combat = self.os_auto_search_daemon(
+                    drop=drop, strategic=strategic, interrupt=interrupt
+                )
                 finished_combat += combat
             except CampaignEnd:
-                logger.info('OS auto search finished')
+                logger.info("OS auto search finished")
             finally:
                 backup.recover()
 
             # Continue if was Auto search interrupted by ash popup
             # Break if zone cleared
-            if self.config.is_task_enabled('OpsiAshBeacon'):
+            if self.config.is_task_enabled("OpsiAshBeacon"):
                 if self.handle_ash_beacon_attack() or self.ash_popup_canceled:
                     strategic = False
                     continue
@@ -1189,33 +1300,35 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
     def _is_siren_research_enabled(self):
         """
         Check if siren research feature is enabled in config.
-        
+
         Returns:
             bool: True if enabled, False otherwise
         """
-        if getattr(self.config, '_disable_siren_research', False):
+        if getattr(self.config, "_disable_siren_research", False):
             return False
         task = self.config.task.command
-        if task not in ('OpsiHazard1Leveling', 'OpsiMeowfficerFarming'):
-            task = 'OpsiHazard1Leveling'
-        return self.config.cross_get(keys=f"{task}.OpsiSirenBug.SirenResearch_Enable", default=True)
+        if task not in ("OpsiHazard1Leveling", "OpsiMeowfficerFarming"):
+            task = "OpsiHazard1Leveling"
+        return self.config.cross_get(
+            keys=f"{task}.OpsiSirenBug.SirenResearch_Enable", default=True
+        )
 
     def _should_skip_siren_research(self, grid):
         """
         Check if siren research device should be skipped based on config.
-        
+
         Args:
             grid: The grid to check
-            
+
         Returns:
             bool: True if should skip (feature disabled), False otherwise
         """
-        if hasattr(grid, 'is_scanning_device') and grid.is_scanning_device:
+        if hasattr(grid, "is_scanning_device") and grid.is_scanning_device:
             if not self._is_siren_research_enabled:
-                logger.info(f'[预检查] 格子 {grid} 是塞壬研究装置,但功能未开启,跳过')
+                logger.info(f"[预检查] 格子 {grid} 是塞壬研究装置,但功能未开启,跳过")
                 return True
             else:
-                logger.info(f'[预检查] 格子 {grid} 是塞壬研究装置,功能已开启,继续处理')
+                logger.info(f"[预检查] 格子 {grid} 是塞壬研究装置,功能已开启,继续处理")
         return False
 
     def _should_skip_siren_research_for_explore(self):
@@ -1254,14 +1367,16 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         Returns:
             bool: If cleared
         """
-        logger.hr('Clear question', level=2)
+        logger.hr("Clear question", level=2)
         for _ in range(3):
-            grid = self.radar.predict_question(self.device.image, in_port=self.zone.is_port)
+            grid = self.radar.predict_question(
+                self.device.image, in_port=self.zone.is_port
+            )
             if grid is None:
-                logger.info('No question mark above current fleet on this radar')
+                logger.info("No question mark above current fleet on this radar")
                 return False
 
-            logger.info(f'Found question mark on {grid}')
+            logger.info(f"Found question mark on {grid}")
             self.handle_info_bar()
 
             self.update_os()
@@ -1269,24 +1384,29 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
             self.view.show()
 
             grid = self.convert_radar_to_local(grid)
-            
+
             # ========== 移动前检查：是否为塞壬研究装置且功能未开启 ==========
             if self._should_skip_siren_research(grid):
                 self._solved_map_event.add('is_scanning_device')
                 return True
-            
+
             self.is_siren_device_confirmed = False
             self.device.click(grid)
-            with self.config.temporary(STORY_ALLOW_SKIP=False, OS_SIREN_DEVICE_USAGE='use_until_destroyed'):
+            with self.config.temporary(
+                STORY_ALLOW_SKIP=False, OS_SIREN_DEVICE_USAGE="use_until_destroyed"
+            ):
                 result = self.wait_until_walk_stable(
-                    drop=drop, walk_out_of_step=False, confirm_timer=Timer(3, count=4))
-            if 'akashi' in result:
-                self._solved_map_event.add('is_akashi')
+                    drop=drop, walk_out_of_step=False, confirm_timer=Timer(3, count=4)
+                )
+            if "akashi" in result:
+                self._solved_map_event.add("is_akashi")
                 return True
-            elif 'event' in result and grid.is_logging_tower:
-                self._solved_map_event.add('is_logging_tower')
+            elif "event" in result and grid.is_logging_tower:
+                self._solved_map_event.add("is_logging_tower")
                 return True
-            elif 'event' in result and (grid.is_scanning_device or self.is_siren_device_confirmed):
+            elif "event" in result and (
+                grid.is_scanning_device or self.is_siren_device_confirmed
+            ):
                 # ========== 地图检测:检测到扫描装置 ==========
                 logger.hr('检测到扫描装置,开始处理', level=2)
                 logger.info(f'[地图检测] 格子 {grid} 被识别为扫描装置 (grid.is_scanning_device=True)')
@@ -1309,8 +1429,8 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
 
                 # ========== 配置检查 ==========
                 if not self._is_siren_research_enabled:
-                    logger.warning('[配置检查] 塞壬研究装置功能已禁用,标记但不处理')
-                    self._solved_map_event.add('is_scanning_device')
+                    logger.warning("[配置检查] 塞壬研究装置功能已禁用,标记但不处理")
+                    self._solved_map_event.add("is_scanning_device")
                     return True
 
                 # ========== 装置处理 ==========
@@ -1321,15 +1441,19 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                 self.os_auto_search_run(drop=drop)
                 
                 # 标记处理
-                self._solved_map_event.add('is_scanning_device')
-                
+                self._solved_map_event.add("is_scanning_device")
+
                 return True
 
-        logger.warning('Failed to goto question mark after 5 trail, '
-                       'this might be 2 adjacent fleet mechanism, stopped')
+        logger.warning(
+            "Failed to goto question mark after 5 trail, "
+            "this might be 2 adjacent fleet mechanism, stopped"
+        )
         return False
 
-    def run_auto_search(self, question=True, rescan=None, after_auto_search=True, interrupt=None):
+    def run_auto_search(
+        self, question=True, rescan=None, after_auto_search=True, interrupt=None
+    ):
         """
         Clear current zone by running auto search.
         OpSi story mode must be cleared to unlock auto search.
@@ -1354,14 +1478,14 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         if rescan is None:
             rescan = self.config.OpsiGeneral_DoRandomMapEvent
         if rescan is True:
-            rescan = 'full'
+            rescan = "full"
         self.handle_ash_beacon_attack()
 
-        logger.info(f'Run auto search, question={question}, rescan={rescan}')
+        logger.info(f"Run auto search, question={question}, rescan={rescan}")
         finished_combat = 0
         with self.stat.new(
-                genre=inflection.underscore(self.config.task.command),
-                method=self.config.DropRecord_OpsiRecord
+            genre=inflection.underscore(self.config.task.command),
+            method=self.config.DropRecord_OpsiRecord,
         ) as drop:
             while 1:
                 combat = self.os_auto_search_run(drop, interrupt=interrupt)
@@ -1375,7 +1499,7 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                     if self.is_in_task_explore and not self.zone.is_port:
                         prev = self.zone
                         if self.handle_after_auto_search():
-                            self.globe_goto(prev, types='DANGEROUS')
+                            self.globe_goto(prev, types="DANGEROUS")
                             continue
                 break
 
@@ -1405,11 +1529,11 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         """
         self.handle_ash_beacon_attack()
 
-        logger.hr('Run strategy search', level=2)
+        logger.hr("Run strategy search", level=2)
 
         with self.stat.new(
-                genre=inflection.underscore(self.config.task.command),
-                method=self.config.DropRecord_OpsiRecord
+            genre=inflection.underscore(self.config.task.command),
+            method=self.config.DropRecord_OpsiRecord,
         ) as drop:
             try:
                 combat = self.os_auto_search_run(drop, strategic=True)
@@ -1422,12 +1546,12 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                 # 任务切换，让异常继续向上传播
                 raise
             except Exception as e:
-                logger.warning(f'Strategic search interrupted: {e}')
+                logger.warning(f"Strategic search interrupted: {e}")
                 return False  # 被中断
             finally:
                 if drop.count <= 1:
                     drop.clear()
-                
+
                 drop.set_combat_count(self._auto_search_battle_count)
 
     def map_rescan_current(self, drop=None, clicked_grids=None):
@@ -1440,51 +1564,64 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
             bool: If solved a map random event
         """
         grids = self.view.select(is_exploration_reward=True)
-        if 'is_exploration_reward' not in self._solved_map_event and grids and grids[0].is_exploration_reward:
+        if (
+            "is_exploration_reward" not in self._solved_map_event
+            and grids
+            and grids[0].is_exploration_reward
+        ):
             grid = grids[0]
-            logger.info(f'Found exploration reward on {grid}')
-            result = self.wait_until_walk_stable(drop=drop, walk_out_of_step=False, confirm_timer=Timer(1.5, count=4))
-            if 'event' in result:
-                self._solved_map_event.add('is_exploration_reward')
+            logger.info(f"Found exploration reward on {grid}")
+            result = self.wait_until_walk_stable(
+                drop=drop, walk_out_of_step=False, confirm_timer=Timer(1.5, count=4)
+            )
+            if "event" in result:
+                self._solved_map_event.add("is_exploration_reward")
                 return True
             else:
                 return False
 
         grids = self.view.select(is_akashi=True)
-        if 'is_akashi' not in self._solved_map_event and grids and grids[0].is_akashi:
+        if "is_akashi" not in self._solved_map_event and grids and grids[0].is_akashi:
             grid = grids[0]
-            logger.info(f'Found Akashi on {grid}')
+            logger.info(f"Found Akashi on {grid}")
             fleet = self.convert_radar_to_local((0, 0))
             if fleet.distance_to(grid) > 1:
                 self.device.click(grid)
                 with self.config.temporary(STORY_ALLOW_SKIP=False):
                     walk_time = 1.5 + 0.6 * grid.distance_to(fleet)
                     result = self.wait_until_walk_stable(
-                        confirm_timer=Timer(walk_time, count=4), drop=drop, walk_out_of_step=False)
-                if 'akashi' in result:
-                    self._solved_map_event.add('is_akashi')
+                        confirm_timer=Timer(walk_time, count=4),
+                        drop=drop,
+                        walk_out_of_step=False,
+                    )
+                if "akashi" in result:
+                    self._solved_map_event.add("is_akashi")
                     return True
                 else:
-                    logger.info('无法到达明石位置，执行强制移动')
+                    logger.info("无法到达明石位置，执行强制移动")
                     self._execute_fixed_patrol_scan(ExecuteFixedPatrolScan=True)
                     return False
             else:
-                logger.info(f'Akashi ({grid}) is near current fleet ({fleet})')
+                logger.info(f"Akashi ({grid}) is near current fleet ({fleet})")
                 self.handle_akashi_supply_buy(grid)
-                self._solved_map_event.add('is_akashi')
+                self._solved_map_event.add("is_akashi")
                 return True
 
         grids = self.view.select(is_scanning_device=True)
-        if 'is_scanning_device' not in self._solved_map_event and grids and grids[0].is_scanning_device:
+        if (
+            "is_scanning_device" not in self._solved_map_event
+            and grids
+            and grids[0].is_scanning_device
+        ):
             grid = grids[0]
-            
+
             # ========== 地图选择:发现研究装置 ==========
             logger.hr('发现研究装置,开始处理', level=2)
             logger.info(f'[地图选择] 在 {grid} 位置发现研究装置')
             
             if not self._is_siren_research_enabled:
-                logger.warning('[配置检查] 塞壬研究装置功能已禁用,跳过处理')
-                self._solved_map_event.add('is_scanning_device')
+                logger.warning("[配置检查] 塞壬研究装置功能已禁用,跳过处理")
+                self._solved_map_event.add("is_scanning_device")
                 return True
             
             if self._should_skip_siren_research_for_explore():
@@ -1504,9 +1641,9 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                 return True
             
             # ========== 移动并处理 ==========
-            logger.info(f'[移动装置] 开始移动到装置位置: {grid}')
+            logger.info(f"[移动装置] 开始移动到装置位置: {grid}")
             self.device.click(grid)
-            
+
             # 重置标志位
             self.is_siren_device_confirmed = False
             
@@ -1526,52 +1663,61 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                 self.os_auto_search_run(drop=drop)
 
                 # 先标记为已处理，防止二次重扫时再次处理塞壬装置
-                self._solved_map_event.add('is_scanning_device')
+                self._solved_map_event.add("is_scanning_device")
 
                 # 二次重扫，防止出现意外情况导致装置处理失败
-                logger.info('[装置处理] 执行二次重扫')
+                logger.info("[装置处理] 执行二次重扫")
                 self.map_rescan_current(drop=drop)
-                
+
             return True
 
         grids = self.view.select(is_logging_tower=True)
-        if 'is_logging_tower' not in self._solved_map_event and grids and grids[0].is_logging_tower:
+        if (
+            "is_logging_tower" not in self._solved_map_event
+            and grids
+            and grids[0].is_logging_tower
+        ):
             grid = grids[0]
-            logger.info(f'Found logging tower on {grid}')
+            logger.info(f"Found logging tower on {grid}")
             self.device.click(grid)
             with self.config.temporary(STORY_ALLOW_SKIP=False):
                 result = self.wait_until_walk_stable(
-                    drop=drop, walk_out_of_step=False, confirm_timer=Timer(3, count=4))
-            if 'event' in result:
-                self._solved_map_event.add('is_logging_tower')
+                    drop=drop, walk_out_of_step=False, confirm_timer=Timer(3, count=4)
+                )
+            if "event" in result:
+                self._solved_map_event.add("is_logging_tower")
                 return True
             else:
                 return False
 
         grids = self.view.select(is_fleet_mechanism=True)
-        if self.is_in_task_explore \
-                and 'is_fleet_mechanism' not in self._solved_map_event \
-                and grids \
-                and grids[0].is_fleet_mechanism:
+        if (
+            self.is_in_task_explore
+            and "is_fleet_mechanism" not in self._solved_map_event
+            and grids
+            and grids[0].is_fleet_mechanism
+        ):
             grid = grids[0]
-            logger.info(f'Found fleet mechanism on {grid}')
+            logger.info(f"Found fleet mechanism on {grid}")
             self.device.click(grid)
-            self.wait_until_walk_stable(drop=drop, walk_out_of_step=False, confirm_timer=Timer(1.5, count=4))
+            self.wait_until_walk_stable(
+                drop=drop, walk_out_of_step=False, confirm_timer=Timer(1.5, count=4)
+            )
 
             if self._solved_fleet_mechanism:
-                logger.info('All fleet mechanism are solved')
+                logger.info("All fleet mechanism are solved")
                 self.os_auto_search_run(drop=drop)
-                self._solved_map_event.add('is_fleet_mechanism')
+                self._solved_map_event.add("is_fleet_mechanism")
                 return True
             else:
-                logger.info('One of the fleet mechanism is solved')
+                logger.info("One of the fleet mechanism is solved")
                 self._solved_fleet_mechanism = True
                 return True
 
         logger.info(f'No map event')
         return False
 
-    def map_rescan_once(self, rescan_mode='full', drop=None):
+    def map_rescan_once(self, rescan_mode="full", drop=None):
         """
         Args:
             rescan_mode (str): `current` to scan current camera only,
@@ -1584,26 +1730,28 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         result = False
 
         # Try current camera first
-        logger.hr('Map rescan current', level=2)
+        logger.hr("Map rescan current", level=2)
         self.map_data_init(map_=None)
         self.handle_info_bar()
         try:
             self.update()
         except MapDetectionError:
             # Map is likely cleared, homography cannot detect valid tiles
-            logger.warning('MAP RESCAN CURRENT Homography failed (score below 0.8), '
-                           'map may be cleared or detection is unstable, unhandled events may be missed')
+            logger.warning(
+                "MAP RESCAN CURRENT Homography failed (score below 0.8), "
+                "map may be cleared or detection is unstable, unhandled events may be missed"
+            )
             return False
         if self.map_rescan_current(drop=drop):
-            logger.info(f'Map rescan once end, result={True}')
+            logger.info(f"Map rescan once end, result={True}")
             return True
 
-        if rescan_mode == 'full':
-            logger.hr('Map rescan full', level=2)
+        if rescan_mode == "full":
+            logger.hr("Map rescan full", level=2)
             self.map_init(map_=None)
             queue = self.map.camera_data
             while len(queue) > 0:
-                logger.hr(f'Map rescan {queue[0]}')
+                logger.hr(f"Map rescan {queue[0]}")
                 queue = queue.sort_by_camera_distance(self.camera)
                 self.focus_to(queue[0], swipe_limit=(6, 5))
                 self.focus_to_grid_center(0.3)
@@ -1613,12 +1761,12 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                     break
                 queue = queue[1:]
 
-        logger.info(f'Map rescan once end, result={result}')
+        logger.info(f"Map rescan once end, result={result}")
         return result
 
-    def map_rescan(self, rescan_mode='full', drop=None):
+    def map_rescan(self, rescan_mode="full", drop=None):
         if self.zone.is_port:
-            logger.info('Current zone is a port, do not need rescan')
+            logger.info("Current zone is a port, do not need rescan")
             return False
 
         for _ in range(5):
@@ -1627,18 +1775,18 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
             else:
                 self.fleet_set(self.get_second_fleet())
             if not self.is_in_task_explore and len(self._solved_map_event):
-                logger.info('Solved a map event and not in OpsiExplore, stop rescan')
-                logger.attr('Solved_map_event', self._solved_map_event)
+                logger.info("Solved a map event and not in OpsiExplore, stop rescan")
+                logger.attr("Solved_map_event", self._solved_map_event)
                 self.fleet_set(self.config.OpsiFleet_Fleet)
                 return False
             result = self.map_rescan_once(rescan_mode=rescan_mode, drop=drop)
             if not result:
-                logger.attr('Solved_map_event', self._solved_map_event)
+                logger.attr("Solved_map_event", self._solved_map_event)
                 self.fleet_set(self.config.OpsiFleet_Fleet)
                 return True
 
-        logger.attr('Solved_map_event', self._solved_map_event)
-        logger.warning('Too many trial on map rescan, stop')
+        logger.attr("Solved_map_event", self._solved_map_event)
+        logger.warning("Too many trial on map rescan, stop")
         self.fleet_set(self.config.OpsiFleet_Fleet)
         return False
 
@@ -1667,7 +1815,7 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                 time.sleep(0.45)
                 return True
             except Exception as e:
-                logger.warning(f'安全滑动第 {attempt} 次尝试失败: {e}')
+                logger.warning(f"安全滑动第 {attempt} 次尝试失败: {e}")
                 time.sleep(0.4)
                 continue
         return False
@@ -1696,9 +1844,17 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                 continue
             seen.add(loc)
             grid = self.map[loc]
-            if grid.is_land or grid.is_enemy or grid.is_siren or grid.is_boss or grid.is_fortress:
+            if (
+                grid.is_land
+                or grid.is_enemy
+                or grid.is_siren
+                or grid.is_boss
+                or grid.is_fortress
+            ):
                 continue
-            if getattr(grid, 'is_mechanism_block', False) or getattr(grid, 'is_fleet', False):
+            if getattr(grid, "is_mechanism_block", False) or getattr(
+                grid, "is_fleet", False
+            ):
                 continue
             candidates.append(grid)
 
@@ -1708,9 +1864,17 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                 continue
             seen.add(loc)
             grid = self.map[loc]
-            if grid.is_land or grid.is_enemy or grid.is_siren or grid.is_boss or grid.is_fortress:
+            if (
+                grid.is_land
+                or grid.is_enemy
+                or grid.is_siren
+                or grid.is_boss
+                or grid.is_fortress
+            ):
                 continue
-            if getattr(grid, 'is_mechanism_block', False) or getattr(grid, 'is_fleet', False):
+            if getattr(grid, "is_mechanism_block", False) or getattr(
+                grid, "is_fleet", False
+            ):
                 continue
             candidates.append(grid)
         return candidates
@@ -1722,7 +1886,9 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         try:
             clickable_grid = self.convert_global_to_local(target_grid.location)
         except KeyError:
-            logger.warning(f'已将视角移动到 {target_grid.location}，但在视野中找不到可点击的格子。')
+            logger.warning(
+                f"已将视角移动到 {target_grid.location}，但在视野中找不到可点击的格子。"
+            )
             return False
 
         for try_idx in range(2):
@@ -1735,18 +1901,24 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                 self.device.click(clickable_grid)
                 self.wait_until_walk_stable(confirm_timer=Timer(1.5, count=4))
                 if target_grid.location == primary_target:
-                    logger.info(f'舰队 {fleet_index} 已到达 {target_grid}。')
+                    logger.info(f"舰队 {fleet_index} 已到达 {target_grid}。")
                 else:
-                    logger.info(f'舰队 {fleet_index} 主目标 {self.map[primary_target]} 失败，已改停靠至备用点 {target_grid}。')
+                    logger.info(
+                        f"舰队 {fleet_index} 主目标 {self.map[primary_target]} 失败，已改停靠至备用点 {target_grid}。"
+                    )
                 return True
             except (MapWalkError, GameTooManyClickError) as e:
-                if isinstance(e, MapWalkError) and str(e) == 'walk_out_of_step':
-                    logger.warning(f'舰队 {fleet_index} 前往 {target_grid} 超出移动范围，放弃当前候选点并尝试其他落点')
+                if isinstance(e, MapWalkError) and str(e) == "walk_out_of_step":
+                    logger.warning(
+                        f"舰队 {fleet_index} 前往 {target_grid} 超出移动范围，放弃当前候选点并尝试其他落点"
+                    )
                     return False
-                logger.warning(f'舰队移动异常: {e}，尝试强制恢复（{try_idx + 1}/2）')
+                logger.warning(f"舰队移动异常: {e}，尝试强制恢复（{try_idx + 1}/2）")
                 recovered = False
                 try:
-                    recovered = self._force_move_recover(target_zone=self.zone if self.zone else None)
+                    recovered = self._force_move_recover(
+                        target_zone=self.zone if self.zone else None
+                    )
                 except Exception:
                     recovered = False
                 if recovered:
@@ -1754,12 +1926,14 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                     self.focus_to(target_grid.location)
                     self.update()
                     try:
-                        clickable_grid = self.convert_global_to_local(target_grid.location)
+                        clickable_grid = self.convert_global_to_local(
+                            target_grid.location
+                        )
                     except KeyError:
                         clickable_grid = None
                     if clickable_grid:
                         continue
-                logger.warning('尝试软恢复（back / screenshot / rebuild view）')
+                logger.warning("尝试软恢复（back / screenshot / rebuild view）")
                 try:
                     for _ in range(3):
                         try:
@@ -1772,25 +1946,29 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                         self.map_init(map_=None)
                         self.update()
                     except Exception:
-                        logger.debug('重建视图失败（soft recovery）', exc_info=True)
+                        logger.debug("重建视图失败（soft recovery）", exc_info=True)
                     try:
-                        clickable_grid = self.convert_global_to_local(target_grid.location)
+                        clickable_grid = self.convert_global_to_local(
+                            target_grid.location
+                        )
                     except KeyError:
                         clickable_grid = None
                     if clickable_grid:
-                        logger.info('软恢复后找到格子，重试点击')
+                        logger.info("软恢复后找到格子，重试点击")
                         try:
                             time.sleep(0.3)
                             self.device.click(clickable_grid)
-                            self.wait_until_walk_stable(confirm_timer=Timer(1.5, count=4))
-                            logger.info('软恢复成功，舰队已到达')
+                            self.wait_until_walk_stable(
+                                confirm_timer=Timer(1.5, count=4)
+                            )
+                            logger.info("软恢复成功，舰队已到达")
                             return True
                         except Exception:
-                            logger.debug('软恢复重试点击失败', exc_info=True)
+                            logger.debug("软恢复重试点击失败", exc_info=True)
                 except Exception as rec_e:
-                    logger.debug(f'软恢复过程出现异常: {rec_e}')
+                    logger.debug(f"软恢复过程出现异常: {rec_e}")
                 if try_idx == 1:
-                    logger.warning('软恢复失败，尝试重启应用以恢复状态')
+                    logger.warning("软恢复失败，尝试重启应用以恢复状态")
                     try:
                         self.device.app_stop()
                         time.sleep(1.0)
@@ -1802,25 +1980,35 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                             self.map_init(map_=None)
                             self.update()
                         except Exception:
-                            logger.debug('重建地图数据失败（app restart）', exc_info=True)
+                            logger.debug(
+                                "重建地图数据失败（app restart）", exc_info=True
+                            )
                         try:
-                            clickable_grid = self.convert_global_to_local(target_grid.location)
+                            clickable_grid = self.convert_global_to_local(
+                                target_grid.location
+                            )
                         except KeyError:
                             clickable_grid = None
                         if clickable_grid:
                             time.sleep(0.3)
                             self.device.click(clickable_grid)
-                            self.wait_until_walk_stable(confirm_timer=Timer(1.5, count=4))
-                            logger.info('重启应用后恢复成功，舰队已到达')
+                            self.wait_until_walk_stable(
+                                confirm_timer=Timer(1.5, count=4)
+                            )
+                            logger.info("重启应用后恢复成功，舰队已到达")
                             return True
                     except Exception:
-                        logger.error('应用重启恢复失败，当前候选点移动失败', exc_info=True)
+                        logger.error(
+                            "应用重启恢复失败，当前候选点移动失败", exc_info=True
+                        )
                 time.sleep(0.5)
 
         return False
 
     # 基于ShaddockNH3极致侵蚀一的个人修改
-    def _execute_fixed_patrol_scan(self, ExecuteFixedPatrolScan: bool = False, **kwargs):
+    def _execute_fixed_patrol_scan(
+        self, ExecuteFixedPatrolScan: bool = False, **kwargs
+    ):
         """执行强制移动并触发全图重扫。
 
         在每支舰队移动前执行视角复位，按预设坐标依次移动 1~4 号舰队，
@@ -1834,21 +2022,23 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         Returns:
             None
         """
-        logger.hr('执行强制移动')
+        logger.hr("执行强制移动")
 
         if not ExecuteFixedPatrolScan:
-            logger.info('ExecuteFixedPatrolScan 未启用，跳过强制移动。')
+            logger.info("ExecuteFixedPatrolScan 未启用，跳过强制移动。")
             return
-        logger.attr('ExecuteFixedPatrolScan', True)
+        logger.attr("ExecuteFixedPatrolScan", True)
 
         self.map_init(map_=None)
-        if not hasattr(self, 'map') or not self.map.grids:
-            logger.warning('无法获取当前地图网格数据，已跳过强制移动。')
+        if not hasattr(self, "map") or not self.map.grids:
+            logger.warning("无法获取当前地图网格数据，已跳过强制移动。")
             return
 
-        solved = getattr(self, '_solved_map_event', set())
-        if any(k in solved for k in ('is_akashi', 'is_scanning_device', 'is_logging_tower')):
-            logger.info('彩蛋：雪风大人保佑你，本次舰队移动已跳过')
+        solved = getattr(self, "_solved_map_event", set())
+        if any(
+            k in solved for k in ("is_akashi", "is_scanning_device", "is_logging_tower")
+        ):
+            logger.info("彩蛋：雪风大人保佑你，本次舰队移动已跳过")
             return
 
         patrol_locations = [(2, 0), (3, 0), (4, 0), (5, 0)]  # 对应 C1, D1, E1, F1
@@ -1857,25 +2047,33 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         for i, target_loc in enumerate(patrol_locations):
             fleet_index = i + 1
             if fleet_index in progress:
-                logger.info(f'舰队 {fleet_index} 已在本轮强制移动中完成停靠 ({self.map[progress[fleet_index]]})，跳过重复移动。')
+                logger.info(
+                    f"舰队 {fleet_index} 已在本轮强制移动中完成停靠 ({self.map[progress[fleet_index]]})，跳过重复移动。"
+                )
                 continue
 
             target_grid_group = self.map.select(location=target_loc)
             if not target_grid_group:
-                logger.warning(f'在地图上找不到坐标为 {target_loc} 的格子，跳过舰队 {fleet_index} 的移动。')
+                logger.warning(
+                    f"在地图上找不到坐标为 {target_loc} 的格子，跳过舰队 {fleet_index} 的移动。"
+                )
                 continue
             target_grid = target_grid_group[0]
             occupied_locations = set(progress.values())
-            candidate_grids = self._get_fixed_patrol_candidate_grids(target_loc, occupied_locations=occupied_locations)
+            candidate_grids = self._get_fixed_patrol_candidate_grids(
+                target_loc, occupied_locations=occupied_locations
+            )
             if not candidate_grids:
-                logger.warning(f'舰队 {fleet_index} 在 {target_grid} 附近找不到可用落点，跳过本次移动。')
+                logger.warning(
+                    f"舰队 {fleet_index} 在 {target_grid} 附近找不到可用落点，跳过本次移动。"
+                )
                 continue
 
-            logger.hr(f'强制移动: 指挥舰队 {fleet_index} 前往 {target_grid}', level=2)
+            logger.hr(f"强制移动: 指挥舰队 {fleet_index} 前往 {target_grid}", level=2)
 
             self.fleet_set(fleet_index)
 
-            logger.info('视角复位...')
+            logger.info("视角复位...")
 
             top_point = (640, 150)
             bottom_point = (640, 600)
@@ -1886,22 +2084,26 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                     time.sleep(0.18)
             except Exception:
                 quick_ok = False
-                logger.debug('快速滑动复位遇到异常，尝试安全滑动')
+                logger.debug("快速滑动复位遇到异常，尝试安全滑动")
 
             if not quick_ok:
-                if not self.safe_swipe(top_point, bottom_point, duration=0.55, retries=2):
-                    logger.warning('视角复位失败，继续尝试下一步')
+                if not self.safe_swipe(
+                    top_point, bottom_point, duration=0.55, retries=2
+                ):
+                    logger.warning("视角复位失败，继续尝试下一步")
                 else:
-                    logger.info('视角复位完成。')
+                    logger.info("视角复位完成。")
             else:
-                logger.info('快速滑动复位完成。')
+                logger.info("快速滑动复位完成。")
             time.sleep(0.45)
 
             moved = False
             fallback_location = None
             for candidate_index, candidate_grid in enumerate(candidate_grids[:4]):
                 if candidate_index > 0:
-                    logger.info(f'舰队 {fleet_index} 改用备用落点 {candidate_grid}（原目标 {target_grid}）')
+                    logger.info(
+                        f"舰队 {fleet_index} 改用备用落点 {candidate_grid}（原目标 {target_grid}）"
+                    )
                 if self._try_fixed_patrol_move(fleet_index, candidate_grid, target_loc):
                     if candidate_grid.location == target_loc:
                         progress[fleet_index] = candidate_grid.location
@@ -1909,39 +2111,53 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                         break
 
                     fallback_location = candidate_grid.location
-                    logger.info(f'舰队 {fleet_index} 已停靠备用点 {candidate_grid}，尝试返回真正目标 {target_grid}')
-                    if self._try_fixed_patrol_move(fleet_index, target_grid, target_loc):
+                    logger.info(
+                        f"舰队 {fleet_index} 已停靠备用点 {candidate_grid}，尝试返回真正目标 {target_grid}"
+                    )
+                    if self._try_fixed_patrol_move(
+                        fleet_index, target_grid, target_loc
+                    ):
                         progress[fleet_index] = target_loc
                         moved = True
-                        logger.info(f'舰队 {fleet_index} 已从备用点返回真正目标 {target_grid}')
+                        logger.info(
+                            f"舰队 {fleet_index} 已从备用点返回真正目标 {target_grid}"
+                        )
                         break
 
-                    logger.warning(f'舰队 {fleet_index} 从备用点 {candidate_grid} 返回真正目标 {target_grid} 失败，继续尝试其他候选点')
+                    logger.warning(
+                        f"舰队 {fleet_index} 从备用点 {candidate_grid} 返回真正目标 {target_grid} 失败，继续尝试其他候选点"
+                    )
             if not moved:
                 if fallback_location is not None:
                     progress[fleet_index] = fallback_location
-                    logger.warning(f'舰队 {fleet_index} 无法回到真正目标 {target_grid}，暂时停靠在备用点 {self.map[fallback_location]}。')
+                    logger.warning(
+                        f"舰队 {fleet_index} 无法回到真正目标 {target_grid}，暂时停靠在备用点 {self.map[fallback_location]}。"
+                    )
                 else:
-                    logger.warning(f'舰队 {fleet_index} 在 {target_grid} 及其备用落点均移动失败，继续后续流程。')
+                    logger.warning(
+                        f"舰队 {fleet_index} 在 {target_grid} 及其备用落点均移动失败，继续后续流程。"
+                    )
 
-        backup = self.config.temporary(OpsiGeneral_RepairThreshold=-1, Campaign_UseAutoSearch=False)
+        backup = self.config.temporary(
+            OpsiGeneral_RepairThreshold=-1, Campaign_UseAutoSearch=False
+        )
         try:
-            logger.info('所有舰队已定点，执行最终全图重扫（双遍检查）')
+            logger.info("所有舰队已定点，执行最终全图重扫（双遍检查）")
             self._solved_map_event = set()
             for _ in range(2):
                 try:
-                    self.map_rescan(rescan_mode='full')
+                    self.map_rescan(rescan_mode="full")
                 except Exception as e:
-                    logger.debug(f'最终全图重扫出现异常，继续重试: {e}', exc_info=True)
+                    logger.debug(f"最终全图重扫出现异常，继续重试: {e}", exc_info=True)
                     time.sleep(0.6)
         finally:
             backup.recover()
 
-        logger.info('执行一次自律寻敌以清理可能的装置')
+        logger.info("执行一次自律寻敌以清理可能的装置")
         try:
             self.run_auto_search(question=True, rescan=None, after_auto_search=True)
         except Exception as e:
-            logger.warning(f'自律寻敌过程出现异常: {e}')
+            logger.warning(f"自律寻敌过程出现异常: {e}")
 
     def _select_story_option_by_index(self, target_index, options_count=3):
         """按索引点击剧情选项按钮。

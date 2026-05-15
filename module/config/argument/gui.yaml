@@ -274,6 +274,9 @@ Stat:
   CommissionIncomeTotalCommissions:
   CommissionIncomeRecentTitle:
 
+Tactical:
+  SkillAutoSwitch:
+
 OpsiScheduling:
   UseSmartSchedulingOperationCoinsPreserve:
   OperationCoinsPreserve:

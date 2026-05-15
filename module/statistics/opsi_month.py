@@ -13,8 +13,10 @@ from module.statistics.cl1_database import db as cl1_db
 class OpsiMonthStats:
     def __init__(self, instance_name: str | None = None) -> None:
         self._instance_name = instance_name or "default"
-    
-    def summary(self, year: int | None = None, month: int | None = None) -> Dict[str, Any]:
+
+    def summary(
+        self, year: int | None = None, month: int | None = None
+    ) -> Dict[str, Any]:
         now = datetime.now()
         if year is None:
             year = now.year
@@ -30,7 +32,9 @@ class OpsiMonthStats:
 
         return {"month": key, "total_battles": total, "akashi_encounters": akashi, "raw": data}
 
-    def get_detailed_summary(self, year: int | None = None, month: int | None = None) -> Dict[str, Any]:
+    def get_detailed_summary(
+        self, year: int | None = None, month: int | None = None
+    ) -> Dict[str, Any]:
         """
         获取详细的统计摘要,包含所有计算指标
         """
@@ -43,7 +47,7 @@ class OpsiMonthStats:
 
         # 从数据库读取数据
         data = cl1_db.get_stats(self._instance_name, key)
-        
+
         # 基础数据
         battle_count = int(data.get('battle_count', 0))
         akashi_encounters = int(data.get('akashi_encounters', 0))
@@ -79,7 +83,12 @@ def get_opsi_stats(instance_name: str | None = None) -> OpsiMonthStats:
     return _singleton[key]
 
 
-def compute_monthly_cl1_akashi_ap(year: int | None = None, month: int | None = None, campaign: str = "opsi_akashi", instance_name: str | None = None) -> int:
+def compute_monthly_cl1_akashi_ap(
+    year: int | None = None,
+    month: int | None = None,
+    campaign: str = "opsi_akashi",
+    instance_name: str | None = None,
+) -> int:
     """
     计算指定月份从明石商店购买的行动力总额
     """
@@ -92,11 +101,13 @@ def compute_monthly_cl1_akashi_ap(year: int | None = None, month: int | None = N
 
     instance_name = instance_name or "default"
     data = cl1_db.get_stats(instance_name, key_prefix)
-    
-    return int(data.get('akashi_ap', 0))
+
+    return int(data.get("akashi_ap", 0))
 
 
-def get_ap_timeline(year: int | None = None, month: int | None = None, instance_name: str | None = None) -> list:
+def get_ap_timeline(
+    year: int | None = None, month: int | None = None, instance_name: str | None = None
+) -> list:
     """
     获取行动力变化时间序列数据（真实体力剩余），用于绘制体力变化曲线。
 
@@ -123,20 +134,22 @@ def get_ap_timeline(year: int | None = None, month: int | None = None, instance_
     instance_name = instance_name or "default"
     data = cl1_db.get_stats(instance_name, key_prefix)
 
-    snapshots = data.get('ap_snapshots', [])
+    snapshots = data.get("ap_snapshots", [])
     if not snapshots:
         return []
 
     # 按时间排序
     try:
-        snapshots_sorted = sorted(snapshots, key=lambda e: e.get('ts', ''))
+        snapshots_sorted = sorted(snapshots, key=lambda e: e.get("ts", ""))
     except Exception:
         snapshots_sorted = snapshots
 
     return snapshots_sorted
 
 
-def get_coins_timeline(year: int | None = None, month: int | None = None, instance_name: str | None = None) -> list:
+def get_coins_timeline(
+    year: int | None = None, month: int | None = None, instance_name: str | None = None
+) -> list:
     """
     获取凭证变化时间序列数据（作战补给凭证/特别兑换凭证），用于绘制凭证变化曲线。
 
@@ -164,17 +177,43 @@ def get_coins_timeline(year: int | None = None, month: int | None = None, instan
     instance_name = instance_name or "default"
     data = cl1_db.get_stats(instance_name, key_prefix)
 
-    snapshots = data.get('coins_snapshots', [])
+    snapshots = data.get("coins_snapshots", [])
     if not snapshots:
         return []
 
-    # 按时间排序
     try:
-        snapshots_sorted = sorted(snapshots, key=lambda e: e.get('ts', ''))
+        return sorted(snapshots, key=lambda e: e.get("ts", ""))
     except Exception:
-        snapshots_sorted = snapshots
-
-    return snapshots_sorted
+        return snapshots
 
 
-__all__ = ["get_opsi_stats", "OpsiMonthStats", "compute_monthly_cl1_akashi_ap", "get_ap_timeline", "get_coins_timeline"]
+__all__ = [
+    "get_opsi_stats",
+    "OpsiMonthStats",
+    "compute_monthly_cl1_akashi_ap",
+    "get_ap_timeline",
+    "get_coins_timeline",
+    "get_virtual_asset_timeline",
+]
+
+
+def get_virtual_asset_timeline(
+    year: int | None = None, month: int | None = None, instance_name: str | None = None
+) -> list:
+    """
+    Get virtual asset timeline from ap_snapshots that contain virtual_asset data.
+
+    Returns sorted list of snapshots with 'ts' and 'virtual_asset' fields.
+    """
+    now = datetime.now()
+    if year is None:
+        year = now.year
+    if month is None:
+        month = now.month
+    key_prefix = f"{year:04d}-{month:02d}"
+
+    data = cl1_db.get_stats(instance_name or "default", key_prefix)
+    snapshots = data.get("ap_snapshots", [])
+    return sorted(
+        [s for s in snapshots if "virtual_asset" in s], key=lambda e: e.get("ts", "")
+    )
