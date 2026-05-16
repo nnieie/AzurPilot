@@ -23,7 +23,16 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.SYNC_TOKEN || github.token }}
 
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+
+      - name: Install ruff
+        run: python -m pip install --upgrade pip ruff
+
       - name: Merge upstream/master
+        id: merge
         run: |
           set -euo pipefail
 
@@ -36,9 +45,19 @@ jobs:
 
           if git merge-base --is-ancestor upstream/master HEAD; then
             echo "Already contains upstream/master."
+            echo "merged=false" >> "$GITHUB_OUTPUT"
           else
             git merge --no-edit -X ours upstream/master
+            echo "merged=true" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Validate merged Python changes
+        if: steps.merge.outputs.merged == 'true'
+        run: python dev_tools/validate_python_changes.py --base HEAD^1 --head HEAD
+
+      - name: Push synced master
+        run: |
+          set -euo pipefail
 
           if git diff --quiet origin/master..HEAD; then
             echo "No new merge commit to push."

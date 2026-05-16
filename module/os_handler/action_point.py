@@ -1,5 +1,6 @@
 # 此文件处理大世界（Operation Siren）模式下的行动力（Action Point, AP）管理。
 # 包含行动力数值 OCR 识别、药剂（AP Box）库存解析以及自动购买或使用补给的交互逻辑。
+import os
 from datetime import datetime
 from datetime import timedelta
 
@@ -163,6 +164,9 @@ class ActionPointHandler(UI, MapEventHandler):
         box = [item.amount for item in oil] + [item.amount for item in items]
 
         now_str = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        if not os.path.exists('debug_img'):
+            os.makedirs('debug_img')
+
         # 保存行动力箱子 (AP Box) 的识别截图
         from module.statistics.item import AMOUNT_OCR
         for i, item in enumerate(oil):
@@ -179,8 +183,6 @@ class ActionPointHandler(UI, MapEventHandler):
             logger.info(f'[Debug] AP Box Item {i} amount: {item.amount}')
         current = OCR_ACTION_POINT_REMAIN.ocr(self.device.image)
         logger.info(f'[Debug] OCR_ACTION_POINT_REMAIN: {current}')
-        if not os.path.exists('debug_img'):
-            os.makedirs('debug_img')
 
         # 保存原始全屏截图
         save_image(self.device.image, f'debug_img/ap_{now_str}_orig.png')

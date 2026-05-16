@@ -12,6 +12,24 @@ jobs:
       - name: Run ruff
         run: ruff check . --select E9,F63,F7,F82 --ignore F821,F722
 
+  python-import-sanity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+      - name: Install ruff
+        run: python -m pip install --upgrade pip ruff
+      - name: Validate changed Python files
+        env:
+          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: python dev_tools/validate_python_changes.py --base "$BASE_SHA" --head "$HEAD_SHA"
+
   button-config-check:
     runs-on: ubuntu-latest
     steps:
