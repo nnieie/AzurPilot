@@ -2,58 +2,61 @@
 # AzurPilot
 
 <p align="center">
-  <a href="https://deepwiki.com/wess09/AzurLaneAutoScript">
+  <a href="https://deepwiki.com/wess09/AzurPilot">
     <img src="https://deepwiki.com/badge.svg" alt="DeepWiki" height="22">
   </a>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.8%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python">
-  <img src="https://img.shields.io/github/license/wess09/AzurLaneAutoScript?style=flat-square&label=License&color=2ea44f" alt="License">
-  <img src="https://img.shields.io/github/stars/wess09/AzurLaneAutoScript?style=flat-square&label=Stars&color=ffcc00" alt="Stars">
-  <img src="https://img.shields.io/github/forks/wess09/AzurLaneAutoScript?style=flat-square&label=Forks&color=58a6ff" alt="Forks">
-  <img src="https://img.shields.io/github/issues/wess09/AzurLaneAutoScript?style=flat-square&label=Issues&color=f85149" alt="Issues">
+  <img src="https://img.shields.io/github/license/wess09/AzurPilot?style=flat-square&label=License&color=2ea44f" alt="License">
+  <img src="https://img.shields.io/github/stars/wess09/AzurPilot?style=flat-square&label=Stars&color=ffcc00" alt="Stars">
+  <img src="https://img.shields.io/github/forks/wess09/AzurPilot?style=flat-square&label=Forks&color=58a6ff" alt="Forks">
+  <img src="https://img.shields.io/github/issues/wess09/AzurPilot?style=flat-square&label=Issues&color=f85149" alt="Issues">
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/github/last-commit/wess09/AzurLaneAutoScript?style=flat-square&label=Last%20Commit&color=8b949e" alt="Last Commit">
-  <img src="https://img.shields.io/github/commit-activity/m/wess09/AzurLaneAutoScript?style=flat-square&label=Commit%20Activity&color=8957e5" alt="Commit Activity">
-  <img src="https://img.shields.io/github/repo-size/wess09/AzurLaneAutoScript?style=flat-square&label=Repo%20Size&color=orange" alt="Repo Size">
-  <img src="https://img.shields.io/github/languages/top/wess09/AzurLaneAutoScript?style=flat-square&label=Top%20Language&color=3776AB" alt="Top Language">
+  <img src="https://img.shields.io/github/last-commit/wess09/AzurPilot?style=flat-square&label=Last%20Commit&color=8b949e" alt="Last Commit">
+  <img src="https://img.shields.io/github/commit-activity/m/wess09/AzurPilot?style=flat-square&label=Commit%20Activity&color=8957e5" alt="Commit Activity">
+  <img src="https://img.shields.io/github/repo-size/wess09/AzurPilot?style=flat-square&label=Repo%20Size&color=orange" alt="Repo Size">
+  <img src="https://img.shields.io/github/languages/top/wess09/AzurPilot?style=flat-square&label=Top%20Language&color=3776AB" alt="Top Language">
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/github/contributors/wess09/AzurLaneAutoScript?style=flat-square&label=Contributors&color=00b4d8" alt="Contributors">
-  <img src="https://img.shields.io/github/issues-pr/wess09/AzurLaneAutoScript?style=flat-square&label=Pull%20Requests&color=ffb703" alt="Pull Requests">
-  <img src="https://img.shields.io/github/issues-pr-closed/wess09/AzurLaneAutoScript?style=flat-square&label=PRs%20Closed&color=2ea44f" alt="Closed Pull Requests">
+  <img src="https://img.shields.io/github/contributors/wess09/AzurPilot?style=flat-square&label=Contributors&color=00b4d8" alt="Contributors">
+  <img src="https://img.shields.io/github/issues-pr/wess09/AzurPilot?style=flat-square&label=Pull%20Requests&color=ffb703" alt="Pull Requests">
+  <img src="https://img.shields.io/github/issues-pr-closed/wess09/AzurPilot?style=flat-square&label=PRs%20Closed&color=2ea44f" alt="Closed Pull Requests">
 </p>
 
 ## 项目简介
 
-AzurPilot 是基于 AzurLaneAutoScript 的碧蓝航线自动化辅助项目，主要用于日常任务、委托、科研、大型作战及相关自动化流程。
+AzurPilot 是基于 AzurLaneAutoScript 修改而来的碧蓝航线自动化辅助项目，保留原项目的核心能力，并在此基础上整合了多个分支、功能改进和实验性特性。
 
-本项目为 AzurLaneAutoScript 的二次修改版本，保留原项目的核心能力，并在此基础上整合了多个分支、功能改进和实验性特性。
-
-### 为什么不叫ALAS?
-
-因为本项目作为 AzurLaneAutoScript 的下游分支 对于ALAS的修改过多，为防止用户遇到问题，错误选择ALAS社区反馈本分支的问题，故而更名，你可以继续称呼为ALAS，但是请不要前往ALAS的官方社区反馈问题。
+本项目代码基本由 AI 代码生成与辅助编写，存在较大的不确定性，欢迎提交 [Pull Request](https://github.com/wess09/AzurPilot/pulls) 改正。
 
 项目原始来源与相关分支：
 
-- AzurLaneAutoScript 原项目及其生态分支
-- 雪风源相关分支
-- Alas-with-Dashboard 的部分功能
-- guoh064 分支的部分大型作战相关功能
-- sui-feng-cb 分支的部分岛屿相关功能
-- 其他社区贡献的实用 Pull Request
+- LmeSzinc/AzurLaneAutoScript 原项目及其生态分支 @LmeSzinc
+- yukikaze21/AzurLaneAutoScriptyukikaze21 大世界部分功能 @yukikaze21
+- Zuosizhu/Alas-with-Dashboard 的仪表盘 @Zuosizhu
+- guoh064/AzurLaneAutoScript 大世界部分功能 @guoh064
+- sui-feng-cb/AzurLaneAutoScript 岛屿计划 @sui-feng-cb
+- 其他社区贡献的实用 [Pull Request](https://github.com/LmeSzinc/AzurLaneAutoScript/pulls)
 
-下载地址：
+<div align="center">
+  <a href="https://alas.nanoda.work">
+    <img src="https://img.shields.io/badge/Web-下载-blue?style=for-the-badge&logo=google-chrome&logoColor=white" />
+  </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://addgroup.nanoda.work/#/">
+    <img src="https://img.shields.io/badge/交流群-QQ-red?style=for-the-badge&logo=tencent-qq&logoColor=white" />
+  </a>
+</div>
 
-[https://alas.nanoda.work](https://alas.nanoda.work)
-
-问题反馈与交流：
-
-[https://addgroup.nanoda.work/#/](https://addgroup.nanoda.work/#/)
+## GUI
+<div align="center">
+  <img src="doc/GUI.png" alt="GUI Preview" width="800">
+</div>
 
 ## 重要说明
 
@@ -168,19 +171,24 @@ dev_tools\build_usb_capture_lut_accel.bat
 
 ## 多平台启动器
 
-启动器项目地址：
+<div align="center">
+  <img src="doc/loading.png" alt="loading" width="400" />
+  <img src="doc/GUI.png" alt="GUI" width="400" />
+</div>
+启动器项目地：
 
-[https://github.com/wess09/alas-launcher](https://github.com/wess09/alas-launcher)
+[GitHub](https://github.com/wess09/alas-launcher) 源项目 [ALAS Launcher: 一种新型的 AzurLaneAutoScript 启动器](https://github.com/swordfeng/alas-launcher)
 
-该启动器 fork 自：
-
-[https://github.com/swordfeng/alas-launcher](https://github.com/swordfeng/alas-launcher)
-
-启动器项目遵守上游许可证要求，继续使用 GPL-3.0 协议开源。
+更改内容：
+1. 增加托盘化功能
+2. Windows原生推送
+3. GUI样式美化
 
 ## MCP 服务
 
 AzurPilot 提供 MCP 服务，可供支持 MCP 的客户端或工具调用。
+
+通过 MCP 您可以方便的使用 Agent 管理 AzurPilot
 
 ### 本地连接配置
 
@@ -216,44 +224,54 @@ AzurPilot 提供 MCP 服务，可供支持 MCP 的客户端或工具调用。
 
 | 工具名称 | 功能 |
 | --- | --- |
-| mcp_alas_list_instances | 列出所有实例 |
-| mcp_alas_get_status | 获取实例状态 |
-| mcp_alas_start_instance | 启动实例 |
-| mcp_alas_stop_instance | 停止实例 |
+| list_instances | 列出所有实例 |
+| get_status | 获取实例状态 |
+| start_instance | 启动实例 |
+| stop_instance | 停止实例 |
 
 ### 任务管理
 
 | 工具名称 | 功能 |
 | --- | --- |
-| mcp_alas_list_tasks | 列出所有任务 |
-| mcp_alas_get_task_help | 获取任务帮助 |
-| mcp_alas_trigger_task | 触发任务 |
-| mcp_alas_get_scheduler_queue | 获取调度队列 |
-| mcp_alas_clear_scheduler_queue | 清空调度队列 |
+| list_tasks | 列出所有任务 |
+| get_task_help | 获取任务帮助 |
+| trigger_task | 触发任务 |
+| get_scheduler_queue | 获取调度队列 |
+| clear_scheduler_queue | 清空调度队列 |
 
 ### 监控与信息
 
 | 工具名称 | 功能 |
 | --- | --- |
-| mcp_alas_get_current_running_task | 获取当前运行任务 |
-| mcp_alas_get_resources | 获取资源状态 |
-| mcp_alas_get_config | 获取实例配置 |
-| mcp_alas_get_recent_logs | 获取最近日志 |
-| mcp_alas_get_screenshot | 获取截图 |
+| get_current_running_task | 获取当前运行任务 |
+| get_resources | 获取资源状态 |
+| get_config | 获取实例配置 |
+| get_recent_logs | 获取最近日志 |
+| get_screenshot | 获取截图 |
 
 ### 配置管理
 
 | 工具名称 | 功能 |
 | --- | --- |
-| mcp_alas_update_config | 更新配置 |
+| update_config | 更新配置 |
 
 ### 维护工具
 
 | 工具名称 | 功能 |
 | --- | --- |
-| mcp_alas_restart_emulator | 重启模拟器 |
-| mcp_alas_restart_adb | 重启 ADB |
-| mcp_alas_update_alas | 更新 ALAS |
+| restart_emulator | 重启模拟器 |
+| restart_adb | 重启 ADB |
+| update_alas | 更新 ALAS |
+
+## 赞助支持
+
+<p align="center">
+  <a href="https://afdian.com/a/miaonaa">
+    <img src="doc/afdian.jfif" alt="爱发电" width="200">
+  </a>
+  <br>
+  <b>支持本项目(用于支付服务器费用或训练新模型等)</b>
+</p>
 
 ## OCR 模型
 
@@ -308,17 +326,6 @@ AzurPilot 提供 MCP 服务，可供支持 MCP 的客户端或工具调用。
 | 训练硬件 | 异构加速卡 BW 64G，NVIDIA Tesla A800 80G |
 | 训练时间 | 5 小时 |
 
-## 功能来源与参考项目
-
-本项目部分功能来自或参考以下项目：
-
-- [Zuosizhu/Alas-with-Dashboard](https://github.com/Zuosizhu/Alas-with-Dashboard)
-- [guoh064/AzurLaneAutoScript](https://github.com/guoh064/AzurLaneAutoScript)
-- [sui-feng-cb/AzurLaneAutoScript](https://github.com/sui-feng-cb/AzurLaneAutoScript)
-- [雪风源](https://gitee.com/wqeaxc/AzurLaneAutoScriptyukikaze21)
-
-感谢以上项目和开发者提供的功能、思路与代码基础。
-
 ## 贡献者
 
 由于本项目基于 AzurLaneAutoScript 及其社区分支继续开发，贡献者列表不仅包含本仓库的直接贡献者，也包含上游项目与相关分支中的原始贡献者。
@@ -351,7 +358,7 @@ AzurPilot 提供 MCP 服务，可供支持 MCP 的客户端或工具调用。
 | --- | --- | --- |
 | Gemini 3 Flash | Gemini 3.1 Pro | Claude Opus 4.5 |
 | Claude Sonnet 4.5 | MiMo V2.5 Pro | GPT 5.4 |
-| GPT 5.3 Codex | Qwen 3 Max | DeepSeek v3.2 |
+| GPT 5.3 Codex | Qwen 3 Max | DeepSeek v4 |
 | Kimi K2.5 | GLM 4.7 | MiMo V2.5 |
 
 ### 开发工具

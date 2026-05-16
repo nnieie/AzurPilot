@@ -329,6 +329,10 @@
     "GameManager": {
       "name": "游戏管理器(未完成) (；´Д`)",
       "help": "半成品，只能强制关游戏和自动登录喵~"
+    },
+    "EmulatorManager": {
+      "name": "Task.EmulatorManager.name",
+      "help": "Task.EmulatorManager.help"
     }
   },
   "Scheduler": {
@@ -3937,6 +3941,12 @@
     "_info": {
       "name": "EmulatorManager._info.name",
       "help": "EmulatorManager._info.help"
+    },
+    "EnableRemoteSSH": {
+      "name": "EmulatorManager.EnableRemoteSSH.name",
+      "help": "EmulatorManager.EnableRemoteSSH.help",
+      "True": "True",
+      "False": "False"
     },
     "RemoteSSHHost": {
       "name": "EmulatorManager.RemoteSSHHost.name",

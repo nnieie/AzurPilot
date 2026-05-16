@@ -1,5 +1,6 @@
 import sys
 import typing as t
+import subprocess
 
 from pydantic import BaseModel
 
@@ -79,6 +80,47 @@ class PlatformBase(Connection, EmulatorManagerBase):
         Stop a emulator.
         """
         logger.info(f'Current platform {sys.platform} does not support emulator_stop, skip')
+
+    def run_remote_ssh_command(self):
+        if not getattr(self.config, 'EmulatorManager_EnableRemoteSSH', False):
+            return
+
+        host = self.config.EmulatorManager_RemoteSSHHost
+        port = self.config.EmulatorManager_RemoteSSHPort
+        user = self.config.EmulatorManager_RemoteSSHUser
+        command = self.config.EmulatorManager_RemoteCommand
+
+        if not host or not command:
+            logger.warning('RemoteSSHHost or RemoteCommand is empty, skip remote SSH command')
+            return
+
+        logger.hr('Remote SSH Command', level=1)
+        # Construct ssh command
+        # ssh -p port user@host "command"
+        ssh_bin = 'ssh'
+
+        # If user is provided, use user@host, otherwise just host
+        target = f'{user}@{host}' if user else host
+
+        cmd = [ssh_bin, '-p', str(port), '-o', 'StrictHostKeyChecking=no', target, command]
+        logger.info(f'Executing remote command: {" ".join(cmd)}')
+
+        try:
+            # Use subprocess.run to wait for completion
+            # timeout=60 to avoid hanging
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+            if result.returncode == 0:
+                logger.info('Remote command executed successfully')
+                if result.stdout:
+                    for line in result.stdout.strip().split('\n'):
+                        logger.info(f'Remote: {line}')
+            else:
+                logger.error(f'Remote command failed with return code {result.returncode}')
+                if result.stderr:
+                    for line in result.stderr.strip().split('\n'):
+                        logger.error(f'Remote Error: {line}')
+        except Exception as e:
+            logger.error(f'Failed to execute remote SSH command: {e}')
 
     @cached_property
     def emulator_info(self) -> EmulatorInfo:

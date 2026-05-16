@@ -329,6 +329,10 @@
     "GameManager": {
       "name": "Game Manager (Incomplete)",
       "help": ""
+    },
+    "EmulatorManager": {
+      "name": "Task.EmulatorManager.name",
+      "help": "Task.EmulatorManager.help"
     }
   },
   "Scheduler": {
@@ -3937,6 +3941,12 @@
     "_info": {
       "name": "Emulator Manager",
       "help": "Provides manual emulator restart entry"
+    },
+    "EnableRemoteSSH": {
+      "name": "EmulatorManager.EnableRemoteSSH.name",
+      "help": "EmulatorManager.EnableRemoteSSH.help",
+      "True": "True",
+      "False": "False"
     },
     "RemoteSSHHost": {
       "name": "Remote Server Address",

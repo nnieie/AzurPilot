@@ -329,6 +329,10 @@
     "GameManager": {
       "name": "ゲームマネージャー (未完成)",
       "help": ""
+    },
+    "EmulatorManager": {
+      "name": "Task.EmulatorManager.name",
+      "help": "Task.EmulatorManager.help"
     }
   },
   "Scheduler": {
@@ -3937,6 +3941,12 @@
     "_info": {
       "name": "EmulatorManager._info.name",
       "help": "EmulatorManager._info.help"
+    },
+    "EnableRemoteSSH": {
+      "name": "EmulatorManager.EnableRemoteSSH.name",
+      "help": "EmulatorManager.EnableRemoteSSH.help",
+      "True": "True",
+      "False": "False"
     },
     "RemoteSSHHost": {
       "name": "EmulatorManager.RemoteSSHHost.name",
