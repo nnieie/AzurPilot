@@ -1313,6 +1313,10 @@ EmulatorManagement:
     value: 4
     validate: [1, 24]
 EmulatorManager:
+  EnableRemoteSSH:
+    type: checkbox
+    value: false
+    option: [true, false]
   RemoteSSHHost:
     value: ""
   RemoteSSHPort:

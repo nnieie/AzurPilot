@@ -822,6 +822,7 @@ class GeneratedConfig:
     EmulatorManagement_RestartIntervalHours = 4
 
     # Group `EmulatorManager`
+    EmulatorManager_EnableRemoteSSH = False  # True, False
     EmulatorManager_RemoteSSHHost = None
     EmulatorManager_RemoteSSHPort = 22
     EmulatorManager_RemoteSSHUser = None

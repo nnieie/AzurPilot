@@ -1,3 +1,4 @@
+from __future__ import annotations
 import ctypes
 import re
 import subprocess
@@ -7,7 +8,6 @@ import psutil
 from deploy.Windows.utils import DataProcessInfo
 from module.base.decorator import run_once
 from module.base.timer import Timer
-from module.device.connection import AdbDeviceWithStatus
 from module.device.connection_attr import ConnectionAttr
 from module.device.platform.platform_base import PlatformBase
 from module.device.platform.emulator_windows import Emulator, EmulatorInstance, EmulatorManager
@@ -285,7 +285,7 @@ class PlatformWindows(PlatformBase, EmulatorManager):
                 devices = self.list_device().select(serial=serial)
                 # logger.info(devices)
                 if devices:
-                    device: AdbDeviceWithStatus = devices.first_or_none()
+                    device = devices.first_or_none()
                     if device.status == 'device':
                         # Emulator online
                         pass
@@ -340,6 +340,7 @@ class PlatformWindows(PlatformBase, EmulatorManager):
 
     def emulator_start(self):
         logger.hr('Emulator start', level=1)
+        self.run_remote_ssh_command()
         for _ in range(3):
             # Stop
             if not self._emulator_function_wrapper(self._emulator_stop):

@@ -14002,5 +14002,45 @@
         "display": "disabled"
       }
     }
+  },
+  "EmulatorManager": {
+    "EmulatorManager": {
+      "EnableRemoteSSH": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "RemoteSSHHost": {
+        "type": "input",
+        "value": ""
+      },
+      "RemoteSSHPort": {
+        "type": "input",
+        "value": 22
+      },
+      "RemoteSSHUser": {
+        "type": "input",
+        "value": ""
+      },
+      "RemoteSSHPublicKey": {
+        "type": "textarea",
+        "value": ""
+      },
+      "RemoteCommand": {
+        "type": "input",
+        "value": ""
+      }
+    },
+    "Storage": {
+      "Storage": {
+        "type": "storage",
+        "value": {},
+        "valuetype": "ignore",
+        "display": "disabled"
+      }
+    }
   }
 }

@@ -329,6 +329,10 @@
     "GameManager": {
       "name": "游戏管理器(未完成)",
       "help": ""
+    },
+    "EmulatorManager": {
+      "name": "模拟器管理器",
+      "help": "提供手动重启模拟器的入口"
     }
   },
   "Scheduler": {
@@ -3937,6 +3941,12 @@
     "_info": {
       "name": "模拟器管理器",
       "help": "提供手动重启模拟器的入口"
+    },
+    "EnableRemoteSSH": {
+      "name": "启用远程 SSH 管理",
+      "help": "在重启模拟器之前，通过 SSH 在远程服务器上执行特定指令（如重启 Docker 容器）。",
+      "True": "True",
+      "False": "False"
     },
     "RemoteSSHHost": {
       "name": "远程服务器地址",
