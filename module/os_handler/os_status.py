@@ -1,11 +1,13 @@
 # 此文件用于管理大世界（Operation Siren）模式下的状态信息。
 # 负责海域代币（黄币/紫币）的数值追踪、任务类型识别以及子任务冷却（CD）状态的实时计算。
+import os
 import threading
 import typing as t
 from datetime import datetime, timedelta
 
 import module.config.server as server
 from module.base.timer import Timer
+from module.base.utils import crop, crop_to_text, save_image
 from module.config.config import Function
 from module.config.utils import get_server_next_update
 from module.logger import logger
