@@ -47,7 +47,34 @@ jobs:
             echo "Already contains upstream/master."
             echo "merged=false" >> "$GITHUB_OUTPUT"
           else
-            git merge --no-edit -X ours upstream/master
+            if ! git merge --no-edit -X ours upstream/master; then
+              echo "Merge reported conflicts; only workflow conflicts will be resolved automatically."
+
+              git diff --name-only --diff-filter=U | while IFS= read -r path; do
+                case "$path" in
+                  .github/workflows/*.yml|.github/workflows/*.yaml)
+                    echo "Resolving workflow conflict $path with fork version"
+                    if git cat-file -e "HEAD:$path" 2>/dev/null; then
+                      git checkout --ours -- "$path"
+                      git add "$path"
+                    else
+                      git rm -f -- "$path"
+                    fi
+                    ;;
+                  *)
+                    echo "Leaving non-workflow conflict unresolved for manual review: $path"
+                    ;;
+                esac
+              done
+
+              if git diff --name-only --diff-filter=U | grep -q .; then
+                echo "Unresolved non-workflow conflicts remain; refusing to auto-sync:"
+                git diff --name-only --diff-filter=U
+                exit 1
+              fi
+
+              git commit --no-edit
+            fi
             echo "merged=true" >> "$GITHUB_OUTPUT"
           fi
 
