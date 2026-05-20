@@ -23,75 +23,60 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.SYNC_TOKEN || github.token }}
 
-      - name: Merge upstream/master
-        id: merge
+      - name: Sync upstream/master without workflows
+        id: sync
         run: |
           set -euo pipefail
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git config pull.rebase false
 
           git remote add upstream https://github.com/wess09/AzurPilot.git
           git fetch upstream master
 
-          if git merge-base --is-ancestor upstream/master HEAD; then
-            echo "Already contains upstream/master."
-            echo "merged=false" >> "$GITHUB_OUTPUT"
+          state_file=".github/sync-upstream-base"
+          upstream_ref="upstream/master"
+          upstream_sha="$(git rev-parse "$upstream_ref")"
+
+          if [ -f "$state_file" ] && git cat-file -e "$(tr -d '[:space:]' < "$state_file")^{commit}" 2>/dev/null; then
+            base_sha="$(tr -d '[:space:]' < "$state_file")"
           else
-            if ! git merge --no-edit -X ours upstream/master; then
-              echo "Merge reported conflicts; workflow and modify/delete conflicts will be resolved with the fork version."
+            base_sha="$(git merge-base HEAD "$upstream_ref")"
+          fi
 
-              resolve_with_fork_version() {
-                local path="$1"
+          echo "Sync base: $base_sha"
+          echo "Upstream: $upstream_sha"
 
-                if git cat-file -e ":2:$path" 2>/dev/null; then
-                  git checkout --ours -- "$path"
-                  git add -- "$path"
-                else
-                  git rm -f -- "$path"
-                fi
-              }
+          if [ "$base_sha" = "$upstream_sha" ]; then
+            echo "Already synced with upstream/master."
+            echo "synced=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
-              has_stage() {
-                local stage="$1"
-                local path="$2"
+          patch_file="$RUNNER_TEMP/upstream-without-workflows.patch"
+          git diff --binary "$base_sha" "$upstream_ref" -- . ':(exclude).github/workflows' ':(exclude).github/workflows/**' > "$patch_file"
 
-                git ls-files -u -- "$path" | awk -v stage="$stage" '$3 == stage { found = 1 } END { exit !found }'
-              }
-
-              conflicts_file="$RUNNER_TEMP/sync-upstream-conflicts"
-              git diff --name-only --diff-filter=U -z > "$conflicts_file"
-
-              while IFS= read -r -d '' path; do
-                case "$path" in
-                  .github/workflows/*.yml|.github/workflows/*.yaml)
-                    echo "Resolving workflow conflict $path with fork version"
-                    resolve_with_fork_version "$path"
-                    ;;
-                  *)
-                    if ! has_stage 2 "$path" || ! has_stage 3 "$path"; then
-                      echo "Resolving modify/delete conflict $path with fork version"
-                      resolve_with_fork_version "$path"
-                    else
-                      echo "Leaving non-workflow content conflict unresolved for manual review: $path"
-                    fi
-                    ;;
-                esac
-              done < "$conflicts_file"
-
-              remaining_conflicts="$RUNNER_TEMP/sync-upstream-remaining-conflicts"
-              git diff --name-only --diff-filter=U > "$remaining_conflicts"
-
-              if [ -s "$remaining_conflicts" ]; then
-                echo "Unresolved non-workflow content conflicts remain; refusing to auto-sync:"
-                cat "$remaining_conflicts"
-                exit 1
-              fi
-
-              git commit --no-edit --allow-empty
+          if [ -s "$patch_file" ]; then
+            if ! git apply --3way --index "$patch_file"; then
+              echo "Failed to apply upstream changes without .github/workflows; manual review is required."
+              git status --short
+              exit 1
             fi
-            echo "merged=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Upstream only changed .github/workflows or had no file changes outside that directory."
+          fi
+
+          printf '%s\n' "$upstream_sha" > "$state_file"
+          git add "$state_file"
+
+          if git diff --cached --quiet; then
+            echo "No non-workflow upstream changes to commit."
+            echo "synced=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "Sync upstream/master without workflows" \
+              -m "Upstream: $upstream_sha" \
+              -m "Excluded: .github/workflows"
+            echo "synced=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Push synced master
@@ -99,11 +84,11 @@ jobs:
           set -euo pipefail
 
           if git diff --quiet origin/master..HEAD; then
-            echo "No new merge commit to push."
+            echo "No new sync commit to push."
           else
             git push origin HEAD:master
           fi
 
           echo "## 同步成功" >> "$GITHUB_STEP_SUMMARY"
-          echo "已将 wess09/AzurPilot:master 合并到 ${{ github.repository }}:master。" >> "$GITHUB_STEP_SUMMARY"
-          echo "发生 workflow 或修改/删除冲突时，默认保留 fork 当前分支的状态；普通代码内容冲突仍会停止等待人工处理。" >> "$GITHUB_STEP_SUMMARY"
+          echo "已将 wess09/AzurPilot:master 的非 workflow 内容同步到 ${{ github.repository }}:master。" >> "$GITHUB_STEP_SUMMARY"
+          echo ".github/workflows 目录不会从上游同步；普通代码内容冲突仍会停止等待人工处理。" >> "$GITHUB_STEP_SUMMARY"
