@@ -135,6 +135,9 @@ class PlatformWindows(PlatformBase, EmulatorManager):
         elif instance == Emulator.MEmuPlayer:
             # MEmu.exe MEmu_0
             self.execute(f'"{exe}" {instance.name}')
+        elif instance.type == 'SSH':
+            logger.info('Starting SSH emulator via remote command')
+            self.run_remote_ssh_command(getattr(self.config, 'EmulatorInfo_RemoteStartCommand', ''))
         else:
             raise EmulatorUnknown(f'Cannot start an unknown emulator instance: {instance}')
 
@@ -197,6 +200,9 @@ class PlatformWindows(PlatformBase, EmulatorManager):
         elif instance == Emulator.MEmuPlayer:
             # F:\Program Files\Microvirt\MEmu\memuc.exe stop -n MEmu_0
             self.execute(f'"{Emulator.single_to_console(exe)}" stop -n {instance.name}')
+        elif instance.type == 'SSH':
+            logger.info('Stopping SSH emulator via remote command')
+            self.run_remote_ssh_command(getattr(self.config, 'EmulatorInfo_RemoteStopCommand', ''))
         else:
             raise EmulatorUnknown(f'Cannot stop an unknown emulator instance: {instance}')
 
@@ -340,7 +346,6 @@ class PlatformWindows(PlatformBase, EmulatorManager):
 
     def emulator_start(self):
         logger.hr('Emulator start', level=1)
-        self.run_remote_ssh_command()
         for _ in range(3):
             # Stop
             if not self._emulator_function_wrapper(self._emulator_stop):

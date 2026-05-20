@@ -601,7 +601,8 @@
       "MuMuPlayer12": "MuMu模擬器12",
       "MEmuPlayer": "逍遙模擬器",
       "BlueStacksAir": "BlueStacksAir",
-      "MuMuPro": "MuMuPro"
+      "MuMuPro": "MuMuPro",
+      "SSH": "SSH"
     },
     "name": {
       "name": "模擬器例項名稱",
@@ -610,6 +611,36 @@
     "path": {
       "name": "模擬器安裝路徑",
       "help": ""
+    },
+    "EnableRemoteSSH": {
+      "name": "啟用遠端 SSH 管理",
+      "help": "在重啟模擬器之前，透過 SSH 在遠端伺服器上執行特定指令（如重啟 Docker 容器）。",
+      "True": "True",
+      "False": "False"
+    },
+    "RemoteSSHHost": {
+      "name": "遠端伺服器地址",
+      "help": "遠端伺服器的 IP 地址或域名，例如: 192.168.1.100"
+    },
+    "RemoteSSHPort": {
+      "name": "埠號",
+      "help": "SSH 服務埠，預設 22"
+    },
+    "RemoteSSHUser": {
+      "name": "SSH 用戶名",
+      "help": "登入 SSH 的用戶名，例如: root"
+    },
+    "RemoteSSHPublicKey": {
+      "name": "SSH 私鑰",
+      "help": "SSH 登入所需的私鑰內容（如果需要）"
+    },
+    "RemoteStartCommand": {
+      "name": "遠端啟動指令",
+      "help": "在重啟模擬器時執行的啟動 SSH 指令（如啟動 Docker 容器）"
+    },
+    "RemoteStopCommand": {
+      "name": "遠端停止指令",
+      "help": "在重啟模擬器時執行的停止 SSH 指令（如停止 Docker 容器）"
     }
   },
   "Error": {
@@ -1033,6 +1064,7 @@
       "event_20260226_cn": "春滿客棧Online",
       "event_20260326_cn": "漫遊者招募計劃",
       "event_20260417_cn": "假日航線閃耀海濱",
+      "event_20260520_cn": "Alliance Before the Sacred Seal",
       "raid_20200624": "特別演習埃塞克斯級(復刻)",
       "raid_20210708": "復刻穿越彼方的水線",
       "raid_20220127": "演習神秘事件調查",
@@ -1780,6 +1812,18 @@
     "SkillAutoSwitch": {
       "name": "自動切換技能",
       "help": "自動切換到下一個尚未學習的技能進行學習",
+      "True": "開啟",
+      "False": "關閉"
+    },
+    "RedToBlue": {
+      "name": "藍書代替紅書使用",
+      "help": "開啟後將戰術學院過濾器中的藍書代替紅書使用",
+      "True": "開啟",
+      "False": "關閉"
+    },
+    "NoT4": {
+      "name": "不使用T4教材",
+      "help": "從選擇中排除T4彩色教材",
       "True": "開啟",
       "False": "關閉"
     }
@@ -3658,6 +3702,12 @@
     "PreserveVirtualAsset": {
       "name": "保留 X 點虛擬資產",
       "help": "虛擬資產 = 體力 × 1700/30 + 黃幣 + (到月底時間/10分鐘) × 1700/30\n虛擬資產低於 X 時運行黃幣補充任務，虛擬資產包含當前黃幣和到月底的行動力價值"
+    },
+    "RecordSeaMiles": {
+      "name": "海里數記錄",
+      "help": "每次侵蝕1練級循環後記錄海里數到統計",
+      "True": "開啟",
+      "False": "關閉"
     }
   },
   "OpsiSirenBug": {
@@ -3964,9 +4014,13 @@
       "name": "存取公鑰",
       "help": "SSH 登入所需的公鑰內容（如果需要）"
     },
-    "RemoteCommand": {
-      "name": "遠端執行指令",
-      "help": "連接成功後在遠端伺服器執行的指令，例如: docker restart alas"
+    "RemoteStartCommand": {
+      "name": "EmulatorManager.RemoteStartCommand.name",
+      "help": "EmulatorManager.RemoteStartCommand.help"
+    },
+    "RemoteStopCommand": {
+      "name": "EmulatorManager.RemoteStopCommand.name",
+      "help": "EmulatorManager.RemoteStopCommand.help"
     }
   },
   "OpsiSimulatorParameters": {
@@ -4333,7 +4387,9 @@
       "CommissionIncomeRecentTitle": "Gui.Stat.CommissionIncomeRecentTitle"
     },
     "Tactical": {
-      "SkillAutoSwitch": "Gui.Tactical.SkillAutoSwitch"
+      "SkillAutoSwitch": "Gui.Tactical.SkillAutoSwitch",
+      "RedToBlue": "Gui.Tactical.RedToBlue",
+      "NoT4": "Gui.Tactical.NoT4"
     },
     "OpsiScheduling": {
       "UseSmartSchedulingOperationCoinsPreserve": "Gui.OpsiScheduling.UseSmartSchedulingOperationCoinsPreserve",

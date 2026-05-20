@@ -247,7 +247,7 @@ class CoinTaskMixin:
     
     def check_and_notify_action_point_threshold(self):
         """
-        发送行动力变化推送通知，并保存体力快照数据。
+        发送行动力变化推送通知。
         需要类中包含 _action_point_total 属性。
         """
         if not hasattr(self, '_action_point_total'):
@@ -255,7 +255,6 @@ class CoinTaskMixin:
             
         current_ap = self._action_point_total
 
-        # 保存体力快照到数据库（用于 WebUI 体力变化曲线图）
         instance_name = getattr(self.config, 'config_name', 'default')
         try:
             from module.statistics.cl1_database import db as cl1_db

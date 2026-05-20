@@ -92,7 +92,14 @@
     "EmulatorInfo": {
       "Emulator": "auto",
       "name": null,
-      "path": null
+      "path": null,
+      "EnableRemoteSSH": false,
+      "RemoteSSHHost": null,
+      "RemoteSSHPort": 22,
+      "RemoteSSHUser": "root",
+      "RemoteSSHPublicKey": null,
+      "RemoteStartCommand": null,
+      "RemoteStopCommand": null
     },
     "Error": {
       "HandleError": true,
@@ -1827,9 +1834,11 @@
       "ForceAdbNcScreenshot": false
     },
     "Tactical": {
-      "TacticalFilter": "SameT4 > SameT3 > SameT2 > SameT1\n> BlueT2 > YellowT2 > RedT2\n> BlueT3 > YellowT3 > RedT3\n> BlueT4 > YellowT4 > RedT4\n> BlueT1 > YellowT1 > RedT1\n> first",
+      "TacticalFilter": "SameT4 > SameT3 > SameT2 > SameT1\n> BlueT3 > YellowT3 > RedT3\n> BlueT2 > YellowT2 > RedT2\n> BlueT4 > YellowT4 > RedT4\n> BlueT1 > YellowT1 > RedT1\n> first",
       "RapidTrainingSlot": "do_not_use",
-      "SkillAutoSwitch": true
+      "SkillAutoSwitch": true,
+      "RedToBlue": false,
+      "NoT4": false
     },
     "ControlExpOverflow": {
       "Enable": true,
@@ -2697,7 +2706,8 @@
       "SkipHpCheck": false,
       "Cl1Filter": "ActionPoint",
       "RecordNonCL1AP": true,
-      "PreserveVirtualAsset": 0
+      "PreserveVirtualAsset": 0,
+      "RecordSeaMiles": true
     },
     "OpsiSirenBug": {
       "SirenResearch_Enable": true,
@@ -2889,7 +2899,8 @@
       "RemoteSSHPort": 22,
       "RemoteSSHUser": null,
       "RemoteSSHPublicKey": null,
-      "RemoteCommand": null
+      "RemoteStartCommand": null,
+      "RemoteStopCommand": null
     },
     "Storage": {
       "Storage": {}

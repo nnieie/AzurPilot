@@ -225,9 +225,6 @@ class GitManager(DeployConfig):
         logger.hr('Cloud Update Control Failed', 0)
         if fatal:
             logger.warning('Failed to access cloud update control, stopping startup')
-            alas_kill = getattr(self, 'alas_kill', None)
-            if callable(alas_kill):
-                alas_kill()
             raise ExecutionError
         else:
             logger.warning('Failed to access cloud update control, skip update check')

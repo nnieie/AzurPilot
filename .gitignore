@@ -267,6 +267,9 @@ alas.exe
 console.bat
 .vscode/*
 
+# Cursor/Cline configuration (personal tool settings)
+.cursor/
+
 # Pylance configuration file
 pyrightconfig.json
 

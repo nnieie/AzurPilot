@@ -707,19 +707,30 @@ class AzurLaneAutoScript:
     def emulator_manager(self):
         import subprocess
         # Use deep_get to handle potential nesting
-        enable = deep_get(self.config.data, 'EmulatorManager.EmulatorManager.EnableRemoteSSH', False)
-        if not enable:
-            logger.warning('Remote SSH is not enabled in EmulatorManager settings.')
-            return
+        # Prioritize EmulatorInfo settings if enabled
+        if getattr(self.config, 'EmulatorInfo_EnableRemoteSSH', False):
+            host = getattr(self.config, 'EmulatorInfo_RemoteSSHHost', '')
+            port = getattr(self.config, 'EmulatorInfo_RemoteSSHPort', 22)
+            user = getattr(self.config, 'EmulatorInfo_RemoteSSHUser', '')
+            command = getattr(self.config, 'EmulatorInfo_RemoteStartCommand', '')
+            key = getattr(self.config, 'EmulatorInfo_RemoteSSHPublicKey', '')
+        else:
+            # Use deep_get to handle potential nesting
+            enable = deep_get(self.config.data, 'EmulatorManager.EmulatorManager.EnableRemoteSSH', False)
+            if not enable:
+                logger.warning('Remote SSH is not enabled in EmulatorManager settings.')
+                return
 
-        host = deep_get(self.config.data, 'EmulatorManager.EmulatorManager.RemoteSSHHost', '')
-        port = deep_get(self.config.data, 'EmulatorManager.EmulatorManager.RemoteSSHPort', 22)
-        user = deep_get(self.config.data, 'EmulatorManager.EmulatorManager.RemoteSSHUser', '')
-        command = deep_get(self.config.data, 'EmulatorManager.EmulatorManager.RemoteCommand', '')
-        key = deep_get(self.config.data, 'EmulatorManager.EmulatorManager.RemoteSSHPublicKey', '')
+            host = deep_get(self.config.data, 'EmulatorManager.EmulatorManager.RemoteSSHHost', '')
+            port = deep_get(self.config.data, 'EmulatorManager.EmulatorManager.RemoteSSHPort', 22)
+            user = deep_get(self.config.data, 'EmulatorManager.EmulatorManager.RemoteSSHUser', '')
+            command = deep_get(self.config.data, 'EmulatorManager.EmulatorManager.RemoteStartCommand', '')
+            if not command:
+                command = deep_get(self.config.data, 'EmulatorManager.EmulatorManager.RemoteCommand', '')
+            key = deep_get(self.config.data, 'EmulatorManager.EmulatorManager.RemoteSSHPublicKey', '')
 
         if not host or not command:
-            logger.warning('RemoteSSHHost or RemoteCommand is empty, skip remote SSH command')
+            logger.warning(f'RemoteSSHHost ({host}) or RemoteStartCommand ({command}) is empty, skip remote SSH command')
             return
 
         logger.hr('Remote SSH Command', level=1)

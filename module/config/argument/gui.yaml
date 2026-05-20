@@ -276,6 +276,8 @@ Stat:
 
 Tactical:
   SkillAutoSwitch:
+  RedToBlue:
+  NoT4:
 
 OpsiScheduling:
   UseSmartSchedulingOperationCoinsPreserve:

@@ -601,7 +601,8 @@
       "MuMuPlayer12": "MuMu12喵",
       "MEmuPlayer": "逍遥喵",
       "BlueStacksAir": "BlueStacksAir喵",
-      "MuMuPro": "MuMuPro喵"
+      "MuMuPro": "MuMuPro喵",
+      "SSH": "SSH"
     },
     "name": {
       "name": "模拟器实例小名 (・ω・)",
@@ -610,6 +611,36 @@
     "path": {
       "name": "模拟器安装路径 (。・ω・。)",
       "help": ""
+    },
+    "EnableRemoteSSH": {
+      "name": "开启远程喵喵 SSH 管理",
+      "help": "在重启模拟器之前，让喵喵通过 SSH 在远程服务器上执行指令喵（比如重启 Docker 容器）。",
+      "True": "喵",
+      "False": "唔"
+    },
+    "RemoteSSHHost": {
+      "name": "远程喵喵服务器地址",
+      "help": "远程喵喵服务器的 IP 地址或域名喵，例如: 192.168.1.100"
+    },
+    "RemoteSSHPort": {
+      "name": "喵喵端口号",
+      "help": "SSH 服务端口喵，默认 22"
+    },
+    "RemoteSSHUser": {
+      "name": "SSH 喵喵用户名",
+      "help": "登录 SSH 的喵喵用户名喵，例如: root"
+    },
+    "RemoteSSHPublicKey": {
+      "name": "SSH 喵喵私钥",
+      "help": "SSH 登录所需的喵喵私钥内容喵（如果需要的话喵）"
+    },
+    "RemoteStartCommand": {
+      "name": "远程喵喵启动指令",
+      "help": "在重启模拟器时执行的启动 SSH 指令喵（比如启动 Docker 容器喵）"
+    },
+    "RemoteStopCommand": {
+      "name": "远程喵喵停止指令",
+      "help": "在重启模拟器时执行的停止 SSH 指令喵（比如停止 Docker 容器喵）"
     }
   },
   "Error": {
@@ -1033,6 +1064,7 @@
       "event_20260226_cn": "Springtide Inn Online",
       "event_20260326_cn": "The Vagabond’s Recruitment Plan",
       "event_20260417_cn": "Vacation Lane – Beachside Brilliance",
+      "event_20260520_cn": "Alliance Before the Sacred Seal",
       "raid_20200624": "Air Raid Drills with Essex Rerun",
       "raid_20210708": "Cross Wave rerun",
       "raid_20220127": "Mystery Investigation",
@@ -1778,10 +1810,22 @@
       "slot_4": "使用于4号位喵"
     },
     "SkillAutoSwitch": {
-      "name": "自动换技能喵",
-      "help": "自动换到下一个还没学完的技能继续学喵",
-      "True": "开启喵",
-      "False": "关闭喵"
+      "name": "自动切换技能",
+      "help": "自动切换到下一个尚未学习的技能进行学习",
+      "True": "开启",
+      "False": "关闭"
+    },
+    "RedToBlue": {
+      "name": "蓝书代替红书使用",
+      "help": "开启后将战术学院过滤器中的蓝书代替红书使用",
+      "True": "开启",
+      "False": "关闭"
+    },
+    "NoT4": {
+      "name": "不使用T4教材",
+      "help": "从选择中排除T4彩色教材",
+      "True": "开启",
+      "False": "关闭"
     }
   },
   "ControlExpOverflow": {
@@ -3658,6 +3702,12 @@
     "PreserveVirtualAsset": {
       "name": "OpsiHazard1Leveling.PreserveVirtualAsset.name",
       "help": "OpsiHazard1Leveling.PreserveVirtualAsset.help"
+    },
+    "RecordSeaMiles": {
+      "name": "海里数记录",
+      "help": "每次侵蚀1练级循环后记录海里数到统计",
+      "True": "开启",
+      "False": "关闭"
     }
   },
   "OpsiSirenBug": {
@@ -3964,9 +4014,13 @@
       "name": "EmulatorManager.RemoteSSHPublicKey.name",
       "help": "EmulatorManager.RemoteSSHPublicKey.help"
     },
-    "RemoteCommand": {
-      "name": "EmulatorManager.RemoteCommand.name",
-      "help": "EmulatorManager.RemoteCommand.help"
+    "RemoteStartCommand": {
+      "name": "EmulatorManager.RemoteStartCommand.name",
+      "help": "EmulatorManager.RemoteStartCommand.help"
+    },
+    "RemoteStopCommand": {
+      "name": "EmulatorManager.RemoteStopCommand.name",
+      "help": "EmulatorManager.RemoteStopCommand.help"
     }
   },
   "OpsiSimulatorParameters": {
@@ -4333,7 +4387,9 @@
       "CommissionIncomeRecentTitle": "最近委托记录喵"
     },
     "Tactical": {
-      "SkillAutoSwitch": "Gui.Tactical.SkillAutoSwitch"
+      "SkillAutoSwitch": "Gui.Tactical.SkillAutoSwitch",
+      "RedToBlue": "Gui.Tactical.RedToBlue",
+      "NoT4": "Gui.Tactical.NoT4"
     },
     "OpsiScheduling": {
       "UseSmartSchedulingOperationCoinsPreserve": "获取X个凭证喵",

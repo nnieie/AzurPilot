@@ -601,7 +601,8 @@
       "MuMuPlayer12": "MuMuエミュレータ12",
       "MEmuPlayer": "MEmuエミュレータ",
       "BlueStacksAir": "BlueStacks Air",
-      "MuMuPro": "MuMu Pro"
+      "MuMuPro": "MuMu Pro",
+      "SSH": "SSH"
     },
     "name": {
       "name": "エミュレータインスタンス名",
@@ -610,6 +611,36 @@
     "path": {
       "name": "エミュレータインストールパス",
       "help": ""
+    },
+    "EnableRemoteSSH": {
+      "name": "リモートSSH管理を有効にする",
+      "help": "エミュレータを再起動する前に、SSH経由でリモートサーバー上で特定のコマンド（Dockerコンテナの再起動など）を実行します。",
+      "True": "有効",
+      "False": "無効"
+    },
+    "RemoteSSHHost": {
+      "name": "リモートサーバーアドレス",
+      "help": "リモートサーバーのIPアドレスまたはドメイン名。例: 192.168.1.100"
+    },
+    "RemoteSSHPort": {
+      "name": "ポート番号",
+      "help": "SSHサービスのポート。デフォルトは22です。"
+    },
+    "RemoteSSHUser": {
+      "name": "SSHユーザー名",
+      "help": "SSHログイン用のユーザー名。例: root"
+    },
+    "RemoteSSHPublicKey": {
+      "name": "SSH秘密鍵",
+      "help": "SSHログインに必要な秘密鍵の内容（必要な場合）。"
+    },
+    "RemoteStartCommand": {
+      "name": "リモート起動コマンド",
+      "help": "エミュレータ再起動時に実行されるSSH起動コマンド（Dockerコンテナの起動など）。"
+    },
+    "RemoteStopCommand": {
+      "name": "リモート停止コマンド",
+      "help": "エミュレータ再起動時に実行されるSSH停止コマンド（Dockerコンテナの停止など）。"
     }
   },
   "Error": {
@@ -1033,6 +1064,7 @@
       "event_20260226_cn": "春色旅籠Online",
       "event_20260326_cn": "ワンダラー募集計画",
       "event_20260417_cn": "バケーションレーン・きらめく砂浜",
+      "event_20260520_cn": "聖印前の同盟",
       "raid_20200624": "特別演習超空強襲波（復刻）",
       "raid_20210708": "交錯する新たな波 (復刻)",
       "raid_20220127": "秘密事件調査",
@@ -1778,8 +1810,20 @@
       "slot_4": "4番目で使用"
     },
     "SkillAutoSwitch": {
-      "name": "自動スキル切替",
-      "help": "次の未学習スキルに自動的に切り替えて学習します",
+      "name": "自動スイッチスキル",
+      "help": "未学習のスキルに自動的に切り替えて学習する",
+      "True": "オン",
+      "False": "オフ"
+    },
+    "RedToBlue": {
+      "name": "赤本を青本に置き換え",
+      "help": "戦術学院フィルターの赤本(Red)をすべて青本(Blue)に置き換える",
+      "True": "オン",
+      "False": "オフ"
+    },
+    "NoT4": {
+      "name": "T4教材を使用しない",
+      "help": "T4虹色教材を選択から除外する",
       "True": "オン",
       "False": "オフ"
     }
@@ -3658,6 +3702,12 @@
     "PreserveVirtualAsset": {
       "name": "X ポイントの仮想資産を保持",
       "help": "仮想資産 = モビリティ × 1700/30 + 黄色のコイン + (月末までの時間/10分) × 1700/30\n仮想資産が X 未満の場合、黄色のコイン補給タスクが実行されます。0 は無制限を意味します。"
+    },
+    "RecordSeaMiles": {
+      "name": "海里数記録",
+      "help": "侵食1レベリングサイクルごとに海里数を統計に記録します",
+      "True": "有効",
+      "False": "無効"
     }
   },
   "OpsiSirenBug": {
@@ -3964,9 +4014,13 @@
       "name": "EmulatorManager.RemoteSSHPublicKey.name",
       "help": "EmulatorManager.RemoteSSHPublicKey.help"
     },
-    "RemoteCommand": {
-      "name": "EmulatorManager.RemoteCommand.name",
-      "help": "EmulatorManager.RemoteCommand.help"
+    "RemoteStartCommand": {
+      "name": "EmulatorManager.RemoteStartCommand.name",
+      "help": "EmulatorManager.RemoteStartCommand.help"
+    },
+    "RemoteStopCommand": {
+      "name": "EmulatorManager.RemoteStopCommand.name",
+      "help": "EmulatorManager.RemoteStopCommand.help"
     }
   },
   "OpsiSimulatorParameters": {
@@ -4333,7 +4387,9 @@
       "CommissionIncomeRecentTitle": "Gui.Stat.CommissionIncomeRecentTitle"
     },
     "Tactical": {
-      "SkillAutoSwitch": "Gui.Tactical.SkillAutoSwitch"
+      "SkillAutoSwitch": "Gui.Tactical.SkillAutoSwitch",
+      "RedToBlue": "Gui.Tactical.RedToBlue",
+      "NoT4": "Gui.Tactical.NoT4"
     },
     "OpsiScheduling": {
       "UseSmartSchedulingOperationCoinsPreserve": "Gui.OpsiScheduling.UseSmartSchedulingOperationCoinsPreserve",

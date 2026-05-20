@@ -601,7 +601,8 @@
       "MuMuPlayer12": "MuMu Emulator 12",
       "MEmuPlayer": "MEmu emulator",
       "BlueStacksAir": "BlueStacksAir",
-      "MuMuPro": "MuMuPro"
+      "MuMuPro": "MuMuPro",
+      "SSH": "SSH"
     },
     "name": {
       "name": "Simulator instance name",
@@ -610,6 +611,36 @@
     "path": {
       "name": "Simulator installation path",
       "help": ""
+    },
+    "EnableRemoteSSH": {
+      "name": "Enable Remote SSH Management",
+      "help": "Execute specific commands (e.g., restart Docker containers) on a remote server via SSH before restarting the emulator.",
+      "True": "True",
+      "False": "False"
+    },
+    "RemoteSSHHost": {
+      "name": "Remote Server Address",
+      "help": "IP address or domain of the remote server, e.g., 192.168.1.100"
+    },
+    "RemoteSSHPort": {
+      "name": "Port Number",
+      "help": "SSH service port, default 22"
+    },
+    "RemoteSSHUser": {
+      "name": "SSH Username",
+      "help": "Username to login via SSH, e.g., root"
+    },
+    "RemoteSSHPublicKey": {
+      "name": "SSH Private Key",
+      "help": "The private key content for SSH authentication (if needed)"
+    },
+    "RemoteStartCommand": {
+      "name": "Remote Start Command",
+      "help": "SSH command to start the emulator/service (e.g., docker start)"
+    },
+    "RemoteStopCommand": {
+      "name": "Remote Stop Command",
+      "help": "SSH command to stop the emulator/service (e.g., docker stop)"
     }
   },
   "Error": {
@@ -1033,6 +1064,7 @@
       "event_20260226_cn": "Springtide Inn Online",
       "event_20260326_cn": "The Vagabond’s Recruitment Plan",
       "event_20260417_cn": "Vacation Lane – Beachside Brilliance",
+      "event_20260520_cn": "Alliance Before the Sacred Seal",
       "raid_20200624": "Air Raid Drills with Essex Rerun",
       "raid_20210708": "Cross Wave rerun",
       "raid_20220127": "Mystery Investigation",
@@ -1780,6 +1812,18 @@
     "SkillAutoSwitch": {
       "name": "Auto Switch Skill",
       "help": "Automatically switch to the next unlearned skill for training",
+      "True": "On",
+      "False": "Off"
+    },
+    "RedToBlue": {
+      "name": "Replace Red with Blue",
+      "help": "Replace Red books with Blue books in the tactical filter",
+      "True": "On",
+      "False": "Off"
+    },
+    "NoT4": {
+      "name": "Do not use T4 books",
+      "help": "Remove T4 rainbow books from selection",
       "True": "On",
       "False": "Off"
     }
@@ -3658,6 +3702,12 @@
     "PreserveVirtualAsset": {
       "name": "Preserve X Virtual Asset",
       "help": "Virtual Asset = AP × 1700/30 + Yellow Coins + (Time to Month End / 10 minutes) × 1700/30\nWhen virtual asset drops below X, yellow coin replenishment task will run. 0 means no limit."
+    },
+    "RecordSeaMiles": {
+      "name": "Sea Miles Recording",
+      "help": "Record sea miles to statistics after each hazard 1 leveling cycle",
+      "True": "Enabled",
+      "False": "Disabled"
     }
   },
   "OpsiSirenBug": {
@@ -3964,9 +4014,13 @@
       "name": "Public Key",
       "help": "Public key content for SSH login (if needed)"
     },
-    "RemoteCommand": {
-      "name": "Remote Command",
-      "help": "Command to execute on remote server after connection, e.g.: docker restart alas"
+    "RemoteStartCommand": {
+      "name": "EmulatorManager.RemoteStartCommand.name",
+      "help": "EmulatorManager.RemoteStartCommand.help"
+    },
+    "RemoteStopCommand": {
+      "name": "EmulatorManager.RemoteStopCommand.name",
+      "help": "EmulatorManager.RemoteStopCommand.help"
     }
   },
   "OpsiSimulatorParameters": {
@@ -4333,7 +4387,9 @@
       "CommissionIncomeRecentTitle": "Recent Commissions"
     },
     "Tactical": {
-      "SkillAutoSwitch": "Gui.Tactical.SkillAutoSwitch"
+      "SkillAutoSwitch": "Gui.Tactical.SkillAutoSwitch",
+      "RedToBlue": "Gui.Tactical.RedToBlue",
+      "NoT4": "Gui.Tactical.NoT4"
     },
     "OpsiScheduling": {
       "UseSmartSchedulingOperationCoinsPreserve": "Gui.OpsiScheduling.UseSmartSchedulingOperationCoinsPreserve",

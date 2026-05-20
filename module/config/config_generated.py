@@ -105,9 +105,16 @@ class GeneratedConfig:
     Emulator_AdbRestart = False
 
     # Group `EmulatorInfo`
-    EmulatorInfo_Emulator = 'auto'  # auto, NoxPlayer, NoxPlayer64, BlueStacks4, BlueStacks5, BlueStacks4HyperV, BlueStacks5HyperV, LDPlayer3, LDPlayer4, LDPlayer9, LDPlayer14, MuMuPlayer, MuMuPlayerX, MuMuPlayer12, MEmuPlayer, BlueStacksAir, MuMuPro
+    EmulatorInfo_Emulator = 'auto'  # auto, NoxPlayer, NoxPlayer64, BlueStacks4, BlueStacks5, BlueStacks4HyperV, BlueStacks5HyperV, LDPlayer3, LDPlayer4, LDPlayer9, LDPlayer14, MuMuPlayer, MuMuPlayerX, MuMuPlayer12, MEmuPlayer, BlueStacksAir, MuMuPro, SSH
     EmulatorInfo_name = None
     EmulatorInfo_path = None
+    EmulatorInfo_EnableRemoteSSH = False  # True, False
+    EmulatorInfo_RemoteSSHHost = None
+    EmulatorInfo_RemoteSSHPort = 22
+    EmulatorInfo_RemoteSSHUser = 'root'
+    EmulatorInfo_RemoteSSHPublicKey = None
+    EmulatorInfo_RemoteStartCommand = None
+    EmulatorInfo_RemoteStopCommand = None
 
     # Group `Error`
     Error_HandleError = True
@@ -326,9 +333,11 @@ class GeneratedConfig:
     Commission_DoMajorCommission = False
 
     # Group `Tactical`
-    Tactical_TacticalFilter = 'SameT4 > SameT3 > SameT2 > SameT1\n> BlueT2 > YellowT2 > RedT2\n> BlueT3 > YellowT3 > RedT3\n> BlueT4 > YellowT4 > RedT4\n> BlueT1 > YellowT1 > RedT1\n> first'
+    Tactical_TacticalFilter = 'SameT4 > SameT3 > SameT2 > SameT1\n> BlueT3 > YellowT3 > RedT3\n> BlueT2 > YellowT2 > RedT2\n> BlueT4 > YellowT4 > RedT4\n> BlueT1 > YellowT1 > RedT1\n> first'
     Tactical_RapidTrainingSlot = 'do_not_use'  # do_not_use, slot_1, slot_2, slot_3, slot_4
     Tactical_SkillAutoSwitch = True  # True, False
+    Tactical_RedToBlue = False  # True, False
+    Tactical_NoT4 = False  # True, False
 
     # Group `ControlExpOverflow`
     ControlExpOverflow_Enable = True
@@ -752,6 +761,7 @@ class GeneratedConfig:
     OpsiHazard1Leveling_Cl1Filter = 'ActionPoint'
     OpsiHazard1Leveling_RecordNonCL1AP = True
     OpsiHazard1Leveling_PreserveVirtualAsset = 0
+    OpsiHazard1Leveling_RecordSeaMiles = True  # True, False
 
     # Group `OpsiSirenBug`
     OpsiSirenBug_SirenResearch_Enable = True
@@ -827,7 +837,8 @@ class GeneratedConfig:
     EmulatorManager_RemoteSSHPort = 22
     EmulatorManager_RemoteSSHUser = None
     EmulatorManager_RemoteSSHPublicKey = None
-    EmulatorManager_RemoteCommand = None
+    EmulatorManager_RemoteStartCommand = None
+    EmulatorManager_RemoteStopCommand = None
 
     # Group `OpsiSimulatorParameters`
     OpsiSimulatorParameters_Samples = 100000

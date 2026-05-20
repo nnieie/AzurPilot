@@ -172,8 +172,12 @@ dev_tools\build_usb_capture_lut_accel.bat
 ## 多平台启动器
 
 <div align="center">
-  <img src="doc/loading.png" alt="loading" width="400" />
-  <img src="doc/GUI.png" alt="GUI" width="400" />
+  <img src="doc/loading.png" alt="loading" width="500" />
+  <p>启动加载界面</p>
+  <img src="doc/GUI.png" alt="GUI" width="500" />
+  <p>Windows 客户端界面</p>
+  <img src="doc/macGUI.png" alt="macGUI" width="500" />
+  <p>Mac 客户端界面</p>
 </div>
 启动器项目地：
 
@@ -372,3 +376,191 @@ AzurPilot 提供 MCP 服务，可供支持 MCP 的客户端或工具调用。
 本项目遵循原项目及相关上游项目的许可证要求。启动器项目遵循 GPL-3.0 协议开源。
 
 使用、修改或分发本项目时，请同时遵守相关上游项目的许可证要求。
+
+# 🌸 屎山代码分析报告 🌸
+
+## 📑 目录
+
+- [糟糕指数](#overall-score)
+- [评分指标详情](#metrics-details)
+- [最屎代码排行榜](#problem-files)
+- [诊断结论](#conclusion)
+
+![Score](https://img.shields.io/badge/Score-89%25-brightgreen)
+
+## 糟糕指数 {#overall-score}
+
+| 指标摘要 | 评分 |
+|------|-------|
+| **糟糕指数** | **88.95/100** |
+| 屎山等级 | 🌸 偶有异味 |
+
+> 清新宜人，初闻像早晨的露珠
+
+### 📊 统计信息
+
+| 指标 | 数值 |
+|--------|-------|
+| 总文件数 | 1877 |
+| 已跳过 | 16063 |
+| 耗时 | 5052ms |
+
+## 评分指标详情 {#metrics-details}
+
+| 指标摘要 | 评分 | 状态 |
+|:-----|------:|:------:|
+| 循环复杂度 | 3.80% | ✓✓ |
+| 认知复杂度 | 4.91% | ✓✓ |
+| 嵌套深度 | 1.09% | ✓✓ |
+| 函数长度 | 2.09% | ✓✓ |
+| 文件长度 | 0.84% | ✓✓ |
+| 参数数量 | 2.13% | ✓✓ |
+| 代码重复 | 7.99% | ✓✓ |
+| 结构分析 | 1.78% | ✓✓ |
+| 错误处理 | 5.26% | ✓✓ |
+| 注释比例 | 55.48% | • |
+| 命名规范 | 4.25% | ✓✓ |
+
+## 最屎代码排行榜 {#problem-files}
+
+### 1. module\webui\app.py
+
+**糟糕指数: 49.33**
+
+**问题**: 🔄 复杂度问题: 34, ⚠️ 其他问题: 28, 🏗️ 结构问题: 22, ❌ 错误处理问题: 43, 📝 注释问题: 1, 🏷️ 命名问题: 10
+
+- 🔄 `_render_ap_chart()` L448: 复杂度: 86
+- 🔄 `_render_opsi_stats()` L1095: 复杂度: 80
+- 🔄 `export_opsi_csv()` L1700: 复杂度: 30
+- 🔄 `_render_ship_exp()` L1869: 复杂度: 14
+- 🔄 `_render_commission_income()` L2030: 复杂度: 31
+- 🔍 ...还有 130 个问题实在太屎，列不完了
+
+### 2. mcp_server_sse.py
+
+**糟糕指数: 48.13**
+
+**问题**: 🔄 复杂度问题: 5, ⚠️ 其他问题: 3, 🏗️ 结构问题: 3, ❌ 错误处理问题: 4, 📝 注释问题: 1
+
+- 🔄 `call_tool()` L202: 复杂度: 57
+- 🔄 `call_tool()` L202: 认知复杂度: 71
+- 🔄 `mcp_asgi_app()` L458: 认知复杂度: 18
+- 🔄 `call_tool()` L202: 嵌套深度: 7
+- 🔄 `mcp_asgi_app()` L458: 嵌套深度: 4
+- 🔍 ...还有 9 个问题实在太屎，列不完了
+
+### 3. module\os\map.py
+
+**糟糕指数: 43.93**
+
+**问题**: 🔄 复杂度问题: 37, ⚠️ 其他问题: 15, 📋 重复问题: 3, 🏗️ 结构问题: 21, ❌ 错误处理问题: 1, 📝 注释问题: 1, 🏷️ 命名问题: 7
+
+- 🔄 `os_init()` L48: 复杂度: 18
+- 🔄 `handle_storage_fleet_repair()` L406: 复杂度: 11
+- 🔄 `handle_fleet_repair_by_config()` L455: 复杂度: 17
+- 🔄 `os_auto_search_daemon()` L902: 复杂度: 30
+- 🔄 `os_auto_search_daemon_until_combat()` L1007: 复杂度: 24
+- 🔍 ...还有 77 个问题实在太屎，列不完了
+
+### 4. module\os\tasks\hazard_leveling.py
+
+**糟糕指数: 41.10**
+
+**问题**: 🔄 复杂度问题: 17, ⚠️ 其他问题: 9, 📋 重复问题: 1, 🏗️ 结构问题: 6, ❌ 错误处理问题: 8, 📝 注释问题: 1, 🏷️ 命名问题: 10
+
+- 🔄 `_cl1_smart_scheduling_check()` L43: 复杂度: 24
+- 🔄 `os_check_leveling()` L408: 复杂度: 28
+- 🔄 `_format_check_report()` L567: 复杂度: 14
+- 🔄 `_collect_ship_data_with_retry()` L738: 复杂度: 12
+- 🔄 `_check_custom_positions_full_exp()` L877: 复杂度: 12
+- 🔍 ...还有 45 个问题实在太屎，列不完了
+
+### 5. module\os_simulator\simulator.py
+
+**糟糕指数: 40.39**
+
+**问题**: 🔄 复杂度问题: 9, ⚠️ 其他问题: 5, 📋 重复问题: 3, 🏗️ 结构问题: 3, ❌ 错误处理问题: 1, 📝 注释问题: 1, 🏷️ 命名问题: 10
+
+- 🔄 `_simulate_one()` L48: 复杂度: 22
+- 🔄 `get_paras()` L197: 复杂度: 14
+- 🔄 `simulate()` L377: 复杂度: 11
+- 🔄 `_simulate_one()` L48: 认知复杂度: 30
+- 🔄 `_simulate_batch_kernel()` L140: 认知复杂度: 19
+- 🔍 ...还有 25 个问题实在太屎，列不完了
+
+### 6. module\statistics\cl1_database.py
+
+**糟糕指数: 39.08**
+
+**问题**: 🔄 复杂度问题: 17, ⚠️ 其他问题: 9, 📋 重复问题: 3, 🏗️ 结构问题: 13, ❌ 错误处理问题: 31, 📝 注释问题: 1, 🏷️ 命名问题: 10
+
+- 🔄 `_normalize_meow_hazard_stats()` L258: 复杂度: 20
+- 🔄 `_reconcile_meow_counts()` L372: 复杂度: 19
+- 🔄 `migrate_from_json()` L726: 复杂度: 11
+- 🔄 `get_meow_stats()` L940: 复杂度: 31
+- 🔄 `_check_key_migration()` L105: 认知复杂度: 16
+- 🔍 ...还有 77 个问题实在太屎，列不完了
+
+### 7. module\device\connection.py
+
+**糟糕指数: 38.47**
+
+**问题**: 🔄 复杂度问题: 16, ⚠️ 其他问题: 8, 🏗️ 结构问题: 12, ❌ 错误处理问题: 9, 🏷️ 命名问题: 8
+
+- 🔄 `retry_wrapper()` L32: 复杂度: 12
+- 🔄 `_nc_server_host_port()` L435: 复杂度: 13
+- 🔄 `adb_connect()` L774: 复杂度: 18
+- 🔄 `detect_device()` L1079: 复杂度: 42
+- 🔄 `retry_wrapper()` L32: 认知复杂度: 18
+- 🔍 ...还有 47 个问题实在太屎，列不完了
+
+### 8. module\map\fleet.py
+
+**糟糕指数: 37.16**
+
+**问题**: 🔄 复杂度问题: 28, ⚠️ 其他问题: 6, 🏗️ 结构问题: 17, ❌ 错误处理问题: 2, 📝 注释问题: 1
+
+- 🔄 `round_wait()` L196: 复杂度: 11
+- 🔄 `_goto()` L256: 复杂度: 70
+- 🔄 `goto()` L475: 复杂度: 16
+- 🔄 `full_scan()` L550: 复杂度: 11
+- 🔄 `track_movable()` L611: 复杂度: 30
+- 🔍 ...还有 46 个问题实在太屎，列不完了
+
+### 9. module\commission\commission.py
+
+**糟糕指数: 36.00**
+
+**问题**: 🔄 复杂度问题: 22, ⚠️ 其他问题: 9, 📋 重复问题: 1, 🏗️ 结构问题: 9, 📝 注释问题: 1, 🏷️ 命名问题: 10
+
+- 🔄 `_commission_choose()` L116: 复杂度: 21
+- 🔄 `_commission_ensure_mode()` L234: 复杂度: 11
+- 🔄 `_commission_start_click()` L356: 复杂度: 13
+- 🔄 `_record_commission_income()` L523: 复杂度: 18
+- 🔄 `_commission_receive()` L622: 复杂度: 28
+- 🔍 ...还有 44 个问题实在太屎，列不完了
+
+### 10. module\shop_event\shop_event.py
+
+**糟糕指数: 35.21**
+
+**问题**: 🔄 复杂度问题: 6, ⚠️ 其他问题: 2, 🏗️ 结构问题: 3, 📝 注释问题: 1, 🏷️ 命名问题: 1
+
+- 🔄 `handle_items_related_with_urpt()` L35: 复杂度: 28
+- 🔄 `handle_items_related_with_urpt()` L35: 认知复杂度: 44
+- 🔄 `_run()` L187: 认知复杂度: 15
+- 🔄 `run()` L244: 认知复杂度: 18
+- 🔄 `handle_items_related_with_urpt()` L35: 嵌套深度: 8
+- 🔍 ...还有 7 个问题实在太屎，列不完了
+
+## 诊断结论 {#conclusion}
+
+🌸 **偶有异味** - 基本没事，但是有伤风化
+
+👍 继续保持，你是编码界的一股清流，代码洁癖者的骄傲
+
+---
+
+*由 [fuck-u-code](https://github.com/Done-0/fuck-u-code) 生成*
+
+### 以上问题待解决（没招了 请求手搓大手子）
