@@ -6,6 +6,7 @@
 import os
 import re
 import shutil
+import subprocess
 import threading
 import time
 from datetime import datetime, timedelta
@@ -23,6 +24,7 @@ from module.notify import handle_notify, notify_webui
 
 
 RESTART_SENSITIVE_TASKS = ['Commission', 'Research']
+ADB_REBOOT_TIMEOUT = 180
 
 
 class AzurLaneAutoScript:
@@ -93,6 +95,75 @@ class AzurLaneAutoScript:
             return True
         except Exception as e:
             logger.error(f'重启模拟器失败: {e}')
+            return False
+
+    def _try_adb_reboot_device(self):
+        """
+        通过 adb reboot 重启当前连接的设备。
+
+        这里复用当前 device 的 adb 配置与 serial，等价于执行
+        `adb -s <serial> reboot`，适用于真机/云手机等不能通过模拟器管理器重启的场景。
+
+        Returns:
+            bool: True 如果 adb reboot 指令已成功发出，False 如果无法执行。
+        """
+        if not self.config.Error_GameStuckAdbReboot:
+            logger.warning('GameStuckAdbReboot 已禁用，无法通过 adb 重启设备')
+            return False
+
+        logger.hr('正在通过 adb 重启设备', level=1)
+        try:
+            device = self.__dict__.get('device', None)
+            if device is None:
+                device = self.device
+
+            logger.info(f'正在重启设备: {device.serial}')
+            cmd = [device.adb_binary, '-s', device.serial, 'reboot']
+            logger.info(f'Execute: {cmd}')
+            process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=10)
+            if process.returncode != 0:
+                stdout = process.stdout.decode(errors='ignore').strip()
+                stderr = process.stderr.decode(errors='ignore').strip()
+                logger.error(f'adb reboot 失败，returncode={process.returncode}, stdout={stdout}, stderr={stderr}')
+                return False
+            logger.info('adb reboot 指令已发送')
+
+            def is_device_online():
+                try:
+                    for adb_device in device.list_device():
+                        if adb_device.serial == device.serial and adb_device.status == 'device':
+                            return True
+                except Exception as e:
+                    logger.warning(f'查询设备状态失败: {e}')
+                return False
+
+            logger.info('等待设备进入重启流程，最多 30 秒')
+            deadline = time.time() + 30
+            while time.time() < deadline:
+                if not is_device_online():
+                    logger.info(f'设备 {device.serial} 已离线')
+                    break
+                time.sleep(2)
+            else:
+                logger.warning(f'设备 {device.serial} 在 30 秒内未离线，adb reboot 可能未生效')
+                return False
+
+            logger.info(f'等待设备重新上线，最多 {ADB_REBOOT_TIMEOUT} 秒')
+            deadline = time.time() + ADB_REBOOT_TIMEOUT
+            while time.time() < deadline:
+                if is_device_online():
+                    logger.info(f'设备 {device.serial} 已重新上线')
+                    break
+                time.sleep(5)
+            else:
+                logger.warning(f'设备 {device.serial} 未在 {ADB_REBOOT_TIMEOUT} 秒内重新上线')
+
+            # 设备重启后当前连接不可复用，下次访问时重新创建。
+            if 'device' in self.__dict__:
+                del_cached_property(self, 'device')
+            return True
+        except Exception as e:
+            logger.error(f'通过 adb 重启设备失败: {e}')
             return False
 
     @cached_property
@@ -170,16 +241,26 @@ class AzurLaneAutoScript:
             logger.error(e)
             self.save_error_log()
 
-            if self.config.Error_GameStuckRestart:
+            if self.config.Error_GameStuckRestart or self.config.Error_GameStuckAdbReboot:
                 self.consecutive_game_stuck += 1
                 limit = int(self.config.Error_GameStuckThreshold)
                 logger.warning(f'GameStuckError: {self.consecutive_game_stuck}/{limit}')
                 if self.consecutive_game_stuck >= limit:
-                    logger.warning('游戏卡住次数过多，正在重启模拟器...')
-                    if self._try_restart_emulator():
-                        self.consecutive_game_stuck = 0
-                        self.config.task_call('Restart')
-                        return 'recoverable'
+                    if self.config.Error_GameStuckAdbReboot:
+                        logger.warning('游戏卡住次数过多，正在通过 adb 重启设备...')
+                        if self._try_adb_reboot_device():
+                            self.consecutive_game_stuck = 0
+                            self.config.task_call('Restart')
+                            return 'recoverable'
+
+                    if self.config.Error_GameStuckRestart:
+                        logger.warning('游戏卡住次数过多，正在重启模拟器...')
+                        if self._try_restart_emulator():
+                            self.consecutive_game_stuck = 0
+                            self.config.task_call('Restart')
+                            return 'recoverable'
+                    else:
+                        logger.warning('GameStuckRestart 已禁用，不会自动重启模拟器')
 
             logger.warning(f'游戏卡住，{self.device.package} 将在10秒后重启')
             logger.warning('如果您正在手动操作，请停止 Alas')

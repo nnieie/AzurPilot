@@ -526,6 +526,10 @@
         "type": "checkbox",
         "value": false
       },
+      "GameStuckAdbReboot": {
+        "type": "checkbox",
+        "value": false
+      },
       "GameStuckThreshold": {
         "type": "input",
         "value": 3,

@@ -676,6 +676,10 @@
       "name": "遊戲卡死時重啟模擬器",
       "help": "在遊戲連續卡死（觸發GameStuckError）達到指定次數後，嘗試重啟模擬器。可能有助於解決模擬器假死或視訊記憶體溢位等問題。"
     },
+    "GameStuckAdbReboot": {
+      "name": "遊戲卡死時透過 adb 重啟裝置",
+      "help": "在遊戲連續卡死（觸發GameStuckError）達到指定次數後，執行 `adb -s <serial> reboot` 重啟目前裝置。適用於真機、雲手機或無法透過模擬器管理器重啟的裝置。"
+    },
     "GameStuckThreshold": {
       "name": "遊戲卡死重啟閾值",
       "help": "連續卡死多少次後觸發重啟。"

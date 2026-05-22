@@ -109,6 +109,7 @@
       "OnePushConfig": "provider: null",
       "ScreenshotLength": 1,
       "GameStuckRestart": false,
+      "GameStuckAdbReboot": false,
       "GameStuckThreshold": 3,
       "AdbOfflineRestart": false,
       "AdbOfflineThreshold": 3,

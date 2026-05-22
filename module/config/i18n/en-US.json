@@ -676,6 +676,10 @@
       "name": "Restart the emulator when the game freezes",
       "help": "After the game freezes (triggers GameStuckError) for the specified number of times, try restarting the emulator. It may help solve problems such as emulator freeze or memory overflow."
     },
+    "GameStuckAdbReboot": {
+      "name": "Reboot the device through adb when the game freezes",
+      "help": "After the game freezes (triggers GameStuckError) for the specified number of times, run `adb -s <serial> reboot` to reboot the current device. Useful for physical devices, cloud phones, or devices that cannot be restarted through the emulator manager."
+    },
     "GameStuckThreshold": {
       "name": "Game stuck restart threshold",
       "help": "How many consecutive times it is stuck before triggering a restart."

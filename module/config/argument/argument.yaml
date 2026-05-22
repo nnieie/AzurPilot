@@ -188,6 +188,7 @@ Error:
     value: "provider: null"
   ScreenshotLength: 1
   GameStuckRestart: false
+  GameStuckAdbReboot: false
   GameStuckThreshold:
     value: 3
     validate: [1, 10]
