@@ -85,7 +85,7 @@ class CampaignEvent(CampaignStatus):
     def coin_limit_triggered(self):
         """
         Returns:
-            bool: If coin amount is greater than StopCondition.CoinLimit
+            bool: If coin amount reaches StopCondition.CoinLimit
         """
         limit = int(
             re.sub(r'[,.\'"，。]', '', str(self.config.StopCondition_CoinLimit))
@@ -100,7 +100,7 @@ class CampaignEvent(CampaignStatus):
             return False
 
         logger.attr('Coin_limit', f'{coin}/{limit}')
-        if coin > limit:
+        if coin >= limit:
             logger.hr(f'Reach coin limit: {limit}')
             self.config.Scheduler_Enable = False
             handle_notify(

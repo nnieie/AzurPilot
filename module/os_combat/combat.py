@@ -206,9 +206,18 @@ class Combat(Combat_, MapEventHandler):
             return True
         return False
 
-    def handle_auto_search_battle_status(self, drop=None):
+    def handle_auto_search_battle_status(self, drop=None, battle_status_s_timer=None):
+        if battle_status_s_timer is not None:
+            if self.appear(BATTLE_STATUS_S):
+                battle_status_s_timer.start()
+                if battle_status_s_timer.reached():
+                    return self._handle_single_battle_status(BATTLE_STATUS_S, 'S', drop)
+                return False
+            battle_status_s_timer.clear()
+        elif self._handle_single_battle_status(BATTLE_STATUS_S, 'S', drop):
+            return True
+
         for status_button, status_letter in [
-            (BATTLE_STATUS_S, 'S'),
             (BATTLE_STATUS_A, 'A'),
             (BATTLE_STATUS_B, 'B'),
             (BATTLE_STATUS_C, 'C'),
@@ -293,6 +302,7 @@ class Combat(Combat_, MapEventHandler):
             cl1_combat_timer.start()
 
         success = True
+        battle_status_s_timer = Timer(10)
         while 1:
             self.device.screenshot()
 
@@ -312,8 +322,9 @@ class Combat(Combat_, MapEventHandler):
                 self.device.screenshot_interval_set()
                 break
             if self.is_combat_executing():
+                battle_status_s_timer.clear()
                 continue
-            if self.handle_auto_search_battle_status():
+            if self.handle_auto_search_battle_status(drop=drop, battle_status_s_timer=battle_status_s_timer):
                 success = None
                 continue
             if self.config.OpsiGeneral_RepairThreshold > 0 and self.handle_auto_search_exp_info():

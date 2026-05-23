@@ -10191,6 +10191,10 @@
       "FortChoreMeowfficer": {
         "type": "checkbox",
         "value": true
+      },
+      "OverflowCoins": {
+        "type": "input",
+        "value": -1
       }
     },
     "MeowfficerTrain": {

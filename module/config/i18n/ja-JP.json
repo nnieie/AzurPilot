@@ -1172,8 +1172,8 @@
       "help": "燃料が少なすぎる場合はタスクを延期し、燃料が十分になったら出撃を続行します"
     },
     "CoinLimit": {
-      "name": "資金がXを超えたら停止",
-      "help": "資金がこの数値を超えていることが確認された場合、現在のタスクを停止します。\n0は制限なしを意味します"
+      "name": "StopCondition.CoinLimit.name",
+      "help": "StopCondition.CoinLimit.help"
     },
     "RunCount": {
       "name": "出撃回数がXを超えると停止する",
@@ -1987,6 +1987,10 @@
     "FortChoreMeowfficer": {
       "name": "ニャ窩インタラクション",
       "help": "掃除、給食、ネコじゃらし"
+    },
+    "OverflowCoins": {
+      "name": "金貨が余ったら猫用トイレを買う",
+      "help": "金貨がこの値を超えている間は、金貨がこの値まで下がるか、猫箱が売り切れるまで猫箱を買い続けてください。-1 閉じる"
     }
   },
   "MeowfficerTrain": {
