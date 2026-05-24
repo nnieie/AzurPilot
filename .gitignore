@@ -20,6 +20,7 @@ alas-launcher.exe
 unins000.dat
 unins000.exe
 *.lock
+!uv.lock
 config/reloadflag
 config/reloadalas
 test.py

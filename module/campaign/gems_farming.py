@@ -604,7 +604,9 @@ class GemsFarming(CampaignRun, FleetEquipment, GemsEquipmentHandler, Retirement)
         Change flagship and calculate emotion
         """
         target_ship = max(ship, key=lambda s: (s.level, s.emotion))
-        if self.config.GemsFarming_ALLowHighFlagshipLevel:
+        if self.change_vanguard:
+            self.set_emotion(min(self.get_emotion(), target_ship.emotion))
+        elif self.config.GemsFarming_ALLowHighFlagshipLevel:
             self.set_emotion(target_ship.emotion)
         self._ship_change_confirm(target_ship.button)
 
@@ -651,9 +653,7 @@ class GemsFarming(CampaignRun, FleetEquipment, GemsEquipmentHandler, Retirement)
         Change vanguard and calculate emotion
         """
         target_ship = max(ship, key=lambda s: s.emotion)
-        if self.config.GemsFarming_ALLowHighFlagshipLevel:
-            self.set_emotion(min(self.get_emotion(), target_ship.emotion))
-        else:
+        if self.change_vanguard:
             self.set_emotion(target_ship.emotion)
         self._ship_change_confirm(target_ship.button)
 
@@ -763,8 +763,8 @@ class GemsFarming(CampaignRun, FleetEquipment, GemsEquipmentHandler, Retirement)
                 try:
                     if e.args[0] == 'Hard not satisfied' and self.change_flagship and self.change_vanguard:
                         self.hard_mode_override()
-                        self.flagship_change()
                         self.vanguard_change()
+                        self.flagship_change()
                     else:
                         raise RequestHumanTakeover
                 except RequestHumanTakeover as e:
@@ -778,12 +778,15 @@ class GemsFarming(CampaignRun, FleetEquipment, GemsEquipmentHandler, Retirement)
                 success = True
                 self.hard_mode_override()
                 emotion = self.get_emotion()
-                if self.change_flagship:
-                    success = self.flagship_change()
-                if self.change_vanguard and success:
-                    success = self.vanguard_change()
-                    if not success and self.config.GemsFarming_ALLowHighFlagshipLevel:
+                vanguard_success = True
+                flagship_success = True
+                if self.change_vanguard:
+                    vanguard_success = self.vanguard_change()
+                if self.change_flagship and (vanguard_success or self._trigger_lv32):
+                    flagship_success = self.flagship_change()
+                    if not flagship_success and self.config.GemsFarming_ALLowHighFlagshipLevel:
                         self.set_emotion(emotion)
+                success = vanguard_success and flagship_success
 
                 if is_limit and self.config.StopCondition_RunCount <= 0:
                     logger.hr('Triggered stop condition: Run count')
@@ -804,7 +807,7 @@ class GemsFarming(CampaignRun, FleetEquipment, GemsEquipmentHandler, Retirement)
                         or self._trigger_emotion):
                     self._trigger_emotion = False
                     self.campaign.ensure_auto_search_exit()
-                    self.config.task_delay(minute=30)
+                    self.config.task_delay(minute=60)
                     self.config.task_stop()
 
                 self._trigger_emotion = False

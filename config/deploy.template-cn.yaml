@@ -9,7 +9,6 @@ Deploy:
     # [Other] Use 'master', the stable branch
     Branch: "master"
     # Filepath of git executable `git.exe`
-    # [Easy installer] Use './toolkit/Git/mingw64/bin/git.exe'
     # [Other] Use you own git
     GitExecutable: "./toolkit/Git/mingw64/bin/git.exe"
     # Set git proxy
@@ -48,7 +47,6 @@ Deploy:
 
   Adb:
     # Filepath of ADB executable `adb.exe`
-    # [Easy installer] Use './toolkit/Lib/site-packages/adbutils/binaries/adb.exe'
     # [Other] Use you own latest ADB, but not the ADB in your emulator
     AdbExecutable: "./toolkit/Lib/site-packages/adbutils/binaries/adb.exe"
     # Whether to replace ADB

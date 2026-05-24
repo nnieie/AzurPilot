@@ -16,20 +16,19 @@ class ConfigModel:
     # Git
     Repository: str = "https://github.com/nnieie/AzurPilot"
     Branch: str = "master"
-    GitExecutable: str = "./toolkit/Git/mingw64/bin/git.exe"
+    GitExecutable: str = "./.venv/Scripts/git/cmd/git.exe" if sys.platform == "win32" else "./.venv/bin/git"
     GitProxy: Optional[str] = None
     SSLVerify: bool = False
     AutoUpdate: bool = True
     KeepLocalChanges: bool = False
 
     # Python
-    PythonExecutable: str = "./toolkit/python.exe"
+    PythonExecutable: str = "./.venv/Scripts/python.exe" if sys.platform == "win32" else "./.venv/bin/python"
     PypiMirror: Optional[str] = None
     InstallDependencies: bool = True
-    RequirementsFile: str = "requirements.txt"
 
     # Adb
-    AdbExecutable: str = "./toolkit/Lib/site-packages/adbutils/binaries/adb.exe"
+    AdbExecutable: str = "./.venv/Scripts/adb.exe" if sys.platform == "win32" else "./.venv/bin/adb"
     ReplaceAdb: bool = True
     AutoConnect: bool = True
     InstallUiautomator2: bool = True
@@ -77,6 +76,7 @@ class DeployConfig(ConfigModel):
             file (str): User deploy config.
         """
         self.file = file
+        self.template_file = get_deploy_template()
         self.config = {}
         self.config_template = {}
         self.read()
@@ -98,7 +98,7 @@ class DeployConfig(ConfigModel):
         """
         Read and update deploy config, copy `self.configs` to properties.
         """
-        self.config = poor_yaml_read(DEPLOY_TEMPLATE)
+        self.config = poor_yaml_read(self.template_file)
         self.config_template = copy.deepcopy(self.config)
         origin = poor_yaml_read(self.file)
         self.config.update(origin)
@@ -113,7 +113,7 @@ class DeployConfig(ConfigModel):
             self.write()
 
     def write(self):
-        poor_yaml_write(self.config, self.file)
+        poor_yaml_write(self.config, self.file, template_file=self.template_file)
 
     def config_redirect(self):
         """
