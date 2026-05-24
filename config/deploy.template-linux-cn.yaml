@@ -29,9 +29,7 @@ Deploy:
     KeepLocalChanges: false
 
   Python:
-    # Filepath of python executable `python.exe`
-    # [In most cases] Use the Python created by uv in .venv
-    # [Other] Use your own Python compatible with pyproject.toml
+    # Filepath of python executable.
     PythonExecutable: ./.venv/bin/python
     # URL of pypi mirror
     # [CN user] Use 'https://mirrors.aliyun.com/pypi/simple' for faster and more stable download
@@ -42,8 +40,7 @@ Deploy:
     InstallDependencies: true
 
   Adb:
-    # Filepath of ADB executable `adb.exe`
-    # [Other] Use you own latest ADB, but not the ADB in your emulator
+    # Filepath of ADB executable.
     AdbExecutable: ./.venv/bin/adb
     # Whether to replace ADB
     # Chinese emulators (NoxPlayer, LDPlayer, MemuPlayer, MuMuPlayer) use their own ADB, instead of the latest.

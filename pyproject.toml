@@ -36,7 +36,7 @@ dependencies = [
     "rapidocr",
     "onnxruntime-directml>=1.24.4; sys_platform == 'win32'",
     "onnxruntime==1.26.0; sys_platform == 'linux'",
-    "onnxruntime @ https://files.pythonhosted.org/packages/40/89/17546c1c20f6bfc3ae41c22152378a26edfea918af3129e2139dcd7c99f3/onnxruntime-1.26.0-cp314-cp314-macosx_14_0_arm64.whl; sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "onnxruntime==1.26.0; sys_platform == 'darwin' and platform_machine == 'arm64'",
     "watchdog>=2.0.0",
     "numba",
     "uv",
