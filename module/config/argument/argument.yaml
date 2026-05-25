@@ -482,6 +482,8 @@ GemsFarming:
       hermes: null
       langley: null
       ranger: null
+  UseEmotionFirst: false
+  IgnoreEmotionWarning: false
   ALLowHighFlagshipLevel: false
   ALLowLowVanguardLevel: false
   DelayTaskIFNoFlagship: false

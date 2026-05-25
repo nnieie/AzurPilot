@@ -1561,6 +1561,14 @@
       "name": "Equipment code",
       "help": "Only takes effect when \"Change Ship + Equipment\" is selected.\nWhen changing a ship, if the current ship equipment code in the settings is null, it will be exported; when changing a ship, if the current ship equipment code in the settings is null, the equipment code exported from the previous ship will be used, otherwise the equipment code in the settings will be used.\nBluestacks simulator users need to enable the virtual keyboard first. For details, see https://support.bluestacks.com/hc/zh-tw/articles/360061968892-%E5%A6%82%E4%BD%95%E5%9C% A8-BlueStacks-5-%E4%B8%8A%E4%BD%BF%E7%94%A8%E5%B0%8F%E9%8D%B5%E7%9B%A4-%E8%99%9B%E6%93%AC%E9%8D%B5%E7%9B%A4\nDD: front row expulsion bogue: Borg hermes: athletic god langley: Langley ranger: raider"
     },
+    "UseEmotionFirst": {
+      "name": "GemsFarming.UseEmotionFirst.name",
+      "help": "GemsFarming.UseEmotionFirst.help"
+    },
+    "IgnoreEmotionWarning": {
+      "name": "GemsFarming.IgnoreEmotionWarning.name",
+      "help": "GemsFarming.IgnoreEmotionWarning.help"
+    },
     "ALLowHighFlagshipLevel": {
       "name": "Only replace the full-level rear row",
       "help": "After opening, only level 100 white-skin light aircraft will be selected when changing flagships.\nPlease make sure there are qualified ships in the dock when using it."

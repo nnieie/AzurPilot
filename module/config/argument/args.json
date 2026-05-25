@@ -2239,6 +2239,14 @@
         "value": "DD: null\nbogue: null\nhermes: null\nlangley: null\nranger: null",
         "mode": "yaml"
       },
+      "UseEmotionFirst": {
+        "type": "checkbox",
+        "value": false
+      },
+      "IgnoreEmotionWarning": {
+        "type": "checkbox",
+        "value": false
+      },
       "ALLowHighFlagshipLevel": {
         "type": "checkbox",
         "value": false
@@ -2732,6 +2740,14 @@
         "type": "textarea",
         "value": "DD: null\nbogue: null\nhermes: null\nlangley: null\nranger: null",
         "mode": "yaml"
+      },
+      "UseEmotionFirst": {
+        "type": "checkbox",
+        "value": false
+      },
+      "IgnoreEmotionWarning": {
+        "type": "checkbox",
+        "value": false
       },
       "ALLowHighFlagshipLevel": {
         "type": "checkbox",
@@ -3227,6 +3243,14 @@
         "type": "textarea",
         "value": "DD: null\nbogue: null\nhermes: null\nlangley: null\nranger: null",
         "mode": "yaml"
+      },
+      "UseEmotionFirst": {
+        "type": "checkbox",
+        "value": false
+      },
+      "IgnoreEmotionWarning": {
+        "type": "checkbox",
+        "value": false
       },
       "ALLowHighFlagshipLevel": {
         "type": "checkbox",
