@@ -198,6 +198,7 @@ dev_tools\build_usb_capture_lut_accel.bat
 1. 增加托盘化功能
 2. Windows原生推送
 3. GUI样式美化
+4. uv化
 
 ## MCP 服务
 

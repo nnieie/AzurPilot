@@ -136,6 +136,7 @@ class GeneratedConfig:
 
     # Group `Optimization`
     Optimization_OcrDevice = 'auto'  # auto, cpu, gpu, ane
+    Optimization_OcrBackend = 'auto'  # auto, onnxruntime, ncnn
     Optimization_ScreenshotInterval = 0.3
     Optimization_CombatScreenshotInterval = 1.0
     Optimization_TaskHoardingDuration = 0

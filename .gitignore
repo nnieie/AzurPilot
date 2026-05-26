@@ -1,5 +1,6 @@
 ### AzurLaneAutoScript
 log
+cache/
 config/backup/*
 config/*.ini
 !config/template.ini
@@ -20,11 +21,15 @@ alas-launcher.exe
 unins000.dat
 unins000.exe
 *.lock
-!uv.lock
 config/reloadflag
 config/reloadalas
 test.py
 test/
+!test/
+test/*
+!test/ncnn_ocr_benchmark.py
+!test/ncnn_models
+!test/ncnn_ocr_benchmark.zh-CN.md
 debug_ocr/
 PaddleOCR
 dev_tools/usb_capture_lut_accel.dll
