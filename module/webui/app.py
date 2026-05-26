@@ -454,11 +454,7 @@ class AlasGUI(Frame):
                     get_virtual_asset_timeline,
                 )
 
-                instance_name = (
-                    self.alas_name
-                    if hasattr(self, "alas_name") and self.alas_name
-                    else None
-                )
+                instance_name = getattr(self, "alas_name", None)
                 if not instance_name:
                     from module.config.utils import alas_instance
 
@@ -481,9 +477,6 @@ class AlasGUI(Frame):
                         t("Gui.Stat.Refresh"), onclick=_render_ap_chart, color="off"
                     )
                 return
-
-            from datetime import datetime as _dt
-            import json as _json
 
             def _get_cl5_efficiency():
                 default = 1700.0 / 30.0
@@ -512,7 +505,7 @@ class AlasGUI(Frame):
             for pt in timeline:
                 ts_raw = pt.get("ts", "")
                 try:
-                    dt = _dt.fromisoformat(ts_raw)
+                    dt = datetime.fromisoformat(ts_raw)
                 except Exception:
                     continue
                 raw_points.append(
@@ -543,7 +536,7 @@ class AlasGUI(Frame):
             chart_points = []
             is_detail_mode = False
 
-            today = _dt.now().date()
+            today = datetime.now().date()
             today_points = [p for p in raw_points if p["dt"].date() == today]
             if not today_points and raw_points:
                 last_date = raw_points[-1]["dt"].date()
@@ -672,7 +665,7 @@ class AlasGUI(Frame):
                     if distance_val is not None:
                         ts_raw = pt.get("ts", "")
                         try:
-                            distance_dt = _dt.fromisoformat(ts_raw)
+                            distance_dt = datetime.fromisoformat(ts_raw)
                             distance_raw_points.append({
                                 "dt": distance_dt,
                                 "distance": int(distance_val),
@@ -685,7 +678,7 @@ class AlasGUI(Frame):
                 for pt in coins_timeline:
                     ts_raw = pt.get("ts", "")
                     try:
-                        dt = _dt.fromisoformat(ts_raw)
+                        dt = datetime.fromisoformat(ts_raw)
                     except Exception:
                         continue
                     coins_raw_points.append(
@@ -803,7 +796,7 @@ class AlasGUI(Frame):
                     ts_raw = pt.get("ts", "")
                     if ts_raw:
                         try:
-                            va_dt = _dt.fromisoformat(ts_raw)
+                            va_dt = datetime.fromisoformat(ts_raw)
                             asset_value = _snapshot_float(pt, "asset")
                             virtual_asset_value = _snapshot_float(pt, "virtual_asset")
                             if asset_value is None:
@@ -902,28 +895,28 @@ class AlasGUI(Frame):
                 js_tpl.replace(
                     "__CHART_TYPE__", "line" if is_detail_mode else current_view
                 )
-                .replace("__LABELS__", _json.dumps(labels, ensure_ascii=False))
-                .replace("__OPENS__", _json.dumps(opens))
-                .replace("__HIGHS__", _json.dumps(highs))
-                .replace("__LOWS__", _json.dumps(lows))
-                .replace("__CLOSES__", _json.dumps(closes))
-                .replace("__COUNTS__", _json.dumps(counts))
-                .replace("__AP__", _json.dumps(ap_list))
-                .replace("__AP_TS__", _json.dumps(ap_ts))
+                .replace("__LABELS__", json.dumps(labels, ensure_ascii=False))
+                .replace("__OPENS__", json.dumps(opens))
+                .replace("__HIGHS__", json.dumps(highs))
+                .replace("__LOWS__", json.dumps(lows))
+                .replace("__CLOSES__", json.dumps(closes))
+                .replace("__COUNTS__", json.dumps(counts))
+                .replace("__AP__", json.dumps(ap_list))
+                .replace("__AP_TS__", json.dumps(ap_ts))
                 .replace("__AVG__", str(ap_avg))
                 .replace("__CHART_ID__", chart_id)
                 .replace("__IS_DETAIL_MODE__", "true" if is_detail_mode else "false")
                 .replace(
-                    "__SOURCES__", _json.dumps(detail_sources if is_detail_mode else [])
+                    "__SOURCES__", json.dumps(detail_sources if is_detail_mode else [])
                 )
-                .replace("__YELLOW_COINS__", _json.dumps(yellow_coins_list))
-                .replace("__PURPLE_COINS__", _json.dumps(purple_coins_list))
-                .replace("__COINS_SOURCES__", _json.dumps(coins_sources_list))
-                .replace("__VIRTUAL_ASSET__", _json.dumps(virtual_asset_list))
-                .replace("__VIRTUAL_ASSET_TS__", _json.dumps(virtual_asset_ts_list))
-                .replace("__ASSET__", _json.dumps(asset_list))
-                .replace("__ASSET_TS__", _json.dumps(asset_ts_list))
-                .replace("__DISTANCE__", _json.dumps(distance_list))
+                .replace("__YELLOW_COINS__", json.dumps(yellow_coins_list))
+                .replace("__PURPLE_COINS__", json.dumps(purple_coins_list))
+                .replace("__COINS_SOURCES__", json.dumps(coins_sources_list))
+                .replace("__VIRTUAL_ASSET__", json.dumps(virtual_asset_list))
+                .replace("__VIRTUAL_ASSET_TS__", json.dumps(virtual_asset_ts_list))
+                .replace("__ASSET__", json.dumps(asset_list))
+                .replace("__ASSET_TS__", json.dumps(asset_ts_list))
+                .replace("__DISTANCE__", json.dumps(distance_list))
                 .replace("__SHOW_COINS__", "true" if show_coins else "false")
             )
             from pywebio.session import run_js
@@ -1191,6 +1184,153 @@ class AlasGUI(Frame):
         _render_ap_chart()
         self.task_handler.add(_render_ap_chart, 60, True)
 
+        # ========== 全资源趋势图 ==========
+        def _render_resource_chart():
+            try:
+                from module.statistics.opsi_month import get_resource_timeline
+
+                instance_name = getattr(self, "alas_name", None)
+                if not instance_name:
+                    from module.config.utils import alas_instance
+
+                    all_instances = alas_instance()
+                    instance_name = all_instances[0] if all_instances else None
+
+                timeline = get_resource_timeline(instance_name=instance_name, limit=500)
+            except Exception as e:
+                with use_scope("resource_chart", clear=True):
+                    put_text(t("Gui.Stat.LoadResourceDataFailed", e=e))
+                return
+
+            if not timeline:
+                with use_scope("resource_chart", clear=True):
+                    put_html(build_muted_notice(t("Gui.Stat.NoResourceData")))
+                    put_button(
+                        t("Gui.Stat.Refresh"), onclick=_render_resource_chart, color="off"
+                    )
+                return
+
+            labels = []
+            series_map = {
+                "Oil": {"name": t("Gui.Dashboard.Oil"), "color": "#ff8a65", "data": []},
+                "Coin": {"name": t("Gui.Dashboard.Coin"), "color": "#ffd54f", "data": []},
+                "Gem": {"name": t("Gui.Dashboard.Gem"), "color": "#ef5350", "data": []},
+                "Pt": {"name": t("Gui.Dashboard.Pt"), "color": "#4fc3f7", "data": []},
+                "Cube": {"name": t("Gui.Dashboard.Cube"), "color": "#4dd0e1", "data": []},
+                "Core": {"name": t("Gui.Dashboard.Core"), "color": "#b0bec5", "data": []},
+                "Medal": {"name": t("Gui.Dashboard.Medal"), "color": "#ffd740", "data": []},
+                "Merit": {"name": t("Gui.Dashboard.Merit"), "color": "#ffab00", "data": []},
+                "GuildCoin": {"name": t("Gui.Dashboard.GuildCoin"), "color": "#a1887f", "data": []},
+                "ActionPoint": {"name": t("Gui.Dashboard.ActionPoint"), "color": "#64b5f6", "data": []},
+                "YellowCoin": {"name": t("Gui.Dashboard.YellowCoin"), "color": "#ffa726", "data": []},
+                "PurpleCoin": {"name": t("Gui.Dashboard.PurpleCoin"), "color": "#ce93d8", "data": []},
+            }
+
+            key_map = {
+                "guildcoin": "guild_coin",
+                "actionpoint": "action_point",
+                "yellowcoin": "yellow_coin",
+                "purplecoin": "purple_coin",
+            }
+            for pt in timeline:
+                ts_raw = pt.get("ts", "")
+                try:
+                    dt = datetime.fromisoformat(ts_raw)
+                except Exception:
+                    continue
+                labels.append(dt.strftime("%m-%d %H:%M"))
+                for key in series_map:
+                    raw_val = pt.get(key.lower())
+                    if raw_val is None:
+                        col = key_map.get(key.lower())
+                        if col:
+                            raw_val = pt.get(col)
+                        else:
+                            raw_val = pt.get(key)
+                    if raw_val is not None:
+                        try:
+                            series_map[key]["data"].append(int(raw_val))
+                        except (TypeError, ValueError):
+                            series_map[key]["data"].append(None)
+                    else:
+                        series_map[key]["data"].append(None)
+
+            # 前向填充：用上一个有效值填补 None，避免折线图断点
+            for key in series_map:
+                prev = None
+                filled = []
+                for v in series_map[key]["data"]:
+                    if v is not None:
+                        prev = v
+                    filled.append(prev)
+                series_map[key]["data"] = filled
+
+            if not labels:
+                with use_scope("resource_chart", clear=True):
+                    put_html(build_muted_notice(t("Gui.Stat.NoValidResourceData")))
+                return
+
+            legend_html = ""
+            stats_html = ""
+            series_data = []
+            series_idx = 0
+            for key, meta in series_map.items():
+                valid_data = [v for v in meta["data"] if v is not None]
+                if valid_data:
+                    cur = valid_data[-1]
+                    change = valid_data[-1] - valid_data[0] if len(valid_data) >= 2 else 0
+                    change_color = "#ef5350" if change >= 0 else "#26a69a"
+                    change_sign = "+" if change >= 0 else ""
+                    stats_html += (
+                        f'<span style="white-space:nowrap;">{meta["name"]}: '
+                        f'<b style="color:{meta["color"]}">{cur:,}</b> '
+                        f'<span style="color:{change_color}">({change_sign}{change:,})</span></span>'
+                    )
+                else:
+                    stats_html += (
+                        f'<span style="white-space:nowrap;opacity:0.5;">{meta["name"]}: -</span>'
+                    )
+                legend_html += (
+                    f'<span class="rc-legend-item" data-series="{series_idx}" '
+                    f'style="display:flex;align-items:center;gap:4px;cursor:pointer;opacity:1;">'
+                    f'<span style="width:12px;height:3px;background:{meta["color"]};border-radius:1px;"></span>'
+                    f'{meta["name"]}</span>'
+                )
+                series_data.append({
+                    "key": key,
+                    "name": meta["name"],
+                    "color": meta["color"],
+                    "data": meta["data"],
+                })
+                series_idx += 1
+
+            chart_id = f"rc_{id(self)}"
+
+            html_tpl = read_webapp_template("resource_chart.html")
+            html = html_tpl.format(
+                chart_id=chart_id,
+                title=t("Gui.Stat.ResourceChartTitle"),
+                stats_html=stats_html,
+                legend_html=legend_html,
+            )
+
+            js_tpl = read_webapp_template("resource_chart.js")
+            js_code = (
+                js_tpl
+                .replace("__LABELS__", json.dumps(labels, ensure_ascii=False))
+                .replace("__SERIES_DATA__", json.dumps(series_data, ensure_ascii=False))
+                .replace("__CHART_ID__", chart_id)
+                .replace("__CHART_TITLE__", t("Gui.Stat.ResourceChartTitle"))
+            )
+
+            with use_scope("resource_chart", clear=True):
+                put_html(html)
+                run_js(js_code)
+
+        put_scope("resource_chart", [])
+        _render_resource_chart()
+        self.task_handler.add(_render_resource_chart, 60, True)
+
         def _render_opsi_stats():
             try:
                 from module.statistics.opsi_month import (
@@ -1202,11 +1342,7 @@ class AlasGUI(Frame):
                 from module.statistics.ship_exp_stats import get_ship_exp_stats
 
                 # 使用当前实例名称获取统计数据，确保不为空
-                instance_name = (
-                    self.alas_name
-                    if hasattr(self, "alas_name") and self.alas_name
-                    else None
-                )
+                instance_name = getattr(self, "alas_name", None)
                 if not instance_name:
                     # 使用第一个可用的实例
                     from module.config.utils import alas_instance
@@ -1559,11 +1695,7 @@ class AlasGUI(Frame):
                         }
                         multiplier = multiplier_map.get(mode, 1.2)
 
-                        instance_name_stat = (
-                            self.alas_name
-                            if hasattr(self, "alas_name") and self.alas_name
-                            else None
-                        )
+                        instance_name_stat = getattr(self, "alas_name", None)
                         if not instance_name_stat:
                             from module.config.utils import alas_instance
 
@@ -1731,11 +1863,7 @@ class AlasGUI(Frame):
                         return
 
                     try:
-                        instance_name_local = (
-                            self.alas_name
-                            if hasattr(self, "alas_name") and self.alas_name
-                            else None
-                        )
+                        instance_name_local = getattr(self, "alas_name", None)
                         s_local = (
                             get_opsi_stats(instance_name=instance_name_local).summary()
                             or {}
@@ -1895,11 +2023,7 @@ class AlasGUI(Frame):
                 )
 
                 # 使用当前实例名称获取统计数据，确保不为空
-                instance_name = (
-                    self.alas_name
-                    if hasattr(self, "alas_name") and self.alas_name
-                    else None
-                )
+                instance_name = getattr(self, "alas_name", None)
                 if not instance_name:
                     # 使用第一个可用的实例
                     from module.config.utils import alas_instance
@@ -2018,11 +2142,7 @@ class AlasGUI(Frame):
                     COMMISSION_TRACKED_ITEMS,
                 )
 
-                instance_name = (
-                    self.alas_name
-                    if hasattr(self, "alas_name") and self.alas_name
-                    else None
-                )
+                instance_name = getattr(self, "alas_name", None)
                 if not instance_name:
                     from module.config.utils import alas_instance
 
@@ -3318,6 +3438,24 @@ class AlasGUI(Frame):
         if State.restart_event is None:
             put_warning(t("Gui.Update.DisabledWarn"))
 
+        # ---- 自动更新开关 ----
+        auto_update_val = State.deploy_config.AutoUpdate
+        put_row(
+            content=[
+                put_text(t("Gui.Update.AutoUpdate")),
+                None,
+                put_checkbox(
+                    "auto_update_toggle",
+                    options=[{"label": "", "value": "on"}],
+                    value=["on"] if auto_update_val else [],
+                ),
+            ],
+            size="auto 1fr auto",
+        )
+        pin_on_change("auto_update_toggle", onchange=lambda v: setattr(
+            State.deploy_config, "AutoUpdate", bool(v)
+        ))
+
         put_row(
             content=[put_scope("updater_loading"), None, put_scope("updater_state")],
             size="auto .25rem 1fr",
@@ -3569,6 +3707,24 @@ class AlasGUI(Frame):
             )
             toast("已发送公告测试通知", color="info")
 
+        def _test_notify_error():
+            from module.notify import handle_notify
+
+            instance = _get_debug_target_instance()
+            if not instance:
+                toast("未找到可用实例，无法发送错误推送测试", color="warning")
+                return
+            config = load_config(instance)
+            success = handle_notify(
+                config.Error_OnePushConfig,
+                title=f"Alas <{instance}> 崩溃",
+                content=f"<{instance}> 开发者错误推送测试",
+            )
+            if success:
+                toast("已发送错误推送测试", color="success")
+            else:
+                toast("错误推送测试发送失败，请检查错误推送设置", color="error")
+
         put_buttons(
             buttons=[
                 {
@@ -3581,8 +3737,17 @@ class AlasGUI(Frame):
                     "value": "announcement",
                     "color": "info",
                 },
+                {
+                    "label": "测试错误推送",
+                    "value": "error",
+                    "color": "danger",
+                },
             ],
-            onclick=[_test_notify_update, _test_notify_announcement],
+            onclick=[
+                _test_notify_update,
+                _test_notify_announcement,
+                _test_notify_error,
+            ],
         )
 
     @use_scope("content", clear=True)
@@ -4454,9 +4619,10 @@ def startup():
     State.init()
     lang.reload()
     updater.event = State.manager.Event()
-    if updater.delay > 0:
-        task_handler.add(updater.check_update, updater.delay)
-    task_handler.add(updater.schedule_update(), 86400)
+    if State.deploy_config.AutoUpdate:
+        if updater.delay > 0:
+            task_handler.add(updater.check_update, updater.delay)
+        task_handler.add(updater.schedule_update(), 86400)
     task_handler.start()
     if State.deploy_config.DiscordRichPresence:
         init_discord_rpc()
