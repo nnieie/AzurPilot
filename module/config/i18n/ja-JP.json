@@ -3400,7 +3400,8 @@
       "name": "メタ戦闘",
       "help": "",
       "current": "今期",
-      "current_dossier": "今期 + アーカイブ"
+      "current_dossier": "今期 + アーカイブ",
+      "current_dossier_only": "アーカイブ"
     },
     "OneHitMode": {
       "name": "一撃離脱",

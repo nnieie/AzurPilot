@@ -3400,7 +3400,8 @@
       "name": "META Fight",
       "help": "",
       "current": "Current season",
-      "current_dossier": "Current season + Dossier"
+      "current_dossier": "Current season + Dossier",
+      "current_dossier_only": "Dossier"
     },
     "OneHitMode": {
       "name": "Hit and run",

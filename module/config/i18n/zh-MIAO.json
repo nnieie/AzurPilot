@@ -3400,7 +3400,8 @@
       "name": "META作战模式喵",
       "help": "",
       "current": "当期喵",
-      "current_dossier": "当期+档案喵"
+      "current_dossier": "当期+档案喵",
+      "current_dossier_only": "档案喵"
     },
     "OneHitMode": {
       "name": "一击即走战术 (・ω<)",

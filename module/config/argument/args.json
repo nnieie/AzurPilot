@@ -12684,7 +12684,8 @@
         "value": "current",
         "option": [
           "current",
-          "current_dossier"
+          "current_dossier",
+          "current_dossier_only"
         ]
       },
       "OneHitMode": {

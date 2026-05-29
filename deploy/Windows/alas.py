@@ -26,13 +26,14 @@ class AlasManager(DeployConfig):
         return process
 
     def iter_process_by_names(self, names, in_alas=False) -> t.Iterable[DataProcessInfo]:
-        """
+        """按进程名遍历匹配的进程。
+
         Args:
-            names (str, list[str]): process name, such as 'alas.exe'
-            in_alas (bool): If the output process must in Alas
+            names (str, list[str]): 进程名，如 'alas.exe'。
+            in_alas (bool): 是否只返回属于当前 Alas 实例的进程。
 
         Yields:
-            DataProcessInfo:
+            DataProcessInfo: 匹配的进程信息。
         """
         if not isinstance(names, list):
             names = [names]

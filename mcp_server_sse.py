@@ -35,14 +35,14 @@ try:
 except ImportError:
     remove_fake_pil_module = None
 
-# Setup logging
+# 初始化日志
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("alas-mcp")
 
-# Initialize Helper
+# 初始化配置助手
 helper = McpConfigHelper()
 
-# Initialize MCP Server
+# 初始化 MCP 服务器
 mcp_server = Server("ALAS-MCP")
 
 @mcp_server.list_tools()
@@ -411,13 +411,13 @@ async def call_tool(name: str, arguments: Dict[str, Any]) -> List[TextContent]:
         elif name == "restart_adb":
             inst = arguments.get("instance", "alas")
             try:
-                # Try adb from deploy.yaml
+                # 尝试从 deploy.yaml 获取 ADB 路径
                 adb_path = State.deploy_config.AdbExecutable
                 if adb_path:
                     adb_path = adb_path.replace('\\', '/')
                 
                 if not adb_path or not os.path.exists(adb_path):
-                    # Fallback to connection_attr logic
+                    # 回退到 connection_attr 的查找逻辑
                     adb_search_list = [
                         './.venv/Scripts/adb.exe',
                         './.venv/bin/adb',
@@ -453,20 +453,18 @@ async def call_tool(name: str, arguments: Dict[str, Any]) -> List[TextContent]:
         logger.exception(f"Tool {name} error")
         return [TextContent(type="text", text=f"Error: {str(e)}")]
 
-# SSE Setup - Fixed Endpoint (Matching the /mcp mount point)
+# SSE 传输层初始化 - 固定端点（与 /mcp 挂载点匹配）
 transport = SseServerTransport("/mcp/messages")
 
 async def mcp_asgi_app(scope, receive, send):
-    """
-    Pure ASGI application for MCP service with enhanced logging.
-    """
+    """MCP 服务的纯 ASGI 应用，带增强日志记录。"""
     path = scope.get("path", "")
     method = scope.get("method", "")
     
     if scope["type"] == "http":
         logger.info(f"Incoming ASGI HTTP: {method} {path}")
         
-        # Route logic - Flexible endswith matching to handle various mount/slash combinations
+        # 路由逻辑 - 使用末尾匹配以兼容各种挂载路径和斜线组合
         if path.endswith("/sse"):
             logger.info("Matched endpoint: /sse. Opening SSE connection...")
             async with transport.connect_sse(scope, receive, send) as (read_stream, write_stream):
@@ -491,7 +489,7 @@ async def mcp_asgi_app(scope, receive, send):
                     logger.error(f"Error handling MCP message: {e}", exc_info=True)
         
         else:
-            # Fallback 404
+            # 未匹配路由，返回 404
             await send({
                 'type': 'http.response.start',
                 'status': 404,
@@ -502,7 +500,7 @@ async def mcp_asgi_app(scope, receive, send):
                 'body': b'Not Found'
             })
 
-# Starlette Wrapper
+# Starlette 应用包装
 app = Starlette(
     middleware=[
         Middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])

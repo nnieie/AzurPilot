@@ -15,7 +15,7 @@ from pathlib import Path
 from functools import partial
 from typing import Dict, List, Optional, Any
 
-# Import fake module before import pywebio to avoid importing unnecessary module PIL
+# 在导入 pywebio 之前导入伪造模块，避免加载不必要的 PIL 模块
 from module.webui.fake_pil_module import import_fake_pil_module
 from module.statistics.azurstats import AzurStats
 from module.os_simulator.simulator import OSSimulator
@@ -235,14 +235,14 @@ class AlasGUI(Frame):
 
     def __init__(self) -> None:
         super().__init__()
-        # modified keys, return values of pin_wait_change()
+        # 已修改的配置键，来自 pin_wait_change() 的返回值
         self.modified_config_queue = queue.Queue()
-        # alas config name
+        # 当前 Alas 配置名称
         self.alas_name = ""
         self.alas_mod = "alas"
         self.alas_config = AzurLaneConfig("template")
         self.initial()
-        # rendered state cache
+        # 已渲染的状态缓存
         self.rendered_cache = []
         self.inst_cache = []
         self._overview_snapshot = None
@@ -260,7 +260,7 @@ class AlasGUI(Frame):
 
     @use_scope("aside", clear=True)
     def set_aside(self) -> None:
-        # TODO: update put_icon_buttons()
+        # TODO: 更新 put_icon_buttons()
 
         current_date = datetime.now().date()
         if current_date.month == 4 and current_date.day == 1:
@@ -320,13 +320,13 @@ class AlasGUI(Frame):
             return rendered_state
 
         if not len(self.rendered_cache) or self.load_home:
-            # Reload when add/delete new instance | first start app.py | go to HomePage (HomePage load call force reload)
+            # 添加/删除新实例时重新加载 | 首次启动 app.py | 返回主页（主页加载时强制重新加载）
             flag = False
             self.inst_cache.clear()
             self.inst_cache = alas_instance()
         if flag:
             for index, inst in enumerate(self.inst_cache):
-                # Check for state change
+                # 检查状态变化
                 state = ProcessManager.get_manager(inst).state
                 if state != self.rendered_cache[index]:
                     self.rendered_cache[index] = update(inst, index)
@@ -338,7 +338,7 @@ class AlasGUI(Frame):
                 self.rendered_cache.append(update(inst, index))
             self.load_home = False
         if not flag:
-            # Redraw lost focus, now focus on aside button
+            # 重新绘制失去焦点的侧边栏按钮，聚焦当前激活的按钮
             aside_name = get_localstorage("aside")
             self.active_button("aside", aside_name)
 
@@ -756,7 +756,7 @@ class AlasGUI(Frame):
                         coins_stats_html += f'<div style="display:grid; grid-template-columns:150px 100px 90px 90px 90px; gap:8px; margin-bottom:2px; font-size:12px; color:#aaa;"><span>紫币: <b style="color:#ce93d8">{pc_cur}</b></span><span>变化: <b style="color:{pc_change_color}">{pc_change_sign}{pc_change}</b></span><span>最高: <b style="color:#ef5350">{pc_max}</b></span><span>最低: <b style="color:#26a69a">{pc_min}</b></span><span></span></div>'
                         coins_legend_html += '<span class="ap-legend-item" data-series="1" style="display:flex; align-items:center; gap:4px;cursor:pointer;opacity:1;"><span style="width:12px; height:2px; background:#ce93d8; border-radius:1px; border-top:1px dashed #ce93d8;"></span>紫币</span>'
 
-            # Process distance timeline (align with chart_points like coins)
+            # 处理海里数时间线（与金币等 chart_points 对齐）
             if distance_raw_points and chart_points and current_view in ("line", "detail"):
                 distance_raw_points.sort(key=lambda p: p["dt"])
                 distance_idx = 0
@@ -794,7 +794,7 @@ class AlasGUI(Frame):
                         coins_stats_html += f'<div style="display:grid; grid-template-columns:150px 100px 90px 90px 90px; gap:8px; margin-bottom:2px; font-size:12px; color:#aaa;"><span>海里数: <b style="color:#1565c0">{d_cur}</b></span><span>变化: <b style="color:{d_change_color}">{d_change_sign}{d_change}</b></span><span>最高: <b style="color:#ef5350">{d_max}</b></span><span>最低: <b style="color:#26a69a">{d_min}</b></span><span></span></div>'
                         coins_legend_html += '<span class="ap-legend-item" data-series="5" style="display:flex; align-items:center; gap:4px;cursor:pointer;opacity:1;"><span style="width:12px; height:2px; background:#1565c0; border-radius:1px;"></span>海里数</span>'
 
-            # Process virtual asset timeline
+            # 处理虚拟资产时间线
             if virtual_asset_timeline and current_view in ("line", "detail"):
                 from calendar import monthrange as _monthrange
 
@@ -846,7 +846,7 @@ class AlasGUI(Frame):
                         coins_stats_html += f'<div style="display:grid; grid-template-columns:150px 100px 90px 90px 90px; gap:8px; margin-bottom:2px; font-size:12px; color:#aaa;"><span>虚拟资产: <b style="color:#06b6d4">{va_cur:.1f}</b></span><span>变化: <b style="color:{va_change_color}">{va_change_sign}{va_change:.1f}</b></span><span>最高: <b style="color:#ef5350">{va_max:.1f}</b></span><span>最低: <b style="color:#26a69a">{va_min:.1f}</b></span><span></span></div>'
                         coins_legend_html += '<span class="ap-legend-item" data-series="3" style="display:flex; align-items:center; gap:4px;cursor:pointer;opacity:1;"><span style="width:12px; height:2px; background:#06b6d4; border-radius:1px; border-top:1px dashed #06b6d4;"></span>虚拟资产</span>'
 
-            # Process asset timeline (from same ap_snapshots)
+            # 处理资产时间线（来自相同的 ap_snapshots）
             if asset_list:
                 valid_asset = [v for v in asset_list if v is not None]
                 if valid_asset:
@@ -3664,24 +3664,6 @@ class AlasGUI(Frame):
 
         if State.restart_event is None:
             put_warning(t("Gui.Update.DisabledWarn"))
-
-        # ---- 自动更新开关 ----
-        auto_update_val = State.deploy_config.AutoUpdate
-        put_row(
-            content=[
-                put_text(t("Gui.Update.AutoUpdate")),
-                None,
-                put_checkbox(
-                    "auto_update_toggle",
-                    options=[{"label": "", "value": "on"}],
-                    value=["on"] if auto_update_val else [],
-                ),
-            ],
-            size="auto 1fr auto",
-        )
-        pin_on_change("auto_update_toggle", onchange=lambda v: setattr(
-            State.deploy_config, "AutoUpdate", bool(v)
-        ))
 
         put_row(
             content=[put_scope("updater_loading"), None, put_scope("updater_state")],

@@ -8,11 +8,11 @@ _analyzed_errors_cache = {}
 
 def analyze_exception(config, e):
     """
-    Analyze the exception using LLM.
-    
+    使用 LLM 分析异常原因。
+
     Args:
-        config (AzurLaneConfig): Config object.
-        e (Exception): The exception object.
+        config (AzurLaneConfig): 配置对象。
+        e (Exception): 异常对象。
     """
     if not hasattr(config, 'Error_LlmAnalysis') or not config.Error_LlmAnalysis:
         return
@@ -42,7 +42,7 @@ def analyze_exception(config, e):
         logger.warning('LLM Analysis is enabled but API Key is empty.')
         return
 
-    logger.hr('LLM 错误分析', level=1)
+    logger.hr('LLM 错误分析（严禁提交此模块的相关日志 群内机器人检测到将自动移出群聊）', level=1)
     logger.info('正在调用 LLM 分析异常原因...')
     
     try:
@@ -53,20 +53,20 @@ def analyze_exception(config, e):
             if hasattr(logger, 'log_file') and logger.log_file and os.path.exists(logger.log_file):
                 with open(logger.log_file, 'r', encoding='utf-8') as f:
                     lines = f.readlines()
-                    log_context = "".join(lines[-500:]) # Last 500 lines for better context
+                    log_context = "".join(lines[-500:])  # 取最后 500 行日志作为上下文
         except Exception:
             pass
 
         tb = ''.join(traceback.format_exception(type(e), e, e.__traceback__))
         
-        # Limit total context to 64K characters
+        # 将总上下文限制在 64K 字符以内
         def truncate(text, limit):
             if len(text) > limit:
-                return f"... [Truncated] ...\n{text[-limit:]}"
+                return f"... [已截断] ...\n{text[-limit:]}"
             return text
 
-        # Give log context more priority but keep both within limits
-        # Assuming system prompt + metadata ~ 1K, we have 63K for logs and traceback
+        # 日志上下文优先级更高，但两者都需控制在限制范围内
+        # 假设系统提示词 + 元数据约占 1K，剩余 63K 分配给日志和堆栈追踪
         tb = truncate(tb, 20000)
         log_context = truncate(log_context, 40000)
 
@@ -103,5 +103,5 @@ def analyze_exception(config, e):
     except ImportError:
         logger.error('未安装 openai 库。请运行: pip install openai')
     except Exception as ex:
-        # Avoid circular logging issues, use a simpler error log if LLM itself failed
-        logger.error(f'LLM 分析调用失败: {ex}')
+        # 避免循环日志问题，LLM 本身失败时使用简化的错误日志
+        logger.error(f'LLM 分析调用失败（严禁提交此模块的相关日志 群内机器人检测到将自动移出群聊）: {ex}')

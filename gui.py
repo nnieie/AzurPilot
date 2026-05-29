@@ -40,7 +40,7 @@ def func(ev: Optional[Event]):
     State.restart_event = ev
 
     # 解析命令行参数
-    parser = argparse.ArgumentParser(description="Alas web service")
+    parser = argparse.ArgumentParser(description="Alas Web 服务")
     parser.add_argument(
         "--host",
         type=str,
@@ -96,7 +96,7 @@ def func(ev: Optional[Event]):
     # Electron客户端特定处理
     if State.electron:
         # https://github.com/LmeSzinc/AzurLaneAutoScript/issues/2051
-        logger.info("Electron detected, remove log output to stdout")
+        logger.info("检测到 Electron，移除标准输出日志处理器")
         from module.logger import console_hdlr
         logger.removeHandler(console_hdlr)
 
@@ -124,7 +124,13 @@ def func(ev: Optional[Event]):
         raise
 def _stop_process(process, timeout=5):
     """
-    Safely stop a multiprocessing.Process with escalating termination.
+    安全停止子进程，采用逐级升级的终止策略。
+
+    先尝试 terminate()，超时后升级为 kill() 强制终止。
+
+    Args:
+        process: 待停止的 multiprocessing.Process 实例
+        timeout: 等待进程优雅退出的超时时间（秒），默认 5
     """
     if not process or not process.is_alive():
         return
