@@ -4440,7 +4440,7 @@
       "ImportErrorInvalid": "这不是有效的 AzurPilot/ALAS 配置喵",
       "ImportErrorFailed": "导入失败喵",
       "ImportErrorNoMatch": "所选文件夹中没有找到 config/ 或 log/cl1/ 下的匹配文件喵",
-      "WelcomeTitle": "欢迎使用 ALAS 喵！(｡>﹏<｡)",
+      "WelcomeTitle": "欢迎使用 AzurPilot 喵！(｡>﹏<｡)",
       "WelcomeDescription": "指挥官，快来和雪风一起完成初次设置喵~ (ฅ´ω`ฅ)",
       "WelcomeSelectLanguage": "选择哪种语言喵？(･ω･)ﾉ",
       "WelcomeHint": "选好语言后会自动匹配默认服务器喵，后面还能再改喵~",

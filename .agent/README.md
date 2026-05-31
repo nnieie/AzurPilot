@@ -12,7 +12,7 @@ alwaysApply: true
 
 ## 一、项目简介
 
-**AzurLaneAutoScript (ALAS / AzurPilot)** 是碧蓝航线手游的自动化框架。通过 ADB/uiautomator2 控制安卓模拟器，截取屏幕截图，通过图像匹配和 OCR 识别 UI 元素，自动执行游戏任务。
+**AzurPilot** 是碧蓝航线手游的自动化框架。通过 ADB/uiautomator2 控制安卓模拟器，截取屏幕截图，通过图像匹配和 OCR 识别 UI 元素，自动执行游戏任务。
 
 ### 核心特性
 
@@ -50,8 +50,8 @@ alwaysApply: true
 
 | 术语 | 说明 |
 |------|------|
-| **ALAS** | AzurLaneAutoScript 的缩写 |
-| **AzurPilot** | 项目的另一个名称 |
+| **ALAS** | AzurPilot 的旧称（AzurLaneAutoScript 的缩写） |
+| **AzurPilot** | 项目名称 |
 | **大世界** | 游戏内的 Operation Siren 模式 |
 | **指挥喵** | 游戏内的 Meowfficer 系统 |
 

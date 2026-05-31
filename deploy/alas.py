@@ -20,7 +20,7 @@ class AlasManager(DeployConfig):
     def iter_process_by_name(self, name):
         """按进程名遍历匹配的进程。
 
-        通过 WMI 查询系统进程列表，返回属于当前 Alas 实例的进程信息。
+        通过 WMI 查询系统进程列表，返回属于当前 AzurPilot 实例的进程信息。
 
         Args:
             name (str): 进程名，如 'alas.exe'。
@@ -88,6 +88,6 @@ class AlasManager(DeployConfig):
             self.execute(f'taskkill /f /pid {row[2]}', allow_failure=True, output=False)
 
     def alas_kill(self):
-        logger.hr(f'Kill existing Alas', 0)
+        logger.hr(f'Kill existing AzurPilot', 0)
         self.kill_by_name('alas.exe')
         self.kill_by_name('python.exe')

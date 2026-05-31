@@ -234,7 +234,7 @@ class GitManager(DeployConfig):
         return url
 
     def git_install(self):
-        logger.hr('Update Alas', 0)
+        logger.hr('Update AzurPilot', 0)
 
         if not self.AutoUpdate:
             logger.info('AutoUpdate is disabled, skip')

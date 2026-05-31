@@ -254,7 +254,7 @@ class AzurLaneAutoScript:
             logger.warning(e)
             handle_notify(
                 self.config.Error_OnePushConfig,
-                title=f"Alas <{self.config_name}> 警告",
+                title=f"AzurPilot <{self.config_name}> 警告",
                 content=f"<{self.config_name}> 游戏未运行 - 将自动重启游戏",
             )
             notify_webui(
@@ -291,10 +291,10 @@ class AzurLaneAutoScript:
                         logger.warning('GameStuckRestart 已禁用，不会自动重启模拟器')
 
             logger.warning(f'游戏卡住，{self.device.package} 将在10秒后重启')
-            logger.warning('如果您正在手动操作，请停止 Alas')
+            logger.warning('如果您正在手动操作，请停止 AzurPilot')
             handle_notify(
                 self.config.Error_OnePushConfig,
-                title=f"Alas <{self.config_name}> 警告",
+                title=f"AzurPilot <{self.config_name}> 警告",
                 content=f"<{self.config_name}> 游戏卡住 - 将自动重启游戏",
             )
             notify_webui(
@@ -309,11 +309,11 @@ class AzurLaneAutoScript:
             # 游戏客户端 bug，重启游戏修复
             logger.warning(e)
             self.save_error_log()
-            logger.warning('碧蓝航线游戏客户端发生错误，Alas 无法处理')
+            logger.warning('碧蓝航线游戏客户端发生错误，AzurPilot 无法处理')
             logger.warning(f'正在重启 {self.device.package} 以修复问题')
             handle_notify(
                 self.config.Error_OnePushConfig,
-                title=f"Alas <{self.config_name}> 警告",
+                title=f"AzurPilot <{self.config_name}> 警告",
                 content=f"<{self.config_name}> 游戏客户端错误 - 将自动重启游戏",
             )
             notify_webui(
@@ -332,7 +332,7 @@ class AzurLaneAutoScript:
                 self.save_error_log()
                 handle_notify(
                     self.config.Error_OnePushConfig,
-                    title=f"Alas <{self.config_name}> 崩溃",
+                    title=f"AzurPilot <{self.config_name}> 崩溃",
                     content=f"<{self.config_name}> GamePageUnknownError",
                 )
                 notify_webui(
@@ -349,7 +349,7 @@ class AzurLaneAutoScript:
             logger.critical('噗噗~ 恭喜大叔触发了诡异Bug！果然废材的人品就是差呢❤')
             handle_notify(
                 self.config.Error_OnePushConfig,
-                title=f"Alas <{self.config_name}> 崩溃",
+                title=f"AzurPilot <{self.config_name}> 崩溃",
                 content=f"<{self.config_name}> ScriptError",
             )
             notify_webui(
@@ -367,7 +367,7 @@ class AzurLaneAutoScript:
                 self.config.task_call('Restart')
                 handle_notify(
                     self.config.Error_OnePushConfig,
-                    title=f"Alas <{self.config_name}> 警告",
+                    title=f"AzurPilot <{self.config_name}> 警告",
                     content=f"<{self.config_name}> 模拟器离线 - 已自动重启模拟器",
                 )
                 notify_webui(
@@ -381,7 +381,7 @@ class AzurLaneAutoScript:
                 logger.critical('模拟器都死透了你还在那看？赶紧动手去救它啊，没用的大叔！')
                 handle_notify(
                     self.config.Error_OnePushConfig,
-                    title=f"Alas <{self.config_name}> 崩溃",
+                    title=f"AzurPilot <{self.config_name}> 崩溃",
                     content=f"<{self.config_name}> EmulatorNotRunningError",
                 )
                 notify_webui(
@@ -394,7 +394,7 @@ class AzurLaneAutoScript:
             logger.critical('你行你上啊，盯着我看干什么？难道大叔也想让我这种小鬼帮你接管吗？❤')
             handle_notify(
                 self.config.Error_OnePushConfig,
-                title=f"Alas <{self.config_name}> 崩溃",
+                title=f"AzurPilot <{self.config_name}> 崩溃",
                 content=f"<{self.config_name}> RequestHumanTakeover",
             )
             notify_webui(
@@ -412,7 +412,7 @@ class AzurLaneAutoScript:
             self.save_error_log()
             handle_notify(
                 self.config.Error_OnePushConfig,
-                title=f"Alas <{self.config_name}> 崩溃",
+                title=f"AzurPilot <{self.config_name}> 崩溃",
                 content=f"<{self.config_name}> 发生异常",
             )
             notify_webui(
@@ -683,6 +683,10 @@ class AzurLaneAutoScript:
     def opsi_hazard1_leveling(self):
         from module.campaign.os_run import OSCampaignRun
         OSCampaignRun(config=self.config, device=self.device).opsi_hazard1_leveling()
+
+    def opsi_scheduling(self):
+        from module.campaign.os_run import OSCampaignRun
+        OSCampaignRun(config=self.config, device=self.device).opsi_scheduling()
 
     def opsi_cross_month(self):
         from module.campaign.os_run import OSCampaignRun
@@ -1042,7 +1046,7 @@ class AzurLaneAutoScript:
                 if self.stop_event is not None:
                     if self.stop_event.is_set():
                         logger.info("检测到更新事件")
-                        logger.info(f"Alas [{self.config_name}] 已退出。原因: 更新 | Reason: Update")
+                        logger.info(f"AzurPilot [{self.config_name}] 已退出。原因: 更新 | Reason: Update")
                         break
                 # 检查游戏服务器维护
                 self.checker.wait_until_available()
@@ -1101,7 +1105,7 @@ class AzurLaneAutoScript:
                             task_display = _get_task_display_name(task)
                             handle_notify(
                                 self.config.Error_OnePushConfig,
-                                title=f"[Alas] <{self.config_name}> {task_display} {status}",
+                                title=f"[AzurPilot] <{self.config_name}> {task_display} {status}",
                                 content=f"<{self.config_name}> 任务 {task_display} —— {status}",
                             )
                     except Exception:
@@ -1131,7 +1135,7 @@ class AzurLaneAutoScript:
                     logger.critical('请求人工接管')
                     handle_notify(
                         self.config.Error_OnePushConfig,
-                        title=f"Alas <{self.config_name}> crashed",
+                        title=f"AzurPilot <{self.config_name}> crashed",
                         content=f"<{self.config_name}> RequestHumanTakeover\nTask `{task}` failed {failed} or more times.",
                     )
                     notify_webui(
@@ -1140,7 +1144,7 @@ class AzurLaneAutoScript:
                         content=f"因为 {task} 任务失败次数过多喵！",
                     )
                     logger.warning("任务连续失败次数过多，正在上报错误日志...")
-                    ApiClient.submit_bug_log(f"Alas <{self.config_name}> crashed\nTask `{task}` failed {failed} or more times.")
+                    ApiClient.submit_bug_log(f"AzurPilot <{self.config_name}> crashed\nTask `{task}` failed {failed} or more times.")
                     exit(1)
 
                 if success == True:
@@ -1180,13 +1184,13 @@ class AzurLaneAutoScript:
                 # 检查是否达到重试上限
                 if consecutive_global_failures >= MAX_GLOBAL_FAILURES:
                     logger.critical(
-                        f"连续崩了 {MAX_GLOBAL_FAILURES} 次！Alas 已经被你气死了！"
+                        f"连续崩了 {MAX_GLOBAL_FAILURES} 次！AzurPilot 已经被你气死了！"
                     )
                     logger.critical("这错误没救了，重启一百次也没用。")
                     self.save_error_log()
                     logger.critical("调度器罢工了！赶紧滚过来人工救场！")
                     logger.warning("遇到无法恢复的致命错误，正在上报错误日志...")
-                    ApiClient.submit_bug_log(f"Alas <{self.config_name}> 调度器终止。\n已达到最大全局失败次数 ({MAX_GLOBAL_FAILURES})。\n{traceback.format_exc()}")
+                    ApiClient.submit_bug_log(f"AzurPilot <{self.config_name}> 调度器终止。\n已达到最大全局失败次数 ({MAX_GLOBAL_FAILURES})。\n{traceback.format_exc()}")
                     exit(1)
 
                 # 尝试重启

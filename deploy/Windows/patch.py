@@ -61,11 +61,11 @@ def check_running_directory():
     file = __file__.replace(r"\\", "/").replace("\\", "/")
     # C:/Users/<user>/AppData/Local/Temp/360zip$temp/360$3/AzurLaneAutoScript
     if 'Temp/360zip' in file:
-        logger.critical('请先解压Alas的压缩包，再安装Alas')
+        logger.critical('请先解压AzurPilot的压缩包，再安装AzurPilot')
         exit(1)
     # C:/Users/<user>/AppData/Local/Temp/Rar$EXa9248.23428/AzurLaneAutoScript
     if 'Temp/Rar' in file or 'Local/Temp' in file:
-        logger.critical('Please unzip ALAS installer first')
+        logger.critical('Please unzip AzurPilot installer first')
         exit(1)
 
 

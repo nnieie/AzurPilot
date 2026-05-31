@@ -40,7 +40,7 @@ class GameStuckError(Exception):
 
 
 class GameBugError(Exception):
-    # 碧蓝航线游戏客户端发生错误，ALAS 无法自行处理。
+    # 碧蓝航线游戏客户端发生错误，AzurPilot 无法自行处理。
     # 通常重启游戏即可恢复。
     pass
 
@@ -63,7 +63,7 @@ class GamePageUnknownError(Exception):
 
 class RequestHumanTakeover(Exception):
     # 请求人工接管
-    # ALAS 无法处理此类错误，可能是由于配置错误导致。
+    # AzurPilot 无法处理此类错误，可能是由于配置错误导致。
     pass
 
 

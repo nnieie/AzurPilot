@@ -372,7 +372,7 @@ console_hdlr = RichHandler(
 console_hdlr.setFormatter(console_formatter)
 logger.addHandler(console_hdlr)
 
-# 确保运行在 ALAS 根目录下
+# 确保运行在 AzurPilot 根目录下
 os.chdir(os.path.join(os.path.dirname(__file__), '../'))
 
 # 添加文件日志处理器
@@ -405,7 +405,7 @@ def set_file_logger(name=pyw_name):
         # Windows 下这些进程无需保存日志文件
         processes = ["SyncManager-", "MainProcess", "Process-"]
         pname = multiprocessing.current_process().name.replace(":", "_")
-        # 每个进程在 ALAS 启动时只应调用一次。
+        # 每个进程在 AzurPilot 启动时只应调用一次。
         if any(isinstance(hdlr, RichTimedRotatingHandler) for hdlr in logger.handlers):
             return
     else:
@@ -413,7 +413,7 @@ def set_file_logger(name=pyw_name):
         pname = name
         for hdlr in logger.handlers:
             if isinstance(hdlr, RichTimedRotatingHandler):
-                # 每个进程在 ALAS 启动时只应调用一次。
+                # 每个进程在 AzurPilot 启动时只应调用一次。
                 if hdlr.pname == name:
                     return
                 else:

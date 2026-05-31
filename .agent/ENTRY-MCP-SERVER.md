@@ -72,7 +72,7 @@ async def list_tools() -> List[Tool]:
 
 | # | 工具名 | 功能 | 必需参数 | 可选参数 |
 |---|---|---|---|---|
-| 1 | `list_instances` | 列出所有 ALAS 实例 | 无 | 无 |
+| 1 | `list_instances` | 列出所有 AzurPilot 实例 | 无 | 无 |
 | 2 | `get_status` | 获取所有实例运行状态 | 无 | 无 |
 | 3 | `list_tasks` | 列出所有顶级任务名 | 无 | 无 |
 | 4 | `get_task_help` | 获取任务详细参数结构 | `task_name` | 无 |
@@ -386,7 +386,7 @@ def do_update():
 threading.Thread(target=do_update).start()
 ```
 
-- **功能**: 在后台线程中触发 ALAS 更新
+- **功能**: 在后台线程中触发 AzurPilot 更新
 - **实现**: 启动独立线程执行 `updater.update()`
 - **返回**: 立即返回成功消息（不等待更新完成）
 

@@ -11,7 +11,7 @@ def show_fix_tip(module):
     1. Re-run the launcher so uv can refresh the local .venv
     2. If the problem persists, run:
         ./.venv/Scripts/uv.exe sync --frozen --no-dev --no-install-project --reinstall-package {module}
-    3. Re-open Alas.exe
+    3. Re-open AzurPilot.exe
     """)
 
 

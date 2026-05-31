@@ -126,7 +126,7 @@ def navigate_to_shop(self):
 
 | Level | 用途 | 示例 |
 |-------|------|------|
-| 0 | 脚本开始 | `logger.hr('AzurLaneAutoScript', level=0)` |
+| 0 | 脚本开始 | `logger.hr('AzurPilot', level=0)` |
 | 1 | 功能开始 | `logger.hr('Research', level=1)` |
 | 2 | 阶段开始 | `logger.hr('Select project', level=2)` |
 | 3 | 子阶段 | `logger.hr('Check rewards', level=3)` |

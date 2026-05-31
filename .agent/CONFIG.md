@@ -109,7 +109,7 @@ alwaysApply: true
 - `L74-125`：`read_file()`/`write_file()` — JSON/YAML 读写，使用原子操作。
 - `L128-149`：`iter_folder()` — 文件夹迭代器。
 - `L152-166`：`is_oobe_needed()` — 检查是否需要首次设置向导。
-- `L185-203`：`alas_instance()` — 获取所有 ALAS 实例名称。
+- `L185-203`：`alas_instance()` — 获取所有 AzurPilot 实例名称。
 - `L206-242`：`parse_value()` — 字符串→类型转换（bool、int、float、datetime）。
 - `L308-319`：`server_timezone()`/`server_time_offset()` — 服务器时区计算。
 - `L404-449`：`get_server_next_update()`/`get_server_last_update()` — 计算服务器更新时间。

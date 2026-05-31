@@ -40,7 +40,7 @@ def func(ev: Optional[Event]):
     State.restart_event = ev
 
     # 解析命令行参数
-    parser = argparse.ArgumentParser(description="Alas Web 服务")
+    parser = argparse.ArgumentParser(description="AzurPilot Web 服务")
     parser.add_argument(
         "--host",
         type=str,
@@ -53,7 +53,7 @@ def func(ev: Optional[Event]):
         help="监听端口。默认使用部署设置中的WebuiPort",
     )
     parser.add_argument(
-        "-k", "--key", type=str, help="Alas密码。默认无密码"
+        "-k", "--key", type=str, help="AzurPilot密码。默认无密码"
     )
     parser.add_argument(
         "--cdn",
@@ -73,7 +73,7 @@ def func(ev: Optional[Event]):
         "--run",
         nargs="+",
         type=str,
-        help="启动时运行指定配置的Alas",
+        help="启动时运行指定配置的AzurPilot",
     )
     args, _ = parser.parse_known_args()
 
@@ -162,7 +162,7 @@ if __name__ == "__main__":
             event = Event()
             process = Process(target=func, args=(event,), name="gui")
             process.start()
-            logger.info(f"启动Alas Web服务 (PID: {process.pid})")
+            logger.info(f"启动AzurPilot Web服务 (PID: {process.pid})")
 
             while not should_exit:
                 try:
@@ -182,7 +182,7 @@ if __name__ == "__main__":
                     _stop_process(process)
                     break
                 elif not process.is_alive():
-                    logger.error("Alas Web服务意外退出")
+                    logger.error("AzurPilot Web服务意外退出")
                     should_exit = True
 
             # 确保子进程完全退出
@@ -190,7 +190,7 @@ if __name__ == "__main__":
 
         # 最终清理（预防性）
         _stop_process(process)
-        logger.info("Alas Web服务已成功退出")
+        logger.info("AzurPilot Web服务已成功退出")
     else:
         # 非重载模式：直接运行
         func(None)

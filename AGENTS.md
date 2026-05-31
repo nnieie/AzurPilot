@@ -442,7 +442,7 @@ az = SomeModule('alas', task='SomeTask')
 az.image_file = r'path/to/screenshot.png'
 print(az.appear(SOME_BUTTON))
 
-# 调试其他服务器（在导入任何 ALAS 模块之前设置）
+# 调试其他服务器（在导入任何 AzurPilot 模块之前设置）
 import module.config.server as server
 server.server = 'en'
 ```

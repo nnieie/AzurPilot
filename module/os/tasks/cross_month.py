@@ -31,7 +31,7 @@ class OpsiCrossMonth(OSMap):
 
         # 距离大世界重置还有 10 分钟
         logger.hr('Wait until OpSi reset', level=1)
-        logger.warning('ALAS is now waiting for next OpSi reset, please DO NOT touch the game during wait')
+        logger.warning('AzurPilot is now waiting for next OpSi reset, please DO NOT touch the game during wait')
         while True:
             logger.info(f'Wait until {next_reset}')
             now = datetime.now()

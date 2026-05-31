@@ -3,9 +3,9 @@ description:
 alwaysApply: true
 ---
 
-# AzurLaneAutoScript 基础设施层模块综合分析
+# AzurPilot 基础设施层模块综合分析
 
-> 本文档分析 ALAS 项目中 10 个基础设施层模块的架构、设计模式、依赖关系及代码质量。
+> 本文档分析 AzurPilot 项目中 10 个基础设施层模块的架构、设计模式、依赖关系及代码质量。
 
 ---
 
@@ -414,7 +414,7 @@ graph TD
 
 ### 模块概述
 
-**定位**：ALAS 的 Web 管理界面。
+**定位**：AzurPilot 的 Web 管理界面。
 
 **角色**：基于 PyWebIO 构建的可视化控制台，提供任务配置、仪表盘、日志流、多实例管理等功能。
 
@@ -484,7 +484,7 @@ graph TD
 ### 设计模式与架构分析
 
 1. **MVC 模式**：`app.py` 是 Controller，PyWebIO 是 View，`AzurLaneConfig` 是 Model
-2. **进程池模式**：`ProcessManager` 管理多个 ALAS 实例进程
+2. **进程池模式**：`ProcessManager` 管理多个 AzurPilot 实例进程
 3. **观察者模式**：日志队列实现跨进程事件传递
 
 ### 性能分析
@@ -612,7 +612,7 @@ graph TD
 
 ### 模块概述
 
-**定位**：ALAS 的统一日志系统。
+**定位**：AzurPilot 的统一日志系统。
 
 **角色**：基于 Rich 库的彩色日志输出，支持控制台、文件、WebUI 三种输出目标。
 
@@ -669,7 +669,7 @@ graph TD
 
 ### 模块概述
 
-**定位**：ALAS 的异常类层次结构。
+**定位**：AzurPilot 的异常类层次结构。
 
 **角色**：定义所有游戏状态异常，供任务调度器和处理器使用。
 

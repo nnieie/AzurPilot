@@ -71,7 +71,7 @@ def analyze_exception(config, e):
         log_context = truncate(log_context, 40000)
 
         prompt = f"""
-你是一名碧蓝航线辅助脚本 AzurLaneAutoScript (Alas) 的专家开发者。
+你是一名碧蓝航线辅助脚本 AzurPilot 的专家开发者。
 脚本运行中发生了异常。请分析以下堆栈追踪以及最近的日志，并提供简洁的原因解释和改进建议。
 
 异常信息: {type(e).__name__}: {str(e)}

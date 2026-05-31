@@ -31,7 +31,7 @@ class McpConfigHelper:
 
         # 参数的国际化数据通常位于 i18n_data[task_name] 的顶层，
         # 或位于 Task[task_name]（通用任务描述符）。
-        # ALAS 按任务级键组织国际化数据。
+        # AzurPilot 按任务级键组织国际化数据。
         spec_i18n = self.i18n_data.get(task_name, {})
 
         for group_name, group_data in task_args.items():

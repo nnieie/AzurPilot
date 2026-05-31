@@ -12,7 +12,7 @@ class AppManager(DeployConfig):
         """替换 app.asar 文件以更新 WebApp。
 
         Args:
-            folder (str): AzurLaneAutoScript 根目录路径。
+            folder (str): AzurPilot 根目录路径。
             path (str): 从根目录到 app.asar 的相对路径。
 
         Returns:

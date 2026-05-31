@@ -357,7 +357,7 @@ class EmulatorConnect:
         """替换模拟器中的 ADB 以避免版本冲突。
 
         不同版本的 ADB 启动时会互相终止。国产模拟器使用自带的 ADB，
-        启动时会杀死 Alas 正在使用的 adb.exe。替换模拟器中的 ADB 是最简单的解决方案。
+        启动时会杀死 AzurPilot 正在使用的 adb.exe。替换模拟器中的 ADB 是最简单的解决方案。
 
         Args:
             adb (str): adb.exe 的绝对路径。
