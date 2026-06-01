@@ -253,7 +253,8 @@ pre.rich-traceback-code {
     background-size: 40px 40px !important;
     background-position: 0 0, 20px 20px !important;
     position: relative !important;
-    overflow: hidden !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
 }
 
 /* 右下角缓缓漂浮的爱心气球 */
@@ -298,6 +299,8 @@ pre.rich-traceback-code {
     margin-bottom: 15px !important;
     padding: 16px !important;
     transition: transform 0.25s ease !important;
+    position: relative !important;
+    z-index: 10 !important;
 }
 
 [id^="pywebio-scope-group_"]:hover {
@@ -315,6 +318,7 @@ pre.rich-traceback-code {
     background-color: #fffafb !important;
     border-right: 2px solid #ffe3e8 !important;
     position: relative !important;
+    z-index: 20 !important;
 }
 
 #pywebio-scope-aside::after {
@@ -335,6 +339,8 @@ pre.rich-traceback-code {
     background-color: #ffffff !important;
     border-radius: 14px !important;
     margin: 8px !important;
+    position: relative !important;
+    z-index: 15 !important;
 }
 
 #pywebio-scope-navigator {
@@ -362,6 +368,7 @@ pre.rich-traceback-code {
 /* 顶部栏及漂浮小气球 */
 #pywebio-scope-header {
     position: relative !important;
+    z-index: 30 !important;
     box-shadow: 0 2px 10px rgba(255, 182, 193, 0.12) !important;
     background: linear-gradient(90deg, #ffeef2 0%, #e3f5ff 100%) !important; /* 精致渐变顶部条 */
 }

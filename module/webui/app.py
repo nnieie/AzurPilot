@@ -4483,6 +4483,87 @@ class AlasGUI(Frame):
         else:
             add_css(filepath_css("light-alas"))
 
+        # 儿童节背景 Emoji 雨自动掉落逻辑（支持所有主题）
+        current_date = datetime.now().date()
+        is_children_day = (current_date.month == 6 and current_date.day == 1)
+        
+        EMOJI_RAIN_PREVIEW = False
+        
+        if is_children_day or EMOJI_RAIN_PREVIEW:
+            run_js("""
+            (function(){
+                if (window.alasEmojiRainActive) return;
+                window.alasEmojiRainActive = true;
+                
+                var style = document.createElement('style');
+                style.innerHTML = `
+                    @keyframes emoji-fall {
+                        0% {
+                            transform: translateY(-50px) rotate(0deg);
+                            opacity: 0;
+                        }
+                        15% {
+                            opacity: 0.38;
+                        }
+                        85% {
+                            opacity: 0.38;
+                        }
+                        100% {
+                            transform: translateY(calc(100vh + 50px)) rotate(360deg);
+                            opacity: 0;
+                        }
+                    }
+                    .cute-emoji-drop {
+                        position: fixed !important;
+                        z-index: 2 !important; /* 确保在背景层，隐藏在所有卡片和边栏下方 */
+                        pointer-events: none !important;
+                        user-select: none !important;
+                        animation: emoji-fall linear forwards;
+                    }
+                `;
+                document.head.appendChild(style);
+
+                // 精选儿童节超萌童趣 Emoji
+                var emojis = ['🧸', '💗', '🍬', '💗', '🌸', '🍒', '🌈', '🌸', '💗', '🌟', '🦄', '🌈', '🌸', '🌟', '🌸', '🌈'];
+                
+                setInterval(function(){
+                    // 若容器不存在，则停止产生新雨点
+                    if (!document.getElementById('pywebio-scope-content')) return;
+                    
+                    var emoji = emojis[Math.floor(Math.random() * emojis.length)];
+                    var span = document.createElement('span');
+                    span.className = 'cute-emoji-drop';
+                    span.textContent = emoji;
+                    
+                    // 随机横坐标位置 (0vw - 100vw)
+                    var left = Math.random() * 100;
+                    span.style.left = left + 'vw';
+                    span.style.top = '-50px';
+                    
+                    // 随机下落时间 (8秒 - 14秒)，悠闲舒适
+                    var duration = 8 + Math.random() * 6;
+                    span.style.animationDuration = duration + 's';
+                    
+                    // 随机大小 (18px - 32px)，远近有致
+                    var size = 18 + Math.random() * 14;
+                    span.style.fontSize = size + 'px';
+                    
+                    // 随机下落延时，更具随机美感
+                    var delay = Math.random() * 2;
+                    span.style.animationDelay = delay + 's';
+                    
+                    document.body.appendChild(span);
+                    
+                    // 下落结束移除元素，防止 DOM 膨胀
+                    setTimeout(function(){
+                        if (span.parentNode) {
+                            span.parentNode.removeChild(span);
+                        }
+                    }, (duration + delay) * 1000);
+                }, 650); // 每 650ms 飘落一个，密度适中且极其治愈
+            })();
+            """)
+
         # 加载静态 JS 工具文件（公告弹窗、截图查看器、自动刷新等）
         # 替代原来的多个 run_js() 运行时注入
         run_js(

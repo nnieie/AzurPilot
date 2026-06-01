@@ -225,11 +225,47 @@ class AzurLaneAutoScript:
             logger.exception(e)
             exit(1)
 
+    def _check_sensitive_exit(self, command, error):
+        """
+        检查当前任务是否为敏感任务，如果是则直接退出。
+
+        敏感任务出错时不做任何重启或恢复，完全停止 Alas 运行。
+
+        Args:
+            command (str): 任务方法名（下划线形式，如 opsi_cross_month）。
+            error (Exception): 触发的异常对象。
+
+        Returns:
+            bool: True 表示已退出（不会返回），False 表示非敏感任务，继续原有逻辑。
+        """
+        task_name = inflection.camelize(command)
+        sensitive = self.config.cross_get(
+            keys=f'{task_name}.Scheduler.Sensitive', default=False
+        )
+        if not sensitive:
+            return False
+
+        logger.critical(f'敏感任务 `{task_name}` 出错，禁止重启，AzurPilot 将停止运行')
+        logger.critical(f'异常: {error}')
+        handle_notify(
+            self.config.Error_OnePushConfig,
+            title=f"AzurPilot <{self.config_name}> 敏感任务出错",
+            content=f"<{self.config_name}> 敏感任务 `{task_name}` 出错，AzurPilot 已停止运行\n{error}",
+        )
+        notify_webui(
+            self.config_name,
+            title=f"敏感任务 {task_name} 出错喵！AzurPilot 已停止喵！",
+            content=f"因为 {task_name} 是敏感任务，出错后不会重启喵~\n{error}",
+        )
+        exit(1)
+
     def run(self, command, skip_first_screenshot=False):
         """
         执行指定任务命令，捕获异常并决定后续行为。
 
         根据异常类型自动判断：重启游戏、重启模拟器、请求人工介入或直接终止。
+        敏感任务出错时直接停止，不做任何重启。
+
         任务执行前会进行一次截图（除非 skip_first_screenshot=True）。
 
         Args:
@@ -252,6 +288,7 @@ class AzurLaneAutoScript:
         except GameNotRunningError as e:
             # 游戏未运行，调度 Restart 任务自动恢复
             logger.warning(e)
+            self._check_sensitive_exit(command, e)
             handle_notify(
                 self.config.Error_OnePushConfig,
                 title=f"AzurPilot <{self.config_name}> 警告",
@@ -268,6 +305,7 @@ class AzurLaneAutoScript:
             # 游戏卡住或点击过多，尝试重启游戏；连续卡死则重启模拟器
             logger.error(e)
             self.save_error_log()
+            self._check_sensitive_exit(command, e)
 
             if self.config.Error_GameStuckRestart or self.config.Error_GameStuckAdbReboot:
                 self.consecutive_game_stuck += 1
@@ -309,6 +347,7 @@ class AzurLaneAutoScript:
             # 游戏客户端 bug，重启游戏修复
             logger.warning(e)
             self.save_error_log()
+            self._check_sensitive_exit(command, e)
             logger.warning('碧蓝航线游戏客户端发生错误，AzurPilot 无法处理')
             logger.warning(f'正在重启 {self.device.package} 以修复问题')
             handle_notify(
@@ -358,10 +397,11 @@ class AzurLaneAutoScript:
                 content=f"因为 ScriptError 喵！",
             )
             raise
-        except EmulatorNotRunningError:
+        except EmulatorNotRunningError as e:
             # 模拟器离线或死机，尝试自动重启
             logger.error('任务执行期间模拟器未运行')
             self.save_error_log()
+            self._check_sensitive_exit(command, e)
             if self._try_restart_emulator():
                 # 重启成功，调度 Restart 任务恢复游戏
                 self.config.task_call('Restart')
@@ -1125,7 +1165,9 @@ class AzurLaneAutoScript:
                     failed = failed + 1  # 不可恢复错误，增加计数
                 deep_set(self.failure_record, keys=task, value=failed)
 
-                strict_restart = self.config.Error_StrictRestart and failed >= 1 and task in RESTART_SENSITIVE_TASKS
+                strict_restart = self.config.Error_StrictRestart and failed >= 1 and self.config.cross_get(
+                    keys=f'{task}.Scheduler.Sensitive', default=False
+                )
                 if failed >= 3 or strict_restart:
                     logger.critical(f"任务 `{task}` 失败 {failed} 次或更多。")
                     logger.critical("可能原因 #1: 您未正确使用。请阅读选项的帮助文本。")
