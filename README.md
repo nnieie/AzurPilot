@@ -221,7 +221,7 @@ uv run python gui.py
    ```bash
    proot-distro install -n ubuntu https://mirrors.tuna.tsinghua.edu.cn/ubuntu-cdimage/ubuntu-base/releases/24.04/release/ubuntu-base-24.04.4-base-arm64.tar.gz
    ```
-   - 出现 `root` 说明 Ubuntu 安装成功
+   - 出现 `proot-distro login ubuntu` 说明 Ubuntu 安装成功
 3. 获取真机文件权限（手机会有弹窗，必须同意）：
    ```bash
    termux-setup-storage
@@ -274,7 +274,7 @@ uv run python gui.py
    tzselect
    ```
    - 假设有 `more` 就按回车
-   - 提示选择时按 `4` → `11` → `1`，选择正确的国内时区
+   - 提示选择时按 4、11、1、1，选择正确的国内时区
 3. 验证时区：
    ```bash
    date

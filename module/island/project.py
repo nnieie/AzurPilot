@@ -196,14 +196,22 @@ class ItemNameOcr(Ocr):
     def after_process(self, result):
         result = super().after_process(result)
         if server.server == 'cn':
-            result = result.replace('蛮', '蜜').replace('汗', '汁').replace('纠', '组').replace('离', '禽').replace('莱', '菜').replace('内', '肉').replace('克', '苋')
+            result = result.replace('蛮', '蜜').replace('汗', '汁').replace('纠', '组').replace('离', '禽').replace('莱', '菜').replace('内', '肉').replace('克', '苋').replace('蛟', '鲛')
             result = re.sub(r'[^\u4e00-\u9fff]', '', result)
             if '冰咖' in result:
                 result = '冰咖啡'
-            if '莓果香橙' in result:
+            elif '莓果香橙' in result:
                 result = '莓果香橙甜点组'
-            if '莉精油' in result:
+            elif '莉精油' in result:
                 result = '茉莉精油'
+            elif '胡萝下' == result:
+                result = '胡萝卜'
+            elif '草莓奶缘' == result:
+                result = '草莓奶绿'
+            elif '红鱼' == result:
+                result = '红鲷鱼'
+            elif '黑鱼' == result:
+                result = '黑鲷鱼'
         elif server.server == 'en':
             result = re.sub(r"[\s'-]+", "", result)
             result = result.lower()
@@ -417,6 +425,7 @@ class ProductItem:
 class IslandProjectRun(IslandUI):
     DEBUG_ISLAND_PROJECT = False
     project = SelectedGrids([])
+    projects_dirty = False
     total = SelectedGrids([])
     character: str
 
@@ -468,6 +477,7 @@ class IslandProjectRun(IslandUI):
                     self.drag_page((0, -500), ISLAND_PROJECT_SWIPE.area, 0.6)
                 else:
                     self.drag_page((0, 500), ISLAND_PROJECT_SWIPE.area, 0.6)
+                self.projects_dirty = True
                 continue
             else:
                 logger.warning(f'Wrong project name {name}, skip ensuring')
@@ -511,6 +521,7 @@ class IslandProjectRun(IslandUI):
                 self.device.click(button)
                 self.device.sleep(0.1)
                 click_timer.reset()
+                success = False
                 continue
 
             if self.appear_then_click(ISLAND_MANAGEMENT, offset=(20, 20), interval=2):
@@ -619,10 +630,11 @@ class IslandProjectRun(IslandUI):
             bool: 是否成功选择
         """
         logger.info('Island select role')
-        timeout = Timer(5, count=3).start()
+        timeout = Timer(8, count=7).start()
         swipe_count = 0
         target_name = CHARACTER_NAME_MAP.get(character, {}).get(server.server,
                        CHARACTER_NAME_MAP.get(character, {}).get('cn', character))
+        target_name_orig = target_name
         det_ocr = AlOcr(name='zhcn' if server.server == 'cn' else 'en')
         for _ in self.loop():
             if timeout.reached():
@@ -635,7 +647,10 @@ class IslandProjectRun(IslandUI):
                 check_button = self.get_character_check_button(character)
                 return self._project_character_select(click_button, check_button)
             else:
-                logger.info(f'No character {name} was found, use manjuu')
+                if found_busy:
+                    logger.info(f'{target_name_orig} unavailable, use manjuu')
+                else:
+                    logger.info(f'No character {target_name_orig} was found, use manjuu')
                 character = 'manjuu'
                 target_name = CHARACTER_NAME_MAP.get(character, {}).get(server.server,
                                CHARACTER_NAME_MAP.get(character, {}).get('cn', character))
@@ -704,6 +719,30 @@ class IslandProjectRun(IslandUI):
                 x_max, y_max = np.max(box, axis=0)
                 card_box = [[x_min - 10, y_min - 100], [x_max + 10, y_min - 100], [x_max + 10, y_max + 10], [x_min - 10, y_max + 10]]
                 working = False
+
+            if server.server == 'cn':
+                txt = txt.rstrip(".…:!iI·;")
+                if len(txt) > 3 and txt[2] == '者':
+                    # 探索者艾/探索者一艾
+                    txt = txt[:3]
+                if txt == '工': # 阻止技能等级C误匹配到工作啾
+                    txt = 'C'
+                elif txt == 'C作啾':
+                    txt = '工作啾'
+                elif txt == '飞会' or txt == '飞去' or txt == '3去' or txt == 'K云':
+                    txt = '飞云'
+                elif stamina is not None and (txt == 'Z' or txt == '3Z' or txt == 'SZ' or txt == '会'):
+                    txt = '飞云'
+                elif txt == '恶喜' or txt == '恶善':
+                    txt = '恶毒'
+                elif stamina is not None and txt == '恶':
+                    txt = '恶毒'
+                elif txt.startswith('海伦'):
+                    txt = '海伦娜'
+                elif txt.startswith('领航品'):
+                    txt = '领航员'
+                elif txt.startswith('独角'):
+                    txt = '独角兽'
 
             cards.append({
                 'name': txt,
@@ -974,6 +1013,7 @@ class IslandProjectRun(IslandUI):
             projects: SelectedGrids = projects.filter(
                 lambda proj: proj.name in names and proj.name not in self.project.get('name'))
             self.project = self.project.add_by_eq(projects)
+            self.projects_dirty = False
 
             for proj in projects:
                 logger.hr('Island Project')
@@ -994,8 +1034,14 @@ class IslandProjectRun(IslandUI):
                         ensure = not end or index != option_num - 1
                         if self.project_receive_and_start(proj, button, self.character, option, proj.id, ensure):
                             break
+                        if self.projects_dirty:
+                            break
                 timeout.reset()
+                if self.projects_dirty:
+                    break
 
+            if self.projects_dirty:
+                continue
             if end:
                 break
             self.drag_page((0, -500), ISLAND_PROJECT_SWIPE.area, 0.6)
