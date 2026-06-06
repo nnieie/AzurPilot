@@ -422,6 +422,9 @@ class UsbCapture:
         if sys.platform == 'win32':
             creationflags = getattr(subprocess, 'CREATE_NO_WINDOW', 0)
         os.makedirs(os.path.dirname(log_path), exist_ok=True)
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+        command = [sys.executable, '-m', 'dev_tools.usb_capture_service', '--config-name', config_name]
+        logger.info(f'USB capture service command: {" ".join(command)}')
         log_file = None
         try:
             log_file = open(log_path, 'a', encoding='utf-8', buffering=1)
@@ -431,8 +434,9 @@ class UsbCapture:
             )
             log_file.write(f'Config: {self.usb_capture_service_config_summary()}\n')
             process = subprocess.Popen(
-                [sys.executable, 'dev_tools/usb_capture_service.py', '--config-name', config_name],
+                command,
                 creationflags=creationflags,
+                cwd=project_root,
                 stdout=log_file,
                 stderr=subprocess.STDOUT,
             )
@@ -440,8 +444,9 @@ class UsbCapture:
         except Exception as e:
             logger.warning(f'Failed to redirect USB capture service log: {e}')
             process = subprocess.Popen(
-                [sys.executable, 'dev_tools/usb_capture_service.py', '--config-name', config_name],
+                command,
                 creationflags=creationflags,
+                cwd=project_root,
             )
             logger.info(f'USB capture service process started without log redirect: pid={process.pid}')
         finally:
