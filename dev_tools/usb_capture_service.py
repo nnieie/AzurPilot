@@ -328,12 +328,16 @@ def control_request(config_name, payload, timeout=0.5):
         return recv_json(sock, timeout=timeout)
 
 
-def ping_service(config_name, timeout=0.3):
+def service_status(config_name, timeout=0.3):
     try:
         response, _ = request(config_name, {'cmd': 'ping'}, timeout=timeout)
-        return bool(response.get('ok'))
+        return response if response.get('ok') else None
     except Exception:
-        return False
+        return None
+
+
+def ping_service(config_name, timeout=0.3):
+    return service_status(config_name, timeout=timeout) is not None
 
 
 def set_preview(config_name, enabled, timeout=1.0):
@@ -1046,12 +1050,23 @@ class CaptureService:
                     cmd = payload.get('cmd')
                     try:
                         if cmd == 'ping':
+                            now = time.time()
+                            frame_age = None if service.frame_time <= 0 else now - service.frame_time
+                            recent_frame_request_age = (
+                                None
+                                if service.recent_frame_request_time <= 0
+                                else now - service.recent_frame_request_time
+                            )
                             send_json(self.request, {
                                 'ok': True,
                                 'config_name': service.config_name,
                                 'seq': service.seq,
                                 'mode': service.mode,
                                 'preview': service.preview_enabled,
+                                'frame_age': frame_age,
+                                'measured_fps': service.measured_fps,
+                                'black_ratio': service.black_ratio,
+                                'recent_frame_request_age': recent_frame_request_age,
                             })
                         elif cmd == 'preview':
                             service.preview_enabled = bool(payload.get('enabled'))

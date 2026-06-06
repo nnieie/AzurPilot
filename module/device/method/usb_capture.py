@@ -1,10 +1,11 @@
-import time
+import os
 import subprocess
 import sys
 import threading
 import queue
 import json
 import socketserver
+import time
 
 import cv2
 import numpy as np
@@ -247,6 +248,56 @@ class UsbCapture:
     def usb_capture_config_name(self):
         return getattr(self.config, 'config_name', 'alas')
 
+    def usb_capture_service_log_path(self):
+        config_name = self.usb_capture_config_name()
+        safe_name = ''.join(c if c.isalnum() or c in ('-', '_', '.', ' ') else '_' for c in str(config_name))
+        return os.path.join('log', f'usb_capture_service_{safe_name}.log')
+
+    def usb_capture_service_config_summary(self):
+        return (
+            f'device={self.config.Emulator_UsbCaptureDevice}, '
+            f'backend={self.config.Emulator_UsbCaptureBackend}, '
+            f'codec={getattr(self.config, "Emulator_UsbCaptureCodec", "MJPG")}, '
+            f'{self.config.Emulator_UsbCaptureWidth}x{self.config.Emulator_UsbCaptureHeight}'
+            f'@{self.config.Emulator_UsbCaptureFps}, '
+            f'preview={self.config.Emulator_UsbCapturePreviewWidth}x{self.config.Emulator_UsbCapturePreviewHeight}'
+            f'@{self.config.Emulator_UsbCapturePreviewFps}, '
+            f'interpolation={self.config.Emulator_UsbCapturePreviewInterpolation}, '
+            f'c_accel={self.config.Emulator_UsbCaptureCAccel}'
+        )
+
+    @staticmethod
+    def _usb_capture_format_seconds(value):
+        return 'None' if value is None else f'{float(value):.2f}s'
+
+    def usb_capture_service_status_text(self, status):
+        if not status:
+            return 'unavailable'
+        return (
+            f"seq={status.get('seq')}, "
+            f"mode={status.get('mode') or 'unknown'}, "
+            f"preview={status.get('preview')}, "
+            f"fps={float(status.get('measured_fps') or 0):.1f}, "
+            f"black={float(status.get('black_ratio') or 0):.1f}%, "
+            f"frame_age={self._usb_capture_format_seconds(status.get('frame_age'))}, "
+            f"recent_request_age={self._usb_capture_format_seconds(status.get('recent_frame_request_age'))}"
+        )
+
+    def usb_capture_service_log_tail(self, lines=20):
+        path = self.usb_capture_service_log_path()
+        if not os.path.exists(path):
+            logger.warning(f'USB capture service log not found: {path}')
+            return
+        try:
+            with open(path, 'r', encoding='utf-8', errors='replace') as file:
+                tail = file.readlines()[-lines:]
+        except Exception as e:
+            logger.warning(f'Failed to read USB capture service log: {path}, {e}')
+            return
+        logger.info(f'USB capture service log tail: {path}')
+        for line in tail:
+            logger.info(line.rstrip())
+
     @staticmethod
     def _usb_capture_clamp_point(x, y):
         width, height = UsbCapture._USB_CAPTURE_OUTPUT_SIZE
@@ -350,36 +401,87 @@ class UsbCapture:
             self.swipe_adb(p1, p2, duration=duration)
 
     def usb_capture_service_start(self):
-        from dev_tools.usb_capture_service import ping_service, service_port
+        from dev_tools.usb_capture_service import service_port, service_status
 
         config_name = self.usb_capture_config_name()
-        if ping_service(config_name):
+        port = service_port(config_name)
+        log_path = self.usb_capture_service_log_path()
+        status = service_status(config_name)
+        if status is not None:
+            if not getattr(self, '_usb_capture_existing_service_logged', False):
+                logger.info(f'USB capture service already running: {config_name} @ 127.0.0.1:{port}')
+                logger.info(f'USB capture service status: {self.usb_capture_service_status_text(status)}')
+                logger.info(f'USB capture service log: {log_path}')
+                self._usb_capture_existing_service_logged = True
             return
 
-        logger.info(f'Starting USB capture service: {config_name} @ 127.0.0.1:{service_port(config_name)}')
+        logger.info(f'Starting USB capture service: {config_name} @ 127.0.0.1:{port}')
+        logger.info(f'USB capture config: {self.usb_capture_service_config_summary()}')
+        logger.info(f'USB capture service log: {log_path}')
         creationflags = 0
         if sys.platform == 'win32':
             creationflags = getattr(subprocess, 'CREATE_NO_WINDOW', 0)
-        subprocess.Popen(
-            [sys.executable, 'dev_tools/usb_capture_service.py', '--config-name', config_name],
-            creationflags=creationflags,
-        )
+        os.makedirs(os.path.dirname(log_path), exist_ok=True)
+        log_file = None
+        try:
+            log_file = open(log_path, 'a', encoding='utf-8', buffering=1)
+            log_file.write(
+                f'\n===== Start USB capture service: {config_name}, '
+                f'{time.strftime("%Y-%m-%d %H:%M:%S")} =====\n'
+            )
+            log_file.write(f'Config: {self.usb_capture_service_config_summary()}\n')
+            process = subprocess.Popen(
+                [sys.executable, 'dev_tools/usb_capture_service.py', '--config-name', config_name],
+                creationflags=creationflags,
+                stdout=log_file,
+                stderr=subprocess.STDOUT,
+            )
+            logger.info(f'USB capture service process started: pid={process.pid}')
+        except Exception as e:
+            logger.warning(f'Failed to redirect USB capture service log: {e}')
+            process = subprocess.Popen(
+                [sys.executable, 'dev_tools/usb_capture_service.py', '--config-name', config_name],
+                creationflags=creationflags,
+            )
+            logger.info(f'USB capture service process started without log redirect: pid={process.pid}')
+        finally:
+            if log_file is not None:
+                try:
+                    log_file.close()
+                except Exception:
+                    pass
 
         deadline = time.time() + self._USB_CAPTURE_OPEN_TIMEOUT
         while time.time() < deadline:
-            if ping_service(config_name):
+            status = service_status(config_name)
+            if status is not None:
+                logger.info(f'USB capture service ready: {self.usb_capture_service_status_text(status)}')
                 return
             time.sleep(0.1)
+        logger.warning(f'USB capture service did not become ready: {config_name} @ 127.0.0.1:{port}')
+        self.usb_capture_service_log_tail()
         raise UsbCaptureError('Start USB capture service timeout')
 
     def usb_capture_service_frame(self):
-        from dev_tools.usb_capture_service import get_frame
+        from dev_tools.usb_capture_service import get_frame, service_status
 
+        config_name = self.usb_capture_config_name()
         self.usb_capture_control_start()
         self.usb_capture_service_start()
-        frame = get_frame(self.usb_capture_config_name(), timeout=self._USB_CAPTURE_FRAME_TIMEOUT)
+        try:
+            frame = get_frame(config_name, timeout=self._USB_CAPTURE_FRAME_TIMEOUT)
+        except Exception as e:
+            status = service_status(config_name, timeout=0.5)
+            logger.warning(f'USB capture service frame failed: {type(e).__name__}: {e}')
+            logger.warning(f'USB capture service status: {self.usb_capture_service_status_text(status)}')
+            logger.warning(f'USB capture service log: {self.usb_capture_service_log_path()}')
+            self.usb_capture_service_log_tail()
+            raise
         if not getattr(self, '_usb_capture_service_logged', False):
-            logger.attr('UsbCaptureService', self.usb_capture_config_name())
+            logger.attr('UsbCaptureService', config_name)
+            status = service_status(config_name, timeout=0.5)
+            logger.info(f'USB capture service status: {self.usb_capture_service_status_text(status)}')
+            logger.info(f'USB capture service log: {self.usb_capture_service_log_path()}')
             self._usb_capture_service_logged = True
         self._usb_capture_last_frame_time = time.time()
         return frame
