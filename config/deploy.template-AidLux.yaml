@@ -9,6 +9,7 @@ Deploy:
     # [Other] Use 'master', the stable branch
     Branch: "master"
     # Filepath of git executable `git.exe`
+    # [Easy installer] Use './toolkit/Git/mingw64/bin/git.exe'
     # [Other] Use you own git
     GitExecutable: ./.venv/bin/git
     # Set git proxy
@@ -29,7 +30,9 @@ Deploy:
     KeepLocalChanges: false
 
   Python:
-    # Filepath of python executable.
+    # Filepath of python executable `python.exe`
+    # [Easy installer] Use './toolkit/python.exe'
+    # [Other] Use you own python, and its version should be 3.7.6 64bit
     PythonExecutable: ./.venv/bin/python
     # URL of pypi mirror
     # [CN user] Use 'https://mirrors.aliyun.com/pypi/simple' for faster and more stable download
@@ -38,9 +41,15 @@ Deploy:
     # Install dependencies at startup
     # [In most cases] Use true
     InstallDependencies: true
+    # Path to requirements.txt
+    # [In most cases] Use 'requirements.txt'
+    # [In AidLux] Use './deploy/AidLux/{version}/requirements.txt', version is default to 0.92
+    RequirementsFile: "requirements.txt"
 
   Adb:
-    # Filepath of ADB executable.
+    # Filepath of ADB executable `adb.exe`
+    # [Easy installer] Use './toolkit/Lib/site-packages/adbutils/binaries/adb.exe'
+    # [Other] Use you own latest ADB, but not the ADB in your emulator
     AdbExecutable: ./.venv/bin/adb
     # Whether to replace ADB
     # Chinese emulators (NoxPlayer, LDPlayer, MemuPlayer, MuMuPlayer) use their own ADB, instead of the latest.

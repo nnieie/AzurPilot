@@ -920,6 +920,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "Storage": {
@@ -975,6 +983,14 @@
         "display": "hide"
       },
       "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "Sensitive": {
         "type": "checkbox",
         "value": false,
         "option": [
@@ -1397,6 +1413,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "Campaign": {
@@ -1813,6 +1837,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "Campaign": {
@@ -2223,6 +2255,14 @@
         "display": "hide"
       },
       "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "Sensitive": {
         "type": "checkbox",
         "value": false,
         "option": [
@@ -2733,6 +2773,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "GemsFarming": {
@@ -3232,6 +3280,14 @@
         "display": "hide"
       },
       "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "Sensitive": {
         "type": "checkbox",
         "value": false,
         "option": [
@@ -3761,6 +3817,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "Campaign": {
@@ -4192,6 +4256,14 @@
         "display": "hide"
       },
       "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "Sensitive": {
         "type": "checkbox",
         "value": false,
         "option": [
@@ -4635,6 +4707,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "Campaign": {
@@ -5071,6 +5151,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "Raid": {
@@ -5350,6 +5438,14 @@
         "display": "hide"
       },
       "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "Sensitive": {
         "type": "checkbox",
         "value": false,
         "option": [
@@ -5775,6 +5871,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "Hospital": {
@@ -5973,6 +6077,14 @@
         "display": "hide"
       },
       "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "Sensitive": {
         "type": "checkbox",
         "value": false,
         "option": [
@@ -6262,6 +6374,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "MaritimeEscort": {
@@ -6323,6 +6443,14 @@
         "display": "hide"
       },
       "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "Sensitive": {
         "type": "checkbox",
         "value": false,
         "option": [
@@ -6411,6 +6539,14 @@
         "display": "hide"
       },
       "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "Sensitive": {
         "type": "checkbox",
         "value": false,
         "option": [
@@ -7119,6 +7255,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "EventDaily": {
@@ -7567,6 +7711,14 @@
         "display": "hide"
       },
       "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "Sensitive": {
         "type": "checkbox",
         "value": false,
         "option": [
@@ -8027,6 +8179,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "EventDaily": {
@@ -8475,6 +8635,14 @@
         "display": "hide"
       },
       "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "Sensitive": {
         "type": "checkbox",
         "value": false,
         "option": [
@@ -8935,6 +9103,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "Campaign": {
@@ -9380,6 +9556,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "RaidDaily": {
@@ -9650,6 +9834,14 @@
         "display": "hide"
       },
       "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "Sensitive": {
         "type": "checkbox",
         "value": false,
         "option": [
@@ -9940,6 +10132,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "Commission": {
@@ -10021,6 +10221,14 @@
         "display": "hide"
       },
       "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "Sensitive": {
         "type": "checkbox",
         "value": false,
         "option": [
@@ -10143,6 +10351,14 @@
         "display": "hide"
       },
       "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "Sensitive": {
         "type": "checkbox",
         "value": false,
         "option": [
@@ -10287,6 +10503,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "Dorm": {
@@ -10380,6 +10604,14 @@
         "display": "hide"
       },
       "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "Sensitive": {
         "type": "checkbox",
         "value": false,
         "option": [
@@ -10491,6 +10723,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "GuildLogistics": {
@@ -10592,6 +10832,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "Reward": {
@@ -10675,6 +10923,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "Awaken": {
@@ -10689,523 +10945,6 @@
       "Favourite": {
         "type": "checkbox",
         "value": false
-      }
-    },
-    "Storage": {
-      "Storage": {
-        "type": "storage",
-        "value": {},
-        "valuetype": "ignore",
-        "display": "disabled"
-      }
-    }
-  },
-  "Island": {
-    "Scheduler": {
-      "Enable": {
-        "type": "checkbox",
-        "value": false,
-        "option": [
-          true,
-          false
-        ]
-      },
-      "PushNotification": {
-        "type": "checkbox",
-        "value": false,
-        "option": [
-          true,
-          false
-        ]
-      },
-      "NextRun": {
-        "type": "datetime",
-        "value": "2020-01-01 00:00:00",
-        "validate": "datetime"
-      },
-      "Command": {
-        "type": "input",
-        "value": "Island",
-        "display": "hide"
-      },
-      "SuccessInterval": {
-        "type": "input",
-        "value": 0,
-        "display": "hide"
-      },
-      "FailureInterval": {
-        "type": "input",
-        "value": 120,
-        "display": "hide"
-      },
-      "ServerUpdate": {
-        "type": "input",
-        "value": "00:00",
-        "display": "hide"
-      },
-      "ForceAdbNcScreenshot": {
-        "type": "checkbox",
-        "value": false,
-        "option": [
-          true,
-          false
-        ]
-      }
-    },
-    "Island1": {
-      "Receive": {
-        "type": "checkbox",
-        "value": false
-      },
-      "Option1": {
-        "type": "input",
-        "value": ""
-      },
-      "Character1": {
-        "type": "input",
-        "value": "工作啾"
-      },
-      "Option2": {
-        "type": "input",
-        "value": ""
-      },
-      "Character2": {
-        "type": "input",
-        "value": "工作啾"
-      },
-      "Option3": {
-        "type": "input",
-        "value": ""
-      },
-      "Character3": {
-        "type": "input",
-        "value": "工作啾"
-      },
-      "Option4": {
-        "type": "input",
-        "value": ""
-      },
-      "Character4": {
-        "type": "input",
-        "value": "工作啾"
-      }
-    },
-    "Island2": {
-      "Receive": {
-        "type": "checkbox",
-        "value": false
-      },
-      "Option1": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          1
-        ]
-      },
-      "Character1": {
-        "type": "input",
-        "value": "工作啾"
-      },
-      "Option2": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          2
-        ]
-      },
-      "Character2": {
-        "type": "input",
-        "value": "工作啾"
-      },
-      "Option3": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          3
-        ]
-      },
-      "Character3": {
-        "type": "input",
-        "value": "工作啾"
-      },
-      "Option4": {
-        "type": "select",
-        "value": 0,
-        "option": [
-          0,
-          4
-        ]
-      },
-      "Character4": {
-        "type": "input",
-        "value": "工作啾"
-      }
-    },
-    "Island3": {
-      "Receive": {
-        "type": "checkbox",
-        "value": false
-      },
-      "Option1": {
-        "type": "input",
-        "value": ""
-      },
-      "Character1": {
-        "type": "input",
-        "value": "工作啾"
-      },
-      "Option2": {
-        "type": "input",
-        "value": ""
-      },
-      "Character2": {
-        "type": "input",
-        "value": "工作啾"
-      },
-      "Option3": {
-        "type": "input",
-        "value": ""
-      },
-      "Character3": {
-        "type": "input",
-        "value": "工作啾"
-      }
-    },
-    "Island4": {
-      "Receive": {
-        "type": "checkbox",
-        "value": false
-      },
-      "Option1": {
-        "type": "input",
-        "value": ""
-      },
-      "Character1": {
-        "type": "input",
-        "value": "工作啾"
-      },
-      "Option2": {
-        "type": "input",
-        "value": ""
-      },
-      "Character2": {
-        "type": "input",
-        "value": "工作啾"
-      },
-      "Option3": {
-        "type": "input",
-        "value": ""
-      },
-      "Character3": {
-        "type": "input",
-        "value": "工作啾"
-      },
-      "Option4": {
-        "type": "input",
-        "value": ""
-      },
-      "Character4": {
-        "type": "input",
-        "value": "工作啾"
-      }
-    },
-    "Island5": {
-      "Receive": {
-        "type": "checkbox",
-        "value": false
-      },
-      "Option1": {
-        "type": "input",
-        "value": ""
-      },
-      "Character1": {
-        "type": "input",
-        "value": "工作啾"
-      },
-      "Option2": {
-        "type": "input",
-        "value": ""
-      },
-      "Character2": {
-        "type": "input",
-        "value": "工作啾"
-      },
-      "Option3": {
-        "type": "input",
-        "value": ""
-      },
-      "Character3": {
-        "type": "input",
-        "value": "工作啾"
-      },
-      "Option4": {
-        "type": "input",
-        "value": ""
-      },
-      "Character4": {
-        "type": "input",
-        "value": "工作啾"
-      }
-    },
-    "Island6": {
-      "Receive": {
-        "type": "checkbox",
-        "value": false
-      },
-      "Option1": {
-        "type": "input",
-        "value": ""
-      },
-      "Character1": {
-        "type": "input",
-        "value": "工作啾"
-      },
-      "Option2": {
-        "type": "input",
-        "value": ""
-      },
-      "Character2": {
-        "type": "input",
-        "value": "工作啾"
-      },
-      "Option3": {
-        "type": "input",
-        "value": ""
-      },
-      "Character3": {
-        "type": "input",
-        "value": "工作啾"
-      },
-      "Option4": {
-        "type": "input",
-        "value": ""
-      },
-      "Character4": {
-        "type": "input",
-        "value": "工作啾"
-      }
-    },
-    "Island7": {
-      "Receive": {
-        "type": "checkbox",
-        "value": false
-      },
-      "Option1": {
-        "type": "input",
-        "value": ""
-      },
-      "Character1": {
-        "type": "input",
-        "value": "工作啾"
-      },
-      "Option2": {
-        "type": "input",
-        "value": ""
-      },
-      "Character2": {
-        "type": "input",
-        "value": "工作啾"
-      }
-    },
-    "Island8": {
-      "Receive": {
-        "type": "checkbox",
-        "value": false
-      },
-      "Option1": {
-        "type": "input",
-        "value": ""
-      },
-      "Character1": {
-        "type": "input",
-        "value": "工作啾"
-      },
-      "Option2": {
-        "type": "input",
-        "value": ""
-      },
-      "Character2": {
-        "type": "input",
-        "value": "工作啾"
-      }
-    },
-    "Island9": {
-      "Receive": {
-        "type": "checkbox",
-        "value": false
-      },
-      "Option1": {
-        "type": "input",
-        "value": ""
-      },
-      "Character1": {
-        "type": "input",
-        "value": "工作啾"
-      },
-      "Option2": {
-        "type": "input",
-        "value": ""
-      },
-      "Character2": {
-        "type": "input",
-        "value": "工作啾"
-      }
-    },
-    "Island10": {
-      "Receive": {
-        "type": "checkbox",
-        "value": false
-      },
-      "Option1": {
-        "type": "input",
-        "value": ""
-      },
-      "Character1": {
-        "type": "input",
-        "value": "工作啾"
-      },
-      "Option2": {
-        "type": "input",
-        "value": ""
-      },
-      "Character2": {
-        "type": "input",
-        "value": "工作啾"
-      }
-    },
-    "Island11": {
-      "Receive": {
-        "type": "checkbox",
-        "value": false
-      },
-      "Option1": {
-        "type": "input",
-        "value": ""
-      },
-      "Character1": {
-        "type": "input",
-        "value": "工作啾"
-      },
-      "Option2": {
-        "type": "input",
-        "value": ""
-      },
-      "Character2": {
-        "type": "input",
-        "value": "工作啾"
-      }
-    },
-    "Island12": {
-      "Receive": {
-        "type": "checkbox",
-        "value": false
-      },
-      "Option1": {
-        "type": "input",
-        "value": ""
-      },
-      "Character1": {
-        "type": "input",
-        "value": "工作啾"
-      },
-      "Option2": {
-        "type": "input",
-        "value": ""
-      },
-      "Character2": {
-        "type": "input",
-        "value": "工作啾"
-      }
-    },
-    "Island13": {
-      "Receive": {
-        "type": "checkbox",
-        "value": false
-      },
-      "Option1": {
-        "type": "input",
-        "value": ""
-      },
-      "Character1": {
-        "type": "input",
-        "value": "工作啾"
-      },
-      "Option2": {
-        "type": "input",
-        "value": ""
-      },
-      "Character2": {
-        "type": "input",
-        "value": "工作啾"
-      }
-    },
-    "Island14": {
-      "Receive": {
-        "type": "checkbox",
-        "value": false
-      },
-      "Option1": {
-        "type": "input",
-        "value": ""
-      },
-      "Character1": {
-        "type": "input",
-        "value": "工作啾"
-      },
-      "Option2": {
-        "type": "input",
-        "value": ""
-      },
-      "Character2": {
-        "type": "input",
-        "value": "工作啾"
-      }
-    },
-    "Island15": {
-      "Receive": {
-        "type": "checkbox",
-        "value": false
-      },
-      "Option1": {
-        "type": "input",
-        "value": ""
-      },
-      "Character1": {
-        "type": "input",
-        "value": "工作啾"
-      },
-      "Option2": {
-        "type": "input",
-        "value": ""
-      },
-      "Character2": {
-        "type": "input",
-        "value": "工作啾"
-      }
-    },
-    "Island16": {
-      "Receive": {
-        "type": "checkbox",
-        "value": false
-      },
-      "Option1": {
-        "type": "input",
-        "value": ""
-      },
-      "Character1": {
-        "type": "input",
-        "value": "工作啾"
-      },
-      "Option2": {
-        "type": "input",
-        "value": ""
-      },
-      "Character2": {
-        "type": "input",
-        "value": "工作啾"
       }
     },
     "Storage": {
@@ -11261,6 +11000,14 @@
         "display": "hide"
       },
       "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "Sensitive": {
         "type": "checkbox",
         "value": false,
         "option": [
@@ -11474,6 +11221,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "Hard": {
@@ -11543,6 +11298,14 @@
         "display": "hide"
       },
       "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "Sensitive": {
         "type": "checkbox",
         "value": false,
         "option": [
@@ -11669,6 +11432,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "GeneralShop": {
@@ -11750,6 +11521,14 @@
         "display": "hide"
       },
       "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "Sensitive": {
         "type": "checkbox",
         "value": false,
         "option": [
@@ -12051,6 +11830,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "ShipyardDr": {
@@ -12183,6 +11970,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "Gacha": {
@@ -12275,6 +12070,14 @@
         "display": "hide"
       },
       "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "Sensitive": {
         "type": "checkbox",
         "value": false,
         "option": [
@@ -12395,6 +12198,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "Storage": {
@@ -12450,6 +12261,14 @@
         "display": "hide"
       },
       "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "Sensitive": {
         "type": "checkbox",
         "value": false,
         "option": [
@@ -12616,6 +12435,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "OpsiAshBeacon": {
@@ -12708,6 +12535,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "OpsiAshAssist": {
@@ -12769,6 +12604,14 @@
         "display": "hide"
       },
       "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "Sensitive": {
         "type": "checkbox",
         "value": false,
         "option": [
@@ -12886,6 +12729,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "OpsiShop": {
@@ -12968,6 +12819,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "OpsiVoucher": {
@@ -13029,6 +12888,14 @@
         "display": "hide"
       },
       "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "Sensitive": {
         "type": "checkbox",
         "value": false,
         "option": [
@@ -13139,6 +13006,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": true,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "OpsiObscure": {
@@ -13226,6 +13101,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": true,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "OpsiAbyssal": {
@@ -13293,6 +13176,14 @@
         "display": "hide"
       },
       "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "Sensitive": {
         "type": "checkbox",
         "value": false,
         "option": [
@@ -13370,6 +13261,14 @@
         "display": "hide"
       },
       "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "Sensitive": {
         "type": "checkbox",
         "value": false,
         "option": [
@@ -13458,6 +13357,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "OpsiMonthBoss": {
@@ -13537,6 +13444,14 @@
         "display": "hide"
       },
       "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "Sensitive": {
         "type": "checkbox",
         "value": false,
         "option": [
@@ -13694,6 +13609,14 @@
         "display": "hide"
       },
       "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
+      "Sensitive": {
         "type": "checkbox",
         "value": false,
         "option": [
@@ -13900,6 +13823,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "OpsiScheduling": {
@@ -14032,6 +13963,14 @@
           true,
           false
         ]
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": true,
+        "option": [
+          true,
+          false
+        ]
       }
     },
     "Storage": {
@@ -14137,57 +14076,6 @@
     }
   },
   "IslandPlan": {
-    "Scheduler": {
-      "Enable": {
-        "type": "checkbox",
-        "value": false,
-        "option": [
-          true,
-          false
-        ]
-      },
-      "PushNotification": {
-        "type": "checkbox",
-        "value": false,
-        "option": [
-          true,
-          false
-        ]
-      },
-      "NextRun": {
-        "type": "datetime",
-        "value": "2020-01-01 00:00:00",
-        "validate": "datetime"
-      },
-      "Command": {
-        "type": "input",
-        "value": "IslandPlan",
-        "display": "hide"
-      },
-      "SuccessInterval": {
-        "type": "input",
-        "value": 0,
-        "display": "hide"
-      },
-      "FailureInterval": {
-        "type": "input",
-        "value": 120,
-        "display": "hide"
-      },
-      "ServerUpdate": {
-        "type": "input",
-        "value": "00:00",
-        "display": "hide"
-      },
-      "ForceAdbNcScreenshot": {
-        "type": "checkbox",
-        "value": false,
-        "option": [
-          true,
-          false
-        ]
-      }
-    },
     "IslandPlan": {
       "Season": {
         "type": "select",
@@ -14251,6 +14139,14 @@
         "type": "input",
         "value": "00:00",
         "display": "hide"
+      },
+      "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       },
       "Sensitive": {
         "type": "checkbox",
@@ -15013,6 +14909,14 @@
         "value": "00:00",
         "display": "hide"
       },
+      "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
       "Sensitive": {
         "type": "checkbox",
         "value": false,
@@ -15163,6 +15067,14 @@
         "value": "00:00",
         "display": "hide"
       },
+      "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
       "Sensitive": {
         "type": "checkbox",
         "value": false,
@@ -15298,6 +15210,14 @@
         "type": "input",
         "value": "00:00",
         "display": "hide"
+      },
+      "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       },
       "Sensitive": {
         "type": "checkbox",
@@ -15451,6 +15371,14 @@
         "type": "input",
         "value": "00:00",
         "display": "hide"
+      },
+      "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       },
       "Sensitive": {
         "type": "checkbox",
@@ -15736,6 +15664,14 @@
         "value": "00:00",
         "display": "hide"
       },
+      "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
       "Sensitive": {
         "type": "checkbox",
         "value": false,
@@ -16002,6 +15938,14 @@
         "value": "00:00",
         "display": "hide"
       },
+      "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
       "Sensitive": {
         "type": "checkbox",
         "value": false,
@@ -16236,6 +16180,14 @@
         "type": "input",
         "value": "00:00",
         "display": "hide"
+      },
+      "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       },
       "Sensitive": {
         "type": "checkbox",
@@ -16499,6 +16451,14 @@
         "value": "00:00",
         "display": "hide"
       },
+      "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
       "Sensitive": {
         "type": "checkbox",
         "value": false,
@@ -16756,6 +16716,14 @@
         "value": "00:00",
         "display": "hide"
       },
+      "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
       "Sensitive": {
         "type": "checkbox",
         "value": false,
@@ -16861,6 +16829,14 @@
         "value": "00:00",
         "display": "hide"
       },
+      "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      },
       "Sensitive": {
         "type": "checkbox",
         "value": false,
@@ -16921,6 +16897,14 @@
         "type": "input",
         "value": "00:00",
         "display": "hide"
+      },
+      "ForceAdbNcScreenshot": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       },
       "Sensitive": {
         "type": "checkbox",

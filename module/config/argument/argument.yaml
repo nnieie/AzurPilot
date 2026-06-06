@@ -81,6 +81,10 @@ Scheduler:
     type: checkbox
     value: false
     option: [true, false]
+  Sensitive:
+    type: checkbox
+    value: false
+    option: [true, false]
 Emulator:
   Serial:
     value: auto

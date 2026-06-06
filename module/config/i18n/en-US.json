@@ -417,6 +417,12 @@
       "help": "When enabled, this task ignores the global screenshot method and always captures screenshots with ADB_nc. Use this to avoid recognition issues caused by USB capture card color shifts.",
       "True": "Enabled",
       "False": "False"
+    },
+    "Sensitive": {
+      "name": "Sensitive task",
+      "help": "When an error occurs, prohibit restarting the game and stop AzurPilot immediately. Suitable for critical tasks like cross-month daily, obscure sea areas, and abyssal sea areas.",
+      "True": "True",
+      "False": "False"
     }
   },
   "Emulator": {

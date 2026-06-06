@@ -417,6 +417,12 @@
       "help": "开启后，当前任务会忽略全局截图方案，强制使用 ADB_nc 进行截图。可用于绕过 USB 采集卡偏色导致的识别问题。",
       "True": "已启用",
       "False": "False"
+    },
+    "Sensitive": {
+      "name": "敏感任务",
+      "help": "出错时禁止重启游戏，直接停止 AzurPilot 运行。适用于跨月每日、隐秘海域、深渊海域等关键时刻任务。",
+      "True": "True",
+      "False": "False"
     }
   },
   "Emulator": {
