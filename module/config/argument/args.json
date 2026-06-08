@@ -14781,11 +14781,7 @@
         "value": "None",
         "option": [
           "None",
-          "iced_coffee",
-          "omelette",
           "cheese",
-          "latte",
-          "citrus_coffee",
           "strawberry_milkshake",
           "morning_light",
           "wake_up_call",
@@ -14797,11 +14793,7 @@
         "value": "None",
         "option": [
           "None",
-          "iced_coffee",
-          "omelette",
           "cheese",
-          "latte",
-          "citrus_coffee",
           "strawberry_milkshake",
           "morning_light",
           "wake_up_call",
@@ -14813,11 +14805,7 @@
         "value": "None",
         "option": [
           "None",
-          "iced_coffee",
-          "omelette",
           "cheese",
-          "latte",
-          "citrus_coffee",
           "strawberry_milkshake",
           "morning_light",
           "wake_up_call",
@@ -14829,11 +14817,7 @@
         "value": "None",
         "option": [
           "None",
-          "iced_coffee",
-          "omelette",
           "cheese",
-          "latte",
-          "citrus_coffee",
           "strawberry_milkshake",
           "morning_light",
           "wake_up_call",
@@ -14845,11 +14829,7 @@
         "value": "None",
         "option": [
           "None",
-          "iced_coffee",
-          "omelette",
           "cheese",
-          "latte",
-          "citrus_coffee",
           "strawberry_milkshake",
           "morning_light",
           "wake_up_call",
@@ -15229,95 +15209,81 @@
       }
     },
     "IslandMine": {
-      "Mining1": {
+      "Positions": {
         "type": "select",
-        "value": "Silver",
+        "value": 1,
         "option": [
-          "None",
-          "Copper",
-          "Aluminium",
-          "Iron",
-          "Sulphur",
-          "Silver"
+          1,
+          2,
+          3,
+          4
         ]
       },
-      "Mining2": {
+      "MineSilver": {
         "type": "select",
-        "value": "Silver",
+        "value": 1,
         "option": [
-          "None",
-          "Copper",
-          "Aluminium",
-          "Iron",
-          "Sulphur",
-          "Silver"
+          0,
+          1,
+          2,
+          3,
+          4
         ]
       },
-      "Mining3": {
-        "type": "select",
-        "value": "Silver",
-        "option": [
-          "None",
-          "Copper",
-          "Aluminium",
-          "Iron",
-          "Sulphur",
-          "Silver"
-        ]
+      "MinCopper": {
+        "type": "input",
+        "value": 50
       },
-      "Mining4": {
-        "type": "select",
-        "value": "Silver",
-        "option": [
-          "None",
-          "Copper",
-          "Aluminium",
-          "Iron",
-          "Sulphur",
-          "Silver"
-        ]
+      "MinAluminium": {
+        "type": "input",
+        "value": 50
+      },
+      "MinIron": {
+        "type": "input",
+        "value": 50
+      },
+      "MinSulphur": {
+        "type": "input",
+        "value": 50
+      },
+      "MinSilver": {
+        "type": "input",
+        "value": 50
       }
     },
     "IslandForest": {
-      "Felling1": {
+      "Positions": {
         "type": "select",
-        "value": "Elegant",
+        "value": 1,
         "option": [
-          "None",
-          "Practical",
-          "Selected",
-          "Elegant"
+          1,
+          2,
+          3,
+          4
         ]
       },
-      "Felling2": {
+      "CutElegant": {
         "type": "select",
-        "value": "Elegant",
+        "value": 1,
         "option": [
-          "None",
-          "Practical",
-          "Selected",
-          "Elegant"
+          0,
+          1,
+          2,
+          3,
+          4
         ]
       },
-      "Felling3": {
-        "type": "select",
-        "value": "Elegant",
-        "option": [
-          "None",
-          "Practical",
-          "Selected",
-          "Elegant"
-        ]
+      "MinElegant": {
+        "type": "input",
+        "value": 50
       },
-      "Felling4": {
-        "type": "select",
-        "value": "Elegant",
-        "option": [
-          "None",
-          "Practical",
-          "Selected",
-          "Elegant"
-        ]
+      "MinPractical": {
+        "type": "input",
+        "value": 50
+      },
+      "MinSelected": {
+        "type": "input",
+        "value": 50
       }
     },
     "Storage": {
@@ -15712,7 +15678,7 @@
           "fruit_paradise",
           "lavender_tea",
           "sunny_honey",
-          "winter_jasmine_tea"
+          "spring_flower_tea"
         ]
       },
       "MealNumber1": {
@@ -15733,7 +15699,7 @@
           "fruit_paradise",
           "lavender_tea",
           "sunny_honey",
-          "winter_jasmine_tea"
+          "spring_flower_tea"
         ]
       },
       "MealNumber2": {
@@ -15754,7 +15720,7 @@
           "fruit_paradise",
           "lavender_tea",
           "sunny_honey",
-          "winter_jasmine_tea"
+          "spring_flower_tea"
         ]
       },
       "MealNumber3": {
@@ -15775,7 +15741,7 @@
           "fruit_paradise",
           "lavender_tea",
           "sunny_honey",
-          "winter_jasmine_tea"
+          "spring_flower_tea"
         ]
       },
       "MealNumber4": {
@@ -15796,7 +15762,7 @@
           "fruit_paradise",
           "lavender_tea",
           "sunny_honey",
-          "winter_jasmine_tea"
+          "spring_flower_tea"
         ]
       },
       "MealNumber5": {
@@ -15817,7 +15783,7 @@
           "fruit_paradise",
           "lavender_tea",
           "sunny_honey",
-          "winter_jasmine_tea"
+          "spring_flower_tea"
         ]
       },
       "MealNumber6": {
@@ -15838,7 +15804,7 @@
           "fruit_paradise",
           "lavender_tea",
           "sunny_honey",
-          "winter_jasmine_tea"
+          "spring_flower_tea"
         ]
       },
       "MealNumber7": {
@@ -15859,7 +15825,7 @@
           "fruit_paradise",
           "lavender_tea",
           "sunny_honey",
-          "winter_jasmine_tea"
+          "spring_flower_tea"
         ]
       },
       "MealNumber8": {
@@ -15882,7 +15848,7 @@
           "fruit_paradise",
           "lavender_tea",
           "sunny_honey",
-          "winter_jasmine_tea"
+          "spring_flower_tea"
         ]
       }
     },
