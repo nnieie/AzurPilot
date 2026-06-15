@@ -182,7 +182,7 @@
       "FleetOnsen": false
     },
     "YukikazeTaskManager": {
-      "TaskPriorityAdjustment": "Restart\n> OpsiCrossMonth\n> Commission > Tactical > Research\n> Exercise\n> Dorm > Meowfficer > Guild > Gacha\n> Reward\n> ShopFrequent > ShopOnce > Shipyard > Freebies\n> PrivateQuarters\n> OpsiExplore\n> Minigame > Awaken\n> OpsiAshBeacon\n> OpsiDaily > OpsiShop > OpsiVoucher > EventShop\n> OpsiAbyssal > OpsiStronghold > OpsiObscure > OpsiArchive\n> Daily > Hard > OpsiAshBeacon > OpsiAshAssist > OpsiMonthBoss\n> Sos > EventSp > EventA > EventB > EventC > EventD\n> RaidDaily > CoalitionSp > WarArchives > MaritimeEscort\n> IslandJuuEatery > IslandJuuCoffee > IslandGrill > IslandTeahouse > IslandRestaurant\n> IslandFarm > IslandRancher > IslandMineForest > IslandDailyGather > IslandManufacture\n> IslandAirDrop > IslandBusiness > IslandDailyOrder > IslandCargoPreparation\n> Event > Event2 > Event3 > Raid > Hospital > HospitalEvent > Coalition > RaidScuttle > Main > Main2 > Main3\n> OpsiMeowfficerFarming\n> GemsFarming\n> Ambush11\n> OpsiHazard1Leveling\n> ThreeOilLowCost"
+      "TaskPriorityAdjustment": "Restart\n> OpsiCrossMonth\n> Commission > Tactical > Research\n> Exercise\n> Dorm > Meowfficer > Guild > Gacha\n> Reward\n> ShopFrequent > ShopOnce > Shipyard > Freebies\n> PrivateQuarters\n> OpsiExplore\n> Minigame > Awaken\n> OpsiAshBeacon\n> OpsiDaily > OpsiShop > OpsiVoucher > EventShop\n> OpsiAbyssal > OpsiStronghold > OpsiObscure > OpsiArchive\n> Daily > Hard > OpsiAshBeacon > OpsiAshAssist > OpsiMonthBoss\n> Sos > EventSp > EventA > EventB > EventC > EventD\n> RaidDaily > CoalitionSp > WarArchives > MaritimeEscort\n> IslandJuuEatery > IslandJuuCoffee > IslandGrill > IslandTeahouse > IslandRestaurant\n> IslandFarm > IslandRancher > IslandMineForest > IslandDailyGather > IslandManufacture\n> IslandAirDrop > IslandBusiness > IslandDailyOrder > IslandPearlSell > IslandCargoPreparation\n> Event > Event2 > Event3 > Raid > Hospital > HospitalEvent > Coalition > RaidScuttle > Main > Main2 > Main3\n> OpsiMeowfficerFarming\n> GemsFarming\n> Ambush11\n> OpsiHazard1Leveling\n> ThreeOilLowCost"
     },
     "Storage": {
       "Storage": {}
@@ -2791,6 +2791,20 @@
       "ForceAdbNcScreenshot": false,
       "Sensitive": false
     },
+    "IslandBusiness": {
+      "BatchEnabled": true,
+      "Batch1Shops": [
+        3,
+        1,
+        5
+      ],
+      "Batch2Shops": [
+        2,
+        4
+      ],
+      "SeasonalReplaceEnabled": true,
+      "SeasonalThreshold": 7
+    },
     "IslandBusinessShop1": {
       "Char1": "None",
       "Char2": "None",
@@ -2798,7 +2812,9 @@
       "Product2": "None",
       "Product3": "None",
       "Product4": "None",
-      "Product5": "None"
+      "Product5": "None",
+      "SeasonalFallback": "hearty_meal",
+      "BoostReplaceFilter": "30 > 20 > 10"
     },
     "IslandBusinessShop2": {
       "Char1": "None",
@@ -2807,7 +2823,8 @@
       "Product2": "None",
       "Product3": "None",
       "Product4": "None",
-      "Product5": "None"
+      "Product5": "None",
+      "BoostReplaceFilter": "30 > 20 > strawberry_honey > fruit_paradise > 10"
     },
     "IslandBusinessShop3": {
       "Char1": "None",
@@ -2816,7 +2833,8 @@
       "Product2": "None",
       "Product3": "None",
       "Product4": "None",
-      "Product5": "None"
+      "Product5": "None",
+      "BoostReplaceFilter": "30 > 20 > succulently_sweet > 10"
     },
     "IslandBusinessShop4": {
       "Char1": "None",
@@ -2825,7 +2843,8 @@
       "Product2": "None",
       "Product3": "None",
       "Product4": "None",
-      "Product5": "None"
+      "Product5": "None",
+      "BoostReplaceFilter": "30 > 20 > 10"
     },
     "IslandBusinessShop5": {
       "Char1": "None",
@@ -2834,7 +2853,8 @@
       "Product2": "None",
       "Product3": "None",
       "Product4": "None",
-      "Product5": "None"
+      "Product5": "None",
+      "BoostReplaceFilter": "30 > 20 > cheese > 10"
     },
     "Storage": {
       "Storage": {}
@@ -3196,7 +3216,8 @@
       "Sensitive": false
     },
     "IslandAirDrop": {
-      "LastSteal": "2020-01-01 00:00:00"
+      "LastSteal": "2020-01-01 00:00:00",
+      "VisitOtherIsland": true
     },
     "Storage": {
       "Storage": {}
@@ -3235,6 +3256,28 @@
       "RejectCount": 0,
       "RejectFilter": "Cheese > Tofu",
       "UrgentDetectRefreshTime": "2020-01-01 00:00:00"
+    },
+    "Storage": {
+      "Storage": {}
+    }
+  },
+  "IslandPearlSell": {
+    "Scheduler": {
+      "Enable": false,
+      "PushNotification": false,
+      "NextRun": "2020-01-01 00:00:00",
+      "Command": "IslandPearlSell",
+      "SuccessInterval": 0,
+      "FailureInterval": 120,
+      "ServerUpdate": "00:00",
+      "Sensitive": false
+    },
+    "IslandPearlSell": {
+      "BuyPrice": 200,
+      "SellPrice": 1000,
+      "BuyNextRun": "2020-01-01 00:00:00",
+      "DailyPriceRefresh": false,
+      "NextPearlTradeTime": "2020-01-01 00:00:00"
     },
     "Storage": {
       "Storage": {}

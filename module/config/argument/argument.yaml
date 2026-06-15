@@ -310,7 +310,7 @@ YukikazeTaskManager:
       > RaidDaily > CoalitionSp > WarArchives > MaritimeEscort
       > IslandJuuEatery > IslandJuuCoffee > IslandGrill > IslandTeahouse > IslandRestaurant
       > IslandFarm > IslandRancher > IslandMineForest > IslandDailyGather > IslandManufacture
-      > IslandAirDrop > IslandBusiness > IslandDailyOrder > IslandCargoPreparation
+      > IslandAirDrop > IslandBusiness > IslandDailyOrder > IslandPearlSell > IslandCargoPreparation
       > Event > Event2 > Event3 > Raid > Hospital > HospitalEvent > Coalition > RaidScuttle > Main > Main2 > Main3
       > OpsiMeowfficerFarming
       > GemsFarming
@@ -1506,6 +1506,7 @@ Handmade:
     option: [ 0, 1, 2 ]
 IslandAirDrop:
   LastSteal: 2020-01-01 00:00:00
+  VisitOtherIsland: true
 
 IslandDailyOrder:
   RejectCount:
@@ -1515,9 +1516,42 @@ IslandDailyOrder:
   UrgentDetectRefreshTime:
     value: "2020-01-01 00:00:00"
 
+IslandPearlSell:
+  BuyPrice:
+    value: 200
+  SellPrice:
+    value: 1000
+  BuyNextRun:
+    value: 2020-01-01 00:00:00
+  DailyPriceRefresh:
+    value: false
+  NextPearlTradeTime:
+    value: 2020-01-01 00:00:00
+
 IslandCargoPreparation:
   Blacklist:
     value: "Milk"
+
+IslandBusiness:
+  BatchEnabled:
+    type: checkbox
+    value: true
+    option: [ true, false ]
+  Batch1Shops:
+    type: multiselect
+    value: [3, 1, 5]
+    option: [1, 2, 3, 4, 5]
+  Batch2Shops:
+    type: multiselect
+    value: [2, 4]
+    option: [1, 2, 3, 4, 5]
+  SeasonalReplaceEnabled:
+    type: checkbox
+    value: true
+    option: [ true, false ]
+  SeasonalThreshold:
+    type: input
+    value: 7
 
 # ---------- Island Business Shops ----------
 _IslandBusinessChar: &IslandBusinessChar
@@ -1628,6 +1662,20 @@ IslandBusinessShop1:
     <<: *IslandBusinessProduct1
   Product5:
     <<: *IslandBusinessProduct1
+  SeasonalFallback:
+    type: select
+    value: hearty_meal
+    option:
+      - None
+      - double_bamboo_shoots
+      - tofu_meat
+      - tofu_combo
+      - hearty_meal
+      - fo_tiao
+      - amaranth_rice_ball
+  BoostReplaceFilter:
+    value: |-
+      30 > 20 > 10
 
 IslandBusinessShop2:
   Char1:
@@ -1644,6 +1692,9 @@ IslandBusinessShop2:
     <<: *IslandBusinessProduct2
   Product5:
     <<: *IslandBusinessProduct2
+  BoostReplaceFilter:
+    value: |-
+      30 > 20 > strawberry_honey > fruit_paradise > 10
 
 IslandBusinessShop3:
   Char1:
@@ -1660,6 +1711,9 @@ IslandBusinessShop3:
     <<: *IslandBusinessProduct3
   Product5:
     <<: *IslandBusinessProduct3
+  BoostReplaceFilter:
+    value: |-
+      30 > 20 > succulently_sweet > 10
 
 IslandBusinessShop4:
   Char1:
@@ -1676,6 +1730,9 @@ IslandBusinessShop4:
     <<: *IslandBusinessProduct4
   Product5:
     <<: *IslandBusinessProduct4
+  BoostReplaceFilter:
+    value: |-
+      30 > 20 > 10
 
 IslandBusinessShop5:
   Char1:
@@ -1692,6 +1749,9 @@ IslandBusinessShop5:
     <<: *IslandBusinessProduct5
   Product5:
     <<: *IslandBusinessProduct5
+  BoostReplaceFilter:
+    value: |-
+      30 > 20 > cheese > 10
 
 # ==================== Tools ====================
 
