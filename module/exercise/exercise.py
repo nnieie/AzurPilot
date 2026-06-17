@@ -177,9 +177,6 @@ class Exercise(ExerciseCombat):
             self.config.set_record(Exercise_OpponentRefreshValue=0)
             return 0
 
-    def server_support_ocr_reset_remain(self) -> bool:
-        return self.config.SERVER in ['cn', 'en', 'jp']
-
     def _get_exercise_reset_remain(self):
         """
         获取演习重置剩余时间。
