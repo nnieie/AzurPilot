@@ -213,12 +213,7 @@ class Exercise(ExerciseCombat):
         logger.attr('Exercise_ExerciseStrategy', self.config.Exercise_ExerciseStrategy)
         self.preserve, admiral_interval = self._get_exercise_strategy()
 
-        if not self.server_support_ocr_reset_remain():
-            logger.info(f'Server {self.config.SERVER} does not yet support OCR exercise reset remain time')
-            logger.info('Please contact the developer to improve as soon as possible')
-            remain_time = datetime.timedelta(days=0)
-        else:
-            remain_time = OCR_PERIOD_REMAIN.ocr(self.device.image)
+        remain_time = OCR_PERIOD_REMAIN.ocr(self.device.image)
         logger.info(f'Exercise period remain: {remain_time}')
 
         if admiral_interval is not None and remain_time:
