@@ -285,6 +285,8 @@ OpsiScheduling:
   UseSmartSchedulingOperationCoinsPreserve:
   OperationCoinsPreserve:
   ActionPointPreserve:
+  ActionPointEarlyTriggerEnable:
+  ActionPointEarlyTriggerThreshold:
 
   OperationCoinsReturnThreshold:
   EnableMeowfficerFarming:

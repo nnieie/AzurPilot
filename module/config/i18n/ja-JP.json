@@ -348,11 +348,11 @@
     },
     "IslandDailyInteract": {
       "name": "デイリー/週間任務",
-      "help": "島のふれあい、JUU速達、商区外送サービス、週間写真タスクを処理します。関連ボタンリソース生成後に有効化できます。"
+      "help": "minitouchのみ対応。島のふれあい、JUU速達、商区外送サービス、週間写真タスクを処理します。関連ボタンリソース生成後に有効化できます。"
     },
     "IslandPearlSell": {
       "name": "週間パール取引",
-      "help": "毎週火曜日01:00にパールを自動処理：まず今週のパールを購入し、次に既存のパールを販売します。minitouchのみ対応。コインが200x220個分の購入に十分であることを確認してください。これが今週のパールを一括購入するための最低要件です。不足するとエラーが発生する可能性があります。"
+      "help": "minitouchのみ対応。毎週火曜日01:00にパールを自動処理：まず今週のパールを購入し、次に既存のパールを販売します。コインが200x220個分の購入に十分であることを確認してください。これが今週のパールを一括購入するための最低要件です。不足するとエラーが発生する可能性があります。"
     },
     "Daemon": {
       "name": "半自動クリック",
@@ -1236,8 +1236,11 @@
       "help": "ゲーム内蔵の推奨編成を使用してハードステージの編成を自動的に完了します"
     },
     "DefeatWithdraw": {
-      "name": "道中での戦闘で敗北し撤退",
-      "help": "道中戦闘で敗北した際の処理方法。オンの場合は海域から直接退出し、オフの場合は別のチームが引き継いで後続の戦闘を試みる。"
+      "name": "道中敗北時の処理",
+      "help": "道中戦闘で敗北した際の処理方法",
+      "withdraw_continue": "撤退して任務続行",
+      "switch_fleet": "艦隊切替して続行",
+      "withdraw_stop": "撤退して任務終了"
     }
   },
   "StopCondition": {
@@ -1278,6 +1281,28 @@
     "ReachLevel": {
       "name": "艦船がレベルXに達すると停止します",
       "help": "レベルX未満の艦船がレベルXに達すると停止します。\n0はレベル制限なしを意味します"
+    }
+  },
+  "WarArchives": {
+    "_info": {
+      "name": "作戦アーカイブ",
+      "help": ""
+    },
+    "DailyRunCount": {
+      "name": "デイリー出撃回数",
+      "help": "作戦アーカイブを1日に実行する最大回数です。\n0は無制限です。\n上限に達すると、タスクを無効化せず次回サーバー更新まで延期します。"
+    },
+    "DailyRunCountRemain": {
+      "name": "本日の残り出撃回数",
+      "help": "スクリプトが自動管理する本日の残り回数です。"
+    },
+    "DailyRunCountRecord": {
+      "name": "デイリー出撃回数記録時刻",
+      "help": "サーバー更新後のリセットに使う、スクリプトが自動管理する記録時刻です。"
+    },
+    "DailyRunCountLimit": {
+      "name": "前回のデイリー出撃回数",
+      "help": "回数調整に使う、スクリプトが自動管理する前回の設定値です。"
     }
   },
   "Fleet": {
@@ -3372,6 +3397,16 @@
       "name": "ショートキャットは X ポイントの可動性を接続して保持します",
       "help": "モビリティがX以下になると停止し、モビリティボックスが自動的に開きます。"
     },
+    "ActionPointEarlyTriggerEnable": {
+      "name": "行動力の早期スケジュール",
+      "help": "最後のセイレーン作戦行動力スナップショットと 10 分ごとに 1 回復する自然回復量から現在の行動力を推定します。しきい値に達したらスマートスケジュールを早めに実行し、緊急委託など高優先度タスク中の行動力あふれを防ぎます。",
+      "True": "True",
+      "False": "False"
+    },
+    "ActionPointEarlyTriggerThreshold": {
+      "name": "早期スケジュール行動力しきい値",
+      "help": "推定行動力が X に達したらスマートスケジュールを早めに起動します。既定値は 200 で、自然上限に近づく前にセイレーン作戦 7-1 または指揮ニャ周回を開始する用途に向いています。"
+    },
     "OperationCoinsReturnThreshold": {
       "name": "X 個の戦闘物資引換券を入手する",
       "help": "黄色のコイン獲得ミッション中に、戦闘補給券を合計 X 枚獲得 (増加) し、レベルを上げるために侵食 1 に戻ります。"
@@ -3443,6 +3478,10 @@
       "3": "3",
       "4": "4"
     },
+    "WorkerFilter": {
+      "name": "農場作業員フィルター",
+      "help": ">で接続。例：ChaoHo > NewJersey > Amagi_chan\nSaratoga > Akashi > Tashkent > YingSwei\nLeMalin > Unicorn > Shimakaze > Cheshire\nChenHai > WilliamDPorter\nHelena > Friedrich > Atago\nYixian > August > Eugen > Hood > Javelin > Laffey > Explorer > Navigator > OceanCrosser > FeiYun > Takao\nデフォルト順の先頭2行のみ認識します。指定キャラクターが使用できない場合は WorkerJuu にフォールバックします。"
+    },
     "MinFarm": {
       "name": "作物在庫閾値",
       "help": "660以上を推奨"
@@ -3469,6 +3508,10 @@
       "2": "2",
       "3": "3",
       "4": "4"
+    },
+    "WorkerFilter": {
+      "name": "果樹園作業員フィルター",
+      "help": ">で接続。例：ChaoHo > NewJersey > Amagi_chan\nSaratoga > Akashi > Tashkent > YingSwei\nLeMalin > Unicorn > Shimakaze > Cheshire\nChenHai > WilliamDPorter\nHelena > Friedrich > Atago\nYixian > August > Eugen > Hood > Javelin > Laffey > Explorer > Navigator > OceanCrosser > FeiYun > Takao\nデフォルト順の先頭2行のみ認識します。指定キャラクターが使用できない場合は WorkerJuu にフォールバックします。"
     },
     "MinOrchard": {
       "name": "果物在庫閾値",
@@ -3502,6 +3545,10 @@
       "help": "",
       "1": "1",
       "2": "2"
+    },
+    "WorkerFilter": {
+      "name": "苗床作業員フィルター",
+      "help": ">で接続。例：ChaoHo > NewJersey > Amagi_chan\nSaratoga > Akashi > Tashkent > YingSwei\nLeMalin > Unicorn > Shimakaze > Cheshire\nChenHai > WilliamDPorter\nHelena > Friedrich > Atago\nYixian > August > Eugen > Hood > Javelin > Laffey > Explorer > Navigator > OceanCrosser > FeiYun > Takao\nデフォルト順の先頭2行のみ認識します。指定キャラクターが使用できない場合は WorkerJuu にフォールバックします。"
     },
     "MinNursery": {
       "name": "苗床作物在庫閾値",
@@ -3538,11 +3585,15 @@
     },
     "RancherFilter": {
       "name": "キャラクターフィルター",
-      "help": ">で接続。例：ChaoHo > NewJersey > Amagi_chan\nSaratoga > Akashi > Tashkent > YingSwei\nLeMalin > Unicorn > Shimakaze > Cheshire\nChenHai > WilliamDPorter\nHelena > Friedrich > Atago\nYixian > August > Eugen > Hood > Javelin > Laffey > Explorer > Navigator > OceanCrosser > FeiYun > Takao"
+      "help": ">で接続。例：ChaoHo > NewJersey > Amagi_chan\nSaratoga > Akashi > Tashkent > YingSwei\nLeMalin > Unicorn > Shimakaze > Cheshire\nChenHai > WilliamDPorter\nHelena > Friedrich > Atago\nYixian > August > Eugen > Hood > Javelin > Laffey > Explorer > Navigator > OceanCrosser > FeiYun > Takao\nデフォルト順の先頭2行のみ認識します。指定キャラクターが使用できない場合は WorkerJuu にフォールバックします。"
     },
     "Wool": {
       "name": "羊を飼育",
       "help": ""
+    },
+    "WoolWorkerFilter": {
+      "name": "羊作業員フィルター",
+      "help": ">で接続。例：ChaoHo > NewJersey > Amagi_chan\nSaratoga > Akashi > Tashkent > YingSwei\nLeMalin > Unicorn > Shimakaze > Cheshire\nChenHai > WilliamDPorter\nHelena > Friedrich > Atago\nYixian > August > Eugen > Hood > Javelin > Laffey > Explorer > Navigator > OceanCrosser > FeiYun > Takao\nデフォルト順の先頭2行のみ認識します。指定キャラクターが使用できない場合は WorkerJuu にフォールバックします。"
     }
   },
   "IslandFishery": {
@@ -3573,6 +3624,10 @@
       "name": "エビ在庫閾値",
       "help": ""
     },
+    "MinCrayfish": {
+      "name": "ザリガニ在庫閾値",
+      "help": ""
+    },
     "MinCrab": {
       "name": "カニ在庫閾値",
       "help": ""
@@ -3595,7 +3650,7 @@
     },
     "RancherFilter": {
       "name": "キャラクターフィルター",
-      "help": ">で接続。例：ChaoHo > NewJersey > Amagi_chan\nSaratoga > Akashi > Tashkent > YingSwei\nLeMalin > Unicorn > Shimakaze > Cheshire\nChenHai > WilliamDPorter\nHelena > Friedrich > Atago\nYixian > August > Eugen > Hood > Javelin > Laffey > Explorer > Navigator > OceanCrosser > FeiYun > Takao"
+      "help": ">で接続。例：ChaoHo > NewJersey > Amagi_chan\nSaratoga > Akashi > Tashkent > YingSwei\nLeMalin > Unicorn > Shimakaze > Cheshire\nChenHai > WilliamDPorter\nHelena > Friedrich > Atago\nYixian > August > Eugen > Hood > Javelin > Laffey > Explorer > Navigator > OceanCrosser > FeiYun > Takao\nデフォルト順の先頭2行のみ認識します。指定キャラクターが使用できない場合は WorkerJuu にフォールバックします。"
     }
   },
   "IslandMine": {
@@ -3619,6 +3674,10 @@
       "2": "2",
       "3": "3",
       "4": "4"
+    },
+    "WorkerFilter": {
+      "name": "鉱山作業員フィルター",
+      "help": ">で接続。例：ChaoHo > NewJersey > Amagi_chan\nSaratoga > Akashi > Tashkent > YingSwei\nLeMalin > Unicorn > Shimakaze > Cheshire\nChenHai > WilliamDPorter\nHelena > Friedrich > Atago\nYixian > August > Eugen > Hood > Javelin > Laffey > Explorer > Navigator > OceanCrosser > FeiYun > Takao\nデフォルト順の先頭2行のみ認識します。指定キャラクターが使用できない場合は WorkerJuu にフォールバックします。"
     },
     "MinCopper": {
       "name": "銅鉱石最低在庫",
@@ -3663,6 +3722,10 @@
       "3": "3",
       "4": "4"
     },
+    "WorkerFilter": {
+      "name": "林場作業員フィルター",
+      "help": ">で接続。例：ChaoHo > NewJersey > Amagi_chan\nSaratoga > Akashi > Tashkent > YingSwei\nLeMalin > Unicorn > Shimakaze > Cheshire\nChenHai > WilliamDPorter\nHelena > Friedrich > Atago\nYixian > August > Eugen > Hood > Javelin > Laffey > Explorer > Navigator > OceanCrosser > FeiYun > Takao\nデフォルト順の先頭2行のみ認識します。指定キャラクターが使用できない場合は WorkerJuu にフォールバックします。"
+    },
     "MinElegant": {
       "name": "エレガント木材最低在庫",
       "help": "倉庫のエレガント木材がこの値を下回った場合のみ林場ポジションが生産します。"
@@ -3674,6 +3737,16 @@
     "MinSelected": {
       "name": "セレクテッド木材最低在庫",
       "help": "倉庫のセレクテッド木材がこの値を下回った場合のみ林場ポジションが生産します。"
+    }
+  },
+  "IslandDailyGather": {
+    "_info": {
+      "name": "デイリー採集",
+      "help": "管理画面の採集タブからデイリー採集を実行します。実行時刻：03:10、18:00。流れ：採集対象を選択→スイッチを切替→キャラクターを配置→出発。"
+    },
+    "WorkerFilter": {
+      "name": "採集キャラクターフィルター",
+      "help": ">で接続。最大3人まで指定でき、採集スロット1～3に対応します。\n>で接続。例：ChaoHo > NewJersey > Amagi_chan\nSaratoga > Akashi > Tashkent > YingSwei\nLeMalin > Unicorn > Shimakaze > Cheshire\nChenHai > WilliamDPorter\nHelena > Friedrich > Atago\nYixian > August > Eugen > Hood > Javelin > Laffey > Explorer > Navigator > OceanCrosser > FeiYun > Takao\nデイリー採集では WorkerJuu を選択できません。入力されている場合は自動で無視します。\nデフォルト順の先頭2行のみ認識します。指定キャラクターが使用できない場合、そのスロットは既存の採集ロジックにフォールバックします。"
     }
   },
   "IslandRestaurant": {
@@ -3689,7 +3762,7 @@
     },
     "ChefFilter": {
       "name": "シェフフィルター",
-      "help": ">で接続"
+      "help": ">で接続。例：ChaoHo > NewJersey > Amagi_chan\nSaratoga > Akashi > Tashkent > YingSwei\nLeMalin > Unicorn > Shimakaze > Cheshire\nChenHai > WilliamDPorter\nHelena > Friedrich > Atago\nYixian > August > Eugen > Hood > Javelin > Laffey > Explorer > Navigator > OceanCrosser > FeiYun > Takao\nデフォルト順の先頭2行のみ認識します。指定キャラクターが使用できない場合は WorkerJuu にフォールバックします。"
     },
     "DoubleBambooShoots": {
       "name": "涼拌双筍",
@@ -3900,7 +3973,7 @@
     },
     "ChefFilter": {
       "name": "シェフフィルター",
-      "help": ">で接続"
+      "help": ">で接続。例：ChaoHo > NewJersey > Amagi_chan\nSaratoga > Akashi > Tashkent > YingSwei\nLeMalin > Unicorn > Shimakaze > Cheshire\nChenHai > WilliamDPorter\nHelena > Friedrich > Atago\nYixian > August > Eugen > Hood > Javelin > Laffey > Explorer > Navigator > OceanCrosser > FeiYun > Takao\nデフォルト順の先頭2行のみ認識します。指定キャラクターが使用できない場合は WorkerJuu にフォールバックします。"
     },
     "Seasonal": {
       "name": "春花茶",
@@ -4093,7 +4166,7 @@
     },
     "ChefFilter": {
       "name": "シェフフィルター",
-      "help": ">で接続"
+      "help": ">で接続。例：ChaoHo > NewJersey > Amagi_chan\nSaratoga > Akashi > Tashkent > YingSwei\nLeMalin > Unicorn > Shimakaze > Cheshire\nChenHai > WilliamDPorter\nHelena > Friedrich > Atago\nYixian > August > Eugen > Hood > Javelin > Laffey > Explorer > Navigator > OceanCrosser > FeiYun > Takao\nデフォルト順の先頭2行のみ認識します。指定キャラクターが使用できない場合は WorkerJuu にフォールバックします。"
     },
     "Meal1": {
       "name": "メニュー1",
@@ -4104,6 +4177,7 @@
       "carrot_omelette": "にんじん厚焼き玉子",
       "stir_fried_chicken": "鶏肉炒め",
       "steak_bowl": "ハンバーグ丼",
+      "crayfish_stir_fry": "ザリガニ炒め",
       "carnival": "バーベキュー祭り",
       "double_energy": "エネルギーダブルセット"
     },
@@ -4120,6 +4194,7 @@
       "carrot_omelette": "にんじん厚焼き玉子",
       "stir_fried_chicken": "鶏肉炒め",
       "steak_bowl": "ハンバーグ丼",
+      "crayfish_stir_fry": "ザリガニ炒め",
       "carnival": "バーベキュー祭り",
       "double_energy": "エネルギーダブルセット"
     },
@@ -4136,6 +4211,7 @@
       "carrot_omelette": "にんじん厚焼き玉子",
       "stir_fried_chicken": "鶏肉炒め",
       "steak_bowl": "ハンバーグ丼",
+      "crayfish_stir_fry": "ザリガニ炒め",
       "carnival": "バーベキュー祭り",
       "double_energy": "エネルギーダブルセット"
     },
@@ -4152,6 +4228,7 @@
       "carrot_omelette": "にんじん厚焼き玉子",
       "stir_fried_chicken": "鶏肉炒め",
       "steak_bowl": "ハンバーグ丼",
+      "crayfish_stir_fry": "ザリガニ炒め",
       "carnival": "バーベキュー祭り",
       "double_energy": "エネルギーダブルセット"
     },
@@ -4168,6 +4245,7 @@
       "carrot_omelette": "にんじん厚焼き玉子",
       "stir_fried_chicken": "鶏肉炒め",
       "steak_bowl": "ハンバーグ丼",
+      "crayfish_stir_fry": "ザリガニ炒め",
       "carnival": "バーベキュー祭り",
       "double_energy": "エネルギーダブルセット"
     },
@@ -4184,6 +4262,7 @@
       "carrot_omelette": "にんじん厚焼き玉子",
       "stir_fried_chicken": "鶏肉炒め",
       "steak_bowl": "ハンバーグ丼",
+      "crayfish_stir_fry": "ザリガニ炒め",
       "carnival": "バーベキュー祭り",
       "double_energy": "エネルギーダブルセット"
     },
@@ -4200,6 +4279,7 @@
       "carrot_omelette": "にんじん厚焼き玉子",
       "stir_fried_chicken": "鶏肉炒め",
       "steak_bowl": "ハンバーグ丼",
+      "crayfish_stir_fry": "ザリガニ炒め",
       "carnival": "バーベキュー祭り",
       "double_energy": "エネルギーダブルセット"
     },
@@ -4216,6 +4296,7 @@
       "carrot_omelette": "にんじん厚焼き玉子",
       "stir_fried_chicken": "鶏肉炒め",
       "steak_bowl": "ハンバーグ丼",
+      "crayfish_stir_fry": "ザリガニ炒め",
       "carnival": "バーベキュー祭り",
       "double_energy": "エネルギーダブルセット"
     },
@@ -4238,6 +4319,7 @@
       "carrot_omelette": "にんじん厚焼き玉子",
       "stir_fried_chicken": "鶏肉炒め",
       "steak_bowl": "ハンバーグ丼",
+      "crayfish_stir_fry": "ザリガニ炒め",
       "carnival": "バーベキュー祭り",
       "double_energy": "エネルギーダブルセット"
     }
@@ -4255,7 +4337,7 @@
     },
     "ChefFilter": {
       "name": "シェフフィルター",
-      "help": ">で接続"
+      "help": ">で接続。例：ChaoHo > NewJersey > Amagi_chan\nSaratoga > Akashi > Tashkent > YingSwei\nLeMalin > Unicorn > Shimakaze > Cheshire\nChenHai > WilliamDPorter\nHelena > Friedrich > Atago\nYixian > August > Eugen > Hood > Javelin > Laffey > Explorer > Navigator > OceanCrosser > FeiYun > Takao\nデフォルト順の先頭2行のみ認識します。指定キャラクターが使用できない場合は WorkerJuu にフォールバックします。"
     },
     "Meal1": {
       "name": "メニュー1",
@@ -4444,7 +4526,7 @@
     },
     "ChefFilter": {
       "name": "シェフフィルター",
-      "help": ">で接続"
+      "help": ">で接続。例：ChaoHo > NewJersey > Amagi_chan\nSaratoga > Akashi > Tashkent > YingSwei\nLeMalin > Unicorn > Shimakaze > Cheshire\nChenHai > WilliamDPorter\nHelena > Friedrich > Atago\nYixian > August > Eugen > Hood > Javelin > Laffey > Explorer > Navigator > OceanCrosser > FeiYun > Takao\nデフォルト順の先頭2行のみ認識します。指定キャラクターが使用できない場合は WorkerJuu にフォールバックします。"
     },
     "Friedrich": {
       "name": "フリードリヒ",
@@ -4702,7 +4784,7 @@
   "IslandDailyInteract": {
     "_info": {
       "name": "デイリー/週間任務",
-      "help": "朝露農場のふれあい、開発計画の JUU 速達、商区外送サービス、週間写真タスクを含む島のデイリー・週間交流を制御します。"
+      "help": "minitouchのみ対応。朝露農場のふれあい、開発計画の JUU 速達、商区外送サービス、週間写真タスクを含む島のデイリー・週間交流を制御します。"
     },
     "WeeklyPhoto": {
       "name": "週間写真タスク",
@@ -4714,7 +4796,7 @@
   "IslandPearlSell": {
     "_info": {
       "name": "週間パール取引",
-      "help": "毎週火曜日01:00にパールを自動処理：まず最高購入価格で今週のパールを購入し、次に最低販売価格で既存のパールを販売します。他の未完了プロセスは翌日01:00にリトライされます。minitouchのみ対応。コインが200x220個分の購入に十分であることを確認してください。これが今週のパールを一括購入するための最低要件です。不足するとエラーが発生する可能性があります。"
+      "help": "minitouchのみ対応。毎週火曜日01:00にパールを自動処理：まず最高購入価格で今週のパールを購入し、次に最低販売価格で既存のパールを販売します。他の未完了プロセスは翌日01:00にリトライされます。コインが200x220個分の購入に十分であることを確認してください。これが今週のパールを一括購入するための最低要件です。不足するとエラーが発生する可能性があります。"
     },
     "BuyPrice": {
       "name": "最大購入価格",
@@ -5274,6 +5356,7 @@
       "roasted_skewer": "炭焼き串",
       "stir_fried_chicken": "鶏肉炒め",
       "steak_bowl": "ハンバーグ丼",
+      "crayfish_stir_fry": "ザリガニ炒め",
       "carnival": "バーベキュー祭り",
       "double_energy": "エネルギーダブルセット"
     },
@@ -5284,6 +5367,7 @@
       "roasted_skewer": "炭焼き串",
       "stir_fried_chicken": "鶏肉炒め",
       "steak_bowl": "ハンバーグ丼",
+      "crayfish_stir_fry": "ザリガニ炒め",
       "carnival": "バーベキュー祭り",
       "double_energy": "エネルギーダブルセット"
     },
@@ -5294,6 +5378,7 @@
       "roasted_skewer": "炭焼き串",
       "stir_fried_chicken": "鶏肉炒め",
       "steak_bowl": "ハンバーグ丼",
+      "crayfish_stir_fry": "ザリガニ炒め",
       "carnival": "バーベキュー祭り",
       "double_energy": "エネルギーダブルセット"
     },
@@ -5304,6 +5389,7 @@
       "roasted_skewer": "炭焼き串",
       "stir_fried_chicken": "鶏肉炒め",
       "steak_bowl": "ハンバーグ丼",
+      "crayfish_stir_fry": "ザリガニ炒め",
       "carnival": "バーベキュー祭り",
       "double_energy": "エネルギーダブルセット"
     },
@@ -5314,6 +5400,7 @@
       "roasted_skewer": "炭焼き串",
       "stir_fried_chicken": "鶏肉炒め",
       "steak_bowl": "ハンバーグ丼",
+      "crayfish_stir_fry": "ザリガニ炒め",
       "carnival": "バーベキュー祭り",
       "double_energy": "エネルギーダブルセット"
     },
@@ -5980,6 +6067,8 @@
       "UseSmartSchedulingOperationCoinsPreserve": "Gui.OpsiScheduling.UseSmartSchedulingOperationCoinsPreserve",
       "OperationCoinsPreserve": "Gui.OpsiScheduling.OperationCoinsPreserve",
       "ActionPointPreserve": "Gui.OpsiScheduling.ActionPointPreserve",
+      "ActionPointEarlyTriggerEnable": "行動力の早期スケジュール",
+      "ActionPointEarlyTriggerThreshold": "早期スケジュール行動力しきい値",
       "OperationCoinsReturnThreshold": "Gui.OpsiScheduling.OperationCoinsReturnThreshold",
       "EnableMeowfficerFarming": "Gui.OpsiScheduling.EnableMeowfficerFarming",
       "EnableObscure": "Gui.OpsiScheduling.EnableObscure",

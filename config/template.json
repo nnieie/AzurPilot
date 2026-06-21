@@ -182,7 +182,7 @@
       "FleetOnsen": false
     },
     "YukikazeTaskManager": {
-      "TaskPriorityAdjustment": "Restart\n> OpsiCrossMonth\n> Commission > Tactical > Research\n> Exercise\n> Dorm > Meowfficer > Guild > Gacha\n> Reward\n> ShopFrequent > ShopOnce > Shipyard > Freebies\n> PrivateQuarters\n> OpsiExplore\n> Minigame > Awaken\n> OpsiAshBeacon\n> OpsiDaily > OpsiShop > OpsiVoucher > EventShop\n> OpsiAbyssal > OpsiStronghold > OpsiObscure > OpsiArchive\n> Daily > Hard > OpsiAshBeacon > OpsiAshAssist > OpsiMonthBoss\n> Sos > EventSp > EventA > EventB > EventC > EventD\n> RaidDaily > CoalitionSp > WarArchives > MaritimeEscort\n> IslandJuuEatery > IslandJuuCoffee > IslandGrill > IslandTeahouse > IslandRestaurant\n> IslandFarm > IslandRancher > IslandMineForest > IslandDailyGather > IslandManufacture\n> IslandAirDrop > IslandBusiness > IslandDailyOrder > IslandDailyInteract > IslandPearlSell > IslandCargoPreparation\n> Event > Event2 > Event3 > Raid > Hospital > HospitalEvent > Coalition > RaidScuttle > Main > Main2 > Main3\n> OpsiMeowfficerFarming\n> GemsFarming\n> Ambush11\n> OpsiHazard1Leveling\n> ThreeOilLowCost"
+      "TaskPriorityAdjustment": "Restart\n> OpsiCrossMonth\n> OpsiScheduling\n> Commission > Tactical > Research\n> Exercise\n> Dorm > Meowfficer > Guild > Gacha\n> Reward\n> ShopFrequent > ShopOnce > Shipyard > Freebies\n> PrivateQuarters\n> OpsiExplore\n> Minigame > Awaken\n> OpsiAshBeacon\n> OpsiDaily > OpsiShop > OpsiVoucher > EventShop\n> OpsiAbyssal > OpsiStronghold > OpsiObscure > OpsiArchive\n> Daily > Hard > OpsiAshBeacon > OpsiAshAssist > OpsiMonthBoss\n> Sos > EventSp > EventA > EventB > EventC > EventD\n> RaidDaily > CoalitionSp > WarArchives > MaritimeEscort\n> IslandJuuEatery > IslandJuuCoffee > IslandGrill > IslandTeahouse > IslandRestaurant\n> IslandFarm > IslandRancher > IslandMineForest > IslandDailyGather > IslandManufacture\n> IslandAirDrop > IslandBusiness > IslandDailyOrder > IslandDailyInteract > IslandPearlSell > IslandCargoPreparation\n> Event > Event2 > Event3 > Raid > Hospital > HospitalEvent > Coalition > RaidScuttle > Main > Main2 > Main3\n> OpsiMeowfficerFarming\n> GemsFarming\n> Ambush11\n> OpsiHazard1Leveling\n> ThreeOilLowCost"
     },
     "Storage": {
       "Storage": {}
@@ -226,7 +226,7 @@
       "Use2xBook": false,
       "AmbushEvade": true,
       "UseRecommendFleet": false,
-      "DefeatWithdraw": true
+      "DefeatWithdraw": "withdraw_stop"
     },
     "StopCondition": {
       "OilLimit": 1000,
@@ -308,7 +308,7 @@
       "Use2xBook": false,
       "AmbushEvade": true,
       "UseRecommendFleet": false,
-      "DefeatWithdraw": true
+      "DefeatWithdraw": "withdraw_stop"
     },
     "StopCondition": {
       "OilLimit": 1000,
@@ -390,7 +390,7 @@
       "Use2xBook": false,
       "AmbushEvade": true,
       "UseRecommendFleet": false,
-      "DefeatWithdraw": true
+      "DefeatWithdraw": "withdraw_stop"
     },
     "StopCondition": {
       "OilLimit": 1000,
@@ -489,7 +489,7 @@
       "Use2xBook": false,
       "AmbushEvade": true,
       "UseRecommendFleet": false,
-      "DefeatWithdraw": true
+      "DefeatWithdraw": "withdraw_stop"
     },
     "StopCondition": {
       "OilLimit": 1000,
@@ -575,7 +575,7 @@
       "Use2xBook": false,
       "AmbushEvade": true,
       "UseRecommendFleet": false,
-      "DefeatWithdraw": true
+      "DefeatWithdraw": "withdraw_stop"
     },
     "StopCondition": {
       "OilLimit": 1000,
@@ -661,7 +661,7 @@
       "Use2xBook": false,
       "AmbushEvade": true,
       "UseRecommendFleet": false,
-      "DefeatWithdraw": true
+      "DefeatWithdraw": "withdraw_stop"
     },
     "StopCondition": {
       "OilLimit": 1000,
@@ -744,7 +744,7 @@
       "Use2xBook": false,
       "AmbushEvade": true,
       "UseRecommendFleet": false,
-      "DefeatWithdraw": true
+      "DefeatWithdraw": "withdraw_stop"
     },
     "StopCondition": {
       "OilLimit": 1000,
@@ -826,7 +826,7 @@
       "Use2xBook": false,
       "AmbushEvade": true,
       "UseRecommendFleet": false,
-      "DefeatWithdraw": true
+      "DefeatWithdraw": "withdraw_stop"
     },
     "StopCondition": {
       "OilLimit": 1000,
@@ -908,7 +908,7 @@
       "Use2xBook": false,
       "AmbushEvade": true,
       "UseRecommendFleet": false,
-      "DefeatWithdraw": true
+      "DefeatWithdraw": "withdraw_stop"
     },
     "StopCondition": {
       "OilLimit": 1000,
@@ -994,7 +994,7 @@
       "Use2xBook": false,
       "AmbushEvade": true,
       "UseRecommendFleet": false,
-      "DefeatWithdraw": true
+      "DefeatWithdraw": "withdraw_stop"
     },
     "StopCondition": {
       "OilLimit": 1000,
@@ -1053,7 +1053,7 @@
       "Use2xBook": false,
       "AmbushEvade": true,
       "UseRecommendFleet": false,
-      "DefeatWithdraw": true
+      "DefeatWithdraw": "withdraw_stop"
     },
     "StopCondition": {
       "OilLimit": 1000,
@@ -1165,7 +1165,7 @@
       "Use2xBook": false,
       "AmbushEvade": true,
       "UseRecommendFleet": false,
-      "DefeatWithdraw": true
+      "DefeatWithdraw": "withdraw_stop"
     },
     "Coalition": {
       "Mode": "hard",
@@ -1262,7 +1262,7 @@
       "Use2xBook": false,
       "AmbushEvade": true,
       "UseRecommendFleet": false,
-      "DefeatWithdraw": true
+      "DefeatWithdraw": "withdraw_stop"
     },
     "StopCondition": {
       "OilLimit": 1000,
@@ -1272,6 +1272,12 @@
       "StageIncrease": false,
       "GetNewShip": false,
       "ReachLevel": 0
+    },
+    "WarArchives": {
+      "DailyRunCount": 0,
+      "DailyRunCountRemain": 0,
+      "DailyRunCountRecord": "2020-01-01 00:00:00",
+      "DailyRunCountLimit": 0
     },
     "Fleet": {
       "Fleet1": 1,
@@ -1348,7 +1354,7 @@
       "Use2xBook": false,
       "AmbushEvade": true,
       "UseRecommendFleet": false,
-      "DefeatWithdraw": true
+      "DefeatWithdraw": "withdraw_stop"
     },
     "StopCondition": {
       "OilLimit": 1000,
@@ -1434,7 +1440,7 @@
       "Use2xBook": false,
       "AmbushEvade": true,
       "UseRecommendFleet": false,
-      "DefeatWithdraw": true
+      "DefeatWithdraw": "withdraw_stop"
     },
     "StopCondition": {
       "OilLimit": 1000,
@@ -1520,7 +1526,7 @@
       "Use2xBook": false,
       "AmbushEvade": true,
       "UseRecommendFleet": false,
-      "DefeatWithdraw": true
+      "DefeatWithdraw": "withdraw_stop"
     },
     "StopCondition": {
       "OilLimit": 1000,
@@ -1606,7 +1612,7 @@
       "Use2xBook": false,
       "AmbushEvade": true,
       "UseRecommendFleet": false,
-      "DefeatWithdraw": true
+      "DefeatWithdraw": "withdraw_stop"
     },
     "StopCondition": {
       "OilLimit": 1000,
@@ -1688,7 +1694,7 @@
       "Use2xBook": false,
       "AmbushEvade": true,
       "UseRecommendFleet": false,
-      "DefeatWithdraw": true
+      "DefeatWithdraw": "withdraw_stop"
     },
     "StopCondition": {
       "OilLimit": 1000,
@@ -1773,7 +1779,7 @@
       "Use2xBook": false,
       "AmbushEvade": true,
       "UseRecommendFleet": false,
-      "DefeatWithdraw": true
+      "DefeatWithdraw": "withdraw_stop"
     },
     "StopCondition": {
       "OilLimit": 1000,
@@ -1825,7 +1831,7 @@
       "Use2xBook": false,
       "AmbushEvade": true,
       "UseRecommendFleet": false,
-      "DefeatWithdraw": true
+      "DefeatWithdraw": "withdraw_stop"
     },
     "Coalition": {
       "Mode": "hard",
@@ -2709,8 +2715,8 @@
       "PushNotification": false,
       "NextRun": "2020-01-01 00:00:00",
       "Command": "OpsiScheduling",
-      "SuccessInterval": 0,
-      "FailureInterval": 120,
+      "SuccessInterval": 60,
+      "FailureInterval": 60,
       "ServerUpdate": "00:00",
       "ForceAdbNcScreenshot": false,
       "Sensitive": false
@@ -2719,6 +2725,8 @@
       "UseSmartSchedulingOperationCoinsPreserve": true,
       "OperationCoinsPreserve": 40000,
       "ActionPointPreserve": 200,
+      "ActionPointEarlyTriggerEnable": true,
+      "ActionPointEarlyTriggerThreshold": 200,
       "OperationCoinsReturnThreshold": 20000,
       "EnableMeowfficerFarming": true,
       "EnableObscure": false,
@@ -2875,11 +2883,13 @@
     },
     "IslandFarm": {
       "Positions": 3,
+      "WorkerFilter": "WorkerJuu",
       "MinFarm": 660,
       "PlantPotatoes": 4
     },
     "IslandOrchard": {
       "Positions": 4,
+      "WorkerFilter": "WorkerJuu",
       "MinOrchard": 300,
       "IgnoreAvocado": true,
       "PlantRubber": 0,
@@ -2887,6 +2897,7 @@
     },
     "IslandNursery": {
       "Positions": 2,
+      "WorkerFilter": "WorkerJuu",
       "MinNursery": 0,
       "IgnorePineapple": true,
       "PlantLavender": 2
@@ -2912,7 +2923,8 @@
       "MinPork": 300,
       "Milk": true,
       "RancherFilter": "WorkerJuu",
-      "Wool": true
+      "Wool": true,
+      "WoolWorkerFilter": "WorkerJuu"
     },
     "IslandFishery": {
       "Positions": 3,
@@ -2920,6 +2932,7 @@
       "MinYellowfinTuna": 50,
       "MinShell": 50,
       "MinShrimp": 50,
+      "MinCrayfish": 50,
       "MinCrab": 50,
       "MinSquid": 50,
       "MinSeaCucumber": 50,
@@ -2945,6 +2958,7 @@
     "IslandMine": {
       "Positions": 1,
       "MineSilver": 1,
+      "WorkerFilter": "WorkerJuu",
       "MinCopper": 50,
       "MinAluminium": 50,
       "MinIron": 50,
@@ -2954,6 +2968,7 @@
     "IslandForest": {
       "Positions": 1,
       "CutElegant": 1,
+      "WorkerFilter": "WorkerJuu",
       "MinElegant": 50,
       "MinPractical": 50,
       "MinSelected": 50
@@ -3199,6 +3214,9 @@
       "ServerUpdate": "00:00",
       "ForceAdbNcScreenshot": false,
       "Sensitive": false
+    },
+    "IslandDailyGather": {
+      "WorkerFilter": ""
     },
     "Storage": {
       "Storage": {}
