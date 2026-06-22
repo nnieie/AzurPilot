@@ -140,12 +140,16 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
         self.config.OS_ACTION_POINT_PRESERVE = preserve
 
         # ===== 智能调度：行动力保留覆盖 =====
-        if is_smart_scheduling_enabled(self.config):
+        if is_smart_scheduling_enabled(self.config) and not natural_ap_cleanup:
             if hasattr(self, '_get_smart_scheduling_action_point_preserve'):
                 smart_ap_preserve = self._get_smart_scheduling_action_point_preserve()
                 if smart_ap_preserve > 0:
                     logger.info(f'[智能调度] 行动力保留使用智能调度配置: {smart_ap_preserve} (原配置: {self.config.OS_ACTION_POINT_PRESERVE})')
                     self.config.OS_ACTION_POINT_PRESERVE = smart_ap_preserve
+
+        if natural_ap_cleanup:
+            logger.info('[智能调度] 短猫自然行动力清理模式：不使用行动力箱子，不购买行动力')
+            self.config.OS_ACTION_POINT_PRESERVE = 0
 
         if self.config.is_task_enabled('OpsiAshBeacon') \
                 and not self._ash_fully_collected \
@@ -182,7 +186,7 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
             self.check_and_notify_action_point_threshold()
 
             # ===== 智能调度：行动力不足检查 =====
-            if is_smart_scheduling_enabled(self.config):
+            if is_smart_scheduling_enabled(self.config) and not natural_ap_cleanup:
                 ap_preserve = self.config.OpsiMeowfficerFarming_ActionPointPreserve
                 if hasattr(self, '_get_smart_scheduling_action_point_preserve'):
                     smart_ap_preserve = self._get_smart_scheduling_action_point_preserve()
@@ -432,9 +436,12 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
     def os_meowfficer_farming(self):
         """执行大世界短猫相接（猫箱搜寻）任务。"""
         logger.hr(f'OS meowfficer farming, hazard_level={self.config.OpsiMeowfficerFarming_HazardLevel}', level=1)
+        natural_ap_cleanup = self._is_natural_ap_cleanup_mode()
+        if natural_ap_cleanup:
+            self._apply_natural_ap_cleanup_runtime()
         
         # ===== 前置检查：黄币状态 =====
-        if self.is_cl1_enabled:
+        if self.is_cl1_enabled and not natural_ap_cleanup:
             return_threshold, _ = self._get_operation_coins_return_threshold()
             if return_threshold is None:
                 logger.info('凭证返回阈值为 0，禁用黄币检查')
@@ -448,6 +455,9 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
         
         preserve = min(self.get_action_point_limit(self.config.OpsiMeowfficerFarming_APPreserveUntilReset),
                        self.config.OpsiMeowfficerFarming_ActionPointPreserve)
+        if natural_ap_cleanup:
+            logger.info('[智能调度] 自然行动力清理模式下短猫保留行动力设为 0')
+            preserve = 0
         if preserve == 0:
             self.config.override(OpsiFleet_Submarine=False)
             
@@ -480,8 +490,9 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
                 logger.info(f'Server {self.config.SERVER} does not support OpsiTarget yet, please contact the developers.')
 
         ap_checked = False
-        while True:
-            ap_checked = self._meow_ap_and_scheduling_check(preserve, ap_checked)
+        try:
+            while True:
+                ap_checked = self._meow_ap_and_scheduling_check(preserve, ap_checked)
 
             # ===== 塞壬探测装置搜索准备 =====
             siren_search_enabled = self.config.OpsiMeowfficerFarming_SirenDetectorSearch_Enable
