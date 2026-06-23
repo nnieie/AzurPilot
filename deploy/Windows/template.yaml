@@ -139,6 +139,7 @@ Deploy:
     DpiScaling: true
     # --key. Password of web ui
     # Useful when expose AzurPilot to the public network
+    # WebuiHost 为 0.0.0.0 或 :: 时必须设置密码
     Password: null
     # --cdn. Use jsdelivr cdn for pywebio static files (css, js).
     # 'true' for jsdelivr cdn

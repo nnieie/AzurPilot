@@ -23,6 +23,7 @@ unins000.exe
 *.lock
 config/reloadflag
 config/reloadalas
+/password.txt
 test.py
 test/
 !test/

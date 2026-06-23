@@ -84,6 +84,7 @@ def func(ev: Optional[Event]):
     ssl_cert = args.ssl_cert or State.deploy_config.WebuiSSLCert
     ssl = ssl_key is not None and ssl_cert is not None
     State.electron = args.electron
+    State.webui_host = host
 
     # 记录启动器配置
     logger.hr("Launcher config")

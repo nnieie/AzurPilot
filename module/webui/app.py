@@ -6,6 +6,8 @@ import argparse
 import json
 import queue
 import requests
+import secrets
+import string
 import threading
 import time
 import re
@@ -135,11 +137,94 @@ fix_py37_subprocess_communicate()
 task_handler = TaskHandler()
 RESTRICTED_DEVICE_IDS = {
     "1",
-    "ec7c276caa6e48a9576ce6684ce91aab",
+    "2",
 }
 RESTRICTED_DEVICE_MESSAGE = (
-    "你的公网IP已泄露 请加群https://qm.qq.com/q/7PTRnGrPzO联系我们解除安全限制"
+    "你的公网IP已泄露 请加群https://join.nanoda.work/#/join联系我们解除安全限制"
 )
+PUBLIC_WEBUI_WITHOUT_PASSWORD_MESSAGE = "当前配置允许所有设备访问，请添加密码\n\n设置方法:\n在config/deploy.yaml中添加:\nWebUI:\n  Password: 你的密码\n然后重启\n\n温馨提示：密码推荐大小写字母+数字不小于六位\n\n目前配置允許所有裝置存取，請新增密碼。\n\n設定方法:\n在config/deploy.yaml中添加:\nWebUI:\n  Password: 你的密碼\n然後重新啟動\n\n溫馨提示：密碼建議包含大小寫英文字母與數字，且不少於六位。\n\nThe current configuration allows access from all devices. Please set a password.\n\nHow to configure:\nAdd the following to config/deploy.yaml:\nWebUI:\n  Password: your_password\nThen restart the application.\n\nTip: It is recommended to use a password containing uppercase and lowercase letters as well as numbers, with a minimum length of 6 characters.\n\n現在の設定では、すべてのデバイスからアクセスできます。パスワードを設定してください。\n\n設定方法:\nconfig/deploy.yaml に以下を追加してください:\nWebUI:\n  Password: あなたのパスワード\nその後、アプリケーションを再起動してください。\n\nヒント：パスワードは英大文字・英小文字・数字を含み、6文字以上にすることを推奨します。"
+PUBLIC_WEBUI_PASSWORD_GENERATE_FAILED_MESSAGE = (
+    "当前配置允许所有设备访问，但自动生成密码失败，请手动在 config/deploy.yaml 设置 Password 后重启。"
+)
+WEBUI_AUTO_PASSWORD_FILE = "password.txt"
+
+
+def is_public_webui_host(host):
+    """
+    判断 WebUI 是否监听所有网络接口。
+
+    Args:
+        host (str): WebUI 监听地址。
+
+    Returns:
+        bool: True 表示 WebUI 允许所有设备访问。
+    """
+    host = str(host or "").strip().lower()
+    return host in ("0.0.0.0", "::", "[::]")
+
+
+def is_webui_password_set(password):
+    """
+    判断 WebUI 密码是否有效设置。
+
+    Args:
+        password: WebUI 密码配置。
+
+    Returns:
+        bool: True 表示密码包含非空白字符。
+    """
+    return bool(str(password or "").strip())
+
+
+def generate_webui_password(length=32):
+    """
+    生成包含大小写字母和数字的 WebUI 密码。
+
+    Args:
+        length (int): 密码长度。
+
+    Returns:
+        str: 随机密码。
+    """
+    letters_upper = string.ascii_uppercase
+    letters_lower = string.ascii_lowercase
+    digits = string.digits
+    alphabet = letters_upper + letters_lower + digits
+    password = [
+        secrets.choice(letters_upper),
+        secrets.choice(letters_lower),
+        secrets.choice(digits),
+    ]
+    password.extend(secrets.choice(alphabet) for _ in range(length - len(password)))
+    secrets.SystemRandom().shuffle(password)
+    return "".join(password)
+
+
+def ensure_public_webui_password(key):
+    """
+    公网监听且未设置密码时自动生成密码。
+
+    Args:
+        key: 命令行或部署配置中的 WebUI 密码。
+
+    Returns:
+        tuple[str | None, str | None]: 有效密码和失败原因。
+    """
+    host = State.webui_host or State.deploy_config.WebuiHost
+    if not is_public_webui_host(host) or is_webui_password_set(key):
+        return key, None
+
+    try:
+        password = generate_webui_password()
+        from deploy.atomic import atomic_write
+
+        atomic_write(WEBUI_AUTO_PASSWORD_FILE, f"{password}\n")
+        State.deploy_config.Password = password
+        logger.warning(f"WebUI 已自动生成密码，请在根目录 {WEBUI_AUTO_PASSWORD_FILE} 查看。")
+        return password, None
+    except Exception as e:
+        logger.exception(f"WebUI 自动生成密码失败: {e}")
+        return None, str(e)
 
 
 def timedelta_to_text(delta=None):
@@ -4999,6 +5084,7 @@ def app():
     AlasGUI.set_theme(theme=theme)
     lang.LANG = State.deploy_config.Language
     key = args.key or State.deploy_config.Password
+    key, password_error = ensure_public_webui_password(key)
     cdn = args.cdn if args.cdn else State.deploy_config.CDN
     runs = None
     if args.run:
@@ -5012,7 +5098,7 @@ def app():
     logger.hr("Webui configs")
     logger.attr("Theme", State.deploy_config.Theme)
     logger.attr("Language", lang.LANG)
-    logger.attr("Password", True if key else False)
+    logger.attr("Password", is_webui_password_set(key))
     logger.attr("CDN", cdn)
     logger.attr("IS_ON_PHONE_CLOUD", IS_ON_PHONE_CLOUD)
 
@@ -5033,10 +5119,23 @@ def app():
         )
         return True
 
+    def _block_public_webui_password_error():
+        if password_error is None:
+            return False
+        popup(
+            "安全保护",
+            PUBLIC_WEBUI_PASSWORD_GENERATE_FAILED_MESSAGE,
+            implicit_close=False,
+            closable=False,
+        )
+        return True
+
     def index():
         if _block_restricted_device():
             return
-        if key is not None and not login(key):
+        if _block_public_webui_password_error():
+            return
+        if is_webui_password_set(key) and not login(key):
             logger.warning(f"{info.user_ip} login failed.")
             time.sleep(1.5)
             run_js("location.reload();")
@@ -5048,7 +5147,9 @@ def app():
     def manage():
         if _block_restricted_device():
             return
-        if key is not None and not login(key):
+        if _block_public_webui_password_error():
+            return
+        if is_webui_password_set(key) and not login(key):
             logger.warning(f"{info.user_ip} login failed.")
             time.sleep(1.5)
             run_js("location.reload();")
