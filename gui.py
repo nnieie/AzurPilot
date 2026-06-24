@@ -79,7 +79,7 @@ def func(ev: Optional[Event]):
 
     # 配置服务器设置
     host = args.host or State.deploy_config.WebuiHost or "0.0.0.0"
-    port = args.port or int(State.deploy_config.WebuiPort) or 22267
+    port = args.port or int(State.deploy_config.WebuiPort) or 25548
     ssl_key = args.ssl_key or State.deploy_config.WebuiSSLKey
     ssl_cert = args.ssl_cert or State.deploy_config.WebuiSSLCert
     ssl = ssl_key is not None and ssl_cert is not None
