@@ -400,7 +400,7 @@
       "name": "この機能を有効にする",
       "help": "このタスクをスケジューラに追加します\n委託、科研、収穫タスクは強制的にオンになっています",
       "True": "有効",
-      "False": "False"
+      "False": "無効"
     },
     "PushNotification": {
       "name": "プッシュ通知",
@@ -437,8 +437,8 @@
     "Sensitive": {
       "name": "センシティブ任務",
       "help": "エラー発生時にゲームの再起動を禁止し、AzurPilot を直ちに停止します。越境デイリー、隠秘海域、深淵海域などの重要なタスクに適用。",
-      "True": "True",
-      "False": "False"
+      "True": "はい",
+      "False": "いいえ"
     }
   },
   "Emulator": {
@@ -1145,6 +1145,7 @@
       "event_20260326_cn": "ワンダラー募集計画",
       "event_20260417_cn": "バケーションレーン・きらめく砂浜",
       "event_20260520_cn": "聖印前の同盟",
+      "event_20260625_cn": "美梦巡演：奇妙夜",
       "raid_20200624": "特別演習超空強襲波（復刻）",
       "raid_20210708": "交錯する新たな波 (復刻)",
       "raid_20220127": "秘密事件調査",
@@ -1809,7 +1810,7 @@
       "help": "",
       "easy": "正午",
       "normal": "黄昏",
-      "hard": "夜晚"
+      "hard": "夜"
     },
     "Stage": {
       "name": "ステージ名",
@@ -1927,8 +1928,8 @@
     "SkillAutoSwitch": {
       "name": "自動スキル切替",
       "help": "次の未学習スキルに自動的に切り替えて学習します",
-      "True": "オン",
-      "False": "オフ"
+      "True": "有効",
+      "False": "無効"
     }
   },
   "ControlExpOverflow": {
@@ -2548,10 +2549,10 @@
       "name": "カードプール",
       "help": "",
       "light": "ライトプール",
-      "heavy": "頑丈なプール",
+      "heavy": "ヘビープール",
       "special": "特別なプール",
       "event": "イベントプール",
-      "wishing_well": "祈りのプール"
+      "wishing_well": "願いのプール"
     },
     "Amount": {
       "name": "引いたカードの枚数",
@@ -2578,26 +2579,26 @@
   },
   "BattlePass": {
     "_info": {
-      "name": "大きな月のカード",
+      "name": "マンスリーパス",
       "help": ""
     },
     "Collect": {
-      "name": "ビッグマンスカードの特典を受け取る",
+      "name": "マンスリーパスの特典を受け取る",
       "help": ""
     }
   },
   "DataKey": {
     "_info": {
-      "name": "ファイルキー",
+      "name": "データキー",
       "help": ""
     },
     "Collect": {
-      "name": "ファイルキーを取得する",
+      "name": "データキーを取得する",
       "help": ""
     },
     "ForceCollect": {
-      "name": "ファイルキーの強制収集",
-      "help": "ファイルキーがいっぱいの場合、それを収集することが必須になります（赤い点を削除します）"
+      "name": "データキーの強制収集",
+      "help": "データキーがいっぱいの場合、それを収集することが必須になります（赤い点を削除します）"
     }
   },
   "Mail": {
@@ -3288,8 +3289,8 @@
     "SkipHpCheck": {
       "name": "HPチェックをスキップ",
       "help": "戦闘後のHPチェックをスキップします。艦船が撃沈されても練級を続行します。",
-      "True": "True",
-      "False": "False"
+      "True": "有効",
+      "False": "無効"
     },
     "Cl1Filter": {
       "name": "明石購入フィルター",
@@ -3346,8 +3347,8 @@
     "EnableCustomCheck": {
       "name": "カスタム艦船検出を有効にする",
       "help": "有効にすると、指定した艦船のみが目標レベルに達したかを検出します。",
-      "True": "True",
-      "False": "False"
+      "True": "有効",
+      "False": "無効"
     },
     "CustomCheckPositions": {
       "name": "カスタム検出艦位",
@@ -3360,14 +3361,14 @@
   },
   "OpsiFleetAutoChange": {
     "_info": {
-      "name": "OpsiFleetAutoChange._info.name",
-      "help": "OpsiFleetAutoChange._info.help"
+      "name": "艦隊自動変更",
+      "help": "大洋で艦隊の自動変更を設定します"
     },
     "Enable": {
       "name": "自動編成を有効にする",
       "help": "有効にすると、経験値が最大になった艦船を自動的に交換します。",
-      "True": "True",
-      "False": "False"
+      "True": "有効",
+      "False": "無効"
     },
     "CooldownHours": {
       "name": "クールダウン時間（時間）",
@@ -3390,8 +3391,8 @@
     "UseSmartSchedulingOperationCoinsPreserve": {
       "name": "X 個の戦闘物資引換券を入手する",
       "help": "有効にすると、以下に設定された戦闘補給券をX個入手する構成が使用されます。無効にすると、侵食 1 レベリングと黄色のコイン保持構成が使用されます。\n閉じたときにモビリティ制御が使用されます\n開いた後、黄色のコインを使用して制御します",
-      "True": "真実",
-      "False": "間違い"
+      "True": "有効",
+      "False": "無効"
     },
     "OperationCoinsPreserve": {
       "name": "侵食 1 レベリング、X 戦闘供給券を維持",
@@ -3404,8 +3405,8 @@
     "ActionPointEarlyTriggerEnable": {
       "name": "行動力の早期スケジュール",
       "help": "侵食 1 または指揮ニャ周回の終了時に自然回復分の行動力を記録し、10 分ごとに 1 回復する速度でスマートスケジュールの次回実行時刻を計算して、行動力あふれを防ぎます。",
-      "True": "True",
-      "False": "False"
+      "True": "有効",
+      "False": "無効"
     },
     "ActionPointEarlyTriggerThreshold": {
       "name": "早期スケジュール行動力しきい値",
@@ -3419,25 +3420,25 @@
       "name": "ショートキャット接続を有効にする",
       "help": "インテリジェント スケジューリングでショート キャット接続タスクが黄色のコインを補充できるようにするかどうか",
       "True": "有効",
-      "False": "有効になっていません"
+      "False": "無効"
     },
     "EnableObscure": {
       "name": "未知の海を可能にする",
       "help": "黄色のコインを補充するためにインテリジェントなスケジューリングでHidden Seaミッションを有効にするかどうか",
       "True": "有効",
-      "False": "有効になっていません"
+      "False": "無効"
     },
     "EnableAbyssal": {
       "name": "深海を有効にする",
       "help": "イエローコインを補充するためのインテリジェントなスケジューリングで深海ミッションを有効にするかどうか",
       "True": "有効",
-      "False": "有効になっていません"
+      "False": "無効"
     },
     "EnableStronghold": {
       "name": "セイレン要塞を有効にする",
       "help": "黄色のコインを補充するためにインテリジェント スケジューリングで Siren Fortress タスクを有効にするかどうか",
       "True": "有効",
-      "False": "有効になっていません"
+      "False": "無効"
     },
     "MeowStartEarlyMode": {
       "name": "月末モビリティ自動掃除モード",
@@ -3671,7 +3672,7 @@
       "4": "4"
     },
     "MineSilver": {
-      "name": "采银矿岗位数",
+      "name": "銀鉱山の作業人数",
       "help": "アイドル鉱山ポストのいくつかを銀の生産に割り当て、残りは空きのままにします。",
       "0": "0",
       "1": "1",
@@ -3718,7 +3719,7 @@
       "4": "4"
     },
     "CutElegant": {
-      "name": "伐典雅之木岗位数",
+      "name": "エレガント伐採の作業人数",
       "help": "アイドル林業ポストのいくつかを高級木材の生産に割り当て、残りは空きのままにします。",
       "0": "0",
       "1": "1",
@@ -4793,8 +4794,8 @@
     "WeeklyPhoto": {
       "name": "週間写真タスク",
       "help": "開発計画から週間写真タスクを開始し、写真撮影と待機選択を3回繰り返し、タスクアイコンが消えるまで処理します。",
-      "True": "True",
-      "False": "False"
+      "True": "有効",
+      "False": "無効"
     }
   },
   "IslandPearlSell": {
@@ -5572,7 +5573,7 @@
       "name": "ゲームをキルし、戦闘をスキップする",
       "help": "",
       "True": "有効",
-      "False": "間違い"
+      "False": "無効"
     }
   },
   "BoxDisassemble": {
@@ -5669,8 +5670,8 @@
     "EnableRemoteSSH": {
       "name": "リモートSSH管理を有効にする",
       "help": "エミュレータを再起動する前に、SSH経由でリモートサーバー上で特定のコマンドを実行します。",
-      "True": "True",
-      "False": "False"
+      "True": "有効",
+      "False": "無効"
     },
     "RemoteSSHHost": {
       "name": "リモートサーバーアドレス",
@@ -5782,8 +5783,8 @@
       "help": "タスクの内部状態を保存します。タスクが異常な場合は手動でクリアできます。"
     },
     "Storage": {
-      "name": "ストレージ.ストレージ.名",
-      "help": "ストレージ.ストレージ.ヘルプ"
+      "name": "タスクストレージ",
+      "help": "タスク内部の状態データをクリアします"
     }
   },
   "Gui": {
@@ -5837,25 +5838,25 @@
     "Overview": {
       "Scheduler": "スケジューラ",
       "Dashboard": "ダッシュボード",
-      "SecondsAgo": "Gui.概要.秒前",
-      "MinutesAgo": "Gui.概要.数分前",
-      "HoursAgo": "Gui.概要.時間前",
-      "DaysAgo": "Gui.概要.日前",
-      "MonthsAgo": "Gui.概要.数か月前",
-      "YearsAgo": "Gui.概要.年前",
-      "NoData": "Gui.Overview.NoData",
-      "Oil": "Gui.概要.オイル",
-      "Coin": "Gui.概要.コイン",
-      "Gem": "Gui.概要.Gem",
-      "Cube": "Gui.概要.Cube",
-      "Pt": "Gui.概要.Pt",
-      "YellowCoin": "Gui.概要.YellowCoin",
-      "PurpleCoin": "Gui.概要.パープルコイン",
-      "ActionPoint": "Gui.Overview.ActionPoint",
-      "Merit": "GUI.概要.メリット",
-      "Medal": "GUI.概要.メダル",
-      "Core": "Gui.概要.コア",
-      "GuildCoin": "Gui.概要.ギルドコイン",
+      "SecondsAgo": "秒前",
+      "MinutesAgo": "分前",
+      "HoursAgo": "時間前",
+      "DaysAgo": "日前",
+      "MonthsAgo": "ヶ月前",
+      "YearsAgo": "年前",
+      "NoData": "データなし",
+      "Oil": "燃料",
+      "Coin": "資金",
+      "Gem": "ダイヤ",
+      "Cube": "キューブ",
+      "Pt": "イベントPT",
+      "YellowCoin": "大洋黄貨",
+      "PurpleCoin": "大洋紫貨",
+      "ActionPoint": "行動力",
+      "Merit": "功績",
+      "Medal": "メダル",
+      "Core": "コアデータ",
+      "GuildCoin": "艦隊貨幣",
       "Log": "ログ",
       "Running": "ランニング",
       "Pending": "キューにいます",
@@ -6060,29 +6061,29 @@
       "CommissionIncomeTotalCommissions": "Gui.Stat.CommissionIncomeTotalCommissions",
       "CommissionIncomeRecentTitle": "Gui.Stat.CommissionIncomeRecentTitle",
       "ResourceChartTitle": "全リソース推移",
-      "LoadResourceDataFailed": "Gui.Stat.LoadResourceDataFailed",
-      "NoResourceData": "Gui.Stat.NoResourceData",
-      "NoValidResourceData": "Gui.Stat.NoValidResourceData"
+      "LoadResourceDataFailed": "リソースデータの読み込みに失敗しました: {e}",
+      "NoResourceData": "リソース変動データがありません。スクリプト実行後に自動記録されます",
+      "NoValidResourceData": "有効なリソースデータがありません"
     },
     "Tactical": {
-      "SkillAutoSwitch": "Gui.Tactical.SkillAutoSwitch"
+      "SkillAutoSwitch": "スキル自動切替"
     },
     "OpsiScheduling": {
-      "UseSmartSchedulingOperationCoinsPreserve": "Gui.OpsiScheduling.UseSmartSchedulingOperationCoinsPreserve",
-      "OperationCoinsPreserve": "Gui.OpsiScheduling.OperationCoinsPreserve",
-      "ActionPointPreserve": "Gui.OpsiScheduling.ActionPointPreserve",
+      "UseSmartSchedulingOperationCoinsPreserve": "スマートスケジューリング作戦コイン保留",
+      "OperationCoinsPreserve": "作戦コイン保留",
+      "ActionPointPreserve": "行動力保留",
       "ActionPointEarlyTriggerEnable": "行動力の早期スケジュール",
       "ActionPointEarlyTriggerThreshold": "早期スケジュール行動力しきい値",
-      "OperationCoinsReturnThreshold": "Gui.OpsiScheduling.OperationCoinsReturnThreshold",
-      "EnableMeowfficerFarming": "Gui.OpsiScheduling.EnableMeowfficerFarming",
-      "EnableObscure": "Gui.OpsiScheduling.EnableObscure",
-      "EnableAbyssal": "Gui.OpsiScheduling.EnableAbyssal",
-      "EnableStronghold": "Gui.OpsiScheduling.EnableStronghold",
-      "MeowStartEarlyMode": "Gui.OpsiScheduling.MeowStartEarlyMode"
+      "OperationCoinsReturnThreshold": "作戦コイン戻り閾値",
+      "EnableMeowfficerFarming": "指揮ニャー収集を有効",
+      "EnableObscure": "隠秘海域を有効",
+      "EnableAbyssal": "深淵海域を有効",
+      "EnableStronghold": "セイレーン要塞を有効",
+      "MeowStartEarlyMode": "短猫早期開始モード"
     },
     "Misc": {
-      "Enabled": "Enabled",
-      "Disabled": "Disabled"
+      "Enabled": "有効",
+      "Disabled": "無効"
     },
     "OOBE": {
       "ImportTitle": "旧データをインポート",
