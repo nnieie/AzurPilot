@@ -200,6 +200,9 @@
       "ForceAdbNcScreenshot": false,
       "Sensitive": false
     },
+    "Restart": {
+      "RandomDelay": "5, 50"
+    },
     "Storage": {
       "Storage": {}
     }

@@ -931,6 +931,12 @@
         ]
       }
     },
+    "Restart": {
+      "RandomDelay": {
+        "type": "input",
+        "value": "5, 50"
+      }
+    },
     "Storage": {
       "Storage": {
         "type": "storage",
@@ -2405,7 +2411,7 @@
           "event_20240521_cn"
         ],
         "option_jp": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_tw": [
           "event_20260520_cn"
@@ -2922,7 +2928,7 @@
           "event_20240521_cn"
         ],
         "option_jp": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_tw": [
           "event_20260520_cn"
@@ -3876,7 +3882,7 @@
           "event_20240521_cn"
         ],
         "option_jp": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_tw": [
           "event_20260520_cn"
@@ -4325,7 +4331,7 @@
           "event_20240521_cn"
         ],
         "option_jp": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_tw": [
           "event_20260520_cn"
@@ -4774,7 +4780,7 @@
           "event_20240521_cn"
         ],
         "option_jp": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_tw": [
           "event_20260520_cn"
@@ -7381,7 +7387,7 @@
           "event_20240521_cn"
         ],
         "option_jp": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_tw": [
           "event_20260520_cn"
@@ -7847,7 +7853,7 @@
           "event_20240521_cn"
         ],
         "option_jp": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_tw": [
           "event_20260520_cn"
@@ -8313,7 +8319,7 @@
           "event_20240521_cn"
         ],
         "option_jp": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_tw": [
           "event_20260520_cn"
@@ -8779,7 +8785,7 @@
           "event_20240521_cn"
         ],
         "option_jp": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_tw": [
           "event_20260520_cn"
@@ -9235,7 +9241,7 @@
           "event_20240521_cn"
         ],
         "option_jp": [
-          "event_20240521_cn"
+          "event_20260625_cn"
         ],
         "option_tw": [
           "event_20260520_cn"
