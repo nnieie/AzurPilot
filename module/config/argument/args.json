@@ -2407,7 +2407,7 @@
           "event_20260625_cn"
         ],
         "option_en": [
-          "event_20230223_cn"
+          "event_20260625_cn"
         ],
         "option_jp": [
           "event_20260625_cn"
@@ -2922,7 +2922,7 @@
           "event_20260625_cn"
         ],
         "option_en": [
-          "event_20230223_cn"
+          "event_20260625_cn"
         ],
         "option_jp": [
           "event_20260625_cn"
@@ -3874,7 +3874,7 @@
           "event_20260625_cn"
         ],
         "option_en": [
-          "event_20230223_cn"
+          "event_20260625_cn"
         ],
         "option_jp": [
           "event_20260625_cn"
@@ -4321,7 +4321,7 @@
           "event_20260625_cn"
         ],
         "option_en": [
-          "event_20230223_cn"
+          "event_20260625_cn"
         ],
         "option_jp": [
           "event_20260625_cn"
@@ -4768,7 +4768,7 @@
           "event_20260625_cn"
         ],
         "option_en": [
-          "event_20230223_cn"
+          "event_20260625_cn"
         ],
         "option_jp": [
           "event_20260625_cn"
@@ -7373,7 +7373,7 @@
           "event_20260625_cn"
         ],
         "option_en": [
-          "event_20230223_cn"
+          "event_20260625_cn"
         ],
         "option_jp": [
           "event_20260625_cn"
@@ -7837,7 +7837,7 @@
           "event_20260625_cn"
         ],
         "option_en": [
-          "event_20230223_cn"
+          "event_20260625_cn"
         ],
         "option_jp": [
           "event_20260625_cn"
@@ -8301,7 +8301,7 @@
           "event_20260625_cn"
         ],
         "option_en": [
-          "event_20230223_cn"
+          "event_20260625_cn"
         ],
         "option_jp": [
           "event_20260625_cn"
@@ -8765,7 +8765,7 @@
           "event_20260625_cn"
         ],
         "option_en": [
-          "event_20230223_cn"
+          "event_20260625_cn"
         ],
         "option_jp": [
           "event_20260625_cn"
@@ -9219,7 +9219,7 @@
           "event_20260625_cn"
         ],
         "option_en": [
-          "event_20230223_cn"
+          "event_20260625_cn"
         ],
         "option_jp": [
           "event_20260625_cn"
@@ -12395,7 +12395,8 @@
           "sirius",
           "new_jersey",
           "taihou",
-          "aegir"
+          "aegir",
+          "nakhimov"
         ]
       }
     },

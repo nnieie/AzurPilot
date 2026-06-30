@@ -1978,7 +1978,7 @@
       "help": ""
     },
     "Favorite": {
-      "name": "常用を優先する",
+      "name": "お気に入りのみ選択",
       "help": ""
     },
     "MinLevel": {
@@ -2689,7 +2689,8 @@
       "sirius": "シリウス",
       "new_jersey": "ニュージャージー",
       "taihou": "大鳳",
-      "aegir": "エーギル"
+      "aegir": "エーギル",
+      "nakhimov": "nakhimov"
     }
   },
   "Daily": {
