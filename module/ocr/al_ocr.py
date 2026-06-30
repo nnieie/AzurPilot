@@ -164,9 +164,9 @@ def _get_onnx_model_params(name):
         )
     else:
         return (
-            "bin/ocr_models/en-US/alocr-en-us-v2.6.nvc.onnx",
-            "bin/ocr_models/en-US/en.txt",
-            OCRVersion.PPOCRV4,
+            "bin/ocr_models/ppocr-v6/ap_en-v6.5_small_rec_nvidia.onnx",
+            "bin/ocr_models/ppocr-v6/ppocrv6_en_dict.txt",
+            OCRVersion.PPOCRV6,
         )
 
 
