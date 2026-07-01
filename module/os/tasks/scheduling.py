@@ -260,7 +260,7 @@ class CoinTaskMixin:
         """
         限制体力相关推送的最小发送间隔，避免高频通知。
         """
-        now = datetime.now()
+        now = current_time()
         last_notify = getattr(self.config, key, None)
         min_interval = timedelta(minutes=self.AP_NOTIFY_MIN_INTERVAL_MINUTES)
         if last_notify and now - last_notify < min_interval:
@@ -499,7 +499,7 @@ class CoinTaskMixin:
             pass
         
         # 计算当前时间到月底的剩余时间（秒）
-        now = datetime.now()
+        now = current_time()
         year, month = now.year, now.month
         last_day = monthrange(year, month)[1]
         month_end = datetime(year, month, last_day, 23, 59, 59)
@@ -801,7 +801,7 @@ class CoinTaskMixin:
         
         with self.config.multi_set():
             if smart_enabled:
-                far_future = datetime.now() + timedelta(days=30)
+                far_future = current_time() + timedelta(days=30)
                 logger.info(f'智能调度已启用，禁用任务 {task_name} 并将下次运行时间延迟到 {far_future}')
                 self.config.cross_set(keys=f'{task_name}.Scheduler.Enable', value=False)
                 self.config.cross_set(keys=f'{task_name}.Scheduler.NextRun', value=far_future)
@@ -1258,10 +1258,9 @@ class OpsiScheduling(CoinTaskMixin, OSMap):
                 return (False, "行动力不足或计算结果为0，无需提前开始短猫")
 
             # 以“下个月大世界刷新时间”为基准，而不是每日服务器刷新时间
-            from datetime import datetime
             from module.config.utils import get_os_next_reset
 
-            now = datetime.now()
+            now = current_time()
             next_reset = get_os_next_reset()
             hours_to_reset = (next_reset - now).total_seconds() / 3600
 
@@ -1344,7 +1343,7 @@ class OpsiScheduling(CoinTaskMixin, OSMap):
         advance_hours = max(0, min(advance_hours, 168))  # 最多提前7天
 
         # 计算建议开始清理时间（以大世界下次重置时间为基准）
-        now = datetime.now()
+        now = current_time()
         try:
             next_reset = get_os_next_reset()
             start_cleanup_dt = next_reset - timedelta(hours=advance_hours)

@@ -1,5 +1,7 @@
 import re
-from datetime import datetime, timedelta
+from datetime import timedelta
+
+from module.config.time_source import now as current_time
 
 from module.base.button import Button
 from module.base.timer import Timer
@@ -47,7 +49,7 @@ class IslandPearlSell(Island):
 
     def run(self):
         logger.hr("Island Pearl Sell Run", level=1)
-        now = datetime.now().replace(microsecond=0)
+        now = current_time().replace(microsecond=0)
 
         pearl_trade_time = self._get_next_pearl_trade_time(now=now)
 
@@ -790,7 +792,7 @@ class IslandPearlSell(Island):
 
     def _trade_due(self, now=None, next_time=None):
         """检查是否到了每周采购售卖的执行时间。"""
-        now = now or datetime.now().replace(microsecond=0)
+        now = now or current_time().replace(microsecond=0)
         next_time = next_time or self._get_next_pearl_trade_time(now=now)
         if now >= next_time:
             return True
@@ -800,7 +802,7 @@ class IslandPearlSell(Island):
         """检查是否到了每日价格刷新时间。"""
         if not self.config.IslandPearlSell_DailyPriceRefresh:
             return False
-        now = now or datetime.now().replace(microsecond=0)
+        now = now or current_time().replace(microsecond=0)
         today_refresh = now.replace(
             hour=self.DAILY_REFRESH_HOUR,
             minute=self.DAILY_REFRESH_MINUTE,
@@ -816,7 +818,7 @@ class IslandPearlSell(Island):
     def _get_next_pearl_trade_time(self, now=None):
         value = self.config.IslandPearlSell_NextPearlTradeTime
         if value in [None, ""]:
-            return now or datetime.now().replace(microsecond=0)
+            return now or current_time().replace(microsecond=0)
         return value
 
     def _get_buy_next_run(self):
@@ -827,7 +829,7 @@ class IslandPearlSell(Island):
 
     def _next_trade_run(self, now=None, base=None):
         """计算下一次真正采购售卖时间，不包含每日价格刷新。"""
-        now = now or datetime.now().replace(microsecond=0)
+        now = now or current_time().replace(microsecond=0)
         candidates = [base or self._get_next_pearl_trade_time(now=now)]
 
         buy_next_run = self._get_buy_next_run()
@@ -837,7 +839,7 @@ class IslandPearlSell(Island):
         return min(candidates)
 
     def _this_week_schedule(self, now=None):
-        now = now or datetime.now().replace(microsecond=0)
+        now = now or current_time().replace(microsecond=0)
         monday = (now - timedelta(days=now.weekday())).replace(
             hour=0, minute=0, second=0, microsecond=0
         )
@@ -848,7 +850,7 @@ class IslandPearlSell(Island):
         )
 
     def _nearest_future_schedule(self, now=None):
-        now = now or datetime.now().replace(microsecond=0)
+        now = now or current_time().replace(microsecond=0)
         target = self._this_week_schedule(now=now)
         if target <= now:
             target += timedelta(days=7)
@@ -856,7 +858,7 @@ class IslandPearlSell(Island):
 
     def _next_daily_refresh(self, now=None):
         """计算下一次每日价格刷新时间（今天的 03:00 或明天的 03:00）。"""
-        now = now or datetime.now().replace(microsecond=0)
+        now = now or current_time().replace(microsecond=0)
         today_refresh = now.replace(
             hour=self.DAILY_REFRESH_HOUR,
             minute=self.DAILY_REFRESH_MINUTE,
@@ -869,7 +871,7 @@ class IslandPearlSell(Island):
 
     def _next_run(self, now=None):
         """计算珍珠任务下一次运行时间。综合周循环、采购延时和每日刷新。"""
-        now = now or datetime.now().replace(microsecond=0)
+        now = now or current_time().replace(microsecond=0)
         candidates = [self._next_trade_run(now=now)]
 
         # 每日价格刷新
@@ -887,7 +889,7 @@ class IslandPearlSell(Island):
 
     @staticmethod
     def next_day_1am(now=None):
-        now = now or datetime.now().replace(microsecond=0)
+        now = now or current_time().replace(microsecond=0)
         return (now + timedelta(days=1)).replace(
             hour=1, minute=0, second=0, microsecond=0
         )
@@ -910,7 +912,7 @@ class IslandPearlSell(Island):
         value = self.config.IslandPearlSell_BuyNextRun
         if value in [None, ""]:
             return True
-        now = datetime.now().replace(microsecond=0)
+        now = current_time().replace(microsecond=0)
         return now >= value
 
     @staticmethod

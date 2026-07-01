@@ -1,7 +1,9 @@
 from module.island_farm.assets import *
 from module.island_rancher.assets import *
 from module.island.island import *
-from datetime import datetime, timedelta
+from datetime import timedelta
+
+from module.config.time_source import now as current_time
 from module.handler.login import LoginHandler
 from module.island.warehouse import *
 from module.logger import logger
@@ -429,7 +431,7 @@ class IslandRancher(Island, WarehouseOCR, LoginHandler):
                 return None
             time_value = time_work.ocr(self.device.image)
             if time_value.total_seconds() > 0:
-                finish_time = datetime.now() + time_value
+                finish_time = current_time() + time_value
                 logger.info(f"牧场岗位{post_id}当前队列最早剩余时间: {time_value}")
                 return finish_time
 
@@ -600,7 +602,7 @@ class IslandRancher(Island, WarehouseOCR, LoginHandler):
             logger.info("没有需要执行的牧场岗位")
 
         finish_times = [getattr(self, var) for var in time_vars if getattr(self, var) is not None]
-        six_hours_later = datetime.now() + timedelta(hours=6)
+        six_hours_later = current_time() + timedelta(hours=6)
         finish_times.append(six_hours_later)
         finish_times.sort()
         logger.info(f'牧场任务完成，暂存 {len(finish_times)} 个计时器，最早结束时间: {finish_times[0]}')

@@ -8,6 +8,7 @@ import module.config.server as server
 from module.base.button import ButtonGrid
 from module.base.timer import Timer
 from module.base.utils import *
+from module.config.time_source import now as current_time
 from module.config.utils import get_server_next_update, server_time_offset
 from module.logger import logger
 from module.ocr.ocr import Digit, DigitCounter
@@ -156,7 +157,7 @@ class ActionPointHandler(UI, MapEventHandler):
             bool: 是否处于月末封锁周。
         """
         diff = server_time_offset()
-        server_now = datetime.now() - diff
+        server_now = current_time() - diff
         next_month = (server_now.replace(day=28) + timedelta(days=4)).replace(
             hour=0, minute=0, second=0, microsecond=0
         )
@@ -478,7 +479,7 @@ class ActionPointHandler(UI, MapEventHandler):
 
         # 检查剩余行动力
         if check_rest_ap:
-            diff = get_server_next_update('00:00') - datetime.now()
+            diff = get_server_next_update('00:00') - current_time()
             today_rest = int(diff.total_seconds() // 600)
             if self._action_point_current + today_rest >= 200:
                 logger.info('The sum of the current action points and the rest action points'

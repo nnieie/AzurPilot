@@ -12,13 +12,14 @@ import threading
 import time
 import re
 import base64
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from functools import partial
 from typing import Dict, List, Optional, Any
 
 # 在导入 pywebio 之前导入伪造模块，避免加载不必要的 PIL 模块
 from module.webui.fake_pil_module import import_fake_pil_module
+from module.config.time_source import now as current_time, status as time_source_status
 from module.statistics.azurstats import AzurStats
 from module.os_simulator.simulator import OSSimulator
 
@@ -445,7 +446,7 @@ class AlasGUI(Frame):
     def set_aside(self) -> None:
         # TODO: 更新 put_icon_buttons()
 
-        current_date = datetime.now().date()
+        current_date = current_time().date()
         if current_date.month == 4 and current_date.day == 1:
             self.af_flag = True
 
@@ -551,6 +552,26 @@ class AlasGUI(Frame):
             put_loading_text(t("Gui.Status.Warning"), shape="grow", color="warning")
         elif state == 4:
             put_loading_text(t("Gui.Status.Updating"), shape="grow", color="success")
+
+    @staticmethod
+    def _format_tz_offset(offset: timedelta) -> str:
+        seconds = int(offset.total_seconds())
+        sign = '+' if seconds >= 0 else '-'
+        seconds = abs(seconds)
+        hours, seconds = divmod(seconds, 3600)
+        minutes = seconds // 60
+        return f'UTC{sign}{hours:02d}:{minutes:02d}'
+
+    def _time_status_text(self) -> str:
+        data = time_source_status()
+        local_offset = current_time(timezone.utc).astimezone().utcoffset()
+        local_tz = self._format_tz_offset(local_offset or timedelta(0))
+        sync_text = '已同步' if data['synced'] else '本机时间'
+        enabled_text = 'NTP' if data['enabled'] else 'NTP关闭'
+        return (
+            f"{enabled_text} {sync_text} · 偏移 {data['offset']:+.3f}s · "
+            f"本机 {local_tz}"
+        )
 
     @classmethod
     def set_theme(cls, theme="default") -> None:
@@ -727,7 +748,7 @@ class AlasGUI(Frame):
             chart_points = []
             is_detail_mode = False
 
-            today = datetime.now().date()
+            today = current_time().date()
             today_points = [p for p in raw_points if p["dt"].date() == today]
             if not today_points and raw_points:
                 last_date = raw_points[-1]["dt"].date()
@@ -1937,7 +1958,7 @@ class AlasGUI(Frame):
                         )
                         hours_ahead = max(0, min(base_hours_ahead * multiplier, 168))
 
-                        now = datetime.now()
+                        now = current_time()
                         next_reset = get_os_next_reset()
                         start_cleanup_dt = next_reset - timedelta(hours=hours_ahead)
                         if start_cleanup_dt < now:
@@ -2082,7 +2103,7 @@ class AlasGUI(Frame):
                     except Exception:
                         s_local = {}
 
-                    month_local = s_local.get("month") or datetime.now().strftime(
+                    month_local = s_local.get("month") or current_time().strftime(
                         "%Y-%m"
                     )
                     total_battles_local = int(s_local.get("total_battles") or 0)
@@ -2685,7 +2706,7 @@ class AlasGUI(Frame):
         next_run = deep_get(config, f"{task}.Scheduler.NextRun")
         if not isinstance(next_run, datetime):
             return False
-        return next_run.date() > datetime.now().date()
+        return next_run.date() > current_time().date()
 
     @staticmethod
     def _split_stage_filter(value: Any) -> List[str]:
@@ -3033,6 +3054,10 @@ class AlasGUI(Frame):
             if arg_help == "" or not arg_help:
                 arg_help = None
             output_kwargs["help"] = arg_help
+            if group_name == "Scheduler" and arg_name == "NextRun":
+                output_kwargs["after"] = put_text(self._time_status_text()).style(
+                    "font-size: .75rem; opacity: .68; margin: .2rem .25rem 0;"
+                )
             # Invalid feedback
             output_kwargs["invalid_feedback"] = t("Gui.Text.InvalidFeedBack", value)
 
@@ -3410,7 +3435,7 @@ class AlasGUI(Frame):
             valid = []
             invalid = []
             config = config_updater.read_file(config_name)
-            n = datetime.now()
+            n = current_time()
             for p, v in deep_iter(config, depth=3):
                 if p[-1].endswith("un") and not isinstance(v, bool):
                     if (v - n).days >= 31:
@@ -3573,7 +3598,7 @@ class AlasGUI(Frame):
             if groups_to_display is None
             else groups_to_display
         )
-        time_now = datetime.now().replace(microsecond=0)
+        time_now = current_time().replace(microsecond=0)
         for group_name in _arg_group:
             group = LogRes(self.alas_config).group(group_name)
             if group is None:
@@ -5195,7 +5220,7 @@ class AlasGUI(Frame):
             add_css(filepath_css("light-alas"))
 
         # 儿童节背景 Emoji 雨自动掉落逻辑（支持所有主题）
-        current_date = datetime.now().date()
+        current_date = current_time().date()
         is_children_day = (current_date.month == 6 and current_date.day == 1)
         
         EMOJI_RAIN_PREVIEW = False
@@ -5653,8 +5678,7 @@ def app():
 
     # Apply config
     theme = State.deploy_config.Theme
-    from datetime import datetime
-    current_date = datetime.now().date()
+    current_date = current_time().date()
     if theme == "default" and (
         (current_date.month == 6 and current_date.day == 1) or
         (current_date.month == 5 and current_date.day == 31) or
