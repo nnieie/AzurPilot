@@ -139,15 +139,27 @@ def _get_onnx_model_params(name):
     返回指定语言的 ONNX 模型参数。
 
     Args:
-        name: 语言名称，如 'cn'、'jp'、'tw'、'en'。
+        name: 模型名称，如 'azur_lane'、'azur_lane_jp'、'cn'、'jp'、'tw'。
 
     Returns:
         (model_path, rec_keys_path, ocr_version) 三元组。
     """
-    if name in ("cn", "zhcn"):
+    if name == "azur_lane":
         return (
-            "bin/ocr_models/ppocr-v6/ap_zh-cn-v6.1_small_rec_dcu.onnx",
-            "bin/ocr_models/ppocr-v6/ppocrv6_cn_dict.txt",
+            "bin/ocr_models/azur_lane/ap_azurlane-v6.5_small_rec_nvidia.onnx",
+            "bin/ocr_models/azur_lane/ppocrv6_azurlane_dict.txt",
+            OCRVersion.PPOCRV6,
+        )
+    elif name == "azur_lane_jp":
+        return (
+            "bin/ocr_models/azur_lane_jp/ap_azurlane_jp-v6_small_rec_nvidia.onnx",
+            "bin/ocr_models/azur_lane_jp/ppocrv6_azurlane_jp_dict.txt",
+            OCRVersion.PPOCRV6,
+        )
+    elif name == "cn":
+        return (
+            "bin/ocr_models/zh-CN/ap_zh-cn-v6.1_small_rec_dcu.onnx",
+            "bin/ocr_models/zh-CN/ppocrv6_cn_dict.txt",
             OCRVersion.PPOCRV6,
         )
     elif name == "jp":
@@ -163,11 +175,7 @@ def _get_onnx_model_params(name):
             OCRVersion.PPOCRV6,
         )
     else:
-        return (
-            "bin/ocr_models/ppocr-v6/ap_en-v6.5_small_rec_nvidia.onnx",
-            "bin/ocr_models/ppocr-v6/ppocrv6_en_dict.txt",
-            OCRVersion.PPOCRV6,
-        )
+        raise ValueError(f"Unsupported OCR model: {name}")
 
 
 def _create_ocr(name):
@@ -198,30 +206,13 @@ def _create_ocr(name):
 
 
 # 懒加载：模块级不再创建模型，首次 init() 时才加载
-_cn_model = None
-_en_model = None
-_jp_model = None
-_tw_model = None
+_model_cache = {}
 
 
 def _get_model(name):
-    global _cn_model, _en_model, _jp_model, _tw_model
-    if name in ("cn", "zhcn"):
-        if _cn_model is None:
-            _cn_model = _create_ocr("cn")
-        return _cn_model
-    elif name == "jp":
-        if _jp_model is None:
-            _jp_model = _create_ocr("jp")
-        return _jp_model
-    elif name == "tw":
-        if _tw_model is None:
-            _tw_model = _create_ocr("tw")
-        return _tw_model
-    else:
-        if _en_model is None:
-            _en_model = _create_ocr("en")
-        return _en_model
+    if name not in _model_cache:
+        _model_cache[name] = _create_ocr(name)
+    return _model_cache[name]
 
 
 DET_MODEL_PATH = "bin/ocr_models/det/PP-OCRv5_mobile_det.onnx"
@@ -311,16 +302,12 @@ def _get_det_model(name):
 
 def reset_ocr_model():
     def _reset():
-        global _cn_model, _en_model, _jp_model, _tw_model
         logger.info("Resetting OCR models")
-        for model in (_cn_model, _en_model, _jp_model, _tw_model):
+        for model in _model_cache.values():
             close = getattr(model, "close", None)
             if close is not None:
                 close()
-        _cn_model = None
-        _en_model = None
-        _jp_model = None
-        _tw_model = None
+        _model_cache.clear()
         _det_model_cache.clear()
 
     return _run_ocr_queued(_reset)
