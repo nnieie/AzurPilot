@@ -44,11 +44,15 @@ v3 zh-cn
 
 ## ncnn
 `ncnn/` 目录保存从现有 ONNX 识别模型转换得到的运行时模型。
-当前 EN、zh-CN、JP、TW 单行识别已迁移到 ncnn CPU / Vulkan。
-运行时提取预 Softmax 输出以降低延迟：EN/zh-CN 使用 `Add.227`，
-JP/TW 使用 `Add.223`。
-JP/TW 的 ONNX 图需要先修补动态 attention/slice 规则；当前直接使用修补后的
-raw ncnn 图，避免 `ncnnoptimize` 在该图上破坏输入 blob。
+当前 `azur_lane`、`azur_lane_jp`、`cn`、`jp`、`tw` 单行识别已迁移到
+ncnn CPU / Vulkan。模型通过 pnnx 从 ONNX 转换，固定输入 shape 为
+`[1,3,48,320]`，运行时输入 blob 为 `in0`，输出 blob 为 `out0`。
+
+重新生成：
+
+```bash
+uv run python -m dev_tools.ocr_ncnn_convert
+```
 
 ## zh—CN Model
 

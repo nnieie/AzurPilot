@@ -3232,11 +3232,11 @@
     },
     "TargetZone": {
       "name": "Target Zone",
-      "help": "Only attack designated sea zones, can be used to obtain Operation Siren achievement stars.\nSupports zone ID, CN/EN/JP/TW zone names, e.g. \"51\", \"NA Ocean SE Sector E\"\nFill in default value 0, or delete the value to cancel"
+      "help": "Only attack the designated sea zone. Supports zone IDs and CN/EN/JP/TW zone names. Use 0 to return to the default logic by Corrosion level.\nWhen Planned Operation in Target Zone is enabled, multiple zones can be entered and cycled in order, e.g. 42,55,45, 42, 55, 45, or 42，55，45."
     },
     "StayInZone": {
       "name": "Planned Operation in Target Zone",
-      "help": "Warm reminder from Yukikaze-sama: After enabling this and specifying a zone, planned operations will be carried out in the designated zone without returning to port nanoda! For Corrosion 3, NA Ocean SE B is recommended; for Corrosion 5, Caribbean Sea B or C is recommended nanoda!"
+      "help": "After enabling this, the task runs according to Target Zone. With one zone it stays there; with multiple zones it cycles through them in the configured order. Only takes effect when Target Zone is not 0."
     },
     "APPreserveUntilReset": {
       "name": "Preserve Action Points Until End of Month",

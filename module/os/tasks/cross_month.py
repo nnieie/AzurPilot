@@ -2,13 +2,14 @@ from datetime import timedelta
 
 from module.config.time_source import now as current_time
 from module.config.utils import get_os_next_reset
-from module.exception import ScriptError, RequestHumanTakeover
+from module.exception import ScriptError
 from module.logger import logger
 from module.map.map_grids import SelectedGrids
 from module.os.map import OSMap
+from module.os.tasks.meowfficer_farming import MeowfficerTargetZoneMixin
 
 
-class OpsiCrossMonth(OSMap):
+class OpsiCrossMonth(MeowfficerTargetZoneMixin, OSMap):
     def os_cross_month_end(self):
         self.config.task_delay(target=get_os_next_reset() - timedelta(minutes=10))
         self.config.task_stop()
@@ -139,6 +140,15 @@ class OpsiCrossMonth(OSMap):
             OpsiMeowfficerFarming_StayInZone=self.config.cross_get('OpsiMeowfficerFarming.OpsiMeowfficerFarming.StayInZone'),
             OpsiMeowfficerFarming_APPreserveUntilReset=False
         )
+        target_zone_tokens = self._meow_target_zone_tokens()
+        target_zones = []
+        traditional_zone = None
+        target_zone_index = 0
+        if self.config.OpsiMeowfficerFarming_StayInZone:
+            target_zones = self._meow_target_zones(require_target=True, allow_multiple=True)
+        elif target_zone_tokens:
+            traditional_zone = self._meow_target_zones(require_target=False, allow_multiple=False)[0]
+
         while True:
             if self.config.OpsiMeowfficerFarming_TargetZone != 0:
                 try:
@@ -147,15 +157,16 @@ class OpsiCrossMonth(OSMap):
                     logger.warning(f'wrong zone_id input:{self.config.OpsiMeowfficerFarming_TargetZone}')
                     raise RequestHumanTakeover('wrong input, task stopped')
                 else:
+                    zone = traditional_zone
                     logger.hr(f'OS meowfficer farming, zone_id={zone.zone_id}', level=1)
-                    self.globe_goto(zone, types='SAFE', refresh=True)
-                    self.fleet_set(self.config.OpsiFleet_Fleet)
-                    if self.run_strategic_search():
-                        self._solved_map_event = set()
-                        self._solved_fleet_mechanism = False
-                        self.clear_question()
-                        self.map_rescan()
-                    self.handle_after_auto_search()
+                self.globe_goto(zone, types='SAFE', refresh=True)
+                self.fleet_set(self.config.OpsiFleet_Fleet)
+                if self.run_strategic_search():
+                    self._solved_map_event = set()
+                    self._solved_fleet_mechanism = False
+                    self.clear_question()
+                    self.map_rescan()
+                self.handle_after_auto_search()
             else:
                 zones = self.zone_select(hazard_level=OpsiMeowfficerFarming_HazardLevel) \
                     .delete(SelectedGrids([self.zone])) \

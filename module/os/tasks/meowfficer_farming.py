@@ -220,7 +220,11 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
             return True
         return ap_checked
 
-    def _meow_handle_traditional_zone(self):
+    def _meow_handle_traditional_zone(self, zone):
+        logger.hr(f'OS meowfficer farming, zone_id={zone.zone_id}', level=1)
+        self.globe_goto(zone, types='SAFE', refresh=True)
+        self.fleet_set(self.config.OpsiFleet_Fleet)
+        self.meow_search_metrics_start()
         try:
             zone = self.name_to_zone(self.config.OpsiMeowfficerFarming_TargetZone)
         except ScriptError:
@@ -246,19 +250,7 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
             self.on_meow_search_end()
             self.config.check_task_switch()
 
-    def _meow_handle_stay_in_zone(self):
-        if self.config.OpsiMeowfficerFarming_TargetZone == 0:
-            logger.warning('已启用 StayInZone 但未设置 TargetZone，跳过本次任务')
-            self.config.task_delay(server_update=True)
-            self.config.task_stop()
-        try:
-            zone = self.name_to_zone(self.config.OpsiMeowfficerFarming_TargetZone)
-        except ScriptError:
-            logger.error('无法定位配置的目标海域，停止任务')
-            self.config.task_delay(server_update=True)
-            self.config.task_stop()
-        
-        logger.hr(f'OS meowfficer farming (stay in zone), zone_id={zone.zone_id}', level=1)
+    def _meow_handle_stay_in_zone(self, zone):
         self.get_current_zone()
         if self.zone.zone_id != zone.zone_id or not self.is_zone_name_hidden:
             self.globe_goto(zone, types='SAFE', refresh=True)
@@ -488,6 +480,15 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
                     self._os_target()
             else:
                 logger.info(f'Server {self.config.SERVER} does not support OpsiTarget yet, please contact the developers.')
+
+        target_zone_tokens = self._meow_target_zone_tokens()
+        target_zones = []
+        traditional_zone = None
+        target_zone_index = 0
+        if self.config.OpsiMeowfficerFarming_StayInZone:
+            target_zones = self._meow_target_zones(require_target=True, allow_multiple=True)
+        elif target_zone_tokens:
+            traditional_zone = self._meow_target_zones(require_target=False, allow_multiple=False)[0]
 
         ap_checked = False
         try:
