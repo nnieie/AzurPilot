@@ -94,12 +94,12 @@ class ConnectionAttr:
         target.parent.mkdir(parents=True, exist_ok=True)
         if target.exists() or target.is_symlink():
             target.unlink()
-        try:
-            target.symlink_to(source)
-        except OSError:
-            shutil.copy2(source, target)
-            if os.name != 'nt':
-                target.chmod(target.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+        shutil.copy2(source, target)
+        if os.name == 'nt':
+            for dll in tools_dir.glob('*.dll'):
+                shutil.copy2(dll, target.parent / dll.name)
+        else:
+            target.chmod(target.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
         logger.info(f'ADB 已安装: {target}')
         return str(target).replace('\\\\', '/').replace('\\', '/')
@@ -368,17 +368,33 @@ class ConnectionAttr:
 
     @cached_property
     def adb_binary(self):
-        # Try adb in deploy.yaml
-        from module.webui.setting import State
-        file = State.deploy_config.AdbExecutable
-        file = file.replace('\\', '/')
-        if os.path.exists(file):
-            return os.path.abspath(file)
+        """
+        获取 ADB 可执行文件路径。
 
-        # Try existing adb.exe
-        for file in self.adb_binary_list:
-            if os.path.exists(file):
-                return os.path.abspath(file)
+        检查顺序：
+        1. deploy.yaml 配置的路径（绝对路径）
+        2. 预定义的候选路径列表
+        3. Python 环境中的 adb
+        4. 系统 PATH 中的 adb
+        5. 自动下载到配置路径
+
+        Returns:
+            str: ADB 可执行文件的绝对路径。
+        """
+        from module.webui.setting import State
+
+        # 统一使用绝对路径检查，避免相对路径导致的 CWD 问题
+        # deploy.yaml 中的路径是相对于项目根目录的
+        deploy_adb = State.deploy_config.AdbExecutable
+        root = State.deploy_config.root_filepath
+        file = os.path.abspath(os.path.join(root, deploy_adb)).replace('\\', '/')
+        if os.path.exists(file):
+            return file
+
+        # Try existing adb.exe in predefined list
+        for candidate in self.adb_binary_list:
+            if os.path.exists(candidate):
+                return os.path.abspath(candidate).replace('\\', '/')
 
         # Try adb in python environment
         import sys
@@ -396,8 +412,7 @@ class ConnectionAttr:
             return os.path.abspath(file).replace('\\', '/')
 
         # Download adb only when all local candidates are missing
-        file = State.deploy_config.AdbExecutable.replace('\\', '/')
-        file = os.path.abspath(file).replace('\\', '/')
+        # 使用绝对路径下载，确保后续实例能找到文件
         downloaded = self.download_adb_binary(file)
         if downloaded:
             return downloaded

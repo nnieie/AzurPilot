@@ -231,6 +231,10 @@ Optimization:
   ScreenshotInterval: 0.3
   CombatScreenshotInterval: 1.0
   TaskHoardingDuration: 0
+  CloseEmulatorDuringLongWait:
+    type: checkbox
+    value: true
+    option: [true, false]
   WhenTaskQueueEmpty:
     value: goto_main
     option: [stay_there, goto_main, close_game]

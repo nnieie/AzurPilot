@@ -145,6 +145,7 @@ class GeneratedConfig:
     Optimization_ScreenshotInterval = 0.3
     Optimization_CombatScreenshotInterval = 1.0
     Optimization_TaskHoardingDuration = 0
+    Optimization_CloseEmulatorDuringLongWait = True  # True, False
     Optimization_WhenTaskQueueEmpty = 'goto_main'  # stay_there, goto_main, close_game
 
     # 配置组 `DropRecord`

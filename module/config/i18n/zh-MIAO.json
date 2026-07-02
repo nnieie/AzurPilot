@@ -826,6 +826,12 @@
       "name": "囤积任务 X 分钟",
       "help": "任务触发后等待X分钟一次性执行，降低操作频率喵。 (´・ω・`)"
     },
+    "CloseEmulatorDuringLongWait": {
+      "name": "长时间等待时关闭模拟器喵",
+      "help": "当下一个任务超过 3 小时后运行时，等待期间关闭模拟器来节省内存和 CPU 喵。",
+      "True": "True",
+      "False": "False"
+    },
     "WhenTaskQueueEmpty": {
       "name": "任务队列清空后",
       "help": "无任务时关游戏降CPU占用喵~ (´・ω・`)",

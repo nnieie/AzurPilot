@@ -1140,7 +1140,35 @@ class AzurLaneAutoScript:
                 logger.info(f'等待直到 {task.next_run} 执行任务 `{task.command}`')
                 self.is_first_task = False
                 method = self.config.Optimization_WhenTaskQueueEmpty
-                if method == 'close_game':
+                wait_duration = task.next_run - current_time()
+                if (
+                    self.config.Optimization_CloseEmulatorDuringLongWait
+                    and wait_duration > timedelta(hours=3)
+                ):
+                    logger.info(
+                        f'下一个任务 `{task.command}` 将在 {wait_duration} 后运行，'
+                        '等待期间关闭模拟器'
+                    )
+                    release_resources()
+                    self.device.release_during_wait()
+                    try:
+                        if self.device.emulator_stop():
+                            logger.info('等待期间已关闭模拟器')
+                        else:
+                            logger.warning('等待期间关闭模拟器失败，继续等待')
+                    except Exception as e:
+                        logger.warning(f'等待期间关闭模拟器失败，继续等待: {e}')
+                    if 'device' in self.__dict__:
+                        del_cached_property(self, 'device')
+                    if not self.wait_until(task.next_run):
+                        del_cached_property(self, 'config')
+                        continue
+                    self._start_emulator_after_long_wait()
+                    if task.command != 'Restart':
+                        self.config.task_call('Restart')
+                        del_cached_property(self, 'config')
+                        continue
+                elif method == 'close_game':
                     logger.info('等待期间关闭游戏')
                     self.device.app_stop()
                     release_resources()

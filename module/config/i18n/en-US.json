@@ -826,6 +826,12 @@
       "name": "Hoard Tasks for X Minutes",
       "help": "Can reduce the frequency of game operations during reward collection\nAfter a task is triggered, wait X minutes, then execute all hoarded tasks at once"
     },
+    "CloseEmulatorDuringLongWait": {
+      "name": "Close Emulator During Long Wait",
+      "help": "When the next task is more than 3 hours away, close the emulator during the wait to save memory and CPU.",
+      "True": "True",
+      "False": "False"
+    },
     "WhenTaskQueueEmpty": {
       "name": "When Task Queue Is Empty",
       "help": "Closing the game when there are no tasks can reduce CPU usage during reward collection",

@@ -251,6 +251,7 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
             self.config.check_task_switch()
 
     def _meow_handle_stay_in_zone(self, zone):
+        logger.hr(f'OS meowfficer farming (stay in zone), zone_id={zone.zone_id}', level=1)
         self.get_current_zone()
         if self.zone.zone_id != zone.zone_id or not self.is_zone_name_hidden:
             self.globe_goto(zone, types='SAFE', refresh=True)

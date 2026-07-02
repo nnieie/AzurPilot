@@ -826,6 +826,12 @@
       "name": "囤積任務 X 分鐘",
       "help": "能在收菜期間降低操作遊戲的頻率\n任務觸發後，等待 X 分鐘，再一次性執行囤積的任務"
     },
+    "CloseEmulatorDuringLongWait": {
+      "name": "長時間等待時關閉模擬器",
+      "help": "當下一個任務超過 3 小時後執行時，等待期間關閉模擬器以節省記憶體和 CPU。",
+      "True": "True",
+      "False": "False"
+    },
     "WhenTaskQueueEmpty": {
       "name": "當任務佇列清空後",
       "help": "無任務時關閉遊戲，能在收菜期間降低 CPU 佔用",

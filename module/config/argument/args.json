@@ -601,6 +601,14 @@
         "type": "input",
         "value": 0
       },
+      "CloseEmulatorDuringLongWait": {
+        "type": "checkbox",
+        "value": true,
+        "option": [
+          true,
+          false
+        ]
+      },
       "WhenTaskQueueEmpty": {
         "type": "select",
         "value": "goto_main",

@@ -215,7 +215,7 @@ def _get_model(name):
     return _model_cache[name]
 
 
-DET_MODEL_PATH = "bin/ocr_models/det/PP-OCRv5_mobile_det.onnx"
+DET_MODEL_PATH = "bin/ocr_models/det/PP-OCRv6_tiny_det.onnx"
 
 _det_model_cache = {}
 
