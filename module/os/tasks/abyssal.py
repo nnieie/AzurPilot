@@ -164,14 +164,14 @@ class OpsiAbyssal(CoinTaskMixin, OSMap):
             return_threshold, cl1_preserve = self._get_operation_coins_return_threshold()
             if return_threshold is None:
                 logger.info('OperationCoinsReturnThreshold 为 0，禁用黄币检查，仅使用行动力阈值控制')
-            elif self._check_yellow_coins_and_return_to_cl1('任务开始前', '深渊海域'):
+            elif self._check_yellow_coins_and_return_to_scheduling('任务开始前', '深渊海域'):
                 return
 
         while True:
             submarine_enabled = self.clear_abyssal()
 
             if self.is_cl1_enabled:
-                if self._check_yellow_coins_and_return_to_cl1('循环中', '深渊海域'):
+                if self._check_yellow_coins_and_return_to_scheduling('循环中', '深渊海域'):
                     return
 
             if not self.config.OpsiAbyssal_ForceRun and submarine_enabled:

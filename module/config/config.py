@@ -313,7 +313,7 @@ class AzurLaneConfig(ConfigUpdater, ManualConfig, GeneratedConfig, ConfigWatcher
     def update(self):
         self.load()
         self.config_override()
-        self.bind(self.task)
+        self.bind(getattr(self, '_bind_task_override', self.task))
         self.save()
 
     def override(self, **kwargs):

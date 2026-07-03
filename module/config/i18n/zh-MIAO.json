@@ -1002,7 +1002,7 @@
     },
     "TaskPriorityAdjustment": {
       "name": "任务优先级调整喵",
-      "help": "默认优先级参考喵： Restart # 重启游戏 > OpsiCrossMonth # 大世界跨月每日 > Commission > Tactical > Research # 委托 > 战术学院 > 科研 > Exercise # 演习 > Dorm > Meowfficer > Guild > Gacha # 后宅 > 指挥喵 > 大舰队 > 每日抽卡 > Reward # 收获 > ShopFrequent > ShopOnce > Shipyard > Freebies # 通用商店 > 其他商店 > 开发船坞 > 白嫖奖励 > PrivateQuarters # 私人休息室 > OpsiExplore # 大世界每月开荒 > Minigame > Awaken # 小游戏 > 认知觉醒 > OpsiAshBeacon # META信标作战 > OpsiDaily > OpsiShop > OpsiVoucher > EventShop # 大世界日常 > 港口商店 > 兑换商店 > 活动商店 > OpsiAbyssal > OpsiStronghold > OpsiObscure > OpsiArchive # 深渊海域 > 塞壬要塞 > 隐秘海域 > 档案坐标 > Daily > Hard > OpsiAshBeacon > OpsiAshAssist > OpsiMonthBoss # 每日挑战 > 困难图 > META作战 > META支援 > 月度boss > Sos > EventSp > EventA > EventB > EventC > EventD # SOS > 活动每日SP > 活动每日A > 活动每日B > 活动每日C > 活动每日D > RaidDaily > CoalitionSp > WarArchives > MaritimeEscort # 共斗活动每日 > 共斗活动SP > 作战档案 > 商船护航 > IslandJuuEatery > IslandJuuCoffee > IslandGrill > IslandTeahouse > IslandRestaurant # 岛屿啾啾简餐 > 啾咖啡 > 乌鱼烤肉 > 白熊饮品 > 有鱼餐馆 > IslandFarm > IslandRancher > IslandMineForest > IslandDailyGather > IslandManufacture # 岛屿农田 > 牧场 > 矿山林场 > 每日采集 > 制造业 > IslandAirDrop > IslandBusiness > IslandDailyOrder > IslandDailyInteract > IslandPearlSell > IslandCargoPreparation # 岛屿每日补给 > 经营模块 > 每日订单 > 每日/周任务 > 每周珍珠采购与售卖 > 货物筹备 > Event > Event2 > Event3 > Raid > Hospital > HospitalEvent > Coalition > RaidScuttle > Main > Main2 > Main3 # 活动图1 > 活动图2 > 活动图3 > 共斗活动 > 医院活动 > 医院活动事件 > 共斗活动 > 共斗沉船 > 主线 > 主线2 > 主线3 > OpsiMeowfficerFarming # 短猫相接 > GemsFarming # 刷紧急委托 > Ambush11 # 1-1刷伏击 > OpsiHazard1Leveling # 侵蚀一练级 > ThreeOilLowCost # 三油低耗 格式：每行只写任务名喵，用 `>` 连接优先级。 上面的 `#` 注释只是说明喵，写入配置时不要保留注释，否则任务名匹配会失败。 任务名要用英文配置任务名；不知道任务名时切到英文界面看名字喵。 留空就使用内置默认优先级喵。"
+      "help": "拖动任务行调整调度优先级喵，越靠上越先执行喵。新增任务会按照内置默认优先级自动插入到合适位置喵。"
     }
   },
   "OneClickRetire": {
@@ -1927,6 +1927,14 @@
     "DoMajorCommission": {
       "name": "做主要委托 (1200油/1000油)",
       "help": "1200油委现已过时收益低，建议关闭喵。 (´・ω・`)"
+    },
+    "CommissionNotifyReward": {
+      "name": "Commission.CommissionNotifyReward.name",
+      "help": "Commission.CommissionNotifyReward.help"
+    },
+    "CommissionNotifyRewardStatistics": {
+      "name": "Commission.CommissionNotifyRewardStatistics.name",
+      "help": "Commission.CommissionNotifyRewardStatistics.help"
     }
   },
   "Tactical": {
@@ -3083,6 +3091,10 @@
       "name": "上一次完成的区域",
       "help": "填0重置进度，重置后自动跳过已开荒海域。支持海域ID或名称喵。"
     },
+    "AllowHazard1Leveling": {
+      "name": "允许开荒期间运行侵蚀1练级喵",
+      "help": "开启后将不会推迟侵蚀1练级任务，慎用，没体力开荒就老实了喵。"
+    },
     "ExploreProgress": {
       "name": "每月开荒进度",
       "help": "显示当前完成百分比喵。 (=^･ω･^=)"
@@ -3221,10 +3233,6 @@
     "ActionPointPreserve": {
       "name": "保留 X 点行动力",
       "help": "行动力低于X停，自动开箱子，X包含箱内行动力。建议保留3000给侵蚀1练级。大世界重置前3天自动减至200，若启用侵蚀1练级则1000，最后一天减至0喵。"
-    },
-    "SmartNaturalAPCleanup": {
-      "name": "智能调度自然行动力清理喵",
-      "help": "智能调度拉起短猫清理自然恢复行动力时使用的一次性隐藏标记喵。"
     },
     "HazardLevel": {
       "name": "侵蚀等级喵",

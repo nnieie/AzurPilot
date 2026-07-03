@@ -467,6 +467,9 @@ def parse_pin_value(val, valuetype: str = None, widget_type: str = None, options
     checkbox 返回 [] 或 [True]（在 put_checkbox_ 中定义）；
     multiselect 返回选项值列表（如 [3, 1, 5]）。
     """
+    if widget_type == 'task_priority':
+        return "" if val is None else str(val)
+
     # 处理 dict 类型 - 提取 'value' 字段并递归解析
     if isinstance(val, dict):
         if 'value' in val:

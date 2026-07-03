@@ -19,8 +19,15 @@ class OpsiExplore(OSMap):
         logger.info('Delay other OpSi tasks during OpsiExplore')
         with self.config.multi_set():
             next_run = self.config.Scheduler_NextRun
-            for task in ['OpsiObscure', 'OpsiAbyssal', 'OpsiArchive', 'OpsiStronghold', 'OpsiMeowfficerFarming',
-                         'OpsiMonthBoss', 'OpsiShop', 'OpsiHazard1Leveling']:
+            delay_tasks = ['OpsiObscure', 'OpsiAbyssal', 'OpsiArchive', 'OpsiStronghold', 'OpsiMeowfficerFarming',
+                         'OpsiMonthBoss', 'OpsiShop', 'OpsiScheduling']
+            can_hazard1_leveling = (
+                self.config.OpsiExplore_AllowHazard1Leveling and
+                self.name_to_zone(self.config.OpsiExplore_LastZone).zone_id not in [0, 44, 24]
+            )
+            if not can_hazard1_leveling:
+                delay_tasks.append('OpsiHazard1Leveling')
+            for task in delay_tasks:
                 keys = f'{task}.Scheduler.NextRun'
                 current = self.config.cross_get(keys=keys, default=DEFAULT_TIME)
                 if current < next_run:

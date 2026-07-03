@@ -809,7 +809,7 @@ class OSFleet(OSCamera, Combat, Fleet, OSAsh):
 
         fleets = self.parse_fleet_filter()
         with self.stat.new(
-                genre=inflection.underscore(self.config.task.command),
+                genre=inflection.underscore(self.opsi_task_command),
                 method=self.config.DropRecord_OpsiRecord
         ) as drop:
             for fleet in fleets:

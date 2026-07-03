@@ -35,17 +35,22 @@ class OSStatus(UI):
     _last_yellow_coins = 0
 
     @property
+    def opsi_task_command(self) -> str:
+        """返回当前实际执行的大世界任务名。"""
+        return getattr(self, '_opsi_active_task_command', None) or self.config.task.command
+
+    @property
     def is_in_task_explore(self) -> bool:
-        return self.config.task.command == 'OpsiExplore'
+        return self.opsi_task_command == 'OpsiExplore'
 
     @property
     def is_in_task_cl1_leveling(self) -> bool:
-        return self.config.task.command == 'OpsiHazard1Leveling'
+        return self.opsi_task_command == 'OpsiHazard1Leveling'
 
     @property
     def is_in_task_meow(self) -> bool:
         """判断当前任务是否是短猫任务"""
-        return self.config.task.command == 'OpsiMeowfficerFarming'
+        return self.opsi_task_command == 'OpsiMeowfficerFarming'
 
     @property
     def is_cl1_enabled(self) -> bool:
@@ -182,4 +187,8 @@ class OSStatus(UI):
 
     def cl1_task_call(self):
         if self.is_cl1_enabled and self.cl1_enough_yellow_coins:
-            self.config.task_call('OpsiHazard1Leveling')
+            is_smart_scheduling_enabled = getattr(self, 'is_smart_scheduling_enabled', None)
+            if is_smart_scheduling_enabled is not None and is_smart_scheduling_enabled():
+                self.config.task_call('OpsiScheduling')
+            else:
+                self.config.task_call('OpsiHazard1Leveling')

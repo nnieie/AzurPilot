@@ -1002,7 +1002,7 @@
     },
     "TaskPriorityAdjustment": {
       "name": "Task priority adjustment",
-      "help": "Default priority reference (`#` text is explanatory; do not copy comments into the config):\nRestart    # Restart the game\n> OpsiCrossMonth    # Operation Siren cross-month daily task\n> Commission > Tactical > Research    # Commission > Tactical Class > Research\n> Exercise    # Exercise\n> Dorm > Meowfficer > Guild > Gacha    # Dorm > Meowfficer > Guild > Daily build\n> Reward    # Rewards\n> ShopFrequent > ShopOnce > Shipyard > Freebies    # Frequent shop > One-time shop > Shipyard > Freebies\n> PrivateQuarters    # Private Quarters\n> OpsiExplore    # Monthly Operation Siren exploration\n> Minigame > Awaken    # Minigame > Cognitive Awakening\n> OpsiAshBeacon    # META beacon battle\n> OpsiDaily > OpsiShop > OpsiVoucher > EventShop    # Operation Siren daily > Port shop > Voucher shop > Event shop\n> OpsiAbyssal > OpsiStronghold > OpsiObscure > OpsiArchive    # Abyssal zone > Siren stronghold > Obscure zone > Archive coordinate\n> Daily > Hard > OpsiAshBeacon > OpsiAshAssist > OpsiMonthBoss    # Daily challenge > Hard mode > META battle > META assist > Monthly boss\n> Sos > EventSp > EventA > EventB > EventC > EventD    # SOS > Event daily SP > Event daily A > Event daily B > Event daily C > Event daily D\n> RaidDaily > CoalitionSp > WarArchives > MaritimeEscort    # Raid daily > Coalition SP > War Archives > Maritime Escort\n> IslandJuuEatery > IslandJuuCoffee > IslandGrill > IslandTeahouse > IslandRestaurant    # Island Juu Eatery > Juu Coffee > Squid Grill > Polar Bear Drinks > Fish Restaurant\n> IslandFarm > IslandRancher > IslandMineForest > IslandDailyGather > IslandManufacture    # Island farm > Ranch > Mine & Forest > Daily gathering > Manufacturing\n> IslandAirDrop > IslandBusiness > IslandDailyOrder > IslandDailyInteract > IslandPearlSell > IslandCargoPreparation    # Island daily supply > Business module > Daily order > Daily/weekly tasks > Weekly pearl trade > Cargo preparation\n> Event > Event2 > Event3 > Raid > Hospital > HospitalEvent > Coalition > RaidScuttle > Main > Main2 > Main3    # Event map 1 > Event map 2 > Event map 3 > Raid > Hospital > Hospital event > Coalition > Raid scuttle > Main campaign > Main campaign 2 > Main campaign 3\n> OpsiMeowfficerFarming    # Operation Siren Meowfficer farming\n> GemsFarming    # Urgent commission farming\n> Ambush11    # 1-1 ambush farming\n> OpsiHazard1Leveling    # Corrosion 1 leveling\n> ThreeOilLowCost    # 3-oil low-cost farming\n\nFormat: task names only, connected with `>` (left = higher priority).\nThe `#` comments above are explanatory only. Do not keep comments in the config value, because comments will break task-name matching.\nUse English config task names. If you are unsure about a task name, switch the UI to English and check it.\nLeave empty to use the built-in default priority."
+      "help": "Drag task rows to adjust scheduler priority. Tasks closer to the top run first. New tasks are automatically inserted into suitable positions according to the built-in default priority."
     }
   },
   "OneClickRetire": {
@@ -1927,6 +1927,14 @@
     "DoMajorCommission": {
       "name": "Make the main commission (1200 oil/1000 oil commission)",
       "help": "The 1200 oil commission is now obsolete and the yield is very low. It is recommended to close it."
+    },
+    "CommissionNotifyReward": {
+      "name": "Commission.CommissionNotifyReward.name",
+      "help": "Commission.CommissionNotifyReward.help"
+    },
+    "CommissionNotifyRewardStatistics": {
+      "name": "Commission.CommissionNotifyRewardStatistics.name",
+      "help": "Commission.CommissionNotifyRewardStatistics.help"
     }
   },
   "Tactical": {
@@ -3083,6 +3091,10 @@
       "name": "Last completed zone",
       "help": "Automatically updated value. Fill in 0 to reset progress. After reset, already explored sea zones will be automatically skipped.\nSupports sea zone ID, CN/EN/JP/TW server zone names, e.g. \"51\", \"NA Ocean SE Sector E\""
     },
+    "AllowHazard1Leveling": {
+      "name": "Allow Hazard 1 Leveling during exploration",
+      "help": "If enabled, Corrosion 1 Leveling will not be postponed. Use with caution, as you might run out of Action Points for exploration."
+    },
     "ExploreProgress": {
       "name": "Monthly Exploration Progress",
       "help": "Shows the current completion percentage of monthly exploration."
@@ -3221,10 +3233,6 @@
     "ActionPointPreserve": {
       "name": "Preserve X Action Points",
       "help": "Stop when Action Points are lower than X, and automatically open Action Point boxes. X includes Action Points in boxes. It is recommended to preserve 3000 AP for Corrosion 1 Leveling.\nThis value will be automatically reduced to 200 points 3 days before Operation Siren reset. If Corrosion 1 Leveling is enabled, it will be changed to 1000 points, and will be automatically reduced to 0 points on the last day."
-    },
-    "SmartNaturalAPCleanup": {
-      "name": "Smart Scheduling Natural AP Cleanup",
-      "help": "Hidden one-shot flag used when Smart Scheduling starts Meowfficer farming to spend naturally recovered Action Points."
     },
     "HazardLevel": {
       "name": "Corrosion Level",

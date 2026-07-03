@@ -1002,7 +1002,7 @@
     },
     "TaskPriorityAdjustment": {
       "name": "タスクの優先度の調整",
-      "help": "既定の優先度参考（# 以降は説明です。実際の設定にはコメントをコピーしないでください）：\nRestart    # ゲーム再起動\n> OpsiCrossMonth    # セイレーン作戦の月跨ぎデイリー\n> Commission > Tactical > Research    # 委託 > 戦術学院 > 研究\n> Exercise    # 演習\n> Dorm > Meowfficer > Guild > Gacha    # 寮舎 > 指揮ニャ > 大艦隊 > デイリー建造\n> Reward    # 報酬受取\n> ShopFrequent > ShopOnce > Shipyard > Freebies    # 通常ショップ > 一回限りショップ > 開発ドック > 無料報酬\n> PrivateQuarters    # プライベートルーム\n> OpsiExplore    # セイレーン作戦の月次開拓\n> Minigame > Awaken    # ミニゲーム > 認知覚醒\n> OpsiAshBeacon    # METAビーコン戦\n> OpsiDaily > OpsiShop > OpsiVoucher > EventShop    # セイレーン作戦デイリー > 港ショップ > 交換ショップ > イベントショップ\n> OpsiAbyssal > OpsiStronghold > OpsiObscure > OpsiArchive    # 深淵海域 > セイレーン要塞 > 隠された海域 > アーカイブ座標\n> Daily > Hard > OpsiAshBeacon > OpsiAshAssist > OpsiMonthBoss    # デイリーチャレンジ > ハード海域 > META戦 > META支援 > 月度ボス\n> Sos > EventSp > EventA > EventB > EventC > EventD    # SOS > イベントデイリーSP > イベントデイリーA > イベントデイリーB > イベントデイリーC > イベントデイリーD\n> RaidDaily > CoalitionSp > WarArchives > MaritimeEscort    # 共闘デイリー > 共闘SP > 作戦アーカイブ > 商船護衛\n> IslandJuuEatery > IslandJuuCoffee > IslandGrill > IslandTeahouse > IslandRestaurant    # 島ジュウ簡餐 > ジュウコーヒー > イカ焼き > 白熊ドリンク > 有魚レストラン\n> IslandFarm > IslandRancher > IslandMineForest > IslandDailyGather > IslandManufacture    # 島農地 > 牧場 > 鉱山＆林場 > デイリー採集 > 製造業\n> IslandAirDrop > IslandBusiness > IslandDailyOrder > IslandDailyInteract > IslandPearlSell > IslandCargoPreparation    # 島デイリー補給 > 経営モジュール > デイリーオーダー > デイリー/週間任務 > 週間パール取引 > 貨物準備\n> Event > Event2 > Event3 > Raid > Hospital > HospitalEvent > Coalition > RaidScuttle > Main > Main2 > Main3    # イベントマップ1 > イベントマップ2 > イベントマップ3 > 共闘 > 病院 > 病院イベント > 連合 > 共闘沈船 > メイン > メイン2 > メイン3\n> OpsiMeowfficerFarming    # セイレーン作戦指揮ニャ収集\n> GemsFarming    # 緊急委託周回\n> Ambush11    # 1-1伏撃周回\n> OpsiHazard1Leveling    # 侵蝕1レベリング\n> ThreeOilLowCost    # 3燃料低コスト\n\n形式: 1 行にはタスク名だけを書き、`>` で優先度をつなぎます（左側ほど優先度が高い）。\n上記の `#` コメントは説明用です。実際の設定値にコメントを残すとタスク名の照合に失敗します。\nタスク名は英語の設定タスク名を使ってください。分からない場合は UI を英語に切り替えて確認してください。\n空欄にすると内蔵の既定優先度を使用します。"
+      "help": "タスク行をドラッグしてスケジューラの優先度を調整します。上にあるタスクほど先に実行されます。新しいタスクは内蔵の既定優先度に従って適切な位置へ自動的に挿入されます。"
     }
   },
   "OneClickRetire": {
@@ -1927,6 +1927,14 @@
     "DoMajorCommission": {
       "name": "主要委託を実行する（1200燃料/1000燃料委託）",
       "help": "1200燃料委託は現在では廃止されており、収益が非常に低いです。オフにすることをお勧めします。"
+    },
+    "CommissionNotifyReward": {
+      "name": "Commission.CommissionNotifyReward.name",
+      "help": "Commission.CommissionNotifyReward.help"
+    },
+    "CommissionNotifyRewardStatistics": {
+      "name": "Commission.CommissionNotifyRewardStatistics.name",
+      "help": "Commission.CommissionNotifyRewardStatistics.help"
     }
   },
   "Tactical": {
@@ -3083,6 +3091,10 @@
       "name": "最後に完了した海域",
       "help": "自動的に更新される値。進行状況をリセットするには0を入力します。リセット後は開放済み海域は自動でスキップされます。\n海域ID、中国サーバー/グローバルサーバー/日本サーバー/台湾サーバーの海域名をサポート（例：「51」「NA Ocean SE Sector E」など）"
     },
+    "AllowHazard1Leveling": {
+      "name": "探索中の侵食1レベリングを許可",
+      "help": "有効にすると、侵食1レベリング任務を延期しなくなります。行動力が足りなくなってエリア開拓ができなくなる恐れがあるため、慎重に使用してください。"
+    },
     "ExploreProgress": {
       "name": "月間開拓進捗",
       "help": "現在の月間開拓の完了パーセンテージを表示します。"
@@ -3221,10 +3233,6 @@
     "ActionPointPreserve": {
       "name": "行動力をXポイント保留",
       "help": "行動力がX以下になると停止し、行動力ボックスを自動で開きます。\nこの値はセイレーン作戦リセット3日前に自動的に200ポイントに減ります。侵食1レベリングが有効な場合は1000ポイントに変更され、最終日には自動的に0ポイントに減ります。"
-    },
-    "SmartNaturalAPCleanup": {
-      "name": "スマートスケジュール自然行動力消化",
-      "help": "スマートスケジュールが自然回復した行動力を消化するために短猫を起動するときに使う一時的な非表示フラグ。"
     },
     "HazardLevel": {
       "name": "侵食レベル",
