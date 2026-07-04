@@ -59,10 +59,16 @@ class ConnectionAttr:
             logger.warning(f'当前平台不支持自动下载 ADB: {sys.platform}')
             return None
 
+        if not target:
+            logger.warning('ADB 下载失败，目标路径为空')
+            return None
+
         target = Path(target).resolve()
-        root = Path.cwd().resolve()
-        tools_dir = root / '.venv' / 'platform-tools'
-        archive = root / '.venv' / 'platform-tools.zip'
+        download_dir = target.parent
+        if target.parent.name in ['Scripts', 'bin'] and target.parent.parent.name == '.venv':
+            download_dir = target.parent.parent
+        tools_dir = download_dir / 'platform-tools'
+        archive = download_dir / 'platform-tools.zip'
         executable = 'adb.exe' if os.name == 'nt' else 'adb'
         source = tools_dir / executable
 
@@ -387,9 +393,9 @@ class ConnectionAttr:
         # deploy.yaml 中的路径是相对于项目根目录的
         deploy_adb = State.deploy_config.AdbExecutable
         root = State.deploy_config.root_filepath
-        file = os.path.abspath(os.path.join(root, deploy_adb)).replace('\\', '/')
-        if os.path.exists(file):
-            return file
+        deploy_adb_file = os.path.abspath(os.path.join(root, deploy_adb)).replace('\\', '/')
+        if os.path.exists(deploy_adb_file):
+            return deploy_adb_file
 
         # Try existing adb.exe in predefined list
         for candidate in self.adb_binary_list:
@@ -407,13 +413,13 @@ class ConnectionAttr:
             return file
 
         # Use adb in system PATH
-        file = shutil.which('adb')
-        if file:
-            return os.path.abspath(file).replace('\\', '/')
+        path_adb = shutil.which('adb')
+        if path_adb:
+            return os.path.abspath(path_adb).replace('\\', '/')
 
         # Download adb only when all local candidates are missing
         # 使用绝对路径下载，确保后续实例能找到文件
-        downloaded = self.download_adb_binary(file)
+        downloaded = self.download_adb_binary(deploy_adb_file)
         if downloaded:
             return downloaded
 
