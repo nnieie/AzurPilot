@@ -579,7 +579,7 @@ class Cl1Database:
         self.save_stats(instance, month, data)
 
     def add_ap_snapshot(self, instance: str, ap_current: int, source: str = "cl1", distance: int = None, ap_total: int = None):
-        """记录行动力快照（真实剩余体力），并计算虚拟资产
+        """记录行动力快照（真实剩余体力），并计算资产
 
         Args:
             instance: 实例名称
@@ -592,18 +592,8 @@ class Cl1Database:
         data = self.get_stats(instance, month)
         now = datetime.now()
 
-        # 计算虚拟资产
-        # 虚拟资产 = AP × (1700/30) + YellowCoins + (到月底时间/10分钟) × (1700/30)
-        from calendar import monthrange
-
-        year, month_num = now.year, now.month
-        last_day = monthrange(year, month_num)[1]
-        month_end = datetime(year, month_num, last_day, 23, 59, 59)
-        time_to_month_end_sec = (month_end - now).total_seconds()
-
         # CL5 效率：1700 / 30 ≈ 56.67
         cl5_efficiency = 1700.0 / 30.0
-        virtual_asset_added = (time_to_month_end_sec / 600.0) * cl5_efficiency
 
         # 获取最近的黄币值
         yellow_coin = 0
@@ -618,15 +608,12 @@ class Cl1Database:
             ap_total = self._coerce_int(ap_total)
         ap_for_asset = ap_total if ap_total is not None else ap_current
         asset = ap_for_asset * cl5_efficiency + yellow_coin
-        # 虚拟资产 = 资产 + 时间加成
-        virtual_asset = asset + virtual_asset_added
 
         snapshot = {
             "ts": now.isoformat(),
             "ap": ap_current,
             "yellow_coin": yellow_coin,
             "asset": round(asset, 2),
-            "virtual_asset": round(virtual_asset, 2),
             "source": source,
         }
         if distance is not None:

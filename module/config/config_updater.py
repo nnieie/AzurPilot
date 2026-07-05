@@ -837,12 +837,6 @@ class ConfigUpdater:
         elif key == 'OpsiHazard1Leveling.OpsiHazard1Leveling.OperationCoinsPreserve':
             yield 'OpsiScheduling.OpsiScheduling.OperationCoinsPreserve', value
         
-        # 智能调度与侵蚀1虚拟资产保留双向同步
-        if key == 'OpsiScheduling.OpsiScheduling.VirtualAssetPreserve':
-            yield 'OpsiHazard1Leveling.OpsiHazard1Leveling.PreserveVirtualAsset', value
-        elif key == 'OpsiHazard1Leveling.OpsiHazard1Leveling.PreserveVirtualAsset':
-            yield 'OpsiScheduling.OpsiScheduling.VirtualAssetPreserve', value
-        
         # 注意：动态下拉菜单更新仅在 pywebio > 1.8.0 时可用
         # elif key == 'Alas.Emulator.ScreenshotMethod' and value == 'nemu_ipc':
         #     yield 'Alas.Emulator.ControlMethod', 'nemu_ipc'

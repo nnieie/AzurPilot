@@ -1,9 +1,6 @@
-from datetime import timedelta
-
-from module.config.utils import get_os_next_reset, DEFAULT_TIME, get_os_reset_remain
+from module.config.utils import get_os_next_reset, DEFAULT_TIME
 from module.exception import GameStuckError, ScriptError
 from module.logger import logger
-from module.map.map_grids import SelectedGrids
 from module.os.globe_operation import OSExploreError
 from module.os.map import OSMap
 
@@ -58,7 +55,6 @@ class OpsiExplore(OSMap):
                 self.config.task_delay(target=next_reset)
                 self.config.task_call('OpsiDaily', force_call=False)
                 self.config.task_call('OpsiShop', force_call=False)
-                self.config.task_call('OpsiHazard1Leveling', force_call=False)
             self.config.task_stop()
 
         logger.hr('OS explore', level=1)

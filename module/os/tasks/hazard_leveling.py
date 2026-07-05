@@ -252,7 +252,7 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
                 _previous_ap_insufficient = True
                 self.notify_push(
                     title="[AzurPilot info] 侵蚀 1 - 行动力低于最低保留",
-                    content=f"当前行动力 {self._action_point_total} 低于最低保留 {min_reserve}，已推迟任务",
+                    content=f"总行动力 {self._action_point_total} 低于最低保留 {min_reserve}，已推迟任务",
                 )
             else:
                 logger.info("上次检查行动力低于最低保留，跳过推送通知")
@@ -548,8 +548,6 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
                 if self.config.OpsiCheckLeveling_DelayAfterFull:
                     logger.info("所有舰船满经验后延迟任务")
                     self.delay_opsi_active_task(server_update=True, task='OpsiHazard1Leveling')
-                    if self.config.task.command == self.TASK_NAME_SCHEDULING:
-                        self.config.task_delay(server_update=True)
                     self.config.task_stop()
 
         self.config.OpsiCheckLeveling_LastRun = datetime.now().replace(microsecond=0)
@@ -938,8 +936,6 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
             if self.config.OpsiCheckLeveling_DelayAfterFull:
                 logger.info("自定义舰位满经验后延迟任务")
                 self.delay_opsi_active_task(server_update=True, task='OpsiHazard1Leveling')
-                if self.config.task.command == self.TASK_NAME_SCHEDULING:
-                    self.config.task_delay(server_update=True)
                 self.config.task_stop()
 
     def _record_ap_and_coins(self, sea_miles=None):

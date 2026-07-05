@@ -35,26 +35,38 @@ class OSStatus(UI):
     _last_yellow_coins = 0
 
     @property
-    def opsi_task_command(self) -> str:
-        """返回当前实际执行的大世界任务名。"""
-        return getattr(self, '_opsi_active_task_command', None) or self.config.task.command
-
-    @property
     def is_in_task_explore(self) -> bool:
-        return self.opsi_task_command == 'OpsiExplore'
+        return self.config.task.command == 'OpsiExplore'
 
     @property
     def is_in_task_cl1_leveling(self) -> bool:
-        return self.opsi_task_command == 'OpsiHazard1Leveling'
+        return self.config.task.command == 'OpsiHazard1Leveling'
+
+    @property
+    def is_running_cl1_leveling(self) -> bool:
+        """判断当前执行上下文是否是侵蚀1练级。"""
+        return (
+            self.is_in_task_cl1_leveling
+            or getattr(self.config, '_bind_task_override', None) == 'OpsiHazard1Leveling'
+        )
 
     @property
     def is_in_task_meow(self) -> bool:
         """判断当前任务是否是短猫任务"""
-        return self.opsi_task_command == 'OpsiMeowfficerFarming'
+        return self.config.task.command == 'OpsiMeowfficerFarming'
 
     @property
     def is_cl1_enabled(self) -> bool:
         return self.config.is_task_enabled('OpsiHazard1Leveling')
+
+    @property
+    def is_cl1_mode_enabled(self) -> bool:
+        """判断侵蚀1相关策略是否启用，包括智能调度代理模式。"""
+        is_smart_scheduling_enabled = getattr(self, 'is_smart_scheduling_enabled', None)
+        return self.is_cl1_enabled or (
+            is_smart_scheduling_enabled is not None
+            and is_smart_scheduling_enabled()
+        )
 
     @property
     def is_meow_enabled(self) -> bool:
@@ -128,7 +140,7 @@ class OSStatus(UI):
             if current_value == 0:
                 # OCR may get 0 when amount is not immediately loaded
                 # Or when popups are obscuring the top bar
-                logger.info(f'Yellow coins is 0, assuming it is an ocr error or UI not loaded')
+                logger.info('Yellow coins is 0, assuming it is an ocr error or UI not loaded')
                 continue
             else:
                 # 验证识别稳定性：连续两次识别相同才确认
@@ -172,7 +184,7 @@ class OSStatus(UI):
         # 记录凭证快照到数据库（用于 WebUI 凭证变化曲线图）
         try:
             instance_name = getattr(self.config, 'config_name', 'default')
-            source = 'cl1' if self.is_in_task_cl1_leveling else ('meow' if self.is_in_task_meow else 'other')
+            source = 'cl1' if self.is_running_cl1_leveling else ('meow' if self.is_in_task_meow else 'other')
             from module.statistics.cl1_database import db as cl1_db
             cl1_db.add_coins_snapshot(
                 instance_name,
@@ -184,11 +196,3 @@ class OSStatus(UI):
             self.config.save()
         except Exception:
             logger.exception('Failed to record coins snapshot')
-
-    def cl1_task_call(self):
-        if self.is_cl1_enabled and self.cl1_enough_yellow_coins:
-            is_smart_scheduling_enabled = getattr(self, 'is_smart_scheduling_enabled', None)
-            if is_smart_scheduling_enabled is not None and is_smart_scheduling_enabled():
-                self.config.task_call('OpsiScheduling')
-            else:
-                self.config.task_call('OpsiHazard1Leveling')

@@ -312,6 +312,7 @@ YukikazeTaskManager:
       > ShopFrequent > ShopOnce > Shipyard > Freebies
       > PrivateQuarters
       > OpsiExplore
+      > OpsiPreventActionPointOverflow
       > Minigame > Awaken
       > OpsiAshBeacon
       > OpsiDaily > OpsiShop > OpsiVoucher > EventShop
@@ -1112,7 +1113,6 @@ OpsiHazard1Leveling:
   Cl1Filter: |-
     ActionPoint
   RecordNonCL1AP: true
-  PreserveVirtualAsset: 0
   RecordSeaMiles:
     type: checkbox
     value: true
@@ -1152,13 +1152,6 @@ OpsiScheduling:
     value: 40000
   ActionPointPreserve:
     value: 200
-  ActionPointEarlyTriggerEnable:
-    value: true
-    type: checkbox
-    option: [true, false]
-  ActionPointEarlyTriggerThreshold:
-    value: 200
-
   OperationCoinsReturnThreshold:
     value: 20000
   EnableMeowfficerFarming:
@@ -1177,20 +1170,18 @@ OpsiScheduling:
     type: checkbox
     value: false
     option: [true, false]
-
-  # 短猫提前开始模式
-  MeowStartEarlyMode:
-    # 激进模式: 0.8倍提前时间, 均衡模式: 1.2倍, 保守模式: 1.5倍
-    value: balanced
+  TaskPriority:
+    type: textarea
+    value: OpsiStronghold > OpsiObscure > OpsiAbyssal > OpsiMeowfficerFarming
+OpsiPreventActionPointOverflow:
+  Task:
+    value: OpsiScheduling
     option:
-      - aggressive
-      - balanced
-      - conservative
-  MeowStartEarlyEnable:
-    # 是否启用短猫提前开始功能
-    value: false
-    type: checkbox
-  VirtualAssetPreserve: 0
+      - OpsiScheduling
+      - OpsiHazard1Leveling
+      - OpsiMeowfficerFarming
+  ActionPointUpperbound: 200
+  ActionPointLowerbound: 10
 
 # ==================== Island ====================
 IslandPlan:

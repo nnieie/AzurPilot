@@ -151,24 +151,16 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
             keep_current_ap = True
             check_rest_ap = True
             cl1_yellow_enough = False
-            if self.is_cl1_enabled:
-                if smart_scheduled:
-                    return_threshold, _ = self._get_operation_coins_return_threshold()
-                    if return_threshold is not None:
-                        yellow_coins = self.get_yellow_coins()
-                        if yellow_coins >= return_threshold:
-                            check_rest_ap = False
-                else:
-                    cl1_yellow_enough = self.cl1_enough_yellow_coins
-                    if cl1_yellow_enough:
-                        check_rest_ap = False
+            if self.is_cl1_mode_enabled and not smart_scheduled:
+                cl1_yellow_enough = self.cl1_enough_yellow_coins
+                if cl1_yellow_enough:
+                    check_rest_ap = False
 
-            if not smart_scheduled and self.is_cl1_enabled and cl1_yellow_enough:
+            if not smart_scheduled and self.is_cl1_mode_enabled and cl1_yellow_enough:
                 try:
                     self.action_point_set(cost=0, keep_current_ap=keep_current_ap, check_rest_ap=check_rest_ap)
                 except ActionPointLimit:
                     self.config.task_delay(server_update=True)
-                    self.config.task_call('OpsiHazard1Leveling')
                     self.config.task_stop()
             else:
                 self.action_point_set(cost=0, keep_current_ap=keep_current_ap, check_rest_ap=check_rest_ap)
@@ -248,12 +240,6 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
         self.on_meow_search_end()
 
         self.config.check_task_switch()
-        
-        if self.is_running_smart_scheduling_task() and self._check_yellow_coins_and_return_to_scheduling(
-            "循环中", "短猫相接"
-        ):
-            return True
-        return False
 
     def _meow_handle_siren_detector_search(self):
         hazard_level = self.config.OpsiMeowfficerFarming_SirenDetectorSearch_HazardLevel
@@ -390,15 +376,7 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
         """准备短猫相接运行环境。"""
         logger.hr(f'OS meowfficer farming, hazard_level={self.config.OpsiMeowfficerFarming_HazardLevel}', level=1)
 
-        # 智能调度代执行时保留黄币返回检查，独立短猫沿用自身行动力限制逻辑。
-        if self.is_cl1_enabled and self.is_running_smart_scheduling_task():
-            return_threshold, _ = self._get_operation_coins_return_threshold()
-            if return_threshold is None:
-                logger.info('凭证返回阈值为 0，禁用黄币检查')
-            elif self._check_yellow_coins_and_return_to_scheduling('任务开始前', '短猫相接'):
-                return None
-
-        if ap_preserve is None and self.is_cl1_enabled and self.config.OpsiMeowfficerFarming_ActionPointPreserve < 500:
+        if ap_preserve is None and self.is_cl1_mode_enabled and self.config.OpsiMeowfficerFarming_ActionPointPreserve < 500:
             logger.info('启用侵蚀 1 练级时，最低行动力保留自动调整为 500')
             self.config.OpsiMeowfficerFarming_ActionPointPreserve = 500
 
@@ -412,7 +390,7 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
         if preserve == 0:
             self.config.override(OpsiFleet_Submarine=False)
 
-        if self.is_cl1_enabled:
+        if self.is_cl1_mode_enabled:
             # 侵蚀 1 练级模式下的必要覆盖项
             self.config.override(
                 OpsiGeneral_DoRandomMapEvent=True,
@@ -426,15 +404,11 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
             if cd is not None and remain > 0:
                 logger.info(f'存在冷却中的任务，延迟短猫任务至 {cd.next_run} 后执行')
                 self.delay_opsi_active_task(target=cd.next_run)
-                if self.config.task.command == self.TASK_NAME_SCHEDULING:
-                    self.config.task_delay(target=cd.next_run)
                 self.config.task_stop()
 
         if self.is_in_opsi_explore():
-            logger.warning(f'大世界探索正在运行，无法执行 {self.opsi_task_command}')
+            logger.warning(f'大世界探索正在运行，无法执行 {self.config.task.command}')
             self.delay_opsi_active_task(server_update=True)
-            if self.config.task.command == self.TASK_NAME_SCHEDULING:
-                self.config.task_delay(server_update=True)
             self.config.task_stop()
 
         if self.config.OpsiTarget_TargetFarming and not getattr(self, '_meow_target_checked', False):

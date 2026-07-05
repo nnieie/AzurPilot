@@ -93,23 +93,6 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
 
         # 初始化
         self.zone_init()
-        # CL1 危险等级练级预扫描
-        # try:
-        #    if getattr(self, "is_in_task_cl1_leveling", False) or getattr(self, "is_cl1_enabled", False):
-        #        logger.info("Detected CL1 leveling on enter: run auto-search then full map rescan to clear events")
-        #        try:
-        #            self.run_auto_search(question=True, rescan='full', after_auto_search=True)
-        #        except CampaignEnd:
-        #        except RequestHumanTakeover:
-        #            logger.warning("Require human takeover during CL1 pre-scan, aborting auto-scan")
-        #        except Exception as e:
-        #            logger.exception(e)
-        #        try:
-        #            self.map_rescan(rescan_mode='full')
-        #        except Exception as e:
-        #            logger.exception(e)
-        # except Exception:
-        #    logger.debug("CL1 pre-scan check skipped due to unexpected condition")
 
         # self.map_init()
         self.hp_reset()
@@ -130,7 +113,7 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
 
         if (
             self.zone.zone_id == leveling_zone
-            and self.opsi_task_command == "OpsiHazard1Leveling"
+            and self.config.task.command == "OpsiHazard1Leveling"
         ):
             pass
         elif self.zone.zone_id == 154:
@@ -346,7 +329,7 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         OpsiGeneral.RepairPackThresholdHazard1 仅用于 CL1 练级。
         """
         default_threshold = float(self.config.OpsiGeneral_RepairPackThreshold)
-        task = getattr(self, "opsi_task_command", "")
+        task = getattr(getattr(self.config, "task", None), "command", "")
         if task == "OpsiHazard1Leveling":
             return float(
                 getattr(
@@ -739,7 +722,7 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                     "set ActionPointPreserve to 0 temporarily"
                 )
                 return 0
-        elif self.is_cl1_enabled and remain <= 2:
+        elif self.is_cl1_mode_enabled and remain <= 2:
             logger.info(
                 "Just less than 3 days to OpSi reset, "
                 "set ActionPointPreserve to 2000 temporarily for hazard 1 leveling"
@@ -771,9 +754,6 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         # 这里不应该直接切换到 CL1
         if self.is_smart_scheduling_enabled():
             return
-        if self.config.OpsiGeneral_BuyActionPointLimit > 0:
-            logger.info('石油购买行动力已启用，跳过 CL1 行动力保留拦截')
-            return
 
         if (
             self.is_cl1_enabled
@@ -787,7 +767,6 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
             logger.info(f"Keep {preserve} AP when CL1 available")
             if not self.action_point_check(preserve):
                 self.config.opsi_task_delay(cl1_preserve=True)
-                self.cl1_task_call()
                 self.config.task_stop()
 
     # 自动搜索战斗计数器
@@ -805,7 +784,7 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
     def on_auto_search_battle_count_add(self):
         self._auto_search_battle_count += 1
         logger.attr("battle_count", self._auto_search_battle_count)
-        if getattr(self, "is_in_task_cl1_leveling", False):
+        if getattr(self, "is_running_cl1_leveling", False):
             try:
                 try:
                     self._cl1_auto_search_battle_count += 1
@@ -1085,11 +1064,15 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
                 continue
             if self.combat_appear():
                 self.on_auto_search_battle_count_add()
-                if strategic and self.config.task_switched():
-                    stop_event = self.config.stop_event
-                    if stop_event is not None and stop_event.is_set():
-                        self.interrupt_auto_search()
-                    elif self.opsi_task_command == "OpsiMeowfficerFarming":
+                stop_event = self.config.stop_event
+                if strategic and stop_event is not None and stop_event.is_set():
+                    self.interrupt_auto_search()
+                elif (
+                    strategic
+                    and not getattr(self.config, '_disable_task_switch', False)
+                    and self.config.task_switched()
+                ):
+                    if self.config.task.command == "OpsiMeowfficerFarming":
                         logger.info("Short meow search is running, delay task switch until search finished")
                     else:
                         self.interrupt_auto_search()
@@ -1347,7 +1330,7 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         """
         if getattr(self.config, "_disable_siren_research", False):
             return False
-        task = self.opsi_task_command
+        task = self.config.task.command
         if task not in ("OpsiHazard1Leveling", "OpsiMeowfficerFarming"):
             task = "OpsiHazard1Leveling"
         return self.config.cross_get(
@@ -1519,7 +1502,7 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         logger.info(f"Run auto search, question={question}, rescan={rescan}")
         finished_combat = 0
         with self.stat.new(
-            genre=inflection.underscore(self.opsi_task_command),
+            genre=inflection.underscore(self.config.task.command),
             method=self.config.DropRecord_OpsiRecord,
         ) as drop:
             while 1:
@@ -1570,7 +1553,7 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         logger.hr("Run strategy search", level=2)
 
         with self.stat.new(
-            genre=inflection.underscore(self.opsi_task_command),
+            genre=inflection.underscore(self.config.task.command),
             method=self.config.DropRecord_OpsiRecord,
         ) as drop:
             try:

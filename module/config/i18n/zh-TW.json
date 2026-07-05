@@ -278,6 +278,10 @@
       "name": "智慧排程+",
       "help": "大世界智慧排程功能，用於協調侵蝕1練級與黃幣補充任務之間的切換\n啟用後將根據黃幣和行動力自動在不同任務之間切換並傳送推送通知"
     },
+    "OpsiPreventActionPointOverflow": {
+      "name": "防止行動力溢出",
+      "help": "當前行動力達到上限時執行大世界任務消耗行動力"
+    },
     "OpsiCrossMonth": {
       "name": "跨月每日",
       "help": "    AzurPilot將在大世界跨月重置之前10分鐘進入大世界，等待大世界重置但不退出大世界，然後完成新一天的大世界每日、隱秘海域、深淵海域和短貓相接，以獲得額外的金菜。執行大世界每日時，按\"大世界每日\"任務設定執行，其餘同理。\n    重要：AzurPilot等待跨月期間，請不要操作遊戲。"
@@ -3331,10 +3335,6 @@
       "name": "統計非侵蝕1來源體力",
       "help": "開啟後，將統計所有來源的體力獲取資料（如明石商店購買）。關閉後，僅在侵蝕1練級任務中統計體力資料，忽略其他任務或手動操作時的體力獲取。"
     },
-    "PreserveVirtualAsset": {
-      "name": "保留 X 點虛擬資產",
-      "help": "虛擬資產 = 體力 × 1700/30 + 黃幣 + (到月底時間/10分鐘) × 1700/30\n虛擬資產低於 X 時運行黃幣補充任務，虛擬資產包含當前黃幣和到月底的行動力價值"
-    },
     "RecordSeaMiles": {
       "name": "海里數記錄",
       "help": "每次侵蝕1練級循環後記錄海里數到統計",
@@ -3433,16 +3433,6 @@
       "name": "短貓相接 保留 X 點行動力",
       "help": "行動力低於 X 後停止，自動開啟行動力箱子，X 包含箱子中的行動力，建議保留1000行動力給侵蝕1練級"
     },
-    "ActionPointEarlyTriggerEnable": {
-      "name": "行動力提前排程",
-      "help": "啟用後在侵蝕一或短貓結束時記錄自然行動力，並按每 10 分鐘回復 1 點行動力計算智慧排程下次運行時間，避免自然行動力溢出。",
-      "True": "開啟",
-      "False": "關閉"
-    },
-    "ActionPointEarlyTriggerThreshold": {
-      "name": "提前排程行動力閾值",
-      "help": "自然行動力回復到 X 時再次運行智慧排程。預設 200，適合在行動力接近自然上限時重新決定執行侵蝕一或短貓。"
-    },
     "OperationCoinsReturnThreshold": {
       "name": "獲取 X 個作戰補給憑證",
       "help": "在黃幣獲取任務時 共獲取(增加) X 個作戰補給憑證後返回侵蝕1練級"
@@ -3471,20 +3461,30 @@
       "True": "已啟用",
       "False": "未啟用"
     },
-    "MeowStartEarlyMode": {
-      "name": "月末行動力自動清理模式",
-      "help": "提前小時數 = (當前行動力/30 × 歷史平均每輪短貓耗時) × 模式係數，並與「下個月大世界重置剩餘時間」比較；激進(×0.8)少提前，均衡(×1.2)平衡，保守(×1.5)多提前",
-      "aggressive": "激進模式",
-      "balanced": "均衡模式",
-      "conservative": "保守模式"
+    "TaskPriority": {
+      "name": "補充黃幣任務優先級",
+      "help": "黃幣不足時，執行補充黃幣任務的優先級順序。使用 > 分隔。"
+    }
+  },
+  "OpsiPreventActionPointOverflow": {
+    "_info": {
+      "name": "防止行動力溢出",
+      "help": "當前行動力達到上限時執行大世界任務消耗行動力\n選擇智慧排程時，如果行動力和黃幣都不足導致沒有可執行任務，將執行短貓相接清理當前行動力"
     },
-    "MeowStartEarlyEnable": {
-      "name": "啟用月末行動力自動清理",
-      "help": "根據歷史短貓耗時與當前行動力，自動判斷是否需要提前開始短貓來清理月末過剩行動力；判斷基準為「下個月大世界重置時間」，不是每日伺服器刷新時間"
+    "Task": {
+      "name": "執行任務",
+      "help": "推薦選擇智慧排程，防溢出任務對此有專門處理",
+      "OpsiScheduling": "智慧排程（推薦）",
+      "OpsiHazard1Leveling": "侵蝕1練級",
+      "OpsiMeowfficerFarming": "短貓相接"
     },
-    "VirtualAssetPreserve": {
-      "name": "侵蝕1練級 保留 X 點虛擬資產",
-      "help": "虛擬資產低於 X 時運行黃幣補充任務，虛擬資產 = 體力 × 1700/30 + 黃幣 + (到月底時間/10分鐘) × 1700/30"
+    "ActionPointUpperbound": {
+      "name": "當前行動力上限",
+      "help": "當前行動力達到此值時開始執行大世界任務"
+    },
+    "ActionPointLowerbound": {
+      "name": "當前行動力下限",
+      "help": "防溢出任務會持續執行，直到當前行動力低於此值"
     }
   },
   "IslandPlan": {
@@ -6186,9 +6186,6 @@
       "TargetExpRequired": "目標等級所需經驗",
       "BattlesCompleted": "已戰鬥場次",
       "ExpRemaining": "還需經驗",
-      "StartCleanupTime": "建議開始清理時間: {value}",
-      "NextOsReset": "下次大世界重置: {value}",
-      "MeowAutoCleanupStatus": "自動提前清理: {value}",
       "CommissionIncomeTitle": "委託收益統計",
       "CommissionIncomeMonth": "本月",
       "CommissionIncomeWeek": "本週",
@@ -6217,14 +6214,12 @@
       "UseSmartSchedulingOperationCoinsPreserve": "智慧排程作戰補給憑證保留",
       "OperationCoinsPreserve": "作戰補給憑證保留",
       "ActionPointPreserve": "行動力保留",
-      "ActionPointEarlyTriggerEnable": "行動力提前排程",
-      "ActionPointEarlyTriggerThreshold": "提前排程行動力閾值",
       "OperationCoinsReturnThreshold": "作戰補給憑證回退閾值",
       "EnableMeowfficerFarming": "啟用指揮喵刷取",
       "EnableObscure": "啟用隱秘海域",
       "EnableAbyssal": "啟用深淵海域",
       "EnableStronghold": "啟用塞壬要塞",
-      "MeowStartEarlyMode": "短貓提前開始模式"
+      "TaskPriority": "任務優先級"
     },
     "Misc": {
       "Enabled": "已開啟",

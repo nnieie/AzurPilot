@@ -865,7 +865,7 @@
     "YukikazeTaskManager": {
       "TaskPriorityAdjustment": {
         "type": "task_priority",
-        "value": "Restart\n> OpsiCrossMonth\n> Commission > Tactical > Research\n> Exercise\n> Dorm > Meowfficer > Guild > Gacha\n> Reward\n> ShopFrequent > ShopOnce > Shipyard > Freebies\n> PrivateQuarters\n> OpsiExplore\n> Minigame > Awaken\n> OpsiAshBeacon\n> OpsiDaily > OpsiShop > OpsiVoucher > EventShop\n> OpsiAbyssal > OpsiStronghold > OpsiObscure > OpsiArchive\n> Daily > Hard > OpsiAshBeacon > OpsiAshAssist > OpsiMonthBoss\n> Sos > EventSp > EventA > EventB > EventC > EventD\n> RaidDaily > CoalitionSp > WarArchives > MaritimeEscort\n> IslandJuuEatery > IslandJuuCoffee > IslandGrill > IslandTeahouse > IslandRestaurant\n> IslandFarm > IslandRancher > IslandMineForest > IslandDailyGather > IslandManufacture\n> IslandAirDrop > IslandBusiness > IslandDailyOrder > IslandDailyInteract > IslandPearlSell > IslandCargoPreparation\n> Event > Event2 > Event3 > Raid > Hospital > HospitalEvent > Coalition > RaidScuttle > Main > Main2 > Main3\n> OpsiScheduling\n> OpsiMeowfficerFarming\n> GemsFarming\n> Ambush11\n> OpsiHazard1Leveling\n> ThreeOilLowCost"
+        "value": "Restart\n> OpsiCrossMonth\n> Commission > Tactical > Research\n> Exercise\n> Dorm > Meowfficer > Guild > Gacha\n> Reward\n> ShopFrequent > ShopOnce > Shipyard > Freebies\n> PrivateQuarters\n> OpsiExplore\n> OpsiPreventActionPointOverflow\n> Minigame > Awaken\n> OpsiAshBeacon\n> OpsiDaily > OpsiShop > OpsiVoucher > EventShop\n> OpsiAbyssal > OpsiStronghold > OpsiObscure > OpsiArchive\n> Daily > Hard > OpsiAshBeacon > OpsiAshAssist > OpsiMonthBoss\n> Sos > EventSp > EventA > EventB > EventC > EventD\n> RaidDaily > CoalitionSp > WarArchives > MaritimeEscort\n> IslandJuuEatery > IslandJuuCoffee > IslandGrill > IslandTeahouse > IslandRestaurant\n> IslandFarm > IslandRancher > IslandMineForest > IslandDailyGather > IslandManufacture\n> IslandAirDrop > IslandBusiness > IslandDailyOrder > IslandDailyInteract > IslandPearlSell > IslandCargoPreparation\n> Event > Event2 > Event3 > Raid > Hospital > HospitalEvent > Coalition > RaidScuttle > Main > Main2 > Main3\n> OpsiScheduling\n> OpsiMeowfficerFarming\n> GemsFarming\n> Ambush11\n> OpsiHazard1Leveling\n> ThreeOilLowCost"
       }
     },
     "Storage": {
@@ -13788,10 +13788,6 @@
         "type": "checkbox",
         "value": true
       },
-      "PreserveVirtualAsset": {
-        "type": "input",
-        "value": 0
-      },
       "RecordSeaMiles": {
         "type": "checkbox",
         "value": true,
@@ -13974,18 +13970,6 @@
         "type": "input",
         "value": 200
       },
-      "ActionPointEarlyTriggerEnable": {
-        "type": "checkbox",
-        "value": true,
-        "option": [
-          true,
-          false
-        ]
-      },
-      "ActionPointEarlyTriggerThreshold": {
-        "type": "input",
-        "value": 200
-      },
       "OperationCoinsReturnThreshold": {
         "type": "input",
         "value": 20000
@@ -14022,22 +14006,89 @@
           false
         ]
       },
-      "MeowStartEarlyMode": {
-        "type": "select",
-        "value": "balanced",
+      "TaskPriority": {
+        "type": "textarea",
+        "value": "OpsiStronghold > OpsiObscure > OpsiAbyssal > OpsiMeowfficerFarming"
+      }
+    },
+    "Storage": {
+      "Storage": {
+        "type": "storage",
+        "value": {},
+        "valuetype": "ignore",
+        "display": "disabled"
+      }
+    }
+  },
+  "OpsiPreventActionPointOverflow": {
+    "Scheduler": {
+      "Enable": {
+        "type": "checkbox",
+        "value": false,
         "option": [
-          "aggressive",
-          "balanced",
-          "conservative"
+          true,
+          false
         ]
       },
-      "MeowStartEarlyEnable": {
+      "PushNotification": {
         "type": "checkbox",
-        "value": false
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
       },
-      "VirtualAssetPreserve": {
+      "NextRun": {
+        "type": "datetime",
+        "value": "2020-01-01 00:00:00",
+        "validate": "datetime"
+      },
+      "Command": {
         "type": "input",
-        "value": 0
+        "value": "OpsiPreventActionPointOverflow",
+        "display": "hide"
+      },
+      "SuccessInterval": {
+        "type": "input",
+        "value": 0,
+        "display": "hide"
+      },
+      "FailureInterval": {
+        "type": "input",
+        "value": 120,
+        "display": "hide"
+      },
+      "ServerUpdate": {
+        "type": "input",
+        "value": "00:00",
+        "display": "hide"
+      },
+      "Sensitive": {
+        "type": "checkbox",
+        "value": false,
+        "option": [
+          true,
+          false
+        ]
+      }
+    },
+    "OpsiPreventActionPointOverflow": {
+      "Task": {
+        "type": "select",
+        "value": "OpsiScheduling",
+        "option": [
+          "OpsiScheduling",
+          "OpsiHazard1Leveling",
+          "OpsiMeowfficerFarming"
+        ]
+      },
+      "ActionPointUpperbound": {
+        "type": "input",
+        "value": 200
+      },
+      "ActionPointLowerbound": {
+        "type": "input",
+        "value": 10
       }
     },
     "Storage": {

@@ -278,6 +278,10 @@
       "name": "智能调度喵",
       "help": "大世界智能调度，协调侵蚀1练级与黄币补充任务自动切换，并推送通知喵~ (´・ω・`)"
     },
+    "OpsiPreventActionPointOverflow": {
+      "name": "防止行动力溢出喵",
+      "help": "当前行动力达到上限时执行大世界任务消耗行动力喵"
+    },
     "OpsiCrossMonth": {
       "name": "跨月每日金菜计划",
       "help": "跨月重置前10分进入大世界，等待重置但不退出，立即完成新一天日常、隐秘、深渊和短猫，获取额外金菜喵！期间千万別操作游戏。"
@@ -3331,10 +3335,6 @@
       "name": "统计非侵蚀1来源体力",
       "help": "开启则统计所有来源体力，关闭仅统计侵蚀1任务中体力，忽略其他任务或手动操作体力获取喵。"
     },
-    "PreserveVirtualAsset": {
-      "name": "保留 X 点虚拟资产",
-      "help": "虚拟资产 = 体力 × 1700/30 + 黄币 + × 1700/30 虚拟资产低于 X 时运行黄币补充任务，0 为不限制 (´・ω・`)"
-    },
     "RecordSeaMiles": {
       "name": "海里数记录",
       "help": "每次侵蚀1练级循环后记录海里数到统计 (´・ω・`)",
@@ -3433,16 +3433,6 @@
       "name": "短猫相接 保留 X 点行动力",
       "help": "行动力< X 后停止，自动开箱，X含箱内行动力。建议保留1000给侵蚀1练级喵。 (´・ω・`)"
     },
-    "ActionPointEarlyTriggerEnable": {
-      "name": "行动力提前调度",
-      "help": "启用后在侵蚀一或短猫结束时记录自然行动力，并按每 10 分钟回复 1 点行动力计算智能调度下次运行时间，避免自然行动力溢出喵。",
-      "True": "开启喵",
-      "False": "关闭喵"
-    },
-    "ActionPointEarlyTriggerThreshold": {
-      "name": "提前调度行动力阈值",
-      "help": "自然行动力恢复到 X 时再次运行智能调度。默认 200，适合在行动力接近自然上限时重新决定执行侵蚀一或短猫喵。 (´・ω・`)"
-    },
     "OperationCoinsReturnThreshold": {
       "name": "获取 X 个作战补给凭证",
       "help": "黄币获取任务中共获取X个凭证后返回侵蚀1练级喵。 (´・ω・`)"
@@ -3471,20 +3461,30 @@
       "True": "已启用喵",
       "False": "未启用喵"
     },
-    "MeowStartEarlyMode": {
-      "name": "月末行动力自动清理模式",
-      "help": "提前小时数=×模式系数，与下月重置剩余时间比较。激进(×0.8)少提前，均衡(×1.2)平衡，保守(×1.5)多提前。",
-      "aggressive": "激进模式喵",
-      "balanced": "均衡模式喵",
-      "conservative": "保守模式喵"
+    "TaskPriority": {
+      "name": "补充黄币任务优先级喵~",
+      "help": "黄币不足时，执行补充黄币任务的优先级顺序喵~。使用 > 分隔。"
+    }
+  },
+  "OpsiPreventActionPointOverflow": {
+    "_info": {
+      "name": "防止行动力溢出喵",
+      "help": "当前行动力达到上限时执行大世界任务消耗行动力喵\n选择智能调度时，如果行动力和黄币都不足导致没有可运行任务，将运行短猫清理当前行动力喵"
     },
-    "MeowStartEarlyEnable": {
-      "name": "启用月末行动力自动清理",
-      "help": "根据历史短猫耗时和当前行动力，自动判断是否提前短猫清月末过剩行动力。基准是下月重置时间，不是每日刷新喵。 (´・ω・`)"
+    "Task": {
+      "name": "执行任务喵",
+      "help": "推荐选择智能调度，防溢出任务对此有专门处理喵",
+      "OpsiScheduling": "智能调度（推荐）",
+      "OpsiHazard1Leveling": "侵蚀1练级",
+      "OpsiMeowfficerFarming": "短猫相接"
     },
-    "VirtualAssetPreserve": {
-      "name": "侵蚀1练级 保留 X 点虚拟资产",
-      "help": "虚拟资产低于 X 时运行黄币补充任务，虚拟资产 = 体力 × 1700/30 + 黄币 + × 1700/30 (´・ω・`)"
+    "ActionPointUpperbound": {
+      "name": "当前行动力上限",
+      "help": "当前行动力达到此值时开始执行大世界任务喵"
+    },
+    "ActionPointLowerbound": {
+      "name": "当前行动力下限",
+      "help": "防溢出任务会持续运行，直到当前行动力低于此值喵"
     }
   },
   "IslandPlan": {
@@ -6157,13 +6157,6 @@
       "AvgMeowRoundTime": "平均一轮短猫时长喵",
       "MeowLootTitle": "短猫相接收获喵",
       "NoMeowDataNotice": "暂无本地短猫收获数据，完成一次短猫相接后会自动生成喵",
-      "MeowAdvanceAdviceTitle": "短猫提前开始建议喵",
-      "CurrentAP": "当前AP: {value}",
-      "ApPerRound": "每轮消耗: {value} AP",
-      "AvailableRounds": "可运行轮数: {value}{unit}",
-      "AvgRoundDuration": "平均每轮耗时: {value}{unit}",
-      "CurrentMode": "当前模式: {value}",
-      "RecommendAhead": "建议提前: {value}{unit}",
       "RoundUnit": "轮",
       "SecondUnit": "秒",
       "HourUnit": "小时",
@@ -6186,9 +6179,6 @@
       "TargetExpRequired": "目标等级所需经验喵",
       "BattlesCompleted": "已战斗场次喵",
       "ExpRemaining": "还需经验喵",
-      "StartCleanupTime": "建议开始清理时间: {value}喵",
-      "NextOsReset": "下次大世界重置: {value}喵",
-      "MeowAutoCleanupStatus": "自动提前清理: {value}喵",
       "CommissionIncomeTitle": "委托收益统计喵",
       "CommissionIncomeMonth": "本月喵",
       "CommissionIncomeWeek": "本周喵",
@@ -6217,14 +6207,12 @@
       "UseSmartSchedulingOperationCoinsPreserve": "获取X个凭证喵",
       "OperationCoinsPreserve": "侵蚀1保留凭证喵",
       "ActionPointPreserve": "短猫保留行动力喵",
-      "ActionPointEarlyTriggerEnable": "行动力提前调度喵",
-      "ActionPointEarlyTriggerThreshold": "提前调度行动力阈值喵",
       "OperationCoinsReturnThreshold": "补充凭证至X喵",
       "EnableMeowfficerFarming": "短猫开关喵",
       "EnableObscure": "隐秘开关喵",
       "EnableAbyssal": "深渊开关喵",
       "EnableStronghold": "要塞开关喵",
-      "MeowStartEarlyMode": "清理模式喵"
+      "TaskPriority": "任务优先级喵~"
     },
     "Misc": {
       "Enabled": "开启喵",

@@ -339,13 +339,6 @@ Stat:
   AvgMeowRoundTime:
   MeowLootTitle:
   NoMeowDataNotice:
-  MeowAdvanceAdviceTitle:
-  CurrentAP:
-  ApPerRound:
-  AvailableRounds:
-  AvgRoundDuration:
-  CurrentMode:
-  RecommendAhead:
   RoundUnit:
   SecondUnit:
   HourUnit:
@@ -368,9 +361,6 @@ Stat:
   TargetExpRequired:
   BattlesCompleted:
   ExpRemaining:
-  StartCleanupTime:
-  NextOsReset:
-  MeowAutoCleanupStatus:
   CommissionIncomeTitle:
   CommissionIncomeMonth:
   CommissionIncomeWeek:
@@ -399,15 +389,13 @@ OpsiScheduling:
   UseSmartSchedulingOperationCoinsPreserve:
   OperationCoinsPreserve:
   ActionPointPreserve:
-  ActionPointEarlyTriggerEnable:
-  ActionPointEarlyTriggerThreshold:
 
   OperationCoinsReturnThreshold:
   EnableMeowfficerFarming:
   EnableObscure:
   EnableAbyssal:
   EnableStronghold:
-  MeowStartEarlyMode:
+  TaskPriority:
     
 Misc:
   Enabled:
