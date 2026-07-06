@@ -3003,6 +3003,10 @@
     "OpsiOnePushConfig": {
       "name": "大世界推送設定",
       "help": "”大世界資訊獨立推送”功能開啟時設定才生效。使用 Onepush 推送一條關於侵蝕1和短貓的資訊。配置方法見文檔：https://github.com/LmeSzinc/AzurLaneAutoScript/wiki/Onepush-configuration-%5BCN%5D"
+    },
+    "AutoSearchTimeLimit": {
+      "name": "自律尋敵時間限制",
+      "help": "單位：分鐘。自律尋敵時連續多長時間沒遇到事件會判定為遊戲卡死"
     }
   },
   "OpsiAshBeacon": {
@@ -5974,14 +5978,14 @@
       "NotRunning": "未執行，與伺服器的連線斷開或伺服器離線",
       "NotEnable": "未啟用，在 deploy.yaml 中設定 webui 密碼並啟用遠端控制",
       "EntryPoint": "遠端訪問 url 地址:",
-      "ConfigureHint": "配置教程：",
-      "SSHNotInstall": "系統中沒有 ssh 工具，請參考教程下載或安裝 ssh",
       "StatusDirect": "P2P 直連",
       "StatusTurn": "TURN 中繼",
       "StatusSsh": "SSH 轉發",
       "StatusSignaling": "等待 P2P 連線",
       "StatusStarting": "正在連線",
-      "StatusFailed": "連線失敗"
+      "StatusFailed": "連線失敗",
+      "ConfigureHint": "配置教程：",
+      "SSHNotInstall": "系統中沒有 ssh 工具，請參考教程下載或安裝 ssh"
     },
     "Launcher": {
       "StartupTitle": "啟動器設定",
@@ -6061,12 +6065,22 @@
       "DiscordRichPresenceHelp": "在 Discord 中展示 AzurPilot 執行狀態。",
       "EnableRemoteAccess": "啟用遠端訪問",
       "EnableRemoteAccessHelp": "透過 SSH 反向通道暴露 WebUI。公開使用前請務必設定密碼。",
+      "RemoteAccessMode": "遠端存取模式",
+      "RemoteAccessModeHelp": "auto 優先 P2P/TURN 並回退 SSH；webrtc 優先 P2P；ssh 僅使用舊 SSH 轉發。",
       "SSHUser": "SSH 使用者",
       "SSHUserHelp": "遠端訪問服務登入使用者名稱，留空時啟動時生成。",
       "SSHServer": "SSH 伺服器",
       "SSHServerHelp": "遠端訪問連線的伺服器，格式為 host:port。",
       "SSHExecutable": "SSH 可執行檔",
       "SSHExecutableHelp": "ssh.exe 路徑，留空或使用 ssh 表示從 PATH 查找。",
+      "SignalingServer": "WebRTC 信令伺服器",
+      "SignalingServerHelp": "留空時從 SSHServer 自動推導為 wss://host/signal。",
+      "StunServers": "STUN 伺服器",
+      "StunServersHelp": "JSON 陣列或逗號分隔字串，用於 NAT 打洞。",
+      "TurnServers": "TURN 伺服器",
+      "TurnServersHelp": "JSON 陣列或逗號分隔字串，P2P 失敗時作為中繼。",
+      "TurnCredentialMode": "TURN 憑證模式",
+      "TurnCredentialModeHelp": "目前支援 static，ephemeral 為後續短期憑證預留。",
       "WebuiHost": "WebUI 監聽地址",
       "WebuiHostHelp": "WebUI 監聽的主機地址，例如 0.0.0.0、127.0.0.1 或 ::。",
       "WebuiPort": "WebUI 連接埠",
@@ -6084,17 +6098,7 @@
       "WebuiSSLKey": "SSL 密鑰檔案",
       "WebuiSSLKeyHelp": "WebUI HTTPS 使用的 SSL 密鑰路徑，需和憑證同時設定。",
       "WebuiSSLCert": "SSL 憑證檔案",
-      "WebuiSSLCertHelp": "WebUI HTTPS 使用的 SSL 憑證路徑，需和密鑰同時設定。",
-      "RemoteAccessMode": "遠端存取模式",
-      "RemoteAccessModeHelp": "auto 優先 P2P/TURN 並回退 SSH；webrtc 優先 P2P；ssh 僅使用舊 SSH 轉發。",
-      "SignalingServer": "WebRTC 信令伺服器",
-      "SignalingServerHelp": "留空時從 SSHServer 自動推導為 wss://host/signal。",
-      "StunServers": "STUN 伺服器",
-      "StunServersHelp": "JSON 陣列或逗號分隔字串，用於 NAT 打洞。",
-      "TurnServers": "TURN 伺服器",
-      "TurnServersHelp": "JSON 陣列或逗號分隔字串，P2P 失敗時作為中繼。",
-      "TurnCredentialMode": "TURN 憑證模式",
-      "TurnCredentialModeHelp": "目前支援 static，ephemeral 為後續短期憑證預留。"
+      "WebuiSSLCertHelp": "WebUI HTTPS 使用的 SSL 憑證路徑，需和密鑰同時設定。"
     },
     "StartupRun": {
       "Title": "啟動時自動執行",

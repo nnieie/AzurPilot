@@ -3003,6 +3003,10 @@
     "OpsiOnePushConfig": {
       "name": "セイレーン作戦プッシュ通知設定",
       "help": "「塞壬行動信息獨立推送」功能開啟時設置才生效。Onepushを使用して、侵食1と短毛猫に関する情報を1つプッシュします。設定方法はドキュメントを参照してください：https://github.com/LmeSzinc/AzurLaneAutoScript/wiki/Onepush-configuration-%5BCN%5D"
+    },
+    "AutoSearchTimeLimit": {
+      "name": "自動探索時間制限",
+      "help": "単位：分。自動探索中にイベントが一定時間発生しない場合、フリーズと判定されます。"
     }
   },
   "OpsiAshBeacon": {
@@ -5974,14 +5978,14 @@
       "NotRunning": "実行されていない、サーバーへの接続が失われた、またはサーバーがオフラインになっています",
       "NotEnable": "有効になっていません。deploy.yaml で webui パスワードを設定し、リモート コントロールを有効にしてください",
       "EntryPoint": "リモートアクセスURLアドレス:",
-      "ConfigureHint": "構成チュートリアル:",
-      "SSHNotInstall": "システムに ssh ツールがありません。チュートリアルを参照して ssh をダウンロードまたはインストールしてください。",
       "StatusDirect": "P2P 直結",
       "StatusTurn": "TURN リレー",
       "StatusSsh": "SSH 転送",
       "StatusSignaling": "P2P 接続待機中",
       "StatusStarting": "接続中",
-      "StatusFailed": "接続失敗"
+      "StatusFailed": "接続失敗",
+      "ConfigureHint": "構成チュートリアル:",
+      "SSHNotInstall": "システムに ssh ツールがありません。チュートリアルを参照して ssh をダウンロードまたはインストールしてください。"
     },
     "Launcher": {
       "StartupTitle": "ランチャー設定",
@@ -6061,12 +6065,22 @@
       "DiscordRichPresenceHelp": "AzurPilot の実行状態を Discord に表示します。",
       "EnableRemoteAccess": "リモートアクセスを有効化",
       "EnableRemoteAccessHelp": "SSH リバーストンネルで WebUI を公開します。公開前に必ずパスワードを設定してください。",
+      "RemoteAccessMode": "リモートアクセスモード",
+      "RemoteAccessModeHelp": "auto は P2P/TURN を優先して SSH に戻します。webrtc は P2P 優先、ssh は従来の SSH 転送のみです。",
       "SSHUser": "SSH ユーザー",
       "SSHUserHelp": "リモートアクセス用のログインユーザー名です。空欄なら起動時に生成されます。",
       "SSHServer": "SSH サーバー",
       "SSHServerHelp": "リモートアクセス用サーバーです。形式は host:port です。",
       "SSHExecutable": "SSH 実行ファイル",
       "SSHExecutableHelp": "ssh.exe のパスです。空欄または ssh で PATH から探します。",
+      "SignalingServer": "WebRTC シグナリングサーバー",
+      "SignalingServerHelp": "空の場合は SSHServer から wss://host/signal を推定します。",
+      "StunServers": "STUN サーバー",
+      "StunServersHelp": "NAT 越え用の JSON 配列またはカンマ区切り文字列。",
+      "TurnServers": "TURN サーバー",
+      "TurnServersHelp": "P2P 失敗時のリレー用 JSON 配列またはカンマ区切り文字列。",
+      "TurnCredentialMode": "TURN 認証情報モード",
+      "TurnCredentialModeHelp": "現在は static をサポートします。ephemeral は短期認証情報用の予約値です。",
       "WebuiHost": "WebUI 待受アドレス",
       "WebuiHostHelp": "WebUI が待ち受けるホストです。例: 0.0.0.0、127.0.0.1、::。",
       "WebuiPort": "WebUI ポート",
@@ -6084,17 +6098,7 @@
       "WebuiSSLKey": "SSL キーファイル",
       "WebuiSSLKeyHelp": "WebUI HTTPS 用の SSL キーです。証明書とセットで設定してください。",
       "WebuiSSLCert": "SSL 証明書ファイル",
-      "WebuiSSLCertHelp": "WebUI HTTPS 用の SSL 証明書です。キーとセットで設定してください。",
-      "RemoteAccessMode": "リモートアクセスモード",
-      "RemoteAccessModeHelp": "auto は P2P/TURN を優先して SSH に戻します。webrtc は P2P 優先、ssh は従来の SSH 転送のみです。",
-      "SignalingServer": "WebRTC シグナリングサーバー",
-      "SignalingServerHelp": "空の場合は SSHServer から wss://host/signal を推定します。",
-      "StunServers": "STUN サーバー",
-      "StunServersHelp": "NAT 越え用の JSON 配列またはカンマ区切り文字列。",
-      "TurnServers": "TURN サーバー",
-      "TurnServersHelp": "P2P 失敗時のリレー用 JSON 配列またはカンマ区切り文字列。",
-      "TurnCredentialMode": "TURN 認証情報モード",
-      "TurnCredentialModeHelp": "現在は static をサポートします。ephemeral は短期認証情報用の予約値です。"
+      "WebuiSSLCertHelp": "WebUI HTTPS 用の SSL 証明書です。キーとセットで設定してください。"
     },
     "StartupRun": {
       "Title": "起動時に自動実行",

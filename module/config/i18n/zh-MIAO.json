@@ -3003,6 +3003,10 @@
     "OpsiOnePushConfig": {
       "name": "大世界推送设置",
       "help": "“大世界信息独立推送”功能开启时设置才生效喵。使用 Onepush 推送一条关于侵蚀1和短猫的信息喵。配置方法见文档喵：https://github.com/LmeSzinc/AzurLaneAutoScript/wiki/Onepush-configuration-%5BCN%5D"
+    },
+    "AutoSearchTimeLimit": {
+      "name": "自律寻敌时间限制喵~",
+      "help": "单位：分钟。自律寻敌时连续多长时间没遇到事件会判定为游戏卡死喵~"
     }
   },
   "OpsiAshBeacon": {
@@ -5974,14 +5978,14 @@
       "NotRunning": "未运行，服务器连接断开或离线喵",
       "NotEnable": "未启用，在 deploy.yaml 设置 webui 密码并启用远程控制喵",
       "EntryPoint": "远程访问 URL:",
-      "ConfigureHint": "配置教程:",
-      "SSHNotInstall": "系统中无 ssh 工具，参考教程下载安装喵",
       "StatusDirect": "P2P 直连喵",
       "StatusTurn": "TURN 中继喵",
       "StatusSsh": "SSH 转发喵",
       "StatusSignaling": "等待 P2P 连接喵",
       "StatusStarting": "正在连接喵",
-      "StatusFailed": "连接失败喵"
+      "StatusFailed": "连接失败喵",
+      "ConfigureHint": "配置教程:",
+      "SSHNotInstall": "系统中无 ssh 工具，参考教程下载安装喵"
     },
     "Launcher": {
       "StartupTitle": "启动器设置喵",
@@ -6061,12 +6065,22 @@
       "DiscordRichPresenceHelp": "在 Discord 中展示 AzurPilot 运行状态喵。",
       "EnableRemoteAccess": "启用远程访问",
       "EnableRemoteAccessHelp": "通过 SSH 反向隧道暴露 WebUI。公网使用前请务必设置密码喵。",
+      "RemoteAccessMode": "远程访问模式喵",
+      "RemoteAccessModeHelp": "auto 优先 P2P/TURN 并回退 SSH；webrtc 优先 P2P；ssh 仅使用旧 SSH 转发喵。",
       "SSHUser": "SSH 用户",
       "SSHUserHelp": "远程访问服务登录用户名，留空时启动时生成喵。",
       "SSHServer": "SSH 服务器",
       "SSHServerHelp": "远程访问连接的服务器，格式为 host:port 喵。",
       "SSHExecutable": "SSH 可执行文件",
       "SSHExecutableHelp": "ssh.exe 路径，留空或使用 ssh 表示从 PATH 查找喵。",
+      "SignalingServer": "WebRTC 信令服务器喵",
+      "SignalingServerHelp": "留空时从 SSHServer 自动推导为 wss://host/signal 喵。",
+      "StunServers": "STUN 服务器喵",
+      "StunServersHelp": "JSON 数组或逗号分隔字符串，用于 NAT 打洞喵。",
+      "TurnServers": "TURN 服务器喵",
+      "TurnServersHelp": "JSON 数组或逗号分隔字符串，P2P 失败时作为中继喵。",
+      "TurnCredentialMode": "TURN 凭证模式喵",
+      "TurnCredentialModeHelp": "当前支持 static，ephemeral 为后续短期凭证预留喵。",
       "WebuiHost": "WebUI 监听地址",
       "WebuiHostHelp": "WebUI 监听的主机地址，例如 0.0.0.0、127.0.0.1 或 :: 喵。",
       "WebuiPort": "WebUI 端口",
@@ -6084,17 +6098,7 @@
       "WebuiSSLKey": "SSL 密钥文件",
       "WebuiSSLKeyHelp": "WebUI HTTPS 使用的 SSL 密钥路径，需和证书同时设置喵。",
       "WebuiSSLCert": "SSL 证书文件",
-      "WebuiSSLCertHelp": "WebUI HTTPS 使用的 SSL 证书路径，需和密钥同时设置喵。",
-      "RemoteAccessMode": "远程访问模式喵",
-      "RemoteAccessModeHelp": "auto 优先 P2P/TURN 并回退 SSH；webrtc 优先 P2P；ssh 仅使用旧 SSH 转发喵。",
-      "SignalingServer": "WebRTC 信令服务器喵",
-      "SignalingServerHelp": "留空时从 SSHServer 自动推导为 wss://host/signal 喵。",
-      "StunServers": "STUN 服务器喵",
-      "StunServersHelp": "JSON 数组或逗号分隔字符串，用于 NAT 打洞喵。",
-      "TurnServers": "TURN 服务器喵",
-      "TurnServersHelp": "JSON 数组或逗号分隔字符串，P2P 失败时作为中继喵。",
-      "TurnCredentialMode": "TURN 凭证模式喵",
-      "TurnCredentialModeHelp": "当前支持 static，ephemeral 为后续短期凭证预留喵。"
+      "WebuiSSLCertHelp": "WebUI HTTPS 使用的 SSL 证书路径，需和密钥同时设置喵。"
     },
     "StartupRun": {
       "Title": "启动时自动运行喵",

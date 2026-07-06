@@ -1,6 +1,11 @@
 from module.config.config import TaskEnd
 from module.config.utils import get_os_reset_remain
-from module.exception import RequestHumanTakeover, ScriptError
+from module.exception import (
+    GameStuckError,
+    GameTooManyClickError,
+    RequestHumanTakeover,
+    ScriptError,
+)
 from module.logger import logger
 from module.map.map_grids import SelectedGrids
 from module.os.map import OSMap

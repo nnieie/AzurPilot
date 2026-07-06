@@ -176,6 +176,18 @@ Deploy:
     # 如果没有，请安装 OpenSSH 或在此下载 (https://github.com/PowerShell/Win32-OpenSSH/releases)
     # If you don't have one, install OpenSSH or download it here (https://github.com/PowerShell/Win32-OpenSSH/releases)
     SSHExecutable: /usr/bin/ssh
+    # WebRTC 信令服务器，留空时从 SSHServer 自动推导为 wss://host/signal
+    # WebRTC signaling server, empty means deriving wss://host/signal from SSHServer
+    SignalingServer: null
+    # STUN 服务器 JSON 数组或逗号分隔字符串
+    # STUN servers as JSON array or comma separated string
+    StunServers: ["stun:stun.l.google.com:19302"]
+    # TURN 服务器 JSON 数组或逗号分隔字符串，留空则不配置 TURN
+    # TURN servers as JSON array or comma separated string, empty to disable TURN
+    TurnServers: null
+    # TURN 凭证模式，当前支持 static，预留 ephemeral
+    # TURN credential mode, currently static, ephemeral is reserved
+    TurnCredentialMode: static
 
   Webui:
     # --host. 监听的主机地址
