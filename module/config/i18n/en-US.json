@@ -5974,6 +5974,12 @@
       "NotRunning": "Not running, the connection to the server is lost or the server is offline",
       "NotEnable": "Not enabled, set the webui password in deploy.yaml and enable remote control",
       "EntryPoint": "Remote access url address:",
+      "StatusDirect": "P2P direct",
+      "StatusTurn": "TURN relay",
+      "StatusSsh": "SSH forwarding",
+      "StatusSignaling": "Waiting for P2P peer",
+      "StatusStarting": "Connecting",
+      "StatusFailed": "Connection failed",
       "ConfigureHint": "Configuration tutorial:",
       "SSHNotInstall": "There is no ssh tool in the system, please refer to the tutorial to download or install ssh"
     },
@@ -6078,7 +6084,17 @@
       "WebuiSSLKey": "SSL Key File",
       "WebuiSSLKeyHelp": "SSL key path for WebUI HTTPS. Must be set together with the certificate.",
       "WebuiSSLCert": "SSL Certificate File",
-      "WebuiSSLCertHelp": "SSL certificate path for WebUI HTTPS. Must be set together with the key."
+      "WebuiSSLCertHelp": "SSL certificate path for WebUI HTTPS. Must be set together with the key.",
+      "RemoteAccessMode": "Remote Access Mode",
+      "RemoteAccessModeHelp": "auto prefers P2P/TURN and falls back to SSH; webrtc prefers P2P; ssh uses legacy SSH forwarding only.",
+      "SignalingServer": "WebRTC Signaling Server",
+      "SignalingServerHelp": "Leave empty to derive wss://host/signal from SSHServer.",
+      "StunServers": "STUN Servers",
+      "StunServersHelp": "JSON array or comma separated string for NAT traversal.",
+      "TurnServers": "TURN Servers",
+      "TurnServersHelp": "JSON array or comma separated string used as relay when P2P fails.",
+      "TurnCredentialMode": "TURN Credential Mode",
+      "TurnCredentialModeHelp": "Currently supports static. ephemeral is reserved for short-lived credentials."
     },
     "StartupRun": {
       "Title": "Auto-run on Startup",

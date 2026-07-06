@@ -156,6 +156,12 @@ Remote:
   NotRunning:
   NotEnable:
   EntryPoint:
+  StatusDirect:
+  StatusTurn:
+  StatusSsh:
+  StatusSignaling:
+  StatusStarting:
+  StatusFailed:
   ConfigureHint:
   SSHNotInstall:
 
@@ -237,12 +243,22 @@ DeploySetting:
   DiscordRichPresenceHelp:
   EnableRemoteAccess:
   EnableRemoteAccessHelp:
+  RemoteAccessMode:
+  RemoteAccessModeHelp:
   SSHUser:
   SSHUserHelp:
   SSHServer:
   SSHServerHelp:
   SSHExecutable:
   SSHExecutableHelp:
+  SignalingServer:
+  SignalingServerHelp:
+  StunServers:
+  StunServersHelp:
+  TurnServers:
+  TurnServersHelp:
+  TurnCredentialMode:
+  TurnCredentialModeHelp:
   WebuiHost:
   WebuiHostHelp:
   WebuiPort:

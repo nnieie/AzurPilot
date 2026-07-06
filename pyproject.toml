@@ -22,6 +22,8 @@ dependencies = [
     "anyio==4.13.0",
     "uvicorn[standard]==0.44.0",
     "aiofiles==23.1.0",
+    "aiohttp>=3.13.2",
+    "aiortc>=1.14.0",
     "pypresence==4.2.1",
     "rich==11.2.0",
     "zerorpc==0.6.3",

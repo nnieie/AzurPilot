@@ -5975,7 +5975,13 @@
       "NotEnable": "未启用，在 deploy.yaml 设置 webui 密码并启用远程控制喵",
       "EntryPoint": "远程访问 URL:",
       "ConfigureHint": "配置教程:",
-      "SSHNotInstall": "系统中无 ssh 工具，参考教程下载安装喵"
+      "SSHNotInstall": "系统中无 ssh 工具，参考教程下载安装喵",
+      "StatusDirect": "P2P 直连喵",
+      "StatusTurn": "TURN 中继喵",
+      "StatusSsh": "SSH 转发喵",
+      "StatusSignaling": "等待 P2P 连接喵",
+      "StatusStarting": "正在连接喵",
+      "StatusFailed": "连接失败喵"
     },
     "Launcher": {
       "StartupTitle": "启动器设置喵",
@@ -6078,7 +6084,17 @@
       "WebuiSSLKey": "SSL 密钥文件",
       "WebuiSSLKeyHelp": "WebUI HTTPS 使用的 SSL 密钥路径，需和证书同时设置喵。",
       "WebuiSSLCert": "SSL 证书文件",
-      "WebuiSSLCertHelp": "WebUI HTTPS 使用的 SSL 证书路径，需和密钥同时设置喵。"
+      "WebuiSSLCertHelp": "WebUI HTTPS 使用的 SSL 证书路径，需和密钥同时设置喵。",
+      "RemoteAccessMode": "远程访问模式喵",
+      "RemoteAccessModeHelp": "auto 优先 P2P/TURN 并回退 SSH；webrtc 优先 P2P；ssh 仅使用旧 SSH 转发喵。",
+      "SignalingServer": "WebRTC 信令服务器喵",
+      "SignalingServerHelp": "留空时从 SSHServer 自动推导为 wss://host/signal 喵。",
+      "StunServers": "STUN 服务器喵",
+      "StunServersHelp": "JSON 数组或逗号分隔字符串，用于 NAT 打洞喵。",
+      "TurnServers": "TURN 服务器喵",
+      "TurnServersHelp": "JSON 数组或逗号分隔字符串，P2P 失败时作为中继喵。",
+      "TurnCredentialMode": "TURN 凭证模式喵",
+      "TurnCredentialModeHelp": "当前支持 static，ephemeral 为后续短期凭证预留喵。"
     },
     "StartupRun": {
       "Title": "启动时自动运行喵",

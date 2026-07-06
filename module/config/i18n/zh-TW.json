@@ -5975,7 +5975,13 @@
       "NotEnable": "未啟用，在 deploy.yaml 中設定 webui 密碼並啟用遠端控制",
       "EntryPoint": "遠端訪問 url 地址:",
       "ConfigureHint": "配置教程：",
-      "SSHNotInstall": "系統中沒有 ssh 工具，請參考教程下載或安裝 ssh"
+      "SSHNotInstall": "系統中沒有 ssh 工具，請參考教程下載或安裝 ssh",
+      "StatusDirect": "P2P 直連",
+      "StatusTurn": "TURN 中繼",
+      "StatusSsh": "SSH 轉發",
+      "StatusSignaling": "等待 P2P 連線",
+      "StatusStarting": "正在連線",
+      "StatusFailed": "連線失敗"
     },
     "Launcher": {
       "StartupTitle": "啟動器設定",
@@ -6078,7 +6084,17 @@
       "WebuiSSLKey": "SSL 密鑰檔案",
       "WebuiSSLKeyHelp": "WebUI HTTPS 使用的 SSL 密鑰路徑，需和憑證同時設定。",
       "WebuiSSLCert": "SSL 憑證檔案",
-      "WebuiSSLCertHelp": "WebUI HTTPS 使用的 SSL 憑證路徑，需和密鑰同時設定。"
+      "WebuiSSLCertHelp": "WebUI HTTPS 使用的 SSL 憑證路徑，需和密鑰同時設定。",
+      "RemoteAccessMode": "遠端存取模式",
+      "RemoteAccessModeHelp": "auto 優先 P2P/TURN 並回退 SSH；webrtc 優先 P2P；ssh 僅使用舊 SSH 轉發。",
+      "SignalingServer": "WebRTC 信令伺服器",
+      "SignalingServerHelp": "留空時從 SSHServer 自動推導為 wss://host/signal。",
+      "StunServers": "STUN 伺服器",
+      "StunServersHelp": "JSON 陣列或逗號分隔字串，用於 NAT 打洞。",
+      "TurnServers": "TURN 伺服器",
+      "TurnServersHelp": "JSON 陣列或逗號分隔字串，P2P 失敗時作為中繼。",
+      "TurnCredentialMode": "TURN 憑證模式",
+      "TurnCredentialModeHelp": "目前支援 static，ephemeral 為後續短期憑證預留。"
     },
     "StartupRun": {
       "Title": "啟動時自動執行",

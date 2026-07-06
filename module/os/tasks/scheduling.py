@@ -16,6 +16,8 @@ OpsiScheduling - 智能调度模块
 配置项:
     - Scheduler.Enable: 任务启用开关（启用此任务即启用智能调度功能）
     - OperationCoinsPreserve: 智能调度时侵蚀1保留的黄币阀值（优先级高于原配置）
+    - UseSmartSchedulingOperationCoinsPreserve: 开启时使用黄币目标调度，关闭时使用体力调度
+    - OperationCoinsReturnThreshold: 黄币目标调度回到侵蚀1前需要高于保留值的缓冲数量
     - ActionPointPreserve: 智能调度时保留的行动力阀值（同时作用于所有任务）
     - ActionPointNotifyLevels: 行动力阈值列表，用于推送通知
 此模块包含:
@@ -72,6 +74,7 @@ class CoinTaskMixin:
     CONFIG_PATH_USE_SMART_CL1_PRESERVE = 'OpsiScheduling.OpsiScheduling.UseSmartSchedulingOperationCoinsPreserve'
     CONFIG_PATH_SMART_CL1_PRESERVE = 'OpsiScheduling.OpsiScheduling.OperationCoinsPreserve'
     CONFIG_PATH_SMART_AP_PRESERVE = 'OpsiScheduling.OpsiScheduling.ActionPointPreserve'
+    CONFIG_PATH_SMART_COIN_RETURN_THRESHOLD = 'OpsiScheduling.OpsiScheduling.OperationCoinsReturnThreshold'
     # 各任务的配置路径常量（集中管理，避免硬编码）
     CONFIG_PATH_MEOW_AP_PRESERVE = 'OpsiMeowfficerFarming.OpsiMeowfficerFarming.ActionPointPreserve'
     CONFIG_PATH_CL1_MIN_AP_RESERVE = 'OpsiHazard1Leveling.OpsiHazard1Leveling.MinimumActionPointReserve'
@@ -398,9 +401,7 @@ class CoinTaskMixin:
             int: 保留的黄币数量
         """
         # 检查是否启用智能调度黄币保留配置
-        use_smart_preserve = self._config_enabled(
-            keys=self.CONFIG_PATH_USE_SMART_CL1_PRESERVE
-        )
+        use_smart_preserve = self._is_coin_target_scheduling_enabled()
         
         if not use_smart_preserve:
             # 开关未开启，回退到侵蚀1原配置
@@ -410,7 +411,7 @@ class CoinTaskMixin:
             # 保证返回 int 以免后续比较报错
             if cl1_preserve_original is None:
                 cl1_preserve_original = 0
-            logger.info(f'【智能调度】黄币保留使用原配置: {cl1_preserve_original} (智能调度开关未启用)')
+            logger.info(f'【智能调度】黄币保留使用原配置: {cl1_preserve_original} (黄币目标调度未启用)')
             return cl1_preserve_original
         else:
             # 开关开启，使用智能调度自己的配置，允许为 0
@@ -438,6 +439,12 @@ class CoinTaskMixin:
         )
         return preserve or 0
 
+    def _is_coin_target_scheduling_enabled(self):
+        """判断是否启用黄币目标调度。关闭时使用体力调度。"""
+        return self._config_enabled(
+            keys=self.CONFIG_PATH_USE_SMART_CL1_PRESERVE
+        )
+
     def _get_coin_task_action_point_preserve(self):
         """获取智能调度用于启动黄币补充任务的行动力阈值。"""
         smart_ap_preserve = self._get_smart_scheduling_action_point_preserve()
@@ -446,6 +453,76 @@ class CoinTaskMixin:
         return self.config.cross_get(
             keys=self.CONFIG_PATH_MEOW_AP_PRESERVE
         ) or 1000
+
+    def _get_smart_scheduling_operation_coins_return_threshold(self):
+        """
+        获取智能调度补黄币阶段的回补增量。
+
+        进入补黄币阶段后，黄币需要达到“侵蚀 1 保留值 + 此阈值”，才允许回到侵蚀 1。
+        """
+        threshold = self.config.cross_get(
+            keys=self.CONFIG_PATH_SMART_COIN_RETURN_THRESHOLD,
+            default=0,
+        )
+        try:
+            threshold = int(threshold or 0)
+        except (TypeError, ValueError):
+            logger.warning(f'智能调度黄币回补阈值无效: {threshold}，使用 0')
+            threshold = 0
+        return max(threshold, 0)
+
+    def _get_coin_replenish_target(self, yellow_coins, cl1_preserve):
+        """
+        获取本轮补黄币目标值。
+
+        目标值与模拟器保持一致：侵蚀 1 保留值 + 回补阈值。
+        """
+        start_coins = getattr(
+            self,
+            '_smart_scheduling_coin_replenish_start',
+            getattr(self.config, '_smart_scheduling_coin_replenish_start', None),
+        )
+        if start_coins is None or yellow_coins < start_coins:
+            start_coins = yellow_coins
+            self._smart_scheduling_coin_replenish_start = start_coins
+            self.config._smart_scheduling_coin_replenish_start = start_coins
+
+        return_threshold = self._get_smart_scheduling_operation_coins_return_threshold()
+        target = cl1_preserve + return_threshold
+        return target, start_coins, return_threshold
+
+    def _clear_coin_replenish_target(self):
+        """清理本轮补黄币状态。"""
+        if hasattr(self, '_smart_scheduling_coin_replenish_start'):
+            delattr(self, '_smart_scheduling_coin_replenish_start')
+        if hasattr(self.config, '_smart_scheduling_coin_replenish_start'):
+            delattr(self.config, '_smart_scheduling_coin_replenish_start')
+
+    def _is_coin_replenish_active(self):
+        """判断当前是否处于补黄币阶段。"""
+        return bool(
+            hasattr(self, '_smart_scheduling_coin_replenish_start')
+            or hasattr(self.config, '_smart_scheduling_coin_replenish_start')
+        )
+
+    def _set_ap_replenish_active(self):
+        """标记体力调度补黄币阶段已开始。"""
+        self._smart_scheduling_ap_replenish_active = True
+        self.config._smart_scheduling_ap_replenish_active = True
+
+    def _clear_ap_replenish_active(self):
+        """清理体力调度补黄币状态。"""
+        if hasattr(self, '_smart_scheduling_ap_replenish_active'):
+            delattr(self, '_smart_scheduling_ap_replenish_active')
+        if hasattr(self.config, '_smart_scheduling_ap_replenish_active'):
+            delattr(self.config, '_smart_scheduling_ap_replenish_active')
+
+    def _is_ap_replenish_active(self):
+        """判断当前是否处于体力调度补黄币阶段。"""
+        return bool(
+            hasattr(self, '_smart_scheduling_ap_replenish_active')
+            or hasattr(self.config, '_smart_scheduling_ap_replenish_active')
+        )
 
     def _get_effective_cl1_ap_preserve(self):
         """
@@ -853,7 +930,7 @@ class OpsiScheduling(CoinTaskMixin, OSMap):
             ap_preserve=ap_preserve,
         )
 
-    def _handle_smart_scheduling_no_task(self, yellow_coins, total_ap, current_ap, preserve, meow_ap_preserve):
+    def _handle_smart_scheduling_no_task(self, yellow_coins, total_ap, current_ap, coin_target, meow_ap_preserve):
         """
         处理黄币和行动力不足导致没有可运行任务的情况。
 
@@ -865,10 +942,14 @@ class OpsiScheduling(CoinTaskMixin, OSMap):
                 f'防止行动力溢出上下文：黄币不足且总行动力未达补黄币保留，'
                 f'执行短猫清理当前行动力 (当前={current_ap}, 总行动力={total_ap})'
             )
+            if yellow_coins < coin_target:
+                coin_status = f'黄币 {yellow_coins} 低于补黄币目标 {coin_target}'
+            else:
+                coin_status = f'黄币 {yellow_coins} 已达到补黄币阈值 {coin_target}'
             self.notify_push(
                 title='[AzurPilot] 防止行动力溢出 - 执行短猫',
                 content=(
-                    f'黄币 {yellow_coins} 低于保留值 {preserve}\n'
+                    f'{coin_status}\n'
                     f'总行动力 {total_ap} 低于补黄币保留 {meow_ap_preserve}\n'
                     f'由 OpsiScheduling 直接执行短猫清理当前行动力 {current_ap}'
                 )
@@ -876,7 +957,7 @@ class OpsiScheduling(CoinTaskMixin, OSMap):
             self._run_scheduled_meowfficer_farming(0)
             return
 
-        self._notify_coins_ap_insufficient(yellow_coins, total_ap, preserve, meow_ap_preserve)
+        self._notify_coins_ap_insufficient(yellow_coins, total_ap, coin_target, meow_ap_preserve)
         self._delay_smart_scheduling_for_ap_limit(total_ap, meow_ap_preserve)
 
     def _run_scheduled_hazard1_leveling(self, ap_preserve):
@@ -939,7 +1020,7 @@ class OpsiScheduling(CoinTaskMixin, OSMap):
         """
         因行动力不足推迟智能调度。
         """
-        logger.warning(f'行动力低于最低保留 ({total_ap} < {min_ap_reserve})')
+        logger.warning(f'行动力达到最低保留 ({total_ap} <= {min_ap_reserve})')
         self._notify_ap_insufficient(total_ap, min_ap_reserve)
         logger.info('行动力不足，智能调度延迟到下次服务器刷新')
         self.config.task_delay(server_update=True, task=self.TASK_NAME_SCHEDULING)
@@ -952,6 +1033,9 @@ class OpsiScheduling(CoinTaskMixin, OSMap):
         cl1_preserve = self._get_smart_scheduling_operation_coins_preserve()
         cl1_ap_preserve = self._get_effective_cl1_ap_preserve()
         meow_ap_preserve = self._get_coin_task_action_point_preserve()
+        coin_target_scheduling = self._is_coin_target_scheduling_enabled()
+        coin_replenish_active = self._is_coin_replenish_active()
+        ap_replenish_active = self._is_ap_replenish_active()
 
         logger.info(f'【智能调度检查】黄币: {yellow_coins}, 保留值: {cl1_preserve}')
         if self.is_running_prevent_action_point_overflow_task():
@@ -966,10 +1050,49 @@ class OpsiScheduling(CoinTaskMixin, OSMap):
             )
 
         try:
-            if yellow_coins < cl1_preserve:
-                logger.info(f'黄币不足 ({yellow_coins} < {cl1_preserve})，需要执行黄币补充任务')
-                if total_ap < meow_ap_preserve:
-                    logger.warning(f'行动力不足以执行短猫 ({total_ap} < {meow_ap_preserve})')
+            if coin_target_scheduling and (yellow_coins < cl1_preserve or coin_replenish_active):
+                coin_target, start_coins, return_threshold = self._get_coin_replenish_target(
+                    yellow_coins,
+                    cl1_preserve,
+                )
+                logger.info(
+                    f'【智能调度检查】补黄币目标: 当前={yellow_coins}, 起始={start_coins}, '
+                    f'回补阈值={return_threshold}, 目标={coin_target}'
+                )
+                if yellow_coins >= coin_target:
+                    logger.info(f'黄币已补足 ({yellow_coins} >= {coin_target})，恢复侵蚀1练级')
+                    self._clear_coin_replenish_target()
+                else:
+                    logger.info(f'黄币未补足 ({yellow_coins} < {coin_target})，需要执行黄币补充任务')
+                    if total_ap <= meow_ap_preserve:
+                        logger.warning(f'行动力不足以执行黄币补充任务 ({total_ap} <= {meow_ap_preserve})')
+                        self._handle_smart_scheduling_no_task(
+                            yellow_coins,
+                            total_ap,
+                            current_ap,
+                            coin_target,
+                            meow_ap_preserve,
+                        )
+                        return
+
+                    self._dispatch_coin_task(
+                        yellow_coins,
+                        total_ap,
+                        coin_target,
+                        meow_ap_preserve,
+                    )
+                    return
+
+            if not coin_target_scheduling and (yellow_coins < cl1_preserve or ap_replenish_active):
+                if not ap_replenish_active:
+                    self._set_ap_replenish_active()
+                logger.info(
+                    f'【智能调度检查】体力调度补黄币中: 黄币={yellow_coins}, '
+                    f'黄币阈值={cl1_preserve}, 总行动力={total_ap}, 行动力阈值={meow_ap_preserve}'
+                )
+                if total_ap <= meow_ap_preserve:
+                    logger.info(f'行动力已达到体力调度阈值 ({total_ap} <= {meow_ap_preserve})，停止补黄币')
+                    self._clear_ap_replenish_active()
                     self._handle_smart_scheduling_no_task(
                         yellow_coins,
                         total_ap,
@@ -987,7 +1110,7 @@ class OpsiScheduling(CoinTaskMixin, OSMap):
                 )
                 return
 
-            if total_ap < cl1_ap_preserve:
+            if total_ap <= cl1_ap_preserve:
                 self._delay_smart_scheduling_for_ap_limit(total_ap, cl1_ap_preserve)
 
             logger.info(f'黄币充足 ({yellow_coins} >= {cl1_preserve})，执行侵蚀1练级')
@@ -1018,7 +1141,7 @@ class OpsiScheduling(CoinTaskMixin, OSMap):
             self.run_smart_scheduling_once()
             self.config.check_task_switch()
 
-    def _notify_coins_ap_insufficient(self, yellow_coins, total_ap, cl1_preserve, meow_ap_preserve):
+    def _notify_coins_ap_insufficient(self, yellow_coins, total_ap, coin_target, meow_ap_preserve):
         """
         发送黄币与行动力双重不足的通知
         """
@@ -1030,7 +1153,10 @@ class OpsiScheduling(CoinTaskMixin, OSMap):
         
         self.notify_push(
             title="[AzurPilot] 智能调度 - 黄币与行动力双重不足",
-            content=f"黄币 {yellow_coins} 低于保留值 {cl1_preserve}\n总行动力 {total_ap} 不足 (需要 {meow_ap_preserve})\n推迟任务"
+            content=(
+                f"黄币: {yellow_coins}，补黄币阈值: {coin_target}\n"
+                f"总行动力 {total_ap} 不足 (需要 {meow_ap_preserve})\n推迟任务"
+            )
         )
     
     def _notify_ap_insufficient(self, total_ap, min_reserve):
@@ -1048,7 +1174,7 @@ class OpsiScheduling(CoinTaskMixin, OSMap):
             content=f"总行动力 {total_ap} 低于最低保留 {min_reserve}，推迟任务"
         )
     
-    def _dispatch_coin_task(self, yellow_coins, total_ap, preserve_value, meow_ap_preserve):
+    def _dispatch_coin_task(self, yellow_coins, total_ap, coin_target, meow_ap_preserve):
         """
         调度黄币补充任务。
 
@@ -1066,7 +1192,7 @@ class OpsiScheduling(CoinTaskMixin, OSMap):
             self._notify_coin_task_proxy(
                 yellow_coins,
                 total_ap,
-                preserve_value,
+                coin_target,
                 meow_ap_preserve,
                 self.TASK_NAMES.get(task_name, task_name),
             )
@@ -1076,7 +1202,7 @@ class OpsiScheduling(CoinTaskMixin, OSMap):
         logger.warning('智能调度启用的黄币补充任务均无可执行内容，结束本轮智能调度')
         self.config.task_stop()
 
-    def _notify_coin_task_proxy(self, yellow_coins, total_ap, cl1_preserve, meow_ap_preserve, task_names):
+    def _notify_coin_task_proxy(self, yellow_coins, total_ap, coin_target, meow_ap_preserve, task_names):
         """
         发送代理执行黄币补充任务的通知。
         """
@@ -1085,7 +1211,7 @@ class OpsiScheduling(CoinTaskMixin, OSMap):
 
         self.notify_push(
             title="[AzurPilot] 智能调度 - 代理执行黄币补充任务",
-            content=(f"黄币 {yellow_coins} 低于保留值 {cl1_preserve}\n"
+            content=(f"黄币: {yellow_coins}，补黄币阈值: {coin_target}\n"
                      f"总行动力: {total_ap} (需要 {meow_ap_preserve})\n"
                      f"代理执行{task_names}获取黄币")
         )

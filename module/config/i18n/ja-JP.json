@@ -5975,7 +5975,13 @@
       "NotEnable": "有効になっていません。deploy.yaml で webui パスワードを設定し、リモート コントロールを有効にしてください",
       "EntryPoint": "リモートアクセスURLアドレス:",
       "ConfigureHint": "構成チュートリアル:",
-      "SSHNotInstall": "システムに ssh ツールがありません。チュートリアルを参照して ssh をダウンロードまたはインストールしてください。"
+      "SSHNotInstall": "システムに ssh ツールがありません。チュートリアルを参照して ssh をダウンロードまたはインストールしてください。",
+      "StatusDirect": "P2P 直結",
+      "StatusTurn": "TURN リレー",
+      "StatusSsh": "SSH 転送",
+      "StatusSignaling": "P2P 接続待機中",
+      "StatusStarting": "接続中",
+      "StatusFailed": "接続失敗"
     },
     "Launcher": {
       "StartupTitle": "ランチャー設定",
@@ -6078,7 +6084,17 @@
       "WebuiSSLKey": "SSL キーファイル",
       "WebuiSSLKeyHelp": "WebUI HTTPS 用の SSL キーです。証明書とセットで設定してください。",
       "WebuiSSLCert": "SSL 証明書ファイル",
-      "WebuiSSLCertHelp": "WebUI HTTPS 用の SSL 証明書です。キーとセットで設定してください。"
+      "WebuiSSLCertHelp": "WebUI HTTPS 用の SSL 証明書です。キーとセットで設定してください。",
+      "RemoteAccessMode": "リモートアクセスモード",
+      "RemoteAccessModeHelp": "auto は P2P/TURN を優先して SSH に戻します。webrtc は P2P 優先、ssh は従来の SSH 転送のみです。",
+      "SignalingServer": "WebRTC シグナリングサーバー",
+      "SignalingServerHelp": "空の場合は SSHServer から wss://host/signal を推定します。",
+      "StunServers": "STUN サーバー",
+      "StunServersHelp": "NAT 越え用の JSON 配列またはカンマ区切り文字列。",
+      "TurnServers": "TURN サーバー",
+      "TurnServersHelp": "P2P 失敗時のリレー用 JSON 配列またはカンマ区切り文字列。",
+      "TurnCredentialMode": "TURN 認証情報モード",
+      "TurnCredentialModeHelp": "現在は static をサポートします。ephemeral は短期認証情報用の予約値です。"
     },
     "StartupRun": {
       "Title": "起動時に自動実行",

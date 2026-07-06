@@ -52,6 +52,10 @@ class ConfigModel:
     SSHUser: Optional[str] = None
     SSHServer: Optional[str] = "app.hk1.azurlane.cloud:10022"
     SSHExecutable: Optional[str] = None
+    SignalingServer: Optional[str] = None
+    StunServers: Optional[str] = '["stun:stun.l.google.com:19302"]'
+    TurnServers: Optional[str] = None
+    TurnCredentialMode: str = "static"
 
     # WebUI 配置
     WebuiHost: str = "0.0.0.0"

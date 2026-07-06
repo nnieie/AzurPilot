@@ -14,6 +14,7 @@ from queue import Queue
 from typing import Callable, Generator, List
 
 import pywebio
+from pywebio.exceptions import SessionClosedException
 from pywebio.input import PASSWORD, actions, input, input_group
 from pywebio.output import PopupSize, popup, put_html, put_text, toast
 from pywebio.session import eval_js, info as session_info, register_thread, run_js
@@ -228,6 +229,9 @@ class TaskHandler:
                         # logger.debug(f'Start task {task.g.__name__}')
                         task.send(self)
                         # logger.debug(f'End task {task.g.__name__}')
+                    except SessionClosedException:
+                        logger.debug(f"WebIO 会话已关闭，停止任务 {task.name}")
+                        self.remove_task(task, nowait=True)
                     except Exception as e:
                         logger.exception(e)
                         self.remove_task(task, nowait=True)

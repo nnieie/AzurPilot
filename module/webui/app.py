@@ -4460,6 +4460,16 @@ class AlasGUI(Frame):
         def u(state):
             if state == -1:
                 return
+            status_map = {
+                "direct_p2p": t("Gui.Remote.StatusDirect"),
+                "turn_relay": t("Gui.Remote.StatusTurn"),
+                "ssh_forward": t("Gui.Remote.StatusSsh"),
+                "waiting_peer": t("Gui.Remote.StatusSignaling"),
+                "signaling": t("Gui.Remote.StatusSignaling"),
+                "starting": t("Gui.Remote.StatusStarting"),
+                "dependency_missing": t("Gui.Remote.StatusSsh"),
+                "failed": t("Gui.Remote.StatusFailed"),
+            }
             clear("remote_loading")
             clear("remote_state")
             clear("remote_info")
@@ -4467,7 +4477,11 @@ class AlasGUI(Frame):
                 put_loading("grow", "success", "remote_loading").style(
                     "--loading-grow--"
                 )
-                put_text(t("Gui.Remote.Running"), scope="remote_state")
+                remote_status = RemoteAccess.get_connection_state()
+                put_text(
+                    f"{t('Gui.Remote.Running')} · {status_map.get(remote_status, remote_status)}",
+                    scope="remote_state",
+                )
                 put_text(t("Gui.Remote.EntryPoint"), scope="remote_info")
                 entrypoint = RemoteAccess.get_entry_point()
                 if entrypoint:
@@ -4479,7 +4493,10 @@ class AlasGUI(Frame):
                         put_link(name=entrypoint, url=entrypoint, scope="remote_info")
                 else:
                     put_text("Loading...", scope="remote_info")
-            elif state in (0, 3):
+                remote_error = RemoteAccess.get_error()
+                if remote_error and remote_status in ("dependency_missing", "failed"):
+                    put_warning(remote_error, closable=False, scope="remote_info")
+            elif state in (0, 3, 4):
                 put_loading("border", "secondary", "remote_loading").style(
                     "--loading-border-fill--"
                 )
