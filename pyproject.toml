@@ -70,7 +70,6 @@ index = [
     { url = "https://pypi.tuna.tsinghua.edu.cn/simple/" },
     { url = "https://mirrors.ustc.edu.cn/pypi/web/simple" },
     { url = "https://pypi.mirrors.ustc.edu.cn/simple/" },
-    { url = "https://mirror.sjtu.edu.cn/pypi/web/simple" },
     { url = "https://mirrors.pku.edu.cn/pypi/web/simple" },
     { url = "https://mirror.nju.edu.cn/pypi/web/simple" },
     { url = "https://mirrors.hust.edu.cn/pypi/web/simple" },
