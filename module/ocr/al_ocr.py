@@ -36,6 +36,17 @@ except Exception as e:
 
 DET_DEBUG = False
 PPOCRV6_EN_REC_KEYS_PATH = "bin/ocr_models/ppocr-v6/ppocrv6_en_dict.txt"
+OCR_MODEL_VERSION_AUTO = 'auto'
+GENERIC_PPOCR_V6_PARAMS = (
+    "bin/ocr_models/ppocr-v6/PP-OCRv6_small_rec.onnx",
+    "bin/ocr_models/ppocr-v6/ppocrv6_dict.txt",
+    OCRVersion.PPOCRV6,
+)
+AZUR_LANE_JP_V6_PARAMS = (
+    "bin/ocr_models/azur_lane_jp/ap_azurlane_jp-v6_small_rec_nvidia.onnx",
+    "bin/ocr_models/azur_lane_jp/ppocrv6_azurlane_jp_dict.txt",
+    OCRVersion.PPOCRV6,
+)
 
 
 class RecOnlyOCR(RapidOCR):
@@ -134,9 +145,106 @@ def _run_ocr_queued(func, *args, **kwargs):
     return job.result
 
 
+ONNX_MODEL_PARAMS = {
+    "azur_lane": {
+        "azur_lane_v6_6": (
+            "bin/ocr_models/azur_lane/ap_azurlane-v6.6_small_rec_dcu.onnx",
+            "bin/ocr_models/azur_lane/ppocrv6_azurlane_dict.txt",
+            OCRVersion.PPOCRV6,
+        ),
+        "azur_lane_v6_5": (
+            "bin/ocr_models/azur_lane/ap_azurlane-v6.5_small_rec_nvidia.onnx",
+            "bin/ocr_models/azur_lane/ppocrv6_azurlane_dict.txt",
+            OCRVersion.PPOCRV6,
+        ),
+        "ppocr_v6": GENERIC_PPOCR_V6_PARAMS,
+        "alocr_en_v2_6": (
+            "bin/ocr_models/azur_lane/alocr-en-us-v2.6.nvc.onnx",
+            "bin/ocr_models/azur_lane/en_dict.txt",
+            OCRVersion.PPOCRV4,
+        ),
+        "alocr_en_v2_0": (
+            "bin/ocr_models/azur_lane/alocr-en-us-v2.0.nvc.onnx",
+            "bin/ocr_models/azur_lane/en_dict.txt",
+            OCRVersion.PPOCRV4,
+        ),
+        "alocr_en_v1_0": (
+            "bin/ocr_models/azur_lane/alocr-en-v1.0.onnx",
+            "bin/ocr_models/azur_lane/en_dict.txt",
+            OCRVersion.PPOCRV4,
+        ),
+    },
+    "azur_lane_jp": {
+        "azur_lane_jp_v6": AZUR_LANE_JP_V6_PARAMS,
+        "ppocr_v6": GENERIC_PPOCR_V6_PARAMS,
+    },
+    "ppocr_v6": {
+        "ppocr_v6": GENERIC_PPOCR_V6_PARAMS,
+    },
+    "cn": {
+        "cn_v6_1": (
+            "bin/ocr_models/zh-CN/ap_zh-cn-v6.1_small_rec_dcu.onnx",
+            "bin/ocr_models/zh-CN/ppocrv6_cn_dict.txt",
+            OCRVersion.PPOCRV6,
+        ),
+        "cn_v6": (
+            "bin/ocr_models/zh-CN/ap_zh-cn-v6_small_rec_dcu.onnx",
+            "bin/ocr_models/zh-CN/ppocrv6_cn_dict.txt",
+            OCRVersion.PPOCRV6,
+        ),
+        "ppocr_v6": GENERIC_PPOCR_V6_PARAMS,
+        "alocr_cn_v3": (
+            "bin/ocr_models/zh-CN/alocr-zh-cn-v3.dtk.onnx",
+            "bin/ocr_models/zh-CN/cn.txt",
+            OCRVersion.PPOCRV5,
+        ),
+        "alocr_cn_v2_5": (
+            "bin/ocr_models/zh-CN/alocr-zh-cn-v2.5.dtk.onnx",
+            "bin/ocr_models/zh-CN/cn.txt",
+            OCRVersion.PPOCRV5,
+        ),
+    },
+    "jp": {
+        "azur_lane_jp_v6": AZUR_LANE_JP_V6_PARAMS,
+        "ppocr_v6": GENERIC_PPOCR_V6_PARAMS,
+    },
+    "tw": {
+        "ppocr_v6": GENERIC_PPOCR_V6_PARAMS,
+    },
+}
+
+DEFAULT_ONNX_MODEL_VERSION = {
+    "azur_lane": "azur_lane_v6_6",
+    "azur_lane_jp": "azur_lane_jp_v6",
+    "ppocr_v6": "ppocr_v6",
+    "cn": "cn_v6_1",
+    "jp": "ppocr_v6",
+    "tw": "ppocr_v6",
+}
+
+
+def _resolve_onnx_model_version(name):
+    specs = ONNX_MODEL_PARAMS.get(name)
+    if specs is None:
+        raise ValueError(f"Unsupported OCR model: {name}")
+
+    requested = config.ocr_model_version(name)
+    if requested == OCR_MODEL_VERSION_AUTO:
+        return DEFAULT_ONNX_MODEL_VERSION[name]
+    if requested in specs:
+        return requested
+
+    fallback = DEFAULT_ONNX_MODEL_VERSION[name]
+    logger.warning(
+        f"OCR model version '{requested}' is not available for '{name}', "
+        f"using '{fallback}'"
+    )
+    return fallback
+
+
 def _get_onnx_model_params(name):
     """
-    返回指定语言的 ONNX 模型参数。
+    按配置选择 ONNX 识别模型版本。
 
     Args:
         name: 模型名称，如 'azur_lane'、'azur_lane_jp'、'ppocr_v6'、'cn'、'jp'、'tw'。
@@ -144,44 +252,8 @@ def _get_onnx_model_params(name):
     Returns:
         (model_path, rec_keys_path, ocr_version) 三元组。
     """
-    if name == "azur_lane":
-        return (
-            "bin/ocr_models/azur_lane/ap_azurlane-v6.5_small_rec_nvidia.onnx",
-            "bin/ocr_models/azur_lane/ppocrv6_azurlane_dict.txt",
-            OCRVersion.PPOCRV6,
-        )
-    elif name == "azur_lane_jp":
-        return (
-            "bin/ocr_models/azur_lane_jp/ap_azurlane_jp-v6_small_rec_nvidia.onnx",
-            "bin/ocr_models/azur_lane_jp/ppocrv6_azurlane_jp_dict.txt",
-            OCRVersion.PPOCRV6,
-        )
-    elif name == "ppocr_v6":
-        return (
-            "bin/ocr_models/ppocr-v6/PP-OCRv6_small_rec.onnx",
-            "bin/ocr_models/ppocr-v6/ppocrv6_dict.txt",
-            OCRVersion.PPOCRV6,
-        )
-    elif name == "cn":
-        return (
-            "bin/ocr_models/zh-CN/ap_zh-cn-v6.1_small_rec_dcu.onnx",
-            "bin/ocr_models/zh-CN/ppocrv6_cn_dict.txt",
-            OCRVersion.PPOCRV6,
-        )
-    elif name == "jp":
-        return (
-            "bin/ocr_models/ppocr-v6/PP-OCRv6_small_rec.onnx",
-            "bin/ocr_models/ppocr-v6/ppocrv6_dict.txt",
-            OCRVersion.PPOCRV6,
-        )
-    elif name == "tw":
-        return (
-            "bin/ocr_models/ppocr-v6/PP-OCRv6_small_rec.onnx",
-            "bin/ocr_models/ppocr-v6/ppocrv6_dict.txt",
-            OCRVersion.PPOCRV6,
-        )
-    else:
-        raise ValueError(f"Unsupported OCR model: {name}")
+    version = _resolve_onnx_model_version(name)
+    return ONNX_MODEL_PARAMS[name][version]
 
 
 def _create_ocr(name):
@@ -215,10 +287,20 @@ def _create_ocr(name):
 _model_cache = {}
 
 
+def _model_cache_key(name):
+    return (
+        name,
+        config.ocr_backend,
+        config.ocr_device,
+        config.ocr_model_version(name),
+    )
+
+
 def _get_model(name):
-    if name not in _model_cache:
-        _model_cache[name] = _create_ocr(name)
-    return _model_cache[name]
+    key = _model_cache_key(name)
+    if key not in _model_cache:
+        _model_cache[key] = _create_ocr(name)
+    return _model_cache[key]
 
 
 DET_MODEL_PATH = "bin/ocr_models/det/PP-OCRv6_tiny_det.onnx"
@@ -296,14 +378,15 @@ def _get_det_model(name):
     """
     backend = config.ocr_backend
     if backend == 'ncnn':
-        key = "det"
+        key = _model_cache_key("det")
         if key not in _det_model_cache:
             _det_model_cache[key] = _create_det_ocr_for_ncnn()
         return _det_model_cache[key]
     else:
-        if name not in _det_model_cache:
-            _det_model_cache[name] = _create_det_ocr_for_onnx(name)
-        return _det_model_cache[name]
+        key = _model_cache_key(name)
+        if key not in _det_model_cache:
+            _det_model_cache[key] = _create_det_ocr_for_onnx(name)
+        return _det_model_cache[key]
 
 
 def reset_ocr_model():

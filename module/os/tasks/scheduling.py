@@ -75,6 +75,9 @@ class CoinTaskMixin:
     CONFIG_PATH_SMART_CL1_PRESERVE = 'OpsiScheduling.OpsiScheduling.OperationCoinsPreserve'
     CONFIG_PATH_SMART_AP_PRESERVE = 'OpsiScheduling.OpsiScheduling.ActionPointPreserve'
     CONFIG_PATH_SMART_COIN_RETURN_THRESHOLD = 'OpsiScheduling.OpsiScheduling.OperationCoinsReturnThreshold'
+    CONFIG_PATH_SMART_STATE = 'OpsiScheduling.Storage.Storage'
+    STATE_KEY_COIN_REPLENISH_START = 'CoinReplenishStart'
+    STATE_KEY_AP_REPLENISH_ACTIVE = 'ApReplenishActive'
     # 各任务的配置路径常量（集中管理，避免硬编码）
     CONFIG_PATH_MEOW_AP_PRESERVE = 'OpsiMeowfficerFarming.OpsiMeowfficerFarming.ActionPointPreserve'
     CONFIG_PATH_CL1_MIN_AP_RESERVE = 'OpsiHazard1Leveling.OpsiHazard1Leveling.MinimumActionPointReserve'
@@ -471,21 +474,53 @@ class CoinTaskMixin:
             threshold = 0
         return max(threshold, 0)
 
+    def _get_smart_scheduling_state(self):
+        """读取智能调度持久化运行状态。"""
+        state = self.config.cross_get(
+            keys=self.CONFIG_PATH_SMART_STATE,
+            default={},
+        )
+        if not isinstance(state, dict):
+            return {}
+        return dict(state)
+
+    def _get_smart_scheduling_state_value(self, key, default=None):
+        """读取单个智能调度运行状态。"""
+        return self._get_smart_scheduling_state().get(key, default)
+
+    def _set_smart_scheduling_state_value(self, key, value):
+        """写入单个智能调度运行状态并立即持久化。"""
+        state = self._get_smart_scheduling_state()
+        if state.get(key) == value:
+            return
+        state[key] = value
+        self.config.modified[self.CONFIG_PATH_SMART_STATE] = state
+        self.config.save()
+
+    def _clear_smart_scheduling_state_value(self, key):
+        """清理单个智能调度运行状态并立即持久化。"""
+        state = self._get_smart_scheduling_state()
+        if key not in state:
+            return
+        state.pop(key, None)
+        self.config.modified[self.CONFIG_PATH_SMART_STATE] = state
+        self.config.save()
+
     def _get_coin_replenish_target(self, yellow_coins, cl1_preserve):
         """
         获取本轮补黄币目标值。
 
         目标值与模拟器保持一致：侵蚀 1 保留值 + 回补阈值。
         """
-        start_coins = getattr(
-            self,
-            '_smart_scheduling_coin_replenish_start',
-            getattr(self.config, '_smart_scheduling_coin_replenish_start', None),
+        start_coins = self._get_smart_scheduling_state_value(
+            self.STATE_KEY_COIN_REPLENISH_START
         )
         if start_coins is None or yellow_coins < start_coins:
             start_coins = yellow_coins
-            self._smart_scheduling_coin_replenish_start = start_coins
-            self.config._smart_scheduling_coin_replenish_start = start_coins
+            self._set_smart_scheduling_state_value(
+                self.STATE_KEY_COIN_REPLENISH_START,
+                start_coins,
+            )
 
         return_threshold = self._get_smart_scheduling_operation_coins_return_threshold()
         target = cl1_preserve + return_threshold
@@ -493,35 +528,36 @@ class CoinTaskMixin:
 
     def _clear_coin_replenish_target(self):
         """清理本轮补黄币状态。"""
-        if hasattr(self, '_smart_scheduling_coin_replenish_start'):
-            delattr(self, '_smart_scheduling_coin_replenish_start')
-        if hasattr(self.config, '_smart_scheduling_coin_replenish_start'):
-            delattr(self.config, '_smart_scheduling_coin_replenish_start')
+        self._clear_smart_scheduling_state_value(
+            self.STATE_KEY_COIN_REPLENISH_START
+        )
 
     def _is_coin_replenish_active(self):
         """判断当前是否处于补黄币阶段。"""
-        return bool(
-            hasattr(self, '_smart_scheduling_coin_replenish_start')
-            or hasattr(self.config, '_smart_scheduling_coin_replenish_start')
-        )
+        return self._get_smart_scheduling_state_value(
+            self.STATE_KEY_COIN_REPLENISH_START
+        ) is not None
 
     def _set_ap_replenish_active(self):
         """标记体力调度补黄币阶段已开始。"""
-        self._smart_scheduling_ap_replenish_active = True
-        self.config._smart_scheduling_ap_replenish_active = True
+        self._set_smart_scheduling_state_value(
+            self.STATE_KEY_AP_REPLENISH_ACTIVE,
+            True,
+        )
 
     def _clear_ap_replenish_active(self):
         """清理体力调度补黄币状态。"""
-        if hasattr(self, '_smart_scheduling_ap_replenish_active'):
-            delattr(self, '_smart_scheduling_ap_replenish_active')
-        if hasattr(self.config, '_smart_scheduling_ap_replenish_active'):
-            delattr(self.config, '_smart_scheduling_ap_replenish_active')
+        self._clear_smart_scheduling_state_value(
+            self.STATE_KEY_AP_REPLENISH_ACTIVE
+        )
 
     def _is_ap_replenish_active(self):
         """判断当前是否处于体力调度补黄币阶段。"""
         return bool(
-            hasattr(self, '_smart_scheduling_ap_replenish_active')
-            or hasattr(self.config, '_smart_scheduling_ap_replenish_active')
+            self._get_smart_scheduling_state_value(
+                self.STATE_KEY_AP_REPLENISH_ACTIVE,
+                False,
+            )
         )
 
     def _get_effective_cl1_ap_preserve(self):
