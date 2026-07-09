@@ -820,8 +820,9 @@
     },
     "OcrModelVersionEnglish": {
       "name": "OCR英文模型版本",
-      "help": "选择英文 OCR 模型版本。auto 使用英文推荐模型 v6.6。该项影响英文 Azur Lane 模型；ncnn 后端会忽略此选择。",
+      "help": "选择英文 OCR 模型版本。auto 使用英文推荐模型 850K。该项影响英文 Azur Lane 模型；ncnn 后端会忽略此选择。",
       "auto": "自动推荐",
+      "alocr_en_900k": "alocr_en_900k",
       "azur_lane_v6_6": "英文 v6.6 (Azur Lane)",
       "azur_lane_v6_5": "英文 v6.5 (Azur Lane)",
       "ppocr_v6": "通用 PP-OCRv6",

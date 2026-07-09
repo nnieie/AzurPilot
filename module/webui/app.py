@@ -234,7 +234,7 @@ def ensure_public_webui_password(key):
 
         atomic_write(WEBUI_AUTO_PASSWORD_FILE, f"{password}\n")
         State.deploy_config.Password = password
-        logger.warning(f"WebUI 已自动生成密码，请在根目录 {WEBUI_AUTO_PASSWORD_FILE} 查看。")
+        logger.warning(f"[WebUI] WebUI 已自动生成密码，请在根目录 {WEBUI_AUTO_PASSWORD_FILE} 查看。")
         return password, None
     except Exception as e:
         logger.exception(f"WebUI 自动生成密码失败: {e}")
@@ -2833,7 +2833,7 @@ class AlasGUI(Frame):
 
     def _simulator_start(self):
         if is_demo_mode():
-            logger.info("DEMO=1，跳过大世界模拟器启动。")
+            logger.info("[WebUI] DEMO=1，跳过大世界模拟器启动。")
             return
         self.simulator.start()
 
@@ -5177,7 +5177,7 @@ class AlasGUI(Frame):
         def announcement_checker():
             from module.base.api_client import ApiClient
 
-            logger.info("公告检查任务启动")
+            logger.info("[WebUI] 公告检查任务启动")
             th = yield  # 获取任务处理器引用
             # 首次检查：触发异步获取
             self._start_announcement_fetch(force=False)

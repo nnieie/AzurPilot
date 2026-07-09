@@ -820,8 +820,9 @@
     },
     "OcrModelVersionEnglish": {
       "name": "OCR 英語モデルバージョン",
-      "help": "英語 OCR モデルのバージョンを選択します。auto は推奨の英語 v6.6 モデルを使用します。この項目は英語 Azur Lane モデルに適用されます。ncnn バックエンドでは無視されます。",
+      "help": "英語 OCR モデルのバージョンを選択します。auto は推奨の英語 850K モデルを使用します。この項目は英語 Azur Lane モデルに適用されます。ncnn バックエンドでは無視されます。",
       "auto": "自動推奨",
+      "alocr_en_900k": "alocr_en_900k",
       "azur_lane_v6_6": "英語 v6.6 (Azur Lane)",
       "azur_lane_v6_5": "英語 v6.5 (Azur Lane)",
       "ppocr_v6": "汎用 PP-OCRv6",

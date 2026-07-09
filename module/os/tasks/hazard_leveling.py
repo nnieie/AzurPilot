@@ -255,9 +255,9 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
                     content=f"总行动力 {self._action_point_total} 低于最低保留 {min_reserve}，已推迟任务",
                 )
             else:
-                logger.info("上次检查行动力低于最低保留，跳过推送通知")
+                logger.info("[大世界-侵蚀1练级] 上次检查行动力低于最低保留，跳过推送通知")
 
-            logger.info("推迟侵蚀 1 任务 50 分钟")
+            logger.info("[大世界-侵蚀1练级] 推迟侵蚀 1 任务 50 分钟")
             self.config.task_delay(minute=50)
             self.config.task_stop()
         else:
@@ -269,7 +269,7 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
         search_completed = self.run_strategic_search()
 
         if not search_completed and search_completed is not None:
-            logger.warning("战略搜索返回 False，可能已被提前中断")
+            logger.warning("[大世界-侵蚀1练级] 战略搜索返回 False，可能已被提前中断")
 
         # 第一次重扫：检查是否还有事件
         self._solved_map_event = set()
@@ -305,7 +305,7 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
         """处理遥测数据提交"""
         try:
             if not getattr(self.config, "DropRecord_TelemetryReport", True):
-                logger.info("[错误] 遥测上报已关闭")
+                logger.info("[大世界-侵蚀1练级] [错误] 遥测上报已关闭")
             else:
 
                 def run_telemetry():
@@ -324,13 +324,13 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
                                 f"侵蚀 1 数据提交已排队，实例名称: {instance_name}"
                             )
                     except Exception as e:
-                        logger.debug(f"侵蚀 1 数据提交后台执行失败: {e}")
+                        logger.debug(f"[大世界-侵蚀1练级] 侵蚀 1 数据提交后台执行失败: {e}")
 
                 from module.base.async_executor import async_executor
 
                 async_executor.submit(run_telemetry)
         except Exception as e:
-            logger.debug(f"侵蚀 1 数据提交触发失败: {e}")
+            logger.debug(f"[大世界-侵蚀1练级] 侵蚀 1 数据提交触发失败: {e}")
 
     def os_hazard1_leveling(self):
         """侵蚀 1 练级任务入口。"""
@@ -363,7 +363,7 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
             and not self._ash_fully_collected
             and self.config.OpsiAshBeacon_EnsureFullyCollected
         ):
-            logger.info("余烬信标未收集满，暂时忽略行动力限制")
+            logger.info("[大世界-侵蚀1练级] 余烬信标未收集满，暂时忽略行动力限制")
             self.config.OS_ACTION_POINT_PRESERVE = 0
         logger.attr(
             "OS_ACTION_POINT_PRESERVE", self.config.OS_ACTION_POINT_PRESERVE
@@ -373,8 +373,8 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
         try:
             self.get_current_zone()
         except MapDetectionError as e:
-            logger.error("OS地图区域识别失败，请确保游戏已进入OS海域地图界面")
-            logger.error(f"OCR识别错误: {e}")
+            logger.error("[大世界-侵蚀1练级] OS地图区域识别失败，请确保游戏已进入OS海域地图界面")
+            logger.error(f"[大世界-侵蚀1练级] OCR识别错误: {e}")
             raise
 
         # 侵蚀 1 练级时，行动力优先用于此任务，而非短猫。
@@ -403,11 +403,11 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
             try:
                 sea_miles = self.detect_and_record_sea_miles()
                 if sea_miles is not None:
-                    logger.info(f"海里数检测完成: {sea_miles}")
+                    logger.info(f"[大世界-侵蚀1练级] 海里数检测完成: {sea_miles}")
                 else:
-                    logger.warning("海里数检测失败，但不影响后续流程")
+                    logger.warning("[大世界-侵蚀1练级] 海里数检测失败，但不影响后续流程")
             except Exception as e:
-                logger.error(f"海里数检测异常: {e}，但不影响后续流程")
+                logger.error(f"[大世界-侵蚀1练级] 海里数检测异常: {e}，但不影响后续流程")
 
         # ===== 货币与体力记录（始终执行，包含海里数）=====
         self._record_ap_and_coins(sea_miles=sea_miles)
@@ -429,16 +429,16 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
             logger.warning(f"检测间隔无效，使用默认值 24 小时")
 
         time_run = self.config.OpsiCheckLeveling_LastRun + timedelta(hours=check_interval)
-        logger.info(f"练级检查下次运行时间: {time_run}")
+        logger.info(f"[大世界-侵蚀1练级] 练级检查下次运行时间: {time_run}")
         if current_time().replace(microsecond=0) < time_run:
-            logger.info("未到运行时间，跳过")
+            logger.info("[大世界-侵蚀1练级] 未到运行时间，跳过")
             return
         target_level = self.config.OpsiCheckLeveling_TargetLevel
         if not isinstance(target_level, int) or target_level < 0 or target_level > 125:
-            logger.error(f"目标等级无效: {target_level}，必须是 0 到 125 之间的整数")
+            logger.error(f"[大世界-侵蚀1练级] 目标等级无效: {target_level}，必须是 0 到 125 之间的整数")
             raise ScriptError(f"Invalid opsi ship target level: {target_level}")
         if target_level == 0:
-            logger.info("目标等级为 0，跳过")
+            logger.info("[大世界-侵蚀1练级] 目标等级为 0，跳过")
             return
 
         logger.attr("待检查舰队", self.config.OpsiFleet_Fleet)
@@ -452,7 +452,7 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
                 custom_positions = [int(p.strip()) for p in custom_positions_str.split(',') if p.strip()]
                 invalid_positions = [p for p in custom_positions if p < 1 or p > 6]
                 if invalid_positions:
-                    logger.warning(f"自定义舰位包含无效值: {invalid_positions}，有效范围为1-6，将检测所有舰船")
+                    logger.warning(f"[大世界-侵蚀1练级] 自定义舰位包含无效值: {invalid_positions}，有效范围为1-6，将检测所有舰船")
                     custom_positions = []
                 else:
                     logger.info(f"自定义检测舰位: {custom_positions}")
@@ -461,7 +461,7 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
                 custom_positions = []
 
         if not self._check_auto_change_prerequisite(enable_custom_check, custom_positions):
-            logger.info("自动配队前置条件不满足，禁用自动配队")
+            logger.info("[大世界-侵蚀1练级] 自动配队前置条件不满足，禁用自动配队")
             self.config.OpsiFleetAutoChange_Enable = False
 
         if enable_custom_check and custom_positions:
@@ -471,7 +471,7 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
 
         if ship_data_result['ships'] is None:
             error_msg = ship_data_result['error'] or "未知错误"
-            logger.error(f"舰船数据收集失败: {error_msg}")
+            logger.error(f"[大世界-侵蚀1练级] 舰船数据收集失败: {error_msg}")
             report = self._format_check_report(
                 None, target_level, self.config.OpsiFleet_Fleet, error_msg=error_msg
             )
@@ -480,7 +480,7 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
                 content=f"<{self.config.config_name}>\n\n{report}",
             )
             self.config.OpsiCheckLeveling_LastRun = current_time().replace(microsecond=0)
-            logger.info("检测失败，下次检测时间设为24小时后")
+            logger.info("[大世界-侵蚀1练级] 检测失败，下次检测时间设为24小时后")
             return
 
         ships = ship_data_result['ships']
@@ -507,7 +507,7 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
                 instance_name=instance_name,
             )
         except Exception as e:
-            logger.warning(f"保存舰船经验数据失败: {e}")
+            logger.warning(f"[大世界-侵蚀1练级] 保存舰船经验数据失败: {e}")
 
         report = self._format_check_report(
             ships, target_level, self.config.OpsiFleet_Fleet, custom_positions=custom_positions if enable_custom_check else None
@@ -536,17 +536,17 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
                 )
 
                 if self.config.OpsiFleetAutoChange_Enable:
-                    logger.info("检测到自动配队已启用，开始执行自动配队")
+                    logger.info("[大世界-侵蚀1练级] 检测到自动配队已启用，开始执行自动配队")
                     try:
                         from module.os.tasks.fleet_auto_change import OpsiFleetAutoChange
                         auto_change = OpsiFleetAutoChange(config=self.config, device=self.device)
                         auto_change.run()
-                        logger.info("自动配队执行完成")
+                        logger.info("[大世界-侵蚀1练级] 自动配队执行完成")
                     except Exception as e:
                         logger.error(f"自动配队执行失败: {e}")
 
                 if self.config.OpsiCheckLeveling_DelayAfterFull:
-                    logger.info("所有舰船满经验后延迟任务")
+                    logger.info("[大世界-侵蚀1练级] 所有舰船满经验后延迟任务")
                     self.delay_opsi_active_task(server_update=True, task='OpsiHazard1Leveling')
                     self.config.task_stop()
 
@@ -567,11 +567,11 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
             return True
 
         if not enable_custom_check:
-            logger.warning("自动配队需要启用自定义舰船检测，将禁用自动配队")
+            logger.warning("[大世界-侵蚀1练级] 自动配队需要启用自定义舰船检测，将禁用自动配队")
             return False
 
         if not custom_positions:
-            logger.warning("自动配队需要有效的自定义舰位配置，将禁用自动配队")
+            logger.warning("[大世界-侵蚀1练级] 自动配队需要有效的自定义舰位配置，将禁用自动配队")
             return False
 
         logger.info(f"自动配队前置条件满足: 启用自定义检测，舰位 {custom_positions}")
@@ -709,7 +709,7 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
         for position in sorted(custom_positions):
             button = slot_buttons.get(position)
             if not button:
-                logger.warning(f"无效的舰位: {position}")
+                logger.warning(f"[大世界-侵蚀1练级] 无效的舰位: {position}")
                 continue
 
             logger.info(f"检测舰位 {position}")
@@ -720,7 +720,7 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
             level, exp = ship_info_get_level_exp(main=self)
 
             if level < 1 or level > len(LIST_SHIP_EXP):
-                logger.warning(f"舰位 {position} 等级识别异常: {level}")
+                logger.warning(f"[大世界-侵蚀1练级] 舰位 {position} 等级识别异常: {level}")
                 ship_data_list.append({
                     "position": position,
                     "level": level,
@@ -803,31 +803,31 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
                     last_non_standard_data = ship_data_list
 
                     if non_standard_retry_count >= 3:
-                        logger.info(f"非标准舰船数量({current_ship_count}艘)已重试3次，使用当前检测结果")
+                        logger.info(f"[大世界-侵蚀1练级] 非标准舰船数量({current_ship_count}艘)已重试3次，使用当前检测结果")
                         return {'ships': ship_data_list, 'error': None}
 
                     logger.warning(f"舰船数量非标准({current_ship_count}艘)，重试确认 ({non_standard_retry_count}/3)")
                     if attempt < max_retry - 1:
-                        logger.info("等待1秒后重试...")
+                        logger.info("[大世界-侵蚀1练级] 等待1秒后重试...")
                         self.device.click_record_clear()
                         import time
                         time.sleep(1)
                     else:
-                        logger.info(f"已达到最大重试次数，使用当前检测结果({current_ship_count}艘)")
+                        logger.info(f"[大世界-侵蚀1练级] 已达到最大重试次数，使用当前检测结果({current_ship_count}艘)")
                         return {'ships': ship_data_list, 'error': None}
                 else:
-                    logger.info("舰船数据验证通过")
+                    logger.info("[大世界-侵蚀1练级] 舰船数据验证通过")
                     return {'ships': ship_data_list, 'error': None}
             else:
-                logger.warning(f"舰船数据验证失败: {validation_result['reason']}")
+                logger.warning(f"[大世界-侵蚀1练级] 舰船数据验证失败: {validation_result['reason']}")
                 last_error = validation_result['reason']
                 if attempt < max_retry - 1:
-                    logger.info("等待1秒后重试...")
+                    logger.info("[大世界-侵蚀1练级] 等待1秒后重试...")
                     self.device.click_record_clear()
                     import time
                     time.sleep(1)
                 else:
-                    logger.error("已达到最大重试次数，舰船数据收集失败")
+                    logger.error("[大世界-侵蚀1练级] 已达到最大重试次数，舰船数据收集失败")
                     return {'ships': None, 'error': f"验证失败: {last_error}"}
 
         return {'ships': None, 'error': "未知错误"}
@@ -893,7 +893,7 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
 
         for position in custom_positions:
             if position not in detected_positions:
-                logger.warning(f"舰位 {position} 不存在于当前舰队中，已检测到的舰位: {detected_positions}")
+                logger.warning(f"[大世界-侵蚀1练级] 舰位 {position} 不存在于当前舰队中，已检测到的舰位: {detected_positions}")
                 positions_not_exist.append(str(position))
                 continue
 
@@ -901,10 +901,10 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
                 if ship['position'] == position:
                     if ship['total_exp'] >= target_exp:
                         positions_full.append(str(position))
-                        logger.info(f"舰位 {position} 已满经验")
+                        logger.info(f"[大世界-侵蚀1练级] 舰位 {position} 已满经验")
                     else:
                         positions_not_full.append(str(position))
-                        logger.info(f"舰位 {position} 未满经验")
+                        logger.info(f"[大世界-侵蚀1练级] 舰位 {position} 未满经验")
                     break
 
         if positions_not_exist:
@@ -924,17 +924,17 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
             )
 
             if self.config.OpsiFleetAutoChange_Enable:
-                logger.info("检测到自动配队已启用，开始执行自动配队")
+                logger.info("[大世界-侵蚀1练级] 检测到自动配队已启用，开始执行自动配队")
                 try:
                     from module.os.tasks.fleet_auto_change import OpsiFleetAutoChange
                     auto_change = OpsiFleetAutoChange(config=self.config, device=self.device)
                     auto_change.run()
-                    logger.info("自动配队执行完成")
+                    logger.info("[大世界-侵蚀1练级] 自动配队执行完成")
                 except Exception as e:
                     logger.error(f"自动配队执行失败: {e}")
 
             if self.config.OpsiCheckLeveling_DelayAfterFull:
-                logger.info("自定义舰位满经验后延迟任务")
+                logger.info("[大世界-侵蚀1练级] 自定义舰位满经验后延迟任务")
                 self.delay_opsi_active_task(server_update=True, task='OpsiHazard1Leveling')
                 self.config.task_stop()
 
@@ -955,7 +955,7 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
                     distance=sea_miles,
                 )
 
-            logger.info("读取当前货币")
+            logger.info("[大世界-侵蚀1练级] 读取当前货币")
             yellow_coins = self.get_yellow_coins()
             from module.statistics.cl1_database import db as cl1_db
             from module.statistics.opsi_month import get_coins_timeline
@@ -975,7 +975,7 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
             )
             self.config.save()
         except Exception as e:
-            logger.error(f"体力/货币记录异常: {e}")
+            logger.error(f"[大世界-侵蚀1练级] 体力/货币记录异常: {e}")
 
     def detect_and_record_sea_miles(self):
         """
@@ -984,15 +984,15 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
         Returns:
             int: 海里数，失败时返回None
         """
-        logger.info("开始海里数检测")
+        logger.info("[大世界-侵蚀1练级] 开始海里数检测")
         
         try:
-            logger.info("确保在大世界地图上")
+            logger.info("[大世界-侵蚀1练级] 确保在大世界地图上")
             if not self.is_in_map():
-                logger.info("当前不在大世界地图，返回大世界地图")
+                logger.info("[大世界-侵蚀1练级] 当前不在大世界地图，返回大世界地图")
                 self.ui_back(check_button=self.is_in_map)
             
-            logger.info("进入情报页面")
+            logger.info("[大世界-侵蚀1练级] 进入情报页面")
             skip_first_screenshot = True
             confirm_timer = Timer(3, count=6).start()
             while 1:
@@ -1005,23 +1005,23 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
                     break
                 
                 if confirm_timer.reached():
-                    logger.warning("进入情报页面超时")
+                    logger.warning("[大世界-侵蚀1练级] 进入情报页面超时")
                     return None
                 
                 if self.appear_then_click(MISSION_ENTER, offset=(200, 5), interval=3):
                     continue
             
-            logger.info("识别海里数")
+            logger.info("[大世界-侵蚀1练级] 识别海里数")
             self.device.screenshot()
             sea_miles = OCR_SEA_MILES_DIGIT.ocr(self.device.image)
             
             if sea_miles <= 0:
-                logger.warning(f"海里数识别异常: {sea_miles}")
+                logger.warning(f"[大世界-侵蚀1练级] 海里数识别异常: {sea_miles}")
                 return None
             
-            logger.info(f"海里数识别成功: {sea_miles}")
+            logger.info(f"[大世界-侵蚀1练级] 海里数识别成功: {sea_miles}")
 
-            logger.info("退出情报页面")
+            logger.info("[大世界-侵蚀1练级] 退出情报页面")
             self.ui_click(
                 MISSION_QUIT,
                 check_button=self.is_in_map,
@@ -1032,7 +1032,7 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
             return sea_miles
             
         except Exception as e:
-            logger.error(f"海里数检测失败: {e}")
+            logger.error(f"[大世界-侵蚀1练级] 海里数检测失败: {e}")
             try:
                 if self.appear(MISSION_CHECK, offset=(20, 20)):
                     self.ui_click(

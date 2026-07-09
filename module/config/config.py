@@ -307,8 +307,8 @@ class AzurLaneConfig(ConfigUpdater, ManualConfig, GeneratedConfig, ConfigWatcher
             logger.attr("Task", task)
             return task
         else:
-            logger.critical("没有等待或待处理的任务")
-            logger.critical("请启用至少一个任务")
+            logger.critical("[Config] 没有等待或待处理的任务")
+            logger.critical("[Config] 请启用至少一个任务")
             raise RequestHumanTakeover
 
     def save(self, mod_name='alas'):

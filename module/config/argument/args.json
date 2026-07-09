@@ -594,6 +594,7 @@
         "value": "auto",
         "option": [
           "auto",
+          "alocr_en_900k",
           "azur_lane_v6_6",
           "azur_lane_v6_5",
           "ppocr_v6",

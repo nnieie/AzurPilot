@@ -820,8 +820,9 @@
     },
     "OcrModelVersionEnglish": {
       "name": "OCR English Model Version",
-      "help": "Choose the English OCR model version. Auto uses the recommended English v6.6 model. This affects the English Azur Lane model; ncnn ignores this setting.",
+      "help": "Choose the English OCR model version. Auto uses the recommended English 850K model. This affects the English Azur Lane model; ncnn ignores this setting.",
       "auto": "Auto Recommended",
+      "alocr_en_900k": "alocr_en_900k",
       "azur_lane_v6_6": "English v6.6 (Azur Lane)",
       "azur_lane_v6_5": "English v6.5 (Azur Lane)",
       "ppocr_v6": "Generic PP-OCRv6",

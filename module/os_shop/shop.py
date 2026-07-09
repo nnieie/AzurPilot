@@ -218,7 +218,7 @@ class OSShop(PortShop, AkashiShop):
                 break
 
             if retry.reached():
-                logger.critical('OCR_SHOP_AMOUNT 识别结果错误，请检查资源文件')
+                logger.critical('[大世界商店] OCR_SHOP_AMOUNT 识别结果错误，请检查资源文件')
                 raise ScriptError
         retry.reset()
 
