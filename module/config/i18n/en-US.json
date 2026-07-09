@@ -820,7 +820,7 @@
     },
     "OcrModelVersionEnglish": {
       "name": "OCR English Model Version",
-      "help": "Choose the English OCR model version. Auto uses the recommended English 850K model. This affects the English Azur Lane model; ncnn ignores this setting.",
+      "help": "Choose the English OCR model version. Auto uses the recommended English AlOCR v2.6 model. This affects the English Azur Lane model; ncnn ignores this setting.",
       "auto": "Auto Recommended",
       "alocr_en_900k": "alocr_en_900k",
       "azur_lane_v6_6": "English v6.6 (Azur Lane)",
@@ -1734,11 +1734,11 @@
       "name": "Ignore Mood Warning Popup",
       "help": "Force through the mood warning popup when it appears."
     },
-    "ALLowHighFlagshipLevel": {
+    "AllowHighFlagshipLevel": {
       "name": "Only replace the full-level rear row",
       "help": "After opening, only level 100 white-skin light aircraft will be selected when changing flagships.\nPlease make sure there are qualified ships in the dock when using it."
     },
-    "ALLowLowVanguardLevel": {
+    "AllowLowVanguardLevel": {
       "name": "Replaceable low-level front row",
       "help": "After opening, the front row level limit is changed to level 30 or above. If it is difficult mode (such as the CD picture), it will be changed to level 70."
     },
@@ -1901,10 +1901,11 @@
     "Mode": {
       "name": "Difficulty",
       "help": "SP map requires running the daily SP mission first",
-      "easy": "Easy",
-      "normal": "Normal",
-      "hard": "Hard",
-      "sp": "SP"
+      "tc1": "tc1",
+      "tc2": "tc2",
+      "tc3": "tc3",
+      "sp": "SP",
+      "ex": "ex"
     },
     "Fleet": {
       "name": "attack team",
@@ -2086,6 +2087,9 @@
       "name": "Research filter",
       "help": "For research drops and project refreshes, please see https://azur-stats.lyoko.io/. People who do not have a basic understanding of these are not recommended to write custom filters. It is recommended to use pre-optimized research filters.",
       "custom": "Custom",
+      "series_9_blueprint_ta152": "Series 9 Blueprint + Ta152",
+      "series_9_blueprint_only": "Series 9 Blueprint only",
+      "series_9_ta152_only": "Series 9 Ta152 only",
       "series_8_blueprint_305": "Series 8 Blueprint + 305",
       "series_8_blueprint_only": "Series 8 Blueprint only",
       "series_8_305_only": "Series 8 305 only",

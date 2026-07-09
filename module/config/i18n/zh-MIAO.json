@@ -820,7 +820,7 @@
     },
     "OcrModelVersionEnglish": {
       "name": "OCR英文模型版本喵",
-      "help": "选择英文 OCR 模型版本喵。auto 使用英文推荐模型 850K。该项影响英文 Azur Lane 模型；ncnn 后端会忽略此选择喵。",
+      "help": "选择英文 OCR 模型版本喵。auto 使用英文推荐模型 AlOCR v2.6。该项影响英文 Azur Lane 模型；ncnn 后端会忽略此选择喵。",
       "auto": "自动推荐喵",
       "alocr_en_900k": "alocr_en_900k",
       "azur_lane_v6_6": "英文 v6.6 (Azur Lane)",
@@ -1734,11 +1734,11 @@
       "name": "忽略心情警告弹窗",
       "help": "打开后，遇到心情警告弹窗将强制打完，打完后如开启更换前排会强制换船"
     },
-    "ALLowHighFlagshipLevel": {
+    "AllowHighFlagshipLevel": {
       "name": "仅更换满级后排",
       "help": "打开后只选100级白轻航。确保船坞有符合条件的船喵。"
     },
-    "ALLowLowVanguardLevel": {
+    "AllowLowVanguardLevel": {
       "name": "可更换低等级前排",
       "help": "前排等级限制降为30级以上，困难模式70级喵。"
     },
@@ -1901,10 +1901,11 @@
     "Mode": {
       "name": "难度喵",
       "help": "SP图需用活动每日SP运行喵。 (´・ω・`)",
-      "easy": "easy喵",
-      "normal": "normal喵",
-      "hard": "hard喵",
-      "sp": "sp喵"
+      "tc1": "tc1",
+      "tc2": "tc2",
+      "tc3": "tc3",
+      "sp": "sp喵",
+      "ex": "ex"
     },
     "Fleet": {
       "name": "出击队伍模式",
@@ -2086,6 +2087,9 @@
       "name": "科研过滤器",
       "help": "科研掉落和刷新见 https://azur-stats.lyoko.io/ ，没了解别自定义。预优化过滤器喵。",
       "custom": "自定义喵",
+      "series_9_blueprint_ta152": "九期 蓝图+Ta152喵",
+      "series_9_blueprint_only": "九期 仅蓝图喵",
+      "series_9_ta152_only": "九期 仅Ta152喵",
       "series_8_blueprint_305": "八期 蓝图+305喵",
       "series_8_blueprint_only": "八期 仅蓝图喵",
       "series_8_305_only": "八期 仅305喵",

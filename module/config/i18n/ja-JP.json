@@ -820,7 +820,7 @@
     },
     "OcrModelVersionEnglish": {
       "name": "OCR 英語モデルバージョン",
-      "help": "英語 OCR モデルのバージョンを選択します。auto は推奨の英語 850K モデルを使用します。この項目は英語 Azur Lane モデルに適用されます。ncnn バックエンドでは無視されます。",
+      "help": "英語 OCR モデルのバージョンを選択します。auto は推奨の英語 AlOCR v2.6 モデルを使用します。この項目は英語 Azur Lane モデルに適用されます。ncnn バックエンドでは無視されます。",
       "auto": "自動推奨",
       "alocr_en_900k": "alocr_en_900k",
       "azur_lane_v6_6": "英語 v6.6 (Azur Lane)",
@@ -1734,11 +1734,11 @@
       "name": "コンディション警告ポップアップを無視",
       "help": "有効にすると、コンディション警告ポップアップを強制的に突破します。完了後、前衛交換が有効な場合、艦船が強制的に交換されます。"
     },
-    "ALLowHighFlagshipLevel": {
+    "AllowHighFlagshipLevel": {
       "name": "満レベル後列のみ交換する",
       "help": "有効にすると、旗艦交換時にレベル100の白レア軽空母のみ選択されます。\n使用時はドックに条件を満たす艦船がいることを確認してください。"
     },
-    "ALLowLowVanguardLevel": {
+    "AllowLowVanguardLevel": {
       "name": "低レベル前衛の交換を許可する",
       "help": "有効にすると、前衛のレベル制限がレベル30以上に変更されます。ハードモード（CDマップなど）の場合はレベル70に変更されます。"
     },
@@ -1901,10 +1901,11 @@
     "Mode": {
       "name": "難易度",
       "help": "SPステージはイベントデイリーSPで実行する必要があります",
-      "easy": "easy",
-      "normal": "normal",
-      "hard": "hard",
-      "sp": "sp"
+      "tc1": "tc1",
+      "tc2": "tc2",
+      "tc3": "tc3",
+      "sp": "sp",
+      "ex": "ex"
     },
     "Fleet": {
       "name": "出撃艦隊",
@@ -2086,6 +2087,9 @@
       "name": "科研フィルター",
       "help": "科研ドロップとプロジェクト更新については https://azur-stats.lyoko.io/ を参照してください。これらの基本を理解していない方はカスタムフィルターの作成をお勧めしません。プリセット科研フィルターの使用をお勧めします。",
       "custom": "カスタム",
+      "series_9_blueprint_ta152": "9期 図面+Ta152",
+      "series_9_blueprint_only": "9期 図面のみ",
+      "series_9_ta152_only": "9期 Ta152のみ",
       "series_8_blueprint_305": "8期 図面+305",
       "series_8_blueprint_only": "8期 図面のみ",
       "series_8_305_only": "8期 305のみ",

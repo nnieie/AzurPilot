@@ -820,7 +820,7 @@
     },
     "OcrModelVersionEnglish": {
       "name": "OCR英文模型版本",
-      "help": "选择英文 OCR 模型版本。auto 使用英文推荐模型 850K。该项影响英文 Azur Lane 模型；ncnn 后端会忽略此选择。",
+      "help": "选择英文 OCR 模型版本。auto 使用英文推荐模型 AlOCR v2.6。该项影响英文 Azur Lane 模型；ncnn 后端会忽略此选择。",
       "auto": "自动推荐",
       "alocr_en_900k": "alocr_en_900k",
       "azur_lane_v6_6": "英文 v6.6 (Azur Lane)",
@@ -1734,11 +1734,11 @@
       "name": "忽略心情警告弹窗",
       "help": "打开后，遇到心情警告弹窗将强制打完，打完后如开启更换前排会强制换船"
     },
-    "ALLowHighFlagshipLevel": {
+    "AllowHighFlagshipLevel": {
       "name": "仅更换满级后排",
       "help": "打开后，更换旗舰时仅会选择100级的白皮轻航。\n使用时请保证船坞中有符合条件的舰船。"
     },
-    "ALLowLowVanguardLevel": {
+    "AllowLowVanguardLevel": {
       "name": "可更换低等级前排",
       "help": "打开后，前排等级限制改为30级以上。若为困难模式（如CD图）则改为70级。"
     },
@@ -1901,10 +1901,11 @@
     "Mode": {
       "name": "难度",
       "help": "SP图需要使用活动每日SP运行",
-      "easy": "easy",
-      "normal": "normal",
-      "hard": "hard",
-      "sp": "sp"
+      "tc1": "tc1",
+      "tc2": "tc2",
+      "tc3": "tc3",
+      "sp": "sp",
+      "ex": "ex"
     },
     "Fleet": {
       "name": "出击队伍",
@@ -2086,6 +2087,9 @@
       "name": "科研过滤器",
       "help": "科研掉落和项目刷新见 https://azur-stats.lyoko.io/，对这些没有基本了解的人不建议编写自定义过滤器，建议使用预优化科研过滤器，自己瞎几把设置过滤器出问题了别叫",
       "custom": "自定义",
+      "series_9_blueprint_ta152": "九期 蓝图+Ta152",
+      "series_9_blueprint_only": "九期 仅蓝图",
+      "series_9_ta152_only": "九期 仅Ta152",
       "series_8_blueprint_305": "八期 蓝图+305",
       "series_8_blueprint_only": "八期 仅蓝图",
       "series_8_305_only": "八期 仅305",

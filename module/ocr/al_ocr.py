@@ -377,7 +377,7 @@ CUSTOM_CTC_MODEL_PARAMS = {
 }
 
 DEFAULT_ONNX_MODEL_VERSION = {
-    "azur_lane": ALAS_CTC_MODEL_VERSION,
+    "azur_lane": "alocr_en_v2_6",
     "azur_lane_jp": "azur_lane_jp_v6",
     "ppocr_v6": "ppocr_v6",
     "cn": "cn_v6_1",
