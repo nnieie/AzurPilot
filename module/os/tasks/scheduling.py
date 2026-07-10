@@ -966,6 +966,18 @@ class OpsiScheduling(CoinTaskMixin, OSMap):
             ap_preserve=ap_preserve,
         )
 
+    def handle_first_auto_search(self, run):
+        """由智能调度决策是否执行 os_init 阶段跳过的首次自律寻敌。"""
+        if not getattr(self, "_smart_scheduling_first_auto_search_pending", False):
+            return
+        self._smart_scheduling_first_auto_search_pending = False
+
+        if not run:
+            logger.info("智能调度接下来执行侵蚀 1，跳过初始化自律寻敌")
+            return
+
+        self.run_first_auto_search()
+
     def _handle_smart_scheduling_no_task(self, yellow_coins, total_ap, current_ap, coin_target, meow_ap_preserve):
         """
         处理黄币和行动力不足导致没有可运行任务的情况。
@@ -990,6 +1002,7 @@ class OpsiScheduling(CoinTaskMixin, OSMap):
                     f'由 OpsiScheduling 直接执行短猫清理当前行动力 {current_ap}'
                 )
             )
+            self.handle_first_auto_search(run=True)
             self._run_scheduled_meowfficer_farming(0)
             return
 
@@ -1005,6 +1018,7 @@ class OpsiScheduling(CoinTaskMixin, OSMap):
             self.config.task_stop()
 
         logger.info('[大世界-智能调度] 执行一轮侵蚀 1 练级')
+        self.handle_first_auto_search(run=False)
         if hasattr(self, 'os_check_leveling'):
             self._run_with_opsi_task_context(
                 self.TASK_NAME_HAZARD1_LEVELING,
@@ -1221,6 +1235,7 @@ class OpsiScheduling(CoinTaskMixin, OSMap):
             logger.warning('[大世界-智能调度] 智能调度中没有启用任何黄币补充任务，默认执行短猫相接')
             all_coin_tasks = [self.TASK_NAME_MEOWFFICER_FARMING]
 
+        self.handle_first_auto_search(run=True)
         task_names = '、'.join([self.TASK_NAMES.get(task, task) for task in all_coin_tasks])
         logger.info(f'[大世界-智能调度] 启用的黄币补充任务: {task_names}')
 

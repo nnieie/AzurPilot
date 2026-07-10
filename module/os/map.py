@@ -54,6 +54,19 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
 
         return scheduling_enabled
 
+    def _get_prevent_action_point_overflow_target_task(self):
+        """读取防溢出任务本轮代跑目标，仅供 os_init 判断首次自律寻敌。"""
+        if self.config.task.command != "OpsiPreventActionPointOverflow":
+            return None
+
+        getter = getattr(self, "_get_prevent_action_point_overflow_task", None)
+        if callable(getter):
+            return getter()
+        return self.config.cross_get(
+            keys="OpsiPreventActionPointOverflow.OpsiPreventActionPointOverflow.Task",
+            default="OpsiScheduling",
+        )
+
     def os_init(self):
         """
         执行任何大世界功能之前调用此方法。
@@ -111,13 +124,30 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         leveling_zone = self.config.cross_get(
             keys="OpsiHazard1Leveling.OpsiHazard1Leveling.TargetZone", default=0
         ) or 22
+        overflow_target_task = self._get_prevent_action_point_overflow_target_task()
 
         if (
+            (
+                self.config.task.command == "OpsiScheduling"
+                and self.is_smart_scheduling_enabled()
+            )
+            or overflow_target_task == "OpsiScheduling"
+        ):
+            logger.info("智能调度将决定初始化自律寻敌是否执行")
+            self._smart_scheduling_first_auto_search_pending = True
+        elif (
             self.zone.zone_id == leveling_zone
-            and self.config.task.command == "OpsiHazard1Leveling"
+            and (
+                self.config.task.command == "OpsiHazard1Leveling"
+                or overflow_target_task == "OpsiHazard1Leveling"
+            )
         ):
             pass
-        elif self.zone.zone_id == 154:
+        else:
+            self.run_first_auto_search()
+
+    def run_first_auto_search(self):
+        if self.zone.zone_id == 154:
             logger.info("In zone 154, skip running first auto search")
             self.handle_ash_beacon_attack()
         else:
