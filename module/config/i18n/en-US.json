@@ -529,6 +529,7 @@
       "cn_android-26": "[国服] 冬月计划",
       "cn_android-27": "[国服] 长弓计划",
       "cn_android-28": "[国服] 裁决协议",
+      "cn_android-29": "[国服] 帷幕计划",
       "cn_ios-0": "[国服] 夏威夷",
       "cn_ios-1": "[国服] 珊瑚海",
       "cn_ios-2": "[国服] 中途岛",
@@ -1969,12 +1970,12 @@
       "help": "The 1200 oil commission is now obsolete and the yield is very low. It is recommended to close it."
     },
     "CommissionNotifyReward": {
-      "name": "Commission.CommissionNotifyReward.name",
-      "help": "Commission.CommissionNotifyReward.help"
+      "name": "Commission Reward Push Notification",
+      "help": "Push notification when receiving commission rewards (especially for gems)"
     },
     "CommissionNotifyRewardStatistics": {
-      "name": "Commission.CommissionNotifyRewardStatistics.name",
-      "help": "Commission.CommissionNotifyRewardStatistics.help"
+      "name": "Include Statistics in Push",
+      "help": "Display today/week/month cumulative gem count in notification"
     }
   },
   "Tactical": {

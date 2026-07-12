@@ -529,6 +529,7 @@
       "cn_android-26": "[国服] 冬月计划",
       "cn_android-27": "[国服] 长弓计划",
       "cn_android-28": "[国服] 裁决协议",
+      "cn_android-29": "[国服] 帷幕计划",
       "cn_ios-0": "[国服] 夏威夷",
       "cn_ios-1": "[国服] 珊瑚海",
       "cn_ios-2": "[国服] 中途岛",
@@ -1969,12 +1970,12 @@
       "help": "1200燃料委託は現在では廃止されており、収益が非常に低いです。オフにすることをお勧めします。"
     },
     "CommissionNotifyReward": {
-      "name": "Commission.CommissionNotifyReward.name",
-      "help": "Commission.CommissionNotifyReward.help"
+      "name": "委託報酬プッシュ通知",
+      "help": "委託報酬獲得時に通知を送信（特にダイヤ報酬）"
     },
     "CommissionNotifyRewardStatistics": {
-      "name": "Commission.CommissionNotifyRewardStatistics.name",
-      "help": "Commission.CommissionNotifyRewardStatistics.help"
+      "name": "通知に統計情報を含める",
+      "help": "通知に今日/週間/月間の累積ダイヤ数を表示"
     }
   },
   "Tactical": {

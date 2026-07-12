@@ -529,6 +529,7 @@
       "cn_android-26": "[国服] 冬月计划",
       "cn_android-27": "[国服] 长弓计划",
       "cn_android-28": "[国服] 裁决协议",
+      "cn_android-29": "[国服] 帷幕计划",
       "cn_ios-0": "[国服] 夏威夷",
       "cn_ios-1": "[国服] 珊瑚海",
       "cn_ios-2": "[国服] 中途岛",
@@ -1206,7 +1207,7 @@
       "event_20260326_cn": "漫遊者招募計劃",
       "event_20260417_cn": "假日航線閃耀海濱",
       "event_20260520_cn": "聖印前的同盟",
-      "event_20260625_cn": "Miracle by Midnight",
+      "event_20260625_cn": "美夢巡演奇秒夜",
       "raid_20200624": "特別演習埃塞克斯級(復刻)",
       "raid_20210708": "復刻穿越彼方的水線",
       "raid_20220127": "演習神秘事件調查",
@@ -1969,12 +1970,12 @@
       "help": "1200油委託現在已經過時，收益很低，建議關閉"
     },
     "CommissionNotifyReward": {
-      "name": "Commission.CommissionNotifyReward.name",
-      "help": "Commission.CommissionNotifyReward.help"
+      "name": "委託獎勵推送通知",
+      "help": "獲得委託獎勵時推送通知（特別關注鑽石獎勵）"
     },
     "CommissionNotifyRewardStatistics": {
-      "name": "Commission.CommissionNotifyRewardStatistics.name",
-      "help": "Commission.CommissionNotifyRewardStatistics.help"
+      "name": "推送包含統計資訊",
+      "help": "在通知中顯示今日/本週/本月累計鑽石數量"
     }
   },
   "Tactical": {

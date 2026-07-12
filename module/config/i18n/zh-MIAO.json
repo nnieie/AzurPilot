@@ -529,6 +529,7 @@
       "cn_android-26": "[国服] 冬月计划",
       "cn_android-27": "[国服] 长弓计划",
       "cn_android-28": "[国服] 裁决协议",
+      "cn_android-29": "[国服] 帷幕计划",
       "cn_ios-0": "[国服] 夏威夷",
       "cn_ios-1": "[国服] 珊瑚海",
       "cn_ios-2": "[国服] 中途岛",
@@ -1969,12 +1970,12 @@
       "help": "1200油委现已过时收益低，建议关闭喵。 (´・ω・`)"
     },
     "CommissionNotifyReward": {
-      "name": "Commission.CommissionNotifyReward.name",
-      "help": "Commission.CommissionNotifyReward.help"
+      "name": "委托奖励推送通知喵~",
+      "help": "获得委托奖励时推送通知喵（特别关注钻石奖励）！"
     },
     "CommissionNotifyRewardStatistics": {
-      "name": "Commission.CommissionNotifyRewardStatistics.name",
-      "help": "Commission.CommissionNotifyRewardStatistics.help"
+      "name": "推送含统计信息喵~",
+      "help": "通知里会显示今日/本周/本月累计钻石数量喵！"
     }
   },
   "Tactical": {
