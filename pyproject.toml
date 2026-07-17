@@ -61,11 +61,11 @@ dev = [
 
 [tool.uv]
 index = [
-    # 云厂商镜像（可靠性高，商业运营）
+    # 云厂商镜像
     { url = "https://mirrors.aliyun.com/pypi/simple/" },
     { url = "https://mirrors.cloud.tencent.com/pypi/simple/" },
     { url = "https://repo.huaweicloud.com/repository/pypi/simple/" },
-    # 教育网镜像（按知名度排序）
+    # 教育网镜像
     { url = "https://mirrors.cernet.edu.cn/pypi/web/simple/" }, # CERNET 校园网联合镜像站
 ]
 index-url = "https://pypi.org/simple/"
