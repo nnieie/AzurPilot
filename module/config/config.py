@@ -14,7 +14,7 @@ from module.config.config_manual import ManualConfig, OutputConfig
 from module.config.config_updater import ConfigUpdater, ensure_time, get_server_next_update, nearest_future
 from module.config.deep import deep_get, deep_set
 from module.config.time_source import now as current_time
-from module.config.utils import DEFAULT_TIME, dict_to_kv, filepath_config, get_os_reset_remain, path_to_arg, is_good_gpu
+from module.config.utils import DEFAULT_TIME, dict_to_kv, filepath_config, get_os_reset_remain, path_to_arg
 from module.config.watcher import ConfigWatcher
 from module.exception import RequestHumanTakeover, ScriptError
 from module.logger import logger
@@ -225,12 +225,22 @@ class AzurLaneConfig(ConfigUpdater, ManualConfig, GeneratedConfig, ConfigWatcher
             if self.ocr_backend == 'onnxruntime':
                 if sys.platform == 'darwin' and platform.machine() == 'arm64':
                     return 'ane'
-                return 'gpu' if is_good_gpu() else 'cpu'
+                if sys.platform == 'win32':
+                    return 'gpu'
+                return 'cpu'
             else:
                 # ncnn 后端：检查 Vulkan GPU 可用性
                 from module.ocr.ncnn_ocr import has_ncnn_vulkan_gpu
                 return 'gpu' if has_ncnn_vulkan_gpu() else 'cpu'
         return val
+
+    @property
+    def ocr_windowsml_install_ep(self) -> bool:
+        return bool(getattr(self, "Optimization_OcrWindowsMlInstallEp", False))
+
+    @property
+    def ocr_windowsml_device(self) -> str:
+        return str(getattr(self, "Optimization_OcrWindowsMlDevice", "auto") or "auto")
 
     @property
     def hoarding(self):

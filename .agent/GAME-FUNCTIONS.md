@@ -1405,7 +1405,7 @@ def _equip_side_navbar(self):
 
 **OCR 识别**（`module/ocr/`）：
 - 使用 NCNN 后端加速推理
-- 支持 DirectML (Windows) 和 CoreML (macOS) GPU 加速
+- 支持 Windows ML 自动选择可见 NPU/GPU 和 CoreML (macOS) 硬件加速
 
 **模板匹配**（`module/base/template.py`）：
 - 使用 OpenCV `matchTemplate`

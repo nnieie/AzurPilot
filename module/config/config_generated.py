@@ -141,6 +141,8 @@ class GeneratedConfig:
 
     # 配置组 `Optimization`
     Optimization_OcrDevice = 'auto'  # auto, cpu, gpu, ane
+    Optimization_OcrWindowsMlDevice = 'auto'
+    Optimization_OcrWindowsMlInstallEp = True
     Optimization_OcrBackend = 'auto'  # auto, onnxruntime, ncnn
     Optimization_OcrModelVersionEnglish = 'auto'  # auto, alocr_en_900k, azur_lane_v6_6, azur_lane_v6_5, ppocr_v6, alocr_en_v2_6, alocr_en_v2_0, alocr_en_v1_0
     Optimization_OcrModelVersionChinese = 'auto'  # auto, cn_v6_1, cn_v6, ppocr_v6, alocr_cn_v3, alocr_cn_v2_5
@@ -375,7 +377,6 @@ class GeneratedConfig:
 
     # 配置组 `Research`
     Research_UseCube = 'only_05_hour'  # always_use, only_05_hour, only_no_project, do_not_use
-    Research_CubePreserve = 0
     Research_UseCoin = 'always_use'  # always_use, only_05_hour, only_no_project, do_not_use
     Research_UsePart = 'always_use'  # always_use, only_05_hour, only_no_project, do_not_use
     Research_AllowDelay = True
@@ -981,6 +982,14 @@ class GeneratedConfig:
     BoxDisassemble_BlueBoxLimit = 1000
     BoxDisassemble_UseWhiteBox = True
     BoxDisassemble_WhiteBoxLimit = 2000
+
+    # 配置组 `AutoEquip`
+    AutoEquip_ShipLimit = 0
+    AutoEquip_EnableSlot1 = True  # True, False
+    AutoEquip_EnableSlot2 = True  # True, False
+    AutoEquip_EnableSlot3 = True  # True, False
+    AutoEquip_EnableSlot4 = True  # True, False
+    AutoEquip_EnableSlot5 = True  # True, False
 
     # 配置组 `Benchmark`
     Benchmark_DeviceType = 'emulator'  # emulator, plone_cloud_with_adb, phone_cloud_without_adb, android_phone, android_phone_vmos

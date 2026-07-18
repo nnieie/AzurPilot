@@ -186,11 +186,14 @@ curl -fsSL https://alas.nanoda.work/install/deploy-image.sh | sudo -E bash
 27. 道中战斗失败可撤退或换队接管
 28. 困难图自动配队（使用推荐阵容）
 29. 关卡名称支持“7-2-3”格式（三战后撤退）
-30. 科研魔方保留阈值（低于设定值时不选魔方项目）
-31. 各商店独立开关（可单独关闭军火商、舰队商店等）
-32. GPU加速推理（Windows DirectML / macOS ANE / ncnn Vulkan）
-33. OCR设备选择（CPU / GPU / ANE）
-34. 共斗每日支持沉船模式
+30. 各商店独立开关（可单独关闭军火商、舰队商店等）
+31. 硬件加速推理（Windows ML 自动选择可见 NPU/GPU / macOS ANE / ncnn Vulkan）
+<p align="center">
+  <img src="doc/winml.png" alt="AzurPilot Logo" width="400">
+</p>
+32. OCR硬件加速选择（CPU / 硬件加速 / ANE，自动安装并注册 Windows ML 厂商 EP）
+33. 共斗每日支持沉船模式
+
 
 * 由 DeepSeek 结合项目分析生成 实际请以实物为准
 

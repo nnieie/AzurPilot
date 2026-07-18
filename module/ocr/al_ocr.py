@@ -12,6 +12,7 @@ from module.exception import RequestHumanTakeover
 from module.logger import logger
 from module.config.config import AzurLaneConfig
 from module.config.utils import DEFAULT_CONFIG_NAME
+from module.ocr.windowsml import AlOrtInferSession, create_ort_session
 
 
 def handle_ocr_error(e):
@@ -19,7 +20,7 @@ def handle_ocr_error(e):
     logger.critical(
         "[OCR] 无法加载 OCR 依赖，请安装微软 C++ 运行库 https://aka.ms/vs/17/release/vc_redist.x64.exe"
     )
-    logger.critical("[OCR] 也有可能是 GPU 不支持加速引起，请尝试关闭 GPU 加速")
+    logger.critical("[OCR] 也有可能是硬件加速不支持引起，请尝试关闭硬件加速")
     logger.critical("[OCR] 如果上述方法都无法解决，请加群获取支持")
     raise RequestHumanTakeover
 
@@ -31,6 +32,7 @@ try:
     from rapidocr.ch_ppocr_rec.typings import TextRecOutput
     from rapidocr.cal_rec_boxes import CalRecBoxes
     from rapidocr.ch_ppocr_det import TextDetector, TextDetOutput
+    from rapidocr.ch_ppocr_det.utils import DBPostProcess
     from rapidocr.utils.load_image import LoadImage
     from rapidocr.utils.process_img import get_rotate_crop_image
     from module.ocr.ncnn_ocr import NcnnRecOCR, supports_ncnn_model
@@ -60,6 +62,65 @@ AZUR_LANE_JP_V6_PARAMS = (
 )
 
 
+def _ocr_windowsml_install_ep():
+    return bool(getattr(config, "ocr_windowsml_install_ep", False))
+
+
+def _ocr_windowsml_device():
+    return getattr(config, "ocr_windowsml_device", "auto")
+
+
+class AlTextRecognizer(TextRecognizer):
+    """使用项目自定义 ONNXRuntime session 的 RapidOCR 识别器。"""
+
+    def __init__(self, cfg, device="cpu"):
+        from rapidocr.ch_ppocr_rec.utils import CTCLabelDecode
+
+        self.session = AlOrtInferSession(
+            cfg,
+            device=device,
+            install_missing_ep=_ocr_windowsml_install_ep(),
+            windowsml_device=_ocr_windowsml_device(),
+        )
+
+        character, character_dict_path = self.get_character_dict(cfg)
+        self.postprocess_op = CTCLabelDecode(
+            character=character,
+            character_path=character_dict_path,
+        )
+        self.rec_batch_num = cfg["rec_batch_num"]
+        self.rec_image_shape = cfg["rec_img_shape"]
+        self.cfg = cfg
+        self.RTL_LANGS = {"arabic", "fa", "ur"}
+
+
+class AlTextDetector(TextDetector):
+    """使用项目自定义 ONNXRuntime session 的 RapidOCR 检测器。"""
+
+    def __init__(self, cfg, device="cpu"):
+        self.limit_side_len = cfg.get("limit_side_len")
+        self.limit_type = cfg.get("limit_type")
+        self.mean = cfg.get("mean")
+        self.std = cfg.get("std")
+        self.preprocess_op = None
+
+        post_process = {
+            "thresh": cfg.get("thresh", 0.3),
+            "box_thresh": cfg.get("box_thresh", 0.5),
+            "max_candidates": cfg.get("max_candidates", 1000),
+            "unclip_ratio": cfg.get("unclip_ratio", 1.6),
+            "use_dilation": cfg.get("use_dilation", True),
+            "score_mode": cfg.get("score_mode", "fast"),
+        }
+        self.postprocess_op = DBPostProcess(**post_process)
+        self.session = AlOrtInferSession(
+            cfg,
+            device=device,
+            install_missing_ep=_ocr_windowsml_install_ep(),
+            windowsml_device=_ocr_windowsml_device(),
+        )
+
+
 class RecOnlyOCR(RapidOCR):
     """只加载识别模型，跳过 det 和 cls 的 ONNX 模型加载。"""
 
@@ -78,7 +139,39 @@ class RecOnlyOCR(RapidOCR):
         cfg.Rec.engine_cfg = cfg.EngineConfig[cfg.Rec.engine_type.value]
         cfg.Rec.font_path = cfg.Global.font_path
         cfg.Rec.model_root_dir = cfg.Global.get("model_root_dir", os.getcwd())
-        self.text_rec = TextRecognizer(cfg.Rec)
+        self.text_rec = AlTextRecognizer(cfg.Rec, device=config.ocr_device)
+
+        self.load_img = LoadImage()
+        self.max_side_len = cfg.Global.max_side_len
+        self.min_side_len = cfg.Global.min_side_len
+
+        self.cal_rec_boxes = CalRecBoxes()
+        self.return_word_box = cfg.Global.return_word_box
+        self.return_single_char_box = cfg.Global.return_single_char_box
+        self.cfg = cfg
+
+
+class AlRapidOCR(RapidOCR):
+    """使用项目自定义 ONNXRuntime session 的 RapidOCR 完整流程。"""
+
+    def _initialize(self, cfg):
+        self.text_score = cfg.Global.text_score
+        self.min_height = cfg.Global.min_height
+        self.width_height_ratio = cfg.Global.width_height_ratio
+
+        self.use_det = cfg.Global.use_det
+        cfg.Det.engine_cfg = cfg.EngineConfig[cfg.Det.engine_type.value]
+        cfg.Det.model_root_dir = cfg.Global.model_root_dir
+        self.text_det = AlTextDetector(cfg.Det, device=config.ocr_device)
+
+        self.use_cls = False
+        self.text_cls = None
+
+        self.use_rec = cfg.Global.use_rec
+        cfg.Rec.engine_cfg = cfg.EngineConfig[cfg.Rec.engine_type.value]
+        cfg.Rec.font_path = cfg.Global.font_path
+        cfg.Rec.model_root_dir = cfg.Global.model_root_dir
+        self.text_rec = AlTextRecognizer(cfg.Rec, device=config.ocr_device)
 
         self.load_img = LoadImage()
         self.max_side_len = cfg.Global.max_side_len
@@ -94,11 +187,6 @@ class AlOcrCtcRecOCR:
     """900k 参数 CNN-CTC 英文识别模型，直接使用 ONNXRuntime 推理。"""
 
     def __init__(self, model_path, device="cpu"):
-        try:
-            import onnxruntime as ort
-        except Exception as exc:
-            handle_ocr_error(exc)
-
         self.model_path = self._resolve_path(model_path)
         if not self.model_path.is_file():
             raise FileNotFoundError(f"OCR model not found: {self.model_path}")
@@ -110,8 +198,12 @@ class AlOcrCtcRecOCR:
         self.max_width = ALAS_CTC_MAX_WIDTH
         self.load_image = LoadImage()
 
-        providers = self._select_providers(ort)
-        self.session = ort.InferenceSession(str(self.model_path), providers=providers)
+        self.session = create_ort_session(
+            self.model_path,
+            preference=device,
+            install_missing_ep=_ocr_windowsml_install_ep(),
+            windowsml_device=_ocr_windowsml_device(),
+        )
         self.input_names = [item.name for item in self.session.get_inputs()]
         logger.info(
             f"Loaded OCR model '{ALAS_CTC_MODEL_VERSION}' on "
@@ -124,19 +216,6 @@ class AlOcrCtcRecOCR:
         if path.is_absolute():
             return path
         return REPO_ROOT / path
-
-    def _select_providers(self, ort):
-        available = ort.get_available_providers()
-        providers = []
-        if os.name == 'nt' and self.device == 'gpu':
-            if "DmlExecutionProvider" in available:
-                providers.append("DmlExecutionProvider")
-            else:
-                logger.warning(
-                    "DmlExecutionProvider is not available, falling back to CPU"
-                )
-        providers.append("CPUExecutionProvider")
-        return providers
 
     def close(self):
         self.session = None
@@ -436,8 +515,6 @@ def _create_ocr(name):
         return NcnnRecOCR(name, device=config.ocr_device)
     else:
         ocr_device = config.ocr_device
-        use_dml = os.name == 'nt' and ocr_device == 'gpu'
-        use_coreml = ocr_device == 'ane'
         version = _resolve_onnx_model_version(name)
         custom_model_path = CUSTOM_CTC_MODEL_PARAMS.get(name, {}).get(version)
         if custom_model_path is not None:
@@ -452,9 +529,6 @@ def _create_ocr(name):
             "Rec.ocr_version": ocr_version,
             "Rec.model_path": model_path,
             "Rec.rec_keys_path": rec_keys_path,
-            "EngineConfig.onnxruntime.use_dml": use_dml,
-            "EngineConfig.onnxruntime.use_coreml": use_coreml,
-            "EngineConfig.onnxruntime.coreml_ep_cfg.MLComputeUnits": "CPUAndNeuralEngine",
         }
         return RecOnlyOCR(params=params)
 
@@ -513,9 +587,6 @@ class DetOnlyOCR(RapidOCR):
 
 def _create_det_ocr_for_onnx(name):
     """为 ONNX 后端创建完整的 RapidOCR 实例（检测 + 识别）。"""
-    ocr_device = config.ocr_device
-    use_dml = os.name == 'nt' and ocr_device == 'gpu'
-    use_coreml = ocr_device == 'ane'
     model_path, rec_keys_path, ocr_version = _get_onnx_model_params(name)
     params = {
         "Global.use_det": True,
@@ -525,11 +596,8 @@ def _create_det_ocr_for_onnx(name):
         "Rec.ocr_version": ocr_version,
         "Rec.model_path": model_path,
         "Rec.rec_keys_path": rec_keys_path,
-        "EngineConfig.onnxruntime.use_dml": use_dml,
-        "EngineConfig.onnxruntime.use_coreml": use_coreml,
-        "EngineConfig.onnxruntime.coreml_ep_cfg.MLComputeUnits": "CPUAndNeuralEngine",
     }
-    return RapidOCR(params=params)
+    return AlRapidOCR(params=params)
 
 
 def _create_det_ocr_for_ncnn():

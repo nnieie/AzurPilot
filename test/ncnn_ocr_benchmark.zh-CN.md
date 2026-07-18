@@ -2,7 +2,7 @@
 
 本文档说明 `test/ncnn_ocr_benchmark.py` 这个 OCR 基准测试。EN/CN/JP/TW 单行识别已迁移到 ncnn；该脚本继续用于复测不同平台、不同 GPU/后端上的真实延迟、功耗和准确率，防止迁移后出现性能或准确率回退。
 
-当前 ncnn 的主要吸引点是：可以通过 Vulkan 在多个平台上使用相对统一的 GPU 后端。它减少了 DirectML/CoreML/CUDA/ROCm 等平台分支，但仍需要各平台实测数据来决定默认策略。
+当前 ncnn 的主要吸引点是：可以通过 Vulkan 在多个平台上使用相对统一的硬件加速后端。它减少了 Windows ML/CoreML/CUDA/ROCm 等平台分支，但仍需要各平台实测数据来决定默认策略。
 
 ## 为什么测试 ncnn
 
@@ -10,7 +10,7 @@
 
 | 平台 | 当前可能路径 | 说明 |
 | --- | --- | --- |
-| Windows | ONNX Runtime DirectML | 基于 DX12，适合 Windows，但不能迁移到 Linux。 |
+| Windows | ONNX Runtime Windows ML | 自动选择已注册可见的 NPU/GPU，失败回退 CPU，但不能迁移到 Linux。 |
 | macOS arm64 | ONNX Runtime CoreML / ANE | 可能很好地利用 Apple Silicon/ANE，但依然是平台独有实现。 |
 | Linux | ONNX Runtime CPU | 没有轻量GPU支持，引入cuda/rocm将导致数GiB的依赖，且其与系统级软件包高度绑定，实现复杂度过高。 |
 | 全平台 | ncnn CPU / Vulkan | 理论上可覆盖 Linux、Windows、Android 的 Vulkan 设备；macOS 需要单独验证，通常要考虑 MoltenVK。 |
@@ -202,7 +202,7 @@ rtk .venv/bin/python test/ncnn_ocr_benchmark.py \
 | OS | 例如 Windows 11 / Arch Linux / macOS |
 | CPU | |
 | GPU / 加速器 | |
-| 驱动 | 例如 NVIDIA driver、Mesa RADV、AMDVLK、DirectML、CoreML |
+| 驱动 | 例如 NVIDIA driver、Mesa RADV、AMDVLK、Windows ML、CoreML |
 | 测试命令 | |
 | `--gpu-index` | |
 | `--ncnn-fp16` | |

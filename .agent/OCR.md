@@ -9,7 +9,7 @@ alwaysApply: true
 
 **定位**：OCR 文字识别系统，负责从游戏截图中提取文本信息。
 
-**角色**：定义 `Ocr` 基类和数字/计数器/时长子类、`AlOcr` RapidOCR 后端、`NcnnRecOCR` ncnn 后端、`ModelProxyFactory` RPC 代理。支持 ONNX Runtime 和 ncnn 双后端，支持 DirectML/CoreML/Vulkan GPU 加速。
+**角色**：定义 `Ocr` 基类和数字/计数器/时长子类、`AlOcr` RapidOCR 后端、`NcnnRecOCR` ncnn 后端、`ModelProxyFactory` RPC 代理。支持 ONNX Runtime 和 ncnn 双后端，支持 Windows ML 自动选择可见 NPU/GPU、CoreML、Vulkan 硬件加速。
 
 **输入/输出**：
 - 输入：截图（`np.ndarray`）、识别区域（`Button`/`tuple`）
@@ -20,7 +20,7 @@ alwaysApply: true
 2. 提供数字识别（`Digit`）、计数器识别（`DigitCounter`）、时长识别（`Duration`）
 3. 支持多种 OCR 后端（ONNX Runtime、ncnn、RPC）
 4. 支持多语言（EN、CN、JP、TW）
-5. 支持 GPU 加速（DirectML、CoreML、Vulkan）
+5. 支持硬件加速（Windows ML 自动选择可见 NPU/GPU、CoreML、Vulkan）
 
 ## 2. 文件清单与逐文件分析
 
@@ -45,7 +45,7 @@ alwaysApply: true
 
 ### 2.2 al_ocr.py（557 行）
 
-**导出类型**：类 `AlOcr`、`RecOnlyOCR`、`DetOnlyOCR`，函数 `reset_ocr_model()`
+**导出类型**：类 `AlOcr`、`RecOnlyOCR`、`AlRapidOCR`、`DetOnlyOCR`，函数 `reset_ocr_model()`
 
 **导入依赖**：
 - 内部：`exception.RequestHumanTakeover`、`logger`、`config.AzurLaneConfig`、`ocr.ncnn_ocr`
@@ -137,7 +137,7 @@ graph TD
 - `rapidocr`：RapidOCR 框架
 - `ncnn`：ncnn 推理框架（可选）
 - `onnxruntime`：ONNX Runtime（可选）
-- `onnxruntime-directml`：DirectML GPU 加速（Windows，可选）
+- `onnxruntime-windowsml`：Windows ML 硬件加速（Windows，自动选择已注册可见的 NPU/GPU，失败回退 CPU）
 - `numpy`、`cv2`：图像处理
 - `zerorpc`：RPC 框架（可选）
 
@@ -176,7 +176,7 @@ graph TD
 - 模型加载时间：首次 ~1-2s
 - 单线程队列避免并发开销
 - `RecPreprocessor.resize_norm_img()` 使用 NumPy 向量化
-- GPU 加速：DirectML（Windows）、CoreML（macOS）、Vulkan（ncnn）
+- 硬件加速：Windows ML（Windows，优先 NPU，其次 GPU，失败回退 CPU）、CoreML（macOS）、Vulkan（ncnn）
 
 ## 8. 安全分析
 

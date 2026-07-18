@@ -41,7 +41,7 @@ alwaysApply: true
 - `L121-134`：`init_task()` — 初始化任务。调用 `load()` → `bind()` → `save()`。
 - `L136-141`：`load()` — 读取配置文件，应用覆盖和修改。
 - `L143-192`：`bind()` — 核心绑定方法。根据任务列表（`General` + `Alas` + 任务特定组）将配置路径映射到属性名。`visited` 集合防止重复绑定。
-- `L195-214`：`ocr_backend`/`ocr_device` 属性 — 智能 OCR 配置。`auto` 模式自动检测 GPU 能力（DirectML/Vulkan/CoreML）。
+- `L195-214`：`ocr_backend`/`ocr_device` 属性 — 智能 OCR 配置。`auto` 模式在 Windows ONNX 后端交给 Windows ML 自动选择可见 NPU/GPU，macOS Apple Silicon 使用 ANE，ncnn 后端检测 Vulkan。
 - `L235-294`：`get_next_task()`/`get_next()` — 调度核心。遍历所有任务，按 `next_run` 分为 `pending`/`waiting`，使用 `Filter` 按优先级排序。
 - `L296-314`：`save()`/`update()` — 持久化修改到 JSON 文件。
 - `L316-347`：`override()`/`config_override()` — 强制覆盖配置值，重置过期的 `NextRun`。

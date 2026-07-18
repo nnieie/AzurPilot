@@ -225,6 +225,10 @@ Optimization:
   OcrDevice:
     value: auto
     option: [auto, cpu, gpu, ane]
+  OcrWindowsMlDevice:
+    value: auto
+    valuetype: str
+  OcrWindowsMlInstallEp: true
   OcrBackend:
     value: auto
     option: [auto, onnxruntime, ncnn]
@@ -699,9 +703,6 @@ Research:
   UseCube:
     value: only_05_hour
     option: [always_use, only_05_hour, only_no_project, do_not_use]
-  CubePreserve:
-    value: 0
-    validate: [0, 999999]
   UseCoin:
     value: always_use
     option: [always_use, only_05_hour, only_no_project, do_not_use]
@@ -1868,6 +1869,30 @@ BoxDisassemble:
   BlueBoxLimit: 1000
   UseWhiteBox: true
   WhiteBoxLimit: 2000
+AutoEquip:
+  ShipLimit:
+    value: 0
+    validate: [0, 9999]
+  EnableSlot1:
+    type: checkbox
+    value: true
+    option: [true, false]
+  EnableSlot2:
+    type: checkbox
+    value: true
+    option: [true, false]
+  EnableSlot3:
+    type: checkbox
+    value: true
+    option: [true, false]
+  EnableSlot4:
+    type: checkbox
+    value: true
+    option: [true, false]
+  EnableSlot5:
+    type: checkbox
+    value: true
+    option: [true, false]
 Benchmark:
   DeviceType:
     value: emulator
