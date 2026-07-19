@@ -613,6 +613,19 @@ def _create_det_ocr_for_ncnn():
     return DetOnlyOCR(params=params)
 
 
+def _create_det_ocr_for_ncnn():
+    """为 ncnn 后端创建 DetOnlyOCR 实例。"""
+    params = {
+        "Global.use_det": True,
+        "Global.use_cls": False,
+        "Global.use_rec": False,
+        "Det.model_path": DET_MODEL_PATH,
+        "Cls.model_path": None,
+        "Rec.model_path": None,
+    }
+    return DetOnlyOCR(params=params)
+
+
 def _get_det_model(name):
     """
     获取检测模型。

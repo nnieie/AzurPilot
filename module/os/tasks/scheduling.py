@@ -383,8 +383,26 @@ class CoinTaskMixin:
         except Exception:
             logger.exception('Failed to save AP snapshot')
 
-        if self._can_send_ap_notification('_last_ap_notification_time'):
-            previous_ap = None
+        content = f"总行动力: {total_ap}"
+        if previous_ap is not None:
+            ap_delta = total_ap - previous_ap
+            if ap_delta == 0:
+                logger.info('[大世界-智能调度] 行动力未发生变化，跳过推送通知')
+                return
+            if ap_delta > 0:
+                content = f"总行动力: {total_ap} 上涨{ap_delta}行动力"
+            else:
+                content = f"总行动力: {total_ap} 下跌{abs(ap_delta)}行动力"
+
+        if not self._can_send_ap_notification('_last_ap_notification_time'):
+            return
+
+        pushed = self.notify_push(
+            title="[AzurPilot] 行动力出现变化！",
+            content=content
+        )
+        if pushed:
+            self._mark_ap_notification_sent('_last_ap_notification_time')
             try:
                 from module.statistics.cl1_database import db as cl1_db
                 cl1_db.async_set_last_ap_notification(instance_name, total_ap)
@@ -698,13 +716,7 @@ class CoinTaskMixin:
 
     def _handle_coin_task_no_content(self, task_display_name, log_message):
         """
-        判断当前任务是否应该应用黄币返回阈值
-        
-        Config:
-            OpsiScheduling.EnableMeowfficerFarming (bool) - 启用短猫相接
-            OpsiScheduling.EnableObscure (bool) - 启用隐秘海域
-            OpsiScheduling.EnableAbyssal (bool) - 启用深渊海域
-            OpsiScheduling.EnableStronghold (bool) - 启用塞壬要塞
+        处理黄币补充任务没有可执行内容的情况。
         """
         enabled_tasks = self._get_enabled_coin_tasks()
         current_task = self._get_current_coin_task_name()
