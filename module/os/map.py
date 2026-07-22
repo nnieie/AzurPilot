@@ -38,9 +38,9 @@ from module.ui.page import page_os
 class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
     def is_smart_scheduling_enabled(self) -> bool:
         """
-        统一判断是否启用了智能调度（侵蚀1与补黄币任务共享的开关逻辑）。
+        统一判断是否启用了智能调度+（侵蚀1与补黄币任务共享的开关逻辑）。
         """
-        # 检测是否在开荒中，如果是，则停止智能调度
+        # 检测是否在开荒中，如果是，则停止智能调度+
         if self.is_in_opsi_explore():
             return False
 
@@ -55,7 +55,7 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         return scheduling_enabled
 
     def _get_prevent_action_point_overflow_target_task(self):
-        """读取防溢出任务本轮代跑目标，仅供 os_init 判断首次自律寻敌。"""
+        """读取防止行动力溢出任务本轮代跑目标，仅供 os_init 判断首次自律寻敌。"""
         if self.config.task.command != "OpsiPreventActionPointOverflow":
             return None
 
@@ -133,7 +133,7 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
             )
             or overflow_target_task == "OpsiScheduling"
         ):
-            logger.info("智能调度将决定初始化自律寻敌是否执行")
+            logger.info("智能调度+将决定初始化自律寻敌是否执行")
             self._smart_scheduling_first_auto_search_pending = True
         elif (
             self.zone.zone_id == leveling_zone
@@ -781,7 +781,7 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
         """
         Keeping enough startup AP to run CL1.
         """
-        # 检查智能调度是否启用，如果启用则由智能调度模块统一管理任务切换
+        # 检查智能调度+是否启用，如果启用则由智能调度+模块统一管理任务切换
         # 这里不应该直接切换到 CL1
         if self.is_smart_scheduling_enabled():
             return
@@ -895,7 +895,7 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
 
     def on_meow_search_start(self):
         """
-        短猫任务：每次开始新海域搜索时调用
+        耄耋相接任务：每次开始新海域搜索时调用
         记录搜索开始时间和行动力
         """
         if not (
@@ -919,7 +919,7 @@ class OSMap(OSFleet, Map, GlobeCamera, StorageHandler, StrategicSearchHandler):
 
     def on_meow_search_end(self):
         """
-        短猫任务：每次完成海域搜索后调用
+        耄耋相接任务：每次完成海域搜索后调用
         通过行动力变化计算实际轮数，记录单轮时间
         """
         if not (

@@ -146,7 +146,7 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
         if self.config.is_task_enabled('OpsiAshBeacon') \
                 and not self._ash_fully_collected \
                 and self.config.OpsiAshBeacon_EnsureFullyCollected:
-            logger.info('[大世界-短猫相接] 余烬信标未收集满，暂时忽略行动力限制')
+            logger.info('[大世界-耄耋相接] 余烬信标未收集满，暂时忽略行动力限制')
             self.config.OS_ACTION_POINT_PRESERVE = 0
         logger.attr('OS_ACTION_POINT_PRESERVE', self.config.OS_ACTION_POINT_PRESERVE)
 
@@ -176,7 +176,7 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
         return ap_checked
 
     def _meow_handle_traditional_zone(self, zone):
-        logger.hr(f'OS meowfficer farming, zone_id={zone.zone_id}', level=1)
+        logger.hr(f'大世界-耄耋相接, zone_id={zone.zone_id}', level=1)
         self.globe_goto(zone, types='SAFE', refresh=True)
         self.fleet_set(self.config.OpsiFleet_Fleet)
         self.meow_search_metrics_start()
@@ -206,7 +206,7 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
             self.config.check_task_switch()
 
     def _meow_handle_stay_in_zone(self, zone):
-        logger.hr(f'OS meowfficer farming (stay in zone), zone_id={zone.zone_id}', level=1)
+        logger.hr(f'大世界-耄耋相接（指定海域循环）, zone_id={zone.zone_id}', level=1)
         self.get_current_zone()
         if self.zone.zone_id != zone.zone_id or not self.is_zone_name_hidden:
             self.globe_goto(zone, types='SAFE', refresh=True)
@@ -348,11 +348,11 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
 
         if not zones:
             message = f'普通搜索模式未找到符合条件的海域 (侵蚀等级 {hazard_level})'
-            logger.warning(f'[大世界-短猫相接] {message}')
-            self._handle_coin_task_no_content('短猫相接', message)
+            logger.warning(f'[大世界-耄耋相接] {message}')
+            self._handle_coin_task_no_content('耄耋相接', message)
             return False
 
-        logger.hr(f'OS meowfficer farming, zone_id={zones[0].zone_id}', level=1)
+        logger.hr(f'大世界-耄耋相接, zone_id={zones[0].zone_id}', level=1)
 
         self.globe_goto(zones[0])
 
@@ -376,15 +376,15 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
         self.config.check_task_switch()
         
     def os_meowfficer_farming(self):
-        """短猫相接任务入口。"""
+        """耄耋相接任务入口。"""
         self.run_meowfficer_farming()
 
     def _prepare_meowfficer_farming(self, ap_preserve=None):
-        """准备短猫相接运行环境。"""
-        logger.hr(f'OS meowfficer farming, hazard_level={self.config.OpsiMeowfficerFarming_HazardLevel}', level=1)
+        """准备耄耋相接运行环境。"""
+        logger.hr(f'大世界-耄耋相接, hazard_level={self.config.OpsiMeowfficerFarming_HazardLevel}', level=1)
 
         if ap_preserve is None and self.is_cl1_mode_enabled and self.config.OpsiMeowfficerFarming_ActionPointPreserve < 500:
-            logger.info('[大世界-短猫相接] 启用侵蚀 1 练级时，最低行动力保留自动调整为 500')
+            logger.info('[大世界-耄耋相接] 启用侵蚀 1 练级时，最低行动力保留自动调整为 500')
             self.config.OpsiMeowfficerFarming_ActionPointPreserve = 500
 
         if ap_preserve is None:
@@ -405,16 +405,16 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
                 OpsiFleet_Submarine=False,
             )
             cd = self.nearest_task_cooling_down
-            logger.attr('[大世界-短猫相接] 最近冷却中的任务', cd)
+            logger.attr('[大世界-耄耋相接] 最近冷却中的任务', cd)
 
             remain = get_os_reset_remain()
             if cd is not None and remain > 0:
-                logger.info(f'[大世界-短猫相接] 存在冷却中的任务，延迟短猫任务至 {cd.next_run} 后执行')
+                logger.info(f'[大世界-耄耋相接] 存在冷却中的任务，延迟耄耋相接任务至 {cd.next_run} 后执行')
                 self.delay_opsi_active_task(target=cd.next_run)
                 self.config.task_stop()
 
         if self.is_in_opsi_explore():
-            logger.warning(f'[大世界-短猫相接] 大世界探索正在运行，无法执行 {self.config.task.command}')
+            logger.warning(f'[大世界-耄耋相接] 每月开荒+正在运行，无法执行 {self.config.task.command}')
             self.delay_opsi_active_task(server_update=True)
             self.config.task_stop()
 
@@ -424,7 +424,7 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
                 if hasattr(self, '_os_target'):
                     self._os_target()
             else:
-                logger.info(f'Server {self.config.SERVER} does not support OpsiTarget yet, please contact the developers.')
+                logger.info(f'服务器 {self.config.SERVER} 暂不支持海域成就，请联系开发者')
 
         target_zone_tokens = self._meow_target_zone_tokens()
         self._meow_target_zone_list = []
@@ -440,7 +440,7 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
         return preserve
 
     def run_meowfficer_farming(self):
-        """执行大世界短猫相接（猫箱搜寻）任务。"""
+        """执行大世界耄耋相接（猫箱搜寻）任务。"""
         preserve = None
         ap_checked = False
         preserve = self._prepare_meowfficer_farming()
