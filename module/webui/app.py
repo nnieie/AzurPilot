@@ -582,15 +582,21 @@ class AlasGUI(Frame):
 
     @classmethod
     def set_theme(cls, theme="default") -> None:
+        if theme == "apple":
+            theme = "advanced_material"
+        if theme not in (
+            "default",
+            "dark",
+            "light",
+            "advanced_material",
+            "dark_advanced_material",
+        ):
+            theme = "default"
         cls.theme = theme
         State.deploy_config.Theme = theme
         State.theme = theme
         pywebio_theme = theme if theme in ("default", "dark", "light") else "dark"
-        if theme == "socialism":
-            pywebio_theme = "default"
-        if theme == "apple":
-            pywebio_theme = "default"
-        if theme == "children":
+        if theme in ("advanced_material", "dark_advanced_material"):
             pywebio_theme = "default"
 
         webconfig(theme=pywebio_theme)
@@ -1119,26 +1125,7 @@ class AlasGUI(Frame):
                             "refresh_text": "#dfdcfb",
                         }
                     )
-                elif self.theme == "socialism":
-                    md3_colors.update(
-                        {
-                            "toolbar_border": "rgba(242, 199, 110, .72)",
-                            "toolbar_bg": "rgba(255, 251, 240, .96)",
-                            "toolbar_shadow": "0 2px 8px rgba(217, 54, 62, .14)",
-                            "segment_border": "rgba(217, 54, 62, .42)",
-                            "segment_divider": "rgba(217, 54, 62, .30)",
-                            "segment_outline": "rgba(242, 199, 110, .58)",
-                            "segment_bg": "#fffaf0",
-                            "text": "#5d2525",
-                            "label": "#8b4513",
-                            "hover": "rgba(217, 54, 62, .08)",
-                            "selected_bg": "#d9363e",
-                            "selected_text": "#f2c76e",
-                            "selected_outline": "rgba(242, 199, 110, .82)",
-                            "refresh_text": "#d9363e",
-                        }
-                    )
-                elif self.theme == "apple":
+                elif self.theme == "advanced_material":
                     md3_colors.update(
                         {
                             "toolbar_border": "rgba(255, 255, 255, .46)",
@@ -1157,27 +1144,25 @@ class AlasGUI(Frame):
                             "refresh_text": "#007aff",
                         }
                     )
-                elif self.theme == "children":
+                elif self.theme == "dark_advanced_material":
                     md3_colors.update(
                         {
-                            "toolbar_border": "rgba(255, 182, 193, .6)",
-                            "toolbar_bg": "rgba(255, 250, 240, .96)",
-                            "toolbar_shadow": "0 2px 8px rgba(255, 182, 193, .2)",
-                            "segment_border": "rgba(255, 160, 122, .4)",
-                            "segment_divider": "rgba(255, 160, 122, .2)",
-                            "segment_outline": "rgba(135, 206, 250, .4)",
-                            "segment_bg": "rgba(255, 255, 255, .8)",
-                            "text": "#6b5a59",
-                            "label": "#8e7877",
-                            "hover": "rgba(255, 192, 203, .2)",
-                            "selected_bg": "rgba(255, 182, 193, .3)",
-                            "selected_text": "#e05275",
-                            "selected_outline": "rgba(255, 182, 193, .5)",
-                            "refresh_text": "#e05275",
+                            "toolbar_border": "rgba(96, 165, 250, .28)",
+                            "toolbar_bg": "rgba(15, 23, 42, .78)",
+                            "toolbar_shadow": "0 8px 20px rgba(0, 0, 0, .32)",
+                            "segment_border": "rgba(148, 163, 184, .34)",
+                            "segment_divider": "rgba(148, 163, 184, .24)",
+                            "segment_outline": "rgba(148, 163, 184, .16)",
+                            "segment_bg": "rgba(15, 23, 42, .72)",
+                            "text": "#e5edf8",
+                            "label": "#aab8cb",
+                            "hover": "rgba(37, 99, 235, .18)",
+                            "selected_bg": "rgba(30, 64, 175, .52)",
+                            "selected_text": "#dbeafe",
+                            "selected_outline": "rgba(96, 165, 250, .42)",
+                            "refresh_text": "#93c5fd",
                         }
                     )
-
-
                 put_html(f"""
                 <style>
                 [style*="--ap-chart-md3-toolbar-{chart_id}"] {{
@@ -4720,9 +4705,8 @@ class AlasGUI(Frame):
                 [
                     {"label": "Light", "value": "default", "color": "light"},
                     {"label": "Dark", "value": "dark", "color": "dark"},
-                    {"label": "新春 ", "value": "socialism", "color": "danger"},
-                    {"label": "Apple", "value": "apple", "color": "primary"},
-                    {"label": "🧸 童趣", "value": "children", "color": "warning"},
+                    {"label": "高级材质", "value": "advanced_material", "color": "primary"},
+                    {"label": "高级材质（暗色）", "value": "dark_advanced_material", "color": "dark"},
                 ],
                 onclick=lambda t: set_theme(t),
             ).style("text-align: center")
@@ -4872,87 +4856,6 @@ class AlasGUI(Frame):
             "document.head.append(Object.assign(document.createElement('link'), { rel: 'manifest', href: '/static/assets/spa/manifest.json' }))"
         )
         load_webui_styles(theme=self.theme, is_mobile=self.is_mobile)
-
-        # 儿童节背景 Emoji 雨自动掉落逻辑（支持所有主题）
-        current_date = current_time().date()
-        is_children_day = (current_date.month == 6 and current_date.day == 1)
-        
-        EMOJI_RAIN_PREVIEW = False
-        
-        if is_children_day or EMOJI_RAIN_PREVIEW:
-            run_js("""
-            (function(){
-                if (window.alasEmojiRainActive) return;
-                window.alasEmojiRainActive = true;
-                
-                var style = document.createElement('style');
-                style.innerHTML = `
-                    @keyframes emoji-fall {
-                        0% {
-                            transform: translateY(-50px) rotate(0deg);
-                            opacity: 0;
-                        }
-                        15% {
-                            opacity: 0.38;
-                        }
-                        85% {
-                            opacity: 0.38;
-                        }
-                        100% {
-                            transform: translateY(calc(100vh + 50px)) rotate(360deg);
-                            opacity: 0;
-                        }
-                    }
-                    .cute-emoji-drop {
-                        position: fixed !important;
-                        z-index: 2 !important; /* 确保在背景层，隐藏在所有卡片和边栏下方 */
-                        pointer-events: none !important;
-                        user-select: none !important;
-                        animation: emoji-fall linear forwards;
-                    }
-                `;
-                document.head.appendChild(style);
-
-                // 精选儿童节超萌童趣 Emoji
-                var emojis = ['🧸', '💗', '🍬', '💗', '🌸', '🍒', '🌈', '🌸', '💗', '🌟', '🦄', '🌈', '🌸', '🌟', '🌸', '🌈'];
-                
-                setInterval(function(){
-                    // 若容器不存在，则停止产生新雨点
-                    if (!document.getElementById('pywebio-scope-content')) return;
-                    
-                    var emoji = emojis[Math.floor(Math.random() * emojis.length)];
-                    var span = document.createElement('span');
-                    span.className = 'cute-emoji-drop';
-                    span.textContent = emoji;
-                    
-                    // 随机横坐标位置 (0vw - 100vw)
-                    var left = Math.random() * 100;
-                    span.style.left = left + 'vw';
-                    span.style.top = '-50px';
-                    
-                    // 随机下落时间 (8秒 - 14秒)，悠闲舒适
-                    var duration = 8 + Math.random() * 6;
-                    span.style.animationDuration = duration + 's';
-                    
-                    // 随机大小 (18px - 32px)，远近有致
-                    var size = 18 + Math.random() * 14;
-                    span.style.fontSize = size + 'px';
-                    
-                    // 随机下落延时，更具随机美感
-                    var delay = Math.random() * 2;
-                    span.style.animationDelay = delay + 's';
-                    
-                    document.body.appendChild(span);
-                    
-                    // 下落结束移除元素，防止 DOM 膨胀
-                    setTimeout(function(){
-                        if (span.parentNode) {
-                            span.parentNode.removeChild(span);
-                        }
-                    }, (duration + delay) * 1000);
-                }, 650); // 每 650ms 飘落一个，密度适中且极其治愈
-            })();
-            """)
 
         # 加载静态 JS 工具文件（公告弹窗、截图查看器、自动刷新等）
         # 替代原来的多个 run_js() 运行时注入
@@ -5604,16 +5507,7 @@ def app():
     args, _ = parser.parse_known_args()
 
     # Apply config
-    theme = State.deploy_config.Theme
-    current_date = current_time().date()
-    if theme == "default" and (
-        (current_date.month == 6 and current_date.day == 1) or
-        (current_date.month == 5 and current_date.day == 31) or
-        (current_date.month == 6 and current_date.day == 2)
-    ):
-        theme = "children"
-
-    AlasGUI.set_theme(theme=theme)
+    AlasGUI.set_theme(theme=State.deploy_config.Theme)
     lang.LANG = State.deploy_config.Language
     key = args.key if is_webui_password_set(args.key) else State.deploy_config.Password
     key, password_error = ensure_public_webui_password(key)
