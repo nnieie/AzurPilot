@@ -1,5 +1,6 @@
 import os
 import queue
+import socket
 import sys
 import threading
 from multiprocessing import Event, Process, Queue, set_start_method
@@ -18,6 +19,27 @@ if sys.platform != "win32":
 from deploy.uv import dependency_sync_service, log_command_output
 from module.logger import logger
 from module.webui.setting import State
+
+
+def _create_dual_stack_sockets(port: int, backlog: int = 2048) -> list[socket.socket]:
+    """创建分别监听 IPv4 与 IPv6 的 WebUI socket。"""
+    sockets = []
+    try:
+        for family, address in ((socket.AF_INET, "0.0.0.0"), (socket.AF_INET6, "::")):
+            listener = socket.socket(family, socket.SOCK_STREAM)
+            if os.name != "nt":
+                listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            if family == socket.AF_INET6:
+                listener.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 1)
+            listener.bind((address, port))
+            listener.listen(backlog)
+            listener.setblocking(False)
+            sockets.append(listener)
+        return sockets
+    except Exception:
+        for listener in sockets:
+            listener.close()
+        raise
 
 
 def func(ev: Optional[Event], dependency_sync_event: Optional[Event] = None):
@@ -110,19 +132,31 @@ def func(ev: Optional[Event], dependency_sync_event: Optional[Event] = None):
     elif ssl_key is None and ssl_cert is not None:
         logger.error("[GUI] 提供了SSL证书但未提供密钥。请同时提供SSL密钥和证书。")
 
-    # 启动uvicorn服务器
+    # 使用 :: 时显式创建两个 socket，避免 Windows 将 IPv6 wildcard 作为仅 IPv6 监听。
     try:
+        uvicorn_options = {
+            "host": host,
+            "port": port,
+            "factory": True,
+        }
         if ssl:
-            uvicorn.run(
-                "module.webui.app:app",
-                host=host,
-                port=port,
-                factory=True,
+            uvicorn_options.update(
                 ssl_keyfile=ssl_key,
-                ssl_certfile=ssl_cert
+                ssl_certfile=ssl_cert,
             )
+
+        if host in ("::", "[::]"):
+            uvicorn_options["host"] = "::"
+            config = uvicorn.Config("module.webui.app:app", **uvicorn_options)
+            sockets = _create_dual_stack_sockets(port, backlog=config.backlog)
+            try:
+                logger.info(f"[GUI] WebUI 同时监听 IPv4 0.0.0.0:{port} 与 IPv6 [::]:{port}")
+                uvicorn.Server(config).run(sockets=sockets)
+            finally:
+                for listener in sockets:
+                    listener.close()
         else:
-            uvicorn.run("module.webui.app:app", host=host, port=port, factory=True)
+            uvicorn.run("module.webui.app:app", **uvicorn_options)
     except Exception as e:
         logger.exception_context(
             title='WebUI 服务启动失败',
