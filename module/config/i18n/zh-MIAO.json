@@ -143,8 +143,8 @@
       "help": "共斗的每日任务，记得清掉喵~ (´・ω・`)"
     },
     "CoalitionSp": {
-      "name": "光影风尚拍摄进行时SP喵",
-      "help": "拍摄活动SP级别，需要精湛技巧喵！( •̀ᴗ-)✧"
+      "name": "怪谈纪实：逃离白夜山庄SP喵",
+      "help": "逃离白夜山庄的每日SP挑战，务必小心怪谈喵！( •̀ᴗ-)✧"
     },
     "Commission": {
       "name": "委托派遣喵",
@@ -812,6 +812,11 @@
       "name": "硬件加速",
       "help": "选择 OCR 硬件加速方式喵。没有 NPU/GPU 不推荐手动启用喵。Windows 会通过 Windows ML 自动选择可见的最佳硬件（NPU > GPU > CPU），ANE 用 macOS Neural Engine。自动：Windows 用 Windows ML 自动选择，Apple Silicon 选 ANE，其他平台 CPU。\n微软文档：https://learn.microsoft.com/zh-cn/windows/ai/new-windows-ml/select-execution-providers?tabs=python",
       "auto": "自动判断",
+      "qnn_npu": "QNN NPU喵",
+      "openvino_npu": "OpenVINO NPU喵",
+      "openvino_gpu": "OpenVINO 独显 GPU喵",
+      "gpu": "DirectML 独显 GPU喵",
+      "openvino_cpu": "OpenVINO CPU喵",
       "cpu": "CPU喵",
       "gpu": "硬件加速喵",
       "ane": "ANE喵"
@@ -830,6 +835,12 @@
       "auto": "自动 喵",
       "onnxruntime": "ONNX Runtime 喵",
       "ncnn": "ncnn 喵"
+    },
+    "OcrWindowsMlVendorEp": {
+      "name": "自动安装并使用厂商 EP 喵",
+      "help": "允许 Windows ML 通过 Windows Update 下载并使用 QNN/OpenVINO 厂商 EP 喵。",
+      "True": "启用喵",
+      "False": "禁用喵"
     },
     "OcrModelVersionEnglish": {
       "name": "OCR英文模型版本喵",
@@ -1135,6 +1146,7 @@
       "coalition_20250626": "The Neon City Investigator",
       "coalition_20251120": "DATE A LANE",
       "coalition_20260122": "Light & Shadow Fashion Shoot!",
+      "coalition_20260723": "怪谈纪实：逃离白夜山庄",
       "event_20200227_cn": "Northern Overture",
       "event_20200312_cn": "The Solomon Ranger Rerun",
       "event_20200326_cn": "Microlayer Medley",
@@ -1918,11 +1930,11 @@
     "Mode": {
       "name": "难度喵",
       "help": "SP图需用活动每日SP运行喵。 (´・ω・`)",
-      "tc1": "tc1",
-      "tc2": "tc2",
-      "tc3": "tc3",
-      "sp": "sp喵",
-      "ex": "ex"
+      "easy": "简单喵",
+      "normal": "普通喵",
+      "hard": "困难喵",
+      "sp": "SP喵",
+      "ex": "EX喵"
     },
     "Fleet": {
       "name": "出击队伍模式",

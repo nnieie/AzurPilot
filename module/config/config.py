@@ -232,6 +232,14 @@ class AzurLaneConfig(ConfigUpdater, ManualConfig, GeneratedConfig, ConfigWatcher
                 # ncnn 后端：检查 Vulkan GPU 可用性
                 from module.ocr.ncnn_ocr import has_ncnn_vulkan_gpu
                 return 'gpu' if has_ncnn_vulkan_gpu() else 'cpu'
+
+        if self.ocr_backend == 'ncnn' and val in {
+            'qnn_npu',
+            'openvino_npu',
+            'openvino_gpu',
+            'openvino_cpu',
+        }:
+            return 'cpu'
         return val
 
     @property

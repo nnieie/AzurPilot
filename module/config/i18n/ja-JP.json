@@ -143,7 +143,7 @@
       "help": ""
     },
     "CoalitionSp": {
-      "name": "光影風尚-撮影進行中SP",
+      "name": "怪谈纪实：逃离白夜山庄SP",
       "help": ""
     },
     "Commission": {
@@ -812,6 +812,11 @@
       "name": "ハードウェアアクセラレーション",
       "help": "OCR のハードウェアアクセラレーション方式を選択します。NPU/GPU がない環境での手動有効化は推奨しません。Windows は Windows ML で利用可能な最適ハードウェア（NPU > GPU > CPU）を選択し、ANE は macOS Apple Neural Engine を使用します。自動：Windows は Windows ML 自動選択、Apple Silicon Mac は ANE、それ以外は CPU。\nMicrosoft docs: https://learn.microsoft.com/ja-jp/windows/ai/new-windows-ml/select-execution-providers?tabs=python",
       "auto": "自動",
+      "qnn_npu": "QNN NPU",
+      "openvino_npu": "OpenVINO NPU",
+      "openvino_gpu": "OpenVINO 専用 GPU",
+      "gpu": "DirectML 専用 GPU",
+      "openvino_cpu": "OpenVINO CPU",
       "cpu": "CPU",
       "gpu": "ハードウェアアクセラレーション",
       "ane": "ANE (Apple)"
@@ -830,6 +835,12 @@
       "auto": "自動 (onnxruntime)",
       "onnxruntime": "ONNX Runtime",
       "ncnn": "ncnn (Vulkan)"
+    },
+    "OcrWindowsMlVendorEp": {
+      "name": "ベンダー EP を自動インストールして使用",
+      "help": "Windows ML が Windows Update を通じて QNN/OpenVINO 実行プロバイダーをダウンロードして使用することを許可します。",
+      "True": "有効",
+      "False": "無効"
     },
     "OcrModelVersionEnglish": {
       "name": "OCR 英語モデルバージョン",
@@ -1135,6 +1146,7 @@
       "coalition_20250626": "ネオンシティの探索者",
       "coalition_20251120": "DATE A LANE",
       "coalition_20260122": "特集写真-撮影進行中",
+      "coalition_20260723": "怪谈纪实：逃离白夜山庄",
       "event_20200227_cn": "凍絶の北海",
       "event_20200312_cn": "南洋に靡く硝煙（復刻）",
       "event_20200326_cn": "闇靄払う銀翼",
@@ -1918,11 +1930,11 @@
     "Mode": {
       "name": "難易度",
       "help": "SPステージはイベントデイリーSPで実行する必要があります",
-      "tc1": "tc1",
-      "tc2": "tc2",
-      "tc3": "tc3",
-      "sp": "sp",
-      "ex": "ex"
+      "easy": "簡単",
+      "normal": "普通",
+      "hard": "困難",
+      "sp": "SP",
+      "ex": "EX"
     },
     "Fleet": {
       "name": "出撃艦隊",

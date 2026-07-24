@@ -103,7 +103,7 @@
       "help": ""
     },
     "Coalition": {
-      "name": "光影风尚-拍摄进行时",
+      "name": "夜勤病栋",
       "help": ""
     },
     "MaritimeEscort": {
@@ -143,7 +143,7 @@
       "help": ""
     },
     "CoalitionSp": {
-      "name": "光影风尚-拍摄进行时SP",
+      "name": "怪谈纪实：逃离白夜山庄SP",
       "help": ""
     },
     "Commission": {
@@ -812,6 +812,11 @@
       "name": "硬件加速",
       "help": "选择 OCR 硬件加速方式。不推荐没有 NPU/GPU 的用户手动启用，除非你知道自己在做什么\nWindows 会通过 Windows ML 自动选择可见的最佳硬件（NPU > GPU > CPU），ANE 仅用于 macOS Apple Neural Engine\n自动选择：Windows 使用 Windows ML 自动选择，Apple Silicon Mac 使用 ANE，其他平台使用 CPU\n微软文档：https://learn.microsoft.com/zh-cn/windows/ai/new-windows-ml/select-execution-providers?tabs=python",
       "auto": "自动选择",
+      "qnn_npu": "QNN NPU",
+      "openvino_npu": "OpenVINO NPU",
+      "openvino_gpu": "OpenVINO 独显 GPU",
+      "gpu": "DirectML 独显 GPU",
+      "openvino_cpu": "OpenVINO CPU",
       "cpu": "CPU",
       "gpu": "硬件加速",
       "ane": "ANE (Apple)"
@@ -830,6 +835,12 @@
       "auto": "自动 (onnxruntime)",
       "onnxruntime": "ONNX Runtime",
       "ncnn": "ncnn (Vulkan)"
+    },
+    "OcrWindowsMlVendorEp": {
+      "name": "自动安装并使用厂商 EP",
+      "help": "允许 Windows ML 通过 Windows Update 下载并使用 QNN/OpenVINO 厂商 EP。",
+      "True": "启用",
+      "False": "禁用"
     },
     "OcrModelVersionEnglish": {
       "name": "OCR英文模型版本",
@@ -1135,6 +1146,7 @@
       "coalition_20250626": "迷彩都市的寻踪者",
       "coalition_20251120": "DATE A LANE",
       "coalition_20260122": "光影风尚-拍摄进行时",
+      "coalition_20260723": "怪谈纪实：逃离白夜山庄",
       "event_20200227_cn": "北境序曲",
       "event_20200312_cn": "复刻斯图尔特的硝烟",
       "event_20200326_cn": "微层混合",
@@ -1918,11 +1930,11 @@
     "Mode": {
       "name": "难度",
       "help": "SP图需要使用活动每日SP运行",
-      "tc1": "tc1",
-      "tc2": "tc2",
-      "tc3": "tc3",
-      "sp": "sp",
-      "ex": "ex"
+      "easy": "简单",
+      "normal": "普通",
+      "hard": "困难",
+      "sp": "SP",
+      "ex": "EX"
     },
     "Fleet": {
       "name": "出击队伍",

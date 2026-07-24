@@ -144,6 +144,7 @@ class GeneratedConfig:
     Optimization_OcrWindowsMlDevice = 'auto'
     Optimization_OcrWindowsMlInstallEp = True
     Optimization_OcrBackend = 'auto'  # auto, onnxruntime, ncnn
+    Optimization_OcrWindowsMlVendorEp = True  # True, False
     Optimization_OcrModelVersionEnglish = 'auto'  # auto, alocr_en_900k, azur_lane_v6_6, azur_lane_v6_5, ppocr_v6, alocr_en_v2_6, alocr_en_v2_0, alocr_en_v1_0
     Optimization_OcrModelVersionChinese = 'auto'  # auto, cn_v6_1, cn_v6, ppocr_v6, alocr_cn_v3, alocr_cn_v2_5
     Optimization_OcrModelVersionJapanese = 'auto'  # auto, azur_lane_jp_v6, ppocr_v6
@@ -341,7 +342,7 @@ class GeneratedConfig:
     MaritimeEscort_Enable = True
 
     # 配置组 `Coalition`
-    Coalition_Mode = 'tc3'  # tc1, tc2, tc3, sp, ex
+    Coalition_Mode = 'hard'  # easy, normal, hard, sp, ex
     Coalition_Fleet = 'single'  # single, multi
 
     # 配置组 `EventShop`

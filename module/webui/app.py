@@ -1,82 +1,54 @@
-# 此文件是 Alas WebUI 的核心逻辑入口类文件。
-# 基于 PyWebIO 框架构建了整个可视化控制台，包括任务配置渲染、仪表盘展示、多实例切换及实时日志流转发等前端功能。
-import os
-import re
-import argparse
-import json
-import queue
-import requests
-import secrets
-import string
-import threading
-import time
-import re
-import base64
-from datetime import datetime, timedelta, timezone
-from pathlib import Path
-from functools import partial
-from typing import Dict, List, Optional, Any
+"""AzurPilot WebUI 的兼容入口和 ASGI 应用工厂。"""
 
-# 在导入 pywebio 之前导入伪造模块，避免加载不必要的 PIL 模块
-from module.webui.fake_pil_module import import_fake_pil_module
-from module.config.time_source import now as current_time, status as time_source_status
-from module.statistics.azurstats import AzurStats
-from module.os_simulator.simulator import OSSimulator
-
-import_fake_pil_module()
-
-from pywebio import config as webconfig
-from pywebio.input import actions, file_upload, input_group
-from pywebio.output import (
-    Output,
-    clear,
-    close_popup,
-    popup,
-    put_button,
-    put_buttons,
-    put_collapse,
-    put_column,
-    put_error,
-    put_html,
-    put_link,
-    put_loading,
-    put_markdown,
-    put_row,
-    put_scope,
-    put_table,
-    put_text,
-    put_warning,
-    toast,
-    use_scope,
-)
-from pywebio.pin import pin, pin_on_change
-from pywebio.session import (
-    download,
-    go_app,
+from module.webui.app_dashboard import DashboardMixin
+from module.webui.app_dependencies import (
+    Dict,
+    Frame,
+    IS_ON_PHONE_CLOUD,
+    List,
+    PUBLIC_WEBUI_PASSWORD_GENERATE_FAILED_MESSAGE,
+    ProcessManager,
+    RESTRICTED_DEVICE_IDS,
+    RESTRICTED_DEVICE_MESSAGE,
+    RichLog,
+    State,
+    argparse,
+    asgi_app,
+    get_device_id,
     info,
+    lang,
+    load_webui_styles,
     local,
-    register_thread,
+    logger,
+    login,
+    os,
+    popup,
     run_js,
     set_env,
-    eval_js,
+    task_handler,
+    time,
+    updater,
 )
-
-import module.webui.lang as lang
-from module.config.config import AzurLaneConfig, Function
-from module.config.deep import deep_get, deep_iter, deep_set
-from module.config.env import IS_ON_PHONE_CLOUD
-from module.config.server import to_server
-from module.config.task_priority import parse_task_priority, task_priority_from_config
-from module.config.utils import (
-    DEFAULT_CONFIG_NAME,
-    alas_instance,
-    alas_template,
-    dict_to_kv,
-    filepath_args,
-    filepath_config,
-    is_oobe_needed,
-    read_file,
-    readable_time,
+from module.webui.app_developer_menu import DeveloperMenuMixin
+from module.webui.app_developer_settings import DeveloperSettingsMixin
+from module.webui.app_developer_tools import DeveloperToolsMixin
+from module.webui.app_developer_update import DeveloperUpdateMixin
+from module.webui.app_event_tools import EventToolsMixin
+from module.webui.app_helpers import (
+    DEMO_DEVICE_ID_TEXT,
+    WEBUI_AUTO_PASSWORD_FILE,
+    build_copyable_device_id,
+    build_muted_notice,
+    build_recommendation_box,
+    build_simple_table,
+    build_title_block,
+    ensure_public_webui_password,
+    generate_webui_password,
+    is_demo_mode,
+    is_public_webui_host,
+    is_webui_password_set,
+    read_webapp_template,
+    timedelta_to_text,
 )
 from module.config.utils import time_delta
 from module.log_res.log_res import LogRes
@@ -150,187 +122,39 @@ WEBUI_AUTO_PASSWORD_FILE = "password.txt"
 DEMO_DEVICE_ID_TEXT = "此程序是为了演示用途构建的版本/This application is a version built for demonstration purposes."
 
 
-def is_demo_mode():
+class AlasGUI(
+    AppShellMixin,
+    StatisticsPageMixin,
+    ActionPointStatisticsMixin,
+    ActionPointToolbarMixin,
+    ResourceStatisticsMixin,
+    OpsiStatisticsMixin,
+    OpsiExportMixin,
+    ShipExperienceStatisticsMixin,
+    CommissionIncomeStatisticsMixin,
+    TaskConfigMixin,
+    EventToolsMixin,
+    OverviewMixin,
+    DashboardMixin,
+    DeveloperMenuMixin,
+    DeveloperUpdateMixin,
+    DeveloperSettingsMixin,
+    DeveloperToolsMixin,
+    InstanceMixin,
+    HomeMixin,
+    Frame,
+):
+    """组合各 WebUI 视图的会话控制器。
+
+    Mixin 的顺序明确会话能力的组合层次。统计页入口通过 ``self`` 调用具体
+    视图的渲染方法，因此各视图模块既可独立维护，也保持原有会话接口不变。
     """
-    判断是否处于演示环境。
 
-    Returns:
-        bool: True 表示 DEMO=1。
-    """
-    return os.environ.get("DEMO") == "1"
-
-
-def is_public_webui_host(host):
-    """
-    判断 WebUI 是否监听所有网络接口。
-
-    Args:
-        host (str): WebUI 监听地址。
-
-    Returns:
-        bool: True 表示 WebUI 允许所有设备访问。
-    """
-    host = str(host or "").strip().lower()
-    return host in ("0.0.0.0", "::", "[::]")
-
-
-def is_webui_password_set(password):
-    """
-    判断 WebUI 密码是否有效设置。
-
-    Args:
-        password: WebUI 密码配置。
-
-    Returns:
-        bool: True 表示密码包含非空白字符。
-    """
-    return bool(str(password or "").strip())
-
-
-def generate_webui_password(length=32):
-    """
-    生成包含大小写字母和数字的 WebUI 密码。
-
-    Args:
-        length (int): 密码长度。
-
-    Returns:
-        str: 随机密码。
-    """
-    letters_upper = string.ascii_uppercase
-    letters_lower = string.ascii_lowercase
-    digits = string.digits
-    alphabet = letters_upper + letters_lower + digits
-    password = [
-        secrets.choice(letters_upper),
-        secrets.choice(letters_lower),
-        secrets.choice(digits),
-    ]
-    password.extend(secrets.choice(alphabet) for _ in range(length - len(password)))
-    secrets.SystemRandom().shuffle(password)
-    return "".join(password)
-
-
-def ensure_public_webui_password(key):
-    """
-    公网监听且未设置密码时自动生成密码。
-
-    Args:
-        key: 命令行或部署配置中的 WebUI 密码。
-
-    Returns:
-        tuple[str | None, str | None]: 有效密码和失败原因。
-    """
-    if is_demo_mode():
-        return key, None
-
-    host = State.webui_host or State.deploy_config.WebuiHost
-    if not is_public_webui_host(host) or is_webui_password_set(key):
-        return key, None
-
-    try:
-        password = generate_webui_password()
-        from deploy.atomic import atomic_write
-
-        atomic_write(WEBUI_AUTO_PASSWORD_FILE, f"{password}\n")
-        State.deploy_config.Password = password
-        logger.warning(f"[WebUI] WebUI 已自动生成密码，请在根目录 {WEBUI_AUTO_PASSWORD_FILE} 查看。")
-        return password, None
-    except Exception as e:
-        logger.exception(f"WebUI 自动生成密码失败: {e}")
-        return None, str(e)
-
-
-def timedelta_to_text(delta=None):
-    time_delta_name_suffix_dict = {
-        "Y": "YearsAgo",
-        "M": "MonthsAgo",
-        "D": "DaysAgo",
-        "h": "HoursAgo",
-        "m": "MinutesAgo",
-        "s": "SecondsAgo",
-    }
-    time_delta_name_prefix = "Gui.Dashboard."
-    time_delta_name_suffix = "NoData"
-    time_delta_display = ""
-    if isinstance(delta, dict):
-        for _key in delta:
-            if delta[_key]:
-                time_delta_name_suffix = time_delta_name_suffix_dict[_key]
-                time_delta_display = delta[_key]
-                break
-    time_delta_display = str(time_delta_display)
-    time_delta_name = time_delta_name_prefix + time_delta_name_suffix
-    return time_delta_display + t(time_delta_name)
-
-
-def read_webapp_template(filename: str) -> str:
-    template_path = Path(os.getcwd()) / "webapp" / filename
-    with open(template_path, "r", encoding="utf-8") as f:
-        return f.read()
-
-
-def build_title_block(
-    title: str, margin_top: int = 12, margin_bottom: int = 8, font_weight: int = 600
-) -> str:
-    tpl = read_webapp_template("title_block.html")
-    return tpl.format(
-        title=title,
-        margin_top=margin_top,
-        margin_bottom=margin_bottom,
-        font_weight=font_weight,
-    )
-
-
-def build_muted_notice(text: str) -> str:
-    tpl = read_webapp_template("muted_notice.html")
-    return tpl.format(text=text)
-
-
-def build_simple_table(headers, rows, extra_style: str = "") -> str:
-    tpl = read_webapp_template("simple_table.html")
-    thead_cells = "".join(
-        [f'<th style="text-align:left;padding:6px">{h}</th>' for h in headers]
-    )
-    tbody_rows = "".join(
-        [
-            "<tr>"
-            + "".join(
-                [f'<td style="text-align:center;padding:6px">{v}</td>' for v in row]
-            )
-            + "</tr>"
-            for row in rows
-        ]
-    )
-    return tpl.format(
-        thead_cells=thead_cells,
-        tbody_rows=tbody_rows,
-        extra_style=extra_style,
-    )
-
-
-def build_copyable_device_id(device_id: str) -> str:
-    tpl = read_webapp_template("copyable_device_id.html")
-    return tpl.format(device_id=device_id)
-
-
-def build_recommendation_box(text: str) -> str:
-    tpl = read_webapp_template("recommendation_box.html")
-    return tpl.format(text=text)
-
-
-class AlasGUI(Frame):
     ALAS_MENU: Dict[str, Dict[str, List[str]]]
     ALAS_ARGS: Dict[str, Dict[str, Dict[str, Dict[str, str]]]]
     theme = "default"
     _log = RichLog
 
-    def initial(self) -> None:
-        self.ALAS_MENU = read_file(filepath_args("menu", self.alas_mod))
-        self.ALAS_ARGS = read_file(filepath_args("args", self.alas_mod))
-        self.ALAS_MENU = read_file(filepath_args("menu", self.alas_mod))
-        self.ALAS_ARGS = read_file(filepath_args("args", self.alas_mod))
-        self._init_alas_config_watcher()
 
     def __init__(self) -> None:
         super().__init__()
@@ -5453,42 +5277,12 @@ def debug():
     AlasGUI().run()
 
 
-def startup():
-    State.init()
-    lang.reload()
-    updater.event = State.manager.Event()
-    if State.deploy_config.AutoUpdate:
-        if updater.delay > 0:
-            task_handler.add(updater.check_update, updater.delay)
-        task_handler.add(updater.schedule_update(), 86400)
-    task_handler.start()
-    if State.deploy_config.DiscordRichPresence:
-        init_discord_rpc()
-    if State.deploy_config.StartOcrServer and not is_demo_mode():
-        start_ocr_server_process(State.deploy_config.OcrServerPort)
-    if State.deploy_config.EnableRemoteAccess and (
-        State.deploy_config.Password is not None or os.environ.get("DEMO") == "1"
-    ):
-        task_handler.add(RemoteAccess.keep_ssh_alive(), 60)
-
-
-def clearup():
-    """
-    Notice: Ensure run it before uvicorn reload app,
-    all process will NOT EXIT after close electron app.
-    """
-    logger.info("Start clearup")
-    RemoteAccess.kill_ssh_process()
-    close_discord_rpc()
-    stop_ocr_server_process()
-    for alas in ProcessManager._processes.values():
-        alas.stop()
-    State.clearup()
-    task_handler.stop()
-    logger.info("Alas closed.")
-
-
 def app():
+    """创建供 Uvicorn 使用的 ASGI 应用工厂。
+
+    Returns:
+        Starlette: 挂载 WebUI 页面和 MCP 子应用的 ASGI 应用。
+    """
     parser = argparse.ArgumentParser(description="Alas web service")
     parser.add_argument(
         "-k", "--key", type=str, help="Password of alas. No password by default"
@@ -5506,20 +5300,20 @@ def app():
     )
     args, _ = parser.parse_known_args()
 
-    # Apply config
     AlasGUI.set_theme(theme=State.deploy_config.Theme)
     lang.LANG = State.deploy_config.Language
     key = args.key if is_webui_password_set(args.key) else State.deploy_config.Password
     key, password_error = ensure_public_webui_password(key)
-    cdn = args.cdn if args.cdn else State.deploy_config.CDN
-    runs = None
+    cdn: str | bool = args.cdn if args.cdn else State.deploy_config.CDN
+    runs: List[str] | None = None
     if args.run:
         runs = args.run
     elif State.deploy_config.Run:
-        # TODO: refactor poor_yaml_read() to support list
+        # deploy.yaml 的旧格式仍是逗号分隔字符串，保持兼容直到配置读取器支持列表。
         tmp = State.deploy_config.Run.split(",")
-        runs = [l.strip(" ['\"]") for l in tmp if len(l)]
-    instances: List[str] = runs
+        runs = [item.strip(" ['\"]") for item in tmp if item]
+    # 未传入 --run 时保持 None，由进程管理器跳过启动实例。
+    instances: List[str] | None = runs
 
     logger.hr("Webui configs")
     logger.attr("Theme", State.deploy_config.Theme)
@@ -5531,10 +5325,9 @@ def app():
     from deploy.atomic import atomic_failure_cleanup
 
     atomic_failure_cleanup("./config")
-
     static_path = os.getcwd()
 
-    def _block_restricted_device():
+    def _block_restricted_device() -> bool:
         if is_demo_mode():
             return False
         if get_device_id() not in RESTRICTED_DEVICE_IDS:
@@ -5547,7 +5340,7 @@ def app():
         )
         return True
 
-    def _block_public_webui_password_error():
+    def _block_public_webui_password_error() -> bool:
         if is_demo_mode() or password_error is None:
             return False
         popup(
@@ -5558,12 +5351,10 @@ def app():
         )
         return True
 
-    def index():
+    def _run_gui(initial_page: str = "home") -> None:
         set_env(title="AzurPilot", output_animation=False)
         load_webui_styles(theme=AlasGUI.theme, is_mobile=info.user_agent.is_mobile)
-        if _block_restricted_device():
-            return
-        if _block_public_webui_password_error():
+        if _block_restricted_device() or _block_public_webui_password_error():
             return
         if is_webui_password_set(key) and not login(key):
             logger.warning(f"{info.user_ip} login failed.")
@@ -5572,27 +5363,17 @@ def app():
             return
         gui = AlasGUI()
         local.gui = gui
-        gui.run()
+        gui.run(initial_page=initial_page)
 
-    def manage():
-        set_env(title="AzurPilot", output_animation=False)
-        load_webui_styles(theme=AlasGUI.theme, is_mobile=info.user_agent.is_mobile)
-        if _block_restricted_device():
-            return
-        if _block_public_webui_password_error():
-            return
-        if is_webui_password_set(key) and not login(key):
-            logger.warning(f"{info.user_ip} login failed.")
-            time.sleep(1.5)
-            run_js("location.reload();")
-            return
-        gui = AlasGUI()
-        local.gui = gui
-        gui.run(initial_page="manage")
+    def index() -> None:
+        _run_gui()
+
+    def manage() -> None:
+        _run_gui(initial_page="manage")
 
     from mcp_server_sse import app as mcp_app
 
-    app = asgi_app(
+    application = asgi_app(
         applications=[index, manage],
         cdn=cdn,
         static_dir=static_path,
@@ -5605,6 +5386,5 @@ def app():
         ],
         on_shutdown=[clearup],
     )
-    app.mount("/mcp", mcp_app)
-
-    return app
+    application.mount("/mcp", mcp_app)
+    return application

@@ -576,8 +576,12 @@
         "value": "auto",
         "option": [
           "auto",
-          "cpu",
+          "qnn_npu",
+          "openvino_npu",
+          "openvino_gpu",
           "gpu",
+          "openvino_cpu",
+          "cpu",
           "ane"
         ]
       },
@@ -597,6 +601,14 @@
           "auto",
           "onnxruntime",
           "ncnn"
+        ]
+      },
+      "OcrWindowsMlVendorEp": {
+        "type": "checkbox",
+        "value": true,
+        "option": [
+          true,
+          false
         ]
       },
       "OcrModelVersionEnglish": {
@@ -6241,10 +6253,11 @@
         "value": "campaign_main",
         "option": [
           "coalition_20230323",
-          "coalition_20260122"
+          "coalition_20260122",
+          "coalition_20260723"
         ],
         "option_cn": [
-          "coalition_20260122"
+          "coalition_20260723"
         ],
         "option_en": [
           "coalition_20260122"
@@ -6257,7 +6270,8 @@
         ],
         "option_bold": [
           "coalition_20230323",
-          "coalition_20260122"
+          "coalition_20260122",
+          "coalition_20260723"
         ]
       },
       "Mode": {
@@ -6311,11 +6325,11 @@
     "Coalition": {
       "Mode": {
         "type": "select",
-        "value": "tc3",
+        "value": "hard",
         "option": [
-          "tc1",
-          "tc2",
-          "tc3",
+          "easy",
+          "normal",
+          "hard",
           "ex"
         ]
       },
@@ -10068,10 +10082,11 @@
         "value": "campaign_main",
         "option": [
           "coalition_20230323",
-          "coalition_20260122"
+          "coalition_20260122",
+          "coalition_20260723"
         ],
         "option_cn": [
-          "coalition_20260122"
+          "coalition_20260723"
         ],
         "option_en": [
           "coalition_20260122"
@@ -10084,7 +10099,8 @@
         ],
         "option_bold": [
           "coalition_20230323",
-          "coalition_20260122"
+          "coalition_20260122",
+          "coalition_20260723"
         ]
       },
       "Mode": {
@@ -10138,14 +10154,15 @@
     "Coalition": {
       "Mode": {
         "type": "select",
-        "value": "tc3",
+        "value": "hard",
         "option": [
-          "tc1",
-          "tc2",
-          "tc3",
+          "easy",
+          "normal",
+          "hard",
           "sp",
           "ex"
-        ]
+        ],
+        "display": "hide"
       },
       "Fleet": {
         "type": "select",

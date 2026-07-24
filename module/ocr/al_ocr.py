@@ -207,7 +207,7 @@ class AlOcrCtcRecOCR:
         self.input_names = [item.name for item in self.session.get_inputs()]
         logger.info(
             f"Loaded OCR model '{ALAS_CTC_MODEL_VERSION}' on "
-            f"{', '.join(self.session.get_providers())}"
+            f"{selected_provider} ({', '.join(self.session.get_providers())})"
         )
 
     @staticmethod
@@ -506,6 +506,38 @@ def _get_onnx_model_params(name):
     return ONNX_MODEL_PARAMS[name][version]
 
 
+def _configure_windows_ml_sessions(
+    ocr,
+    model_paths,
+    ocr_device,
+    allow_vendor_execution_providers,
+):
+    """将 RapidOCR 创建的 CPU session 替换为 Windows ML 精确选定的设备。"""
+    if os.name != 'nt':
+        return ocr
+
+    try:
+        import onnxruntime as ort
+    except Exception as exc:
+        handle_ocr_error(exc)
+
+    for config_name, component_name, model_path in model_paths:
+        component = getattr(ocr, component_name)
+        ort_session = component.session
+        engine_config = getattr(ocr.cfg, config_name).engine_cfg
+        session_options_factory = lambda: ort_session._init_sess_opts(engine_config)
+        ort_session.session, _ = create_onnx_session(
+            ort,
+            model_path,
+            session_options_factory=session_options_factory,
+            allow_acceleration=ocr_device != 'cpu',
+            allow_vendor_execution_providers=allow_vendor_execution_providers,
+            device_preference=ocr_device,
+        )
+
+    return ocr
+
+
 def _create_ocr(name):
     backend = config.ocr_backend
     if backend == 'ncnn':
@@ -518,7 +550,11 @@ def _create_ocr(name):
         version = _resolve_onnx_model_version(name)
         custom_model_path = CUSTOM_CTC_MODEL_PARAMS.get(name, {}).get(version)
         if custom_model_path is not None:
-            return AlOcrCtcRecOCR(custom_model_path, device=ocr_device)
+            return AlOcrCtcRecOCR(
+                custom_model_path,
+                device=ocr_device,
+                allow_vendor_execution_providers=allow_vendor_execution_providers,
+            )
 
         model_path, rec_keys_path, ocr_version = _get_onnx_model_params(name)
         params = {
@@ -530,7 +566,13 @@ def _create_ocr(name):
             "Rec.model_path": model_path,
             "Rec.rec_keys_path": rec_keys_path,
         }
-        return RecOnlyOCR(params=params)
+        ocr = RecOnlyOCR(params=params)
+        return _configure_windows_ml_sessions(
+            ocr,
+            [('Rec', 'text_rec', model_path)],
+            ocr_device,
+            allow_vendor_execution_providers,
+        )
 
 
 # 懒加载：模块级不再创建模型，首次 init() 时才加载
@@ -542,6 +584,7 @@ def _model_cache_key(name):
         name,
         config.ocr_backend,
         config.ocr_device,
+        config.Optimization_OcrWindowsMlVendorEp,
         config.ocr_model_version(name),
     )
 
@@ -646,17 +689,34 @@ def _get_det_model(name):
         return _det_model_cache[key]
 
 
-def reset_ocr_model():
-    def _reset():
-        logger.info("Resetting OCR models")
-        for model in _model_cache.values():
-            close = getattr(model, "close", None)
-            if close is not None:
-                close()
-        _model_cache.clear()
-        _det_model_cache.clear()
+def release_ocr_models(names=None):
+    """在 OCR 工作线程中释放指定模型的全局缓存。"""
+    names = None if names is None else set(names)
 
-    return _run_ocr_queued(_reset)
+    def _release():
+        released = 0
+        for cache in (_model_cache, _det_model_cache):
+            keys = [key for key in cache if names is None or key[0] in names]
+            for key in keys:
+                model = cache.pop(key)
+                close = getattr(model, "close", None)
+                if callable(close):
+                    try:
+                        close()
+                    except Exception as exc:
+                        logger.warning("关闭 OCR 模型缓存失败: %s", exc)
+                released += 1
+
+        if released:
+            logger.info("已释放 %s 个 OCR 模型缓存", released)
+        return released
+
+    return _run_ocr_queued(_release)
+
+
+def reset_ocr_model():
+    logger.info("重置 OCR 模型")
+    return release_ocr_models()
 
 
 class AlOcr:
