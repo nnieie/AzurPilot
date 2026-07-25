@@ -123,6 +123,7 @@ class DeployConfig(ConfigModel):
 
         每次 `read()` 之后必须调用。
         """
+        self.config.pop('AutoUpdate', None)
         if self.Repository in [
             'https://gitee.com/LmeSzinc/AzurLaneAutoScript',
             'https://gitee.com/lmeszinc/azur-lane-auto-script-mirror',

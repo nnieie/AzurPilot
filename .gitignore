@@ -23,6 +23,7 @@ unins000.exe
 *.lock
 config/reloadflag
 config/reloadalas
+config/webui-dependency-sync-pending
 /password.txt
 test.py
 test/

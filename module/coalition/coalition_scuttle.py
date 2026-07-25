@@ -329,6 +329,11 @@ class CoalitionScuttleRun(Coalition, CoalitionScuttleCombat):
             try:
                 self.coalition_execute_once(event=event, stage=mode, fleet=fleet)
             except ScriptEnd as e:
+                # 心情不足时覆盖短延迟为30分钟，避免低心情频繁启动任务
+                if 'Emotion control' in str(e):
+                    logger.info('Emotion insufficient, delay 30 minutes for CoalitionScuttle')
+                    self.config.task_delay(minute=30)
+                    self.config.task_stop()
                 logger.hr('Script end')
                 logger.info(str(e))
                 break

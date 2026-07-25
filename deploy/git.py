@@ -5,6 +5,7 @@ import requests
 
 from deploy.config import DeployConfig, ExecutionError
 from deploy.git_over_cdn.client import GitOverCdnClient
+from deploy.git_over_cdn.endpoints import CLOUDFLARE_UPDATE_URLS, FALLBACK_UPDATE_URLS
 from deploy.logger import logger
 from deploy.utils import *
 

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from time import sleep
 
 import numpy as np
@@ -133,9 +133,18 @@ class FleetEmotion:
         return DIC_RECOVER_MAX[self.recover]
 
     def update(self):
-        recover_count = int(int(current_time().timestamp()) // 360 - int(self.record.timestamp()) // 360)
-        recover_count = max(recover_count, 0)
-        self.current = min(max(self.value, 0) + self.speed * recover_count, self.max)
+        """根据实际经过时间计算情绪恢复。
+
+        使用连续时间恢复计算，而非离散6分钟区间。
+        原方法使用 // 360 计算恢复次数，当 record() 频繁重置时间戳时
+        （如联盟沉船每2分钟调用一次），恢复永远无法累积。
+        改为按实际秒数计算恢复量，与游戏服务端行为一致。
+        """
+        time_diff = int(current_time().timestamp()) - int(self.record.timestamp())
+        time_diff = max(time_diff, 0)
+        # speed 为每360秒的恢复量，换算为每秒恢复 speed/360 点
+        recovery = self.speed * time_diff / 360
+        self.current = min(max(self.value, 0) + int(recovery), self.max)
 
     def get_recovered(self, expected_reduce=0):
         """计算情绪恢复到控制阈值的时间。
@@ -147,7 +156,7 @@ class FleetEmotion:
             datetime.datetime: 情绪 >= 控制阈值的时间。如果已经恢复，则返回过去的时间。
         """
         if self.control == 'keep_exp_bonus' and self.recover == 'not_in_dormitory':
-            logger.critical(f'[战斗] 舰队 {self.fleet} 的情绪控制设置为”保持开心加成”，且恢复地点设置为”港区”，两者不能同时使用，请检查情绪设置')
+            logger.critical(f'[战斗] 舰队 {self.fleet} 的情绪控制设置为"保持开心加成"，且恢复地点设置为"港区"，两者不能同时使用，请检查情绪设置')
             raise RequestHumanTakeover
         # 在 14-4 使用双倍经验书时，预期情绪减少为 32，无法保持开心加成（>120）
         # 否则会导致无限任务延迟
@@ -156,9 +165,12 @@ class FleetEmotion:
             logger.info(f'Fleet {self.fleet} expected_reduce is limited to 29 '
                         f'when Emotion Control=\"Keep Happy Bonus\"')
 
-        recover_count = (self.limit + expected_reduce - self.current) // self.speed
-        recovered = (int(current_time().timestamp()) // 360 + recover_count + 1) * 360
-        return datetime.fromtimestamp(recovered)
+        emotion_needed = self.limit + expected_reduce - self.current
+        if emotion_needed <= 0:
+            return current_time()
+        # speed 为每360秒的恢复量，换算恢复所需秒数
+        seconds_needed = emotion_needed * 360 / self.speed
+        return current_time() + timedelta(seconds=seconds_needed)
 
 class Emotion:
     total_reduced = 0

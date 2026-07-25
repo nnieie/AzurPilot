@@ -7,6 +7,7 @@ from deploy.Windows.config import DeployConfig
 from deploy.Windows.logger import Progress, logger
 from deploy.Windows.utils import cached_property
 from deploy.git_over_cdn.client import GitOverCdnClient
+from deploy.git_over_cdn.endpoints import CLOUDFLARE_UPDATE_URLS, FALLBACK_UPDATE_URLS
 
 
 def _cmd(*args):
