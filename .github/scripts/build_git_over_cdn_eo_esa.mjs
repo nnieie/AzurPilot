@@ -305,8 +305,49 @@ function shortCommit(commit) {
   return commit.slice(0, 8);
 }
 
-function writeIndexHtml(outputDir, options, latest, oldCommits) {
-  const generatedAt = new Date().toISOString();
+function getCommitInfo(commit, repoRoot) {
+  const output = runGit(["show", "-s", "--format=%ct%x00%an%x00%s", commit], repoRoot);
+  const [committedAtSecondsText, authorName = "", subject = ""] = output.split("\0");
+  const committedAtSeconds = Number(committedAtSecondsText);
+  const committedAtTimestamp = committedAtSeconds * 1000;
+  if (!Number.isSafeInteger(committedAtTimestamp)) {
+    throw new Error(`无法读取提交时间：${commit}`);
+  }
+
+  return {
+    commit,
+    shortCommit: shortCommit(commit),
+    authorName,
+    subject,
+    committedAt: new Date(committedAtTimestamp).toISOString(),
+    committedAtTimestamp,
+  };
+}
+
+function formatDuration(milliseconds) {
+  const sign = milliseconds < 0 ? "-" : "";
+  let rest = Math.abs(Math.trunc(milliseconds));
+  const days = Math.floor(rest / 86400000);
+  rest %= 86400000;
+  const hours = Math.floor(rest / 3600000);
+  rest %= 3600000;
+  const minutes = Math.floor(rest / 60000);
+  rest %= 60000;
+  const seconds = Math.floor(rest / 1000);
+  const millis = rest % 1000;
+
+  return `${sign}${days}天 ${hours}时 ${minutes}分 ${seconds}秒 ${millis}毫秒`;
+}
+
+function writeIndexHtml(outputDir, options, latest, oldCommits, commitInfos) {
+  const latestCommitInfo = commitInfos[0];
+  if (!latestCommitInfo) {
+    throw new Error("无法读取最新提交信息");
+  }
+
+  const generatedAtTimestamp = Date.now();
+  const generatedAt = new Date(generatedAtTimestamp).toISOString();
+  const commitAge = formatDuration(generatedAtTimestamp - latestCommitInfo.committedAtTimestamp);
   const packRows = oldCommits.map((commit) => {
     const filename = `${latest}/${commit}.zip`;
     return `
@@ -315,6 +356,17 @@ function writeIndexHtml(outputDir, options, latest, oldCommits) {
             <td><a href="${escapeHtml(filename)}">${escapeHtml(filename)}</a></td>
           </tr>`;
   }).join("");
+  const commitRows = commitInfos.map((info, index) => `
+          <tr>
+            <td>${index === 0 ? "最新" : `前 ${index} 次`}</td>
+            <td><code title="${escapeHtml(info.commit)}">${escapeHtml(info.shortCommit)}</code></td>
+            <td>
+              <time class="local-time" datetime="${escapeHtml(info.committedAt)}">${escapeHtml(info.committedAt)} UTC</time>
+            </td>
+            <td><code>${info.committedAtTimestamp}</code></td>
+            <td>${escapeHtml(info.authorName)}</td>
+            <td>${escapeHtml(info.subject)}</td>
+          </tr>`).join("");
 
   const html = `<!doctype html>
 <html lang="zh-CN">
@@ -437,7 +489,26 @@ function writeIndexHtml(outputDir, options, latest, oldCommits) {
         <dt>更新包数量</dt>
         <dd>${oldCommits.length}</dd>
         <dt>生成时间</dt>
-        <dd><time datetime="${escapeHtml(generatedAt)}">${escapeHtml(generatedAt)}</time></dd>
+        <dd>
+          <time id="generated-at" datetime="${escapeHtml(generatedAt)}">${escapeHtml(generatedAt)} UTC</time>
+          <span id="generated-zone"></span>
+        </dd>
+        <dt>生成时间戳(ms)</dt>
+        <dd><code>${generatedAtTimestamp}</code></dd>
+        <dt>提交时间</dt>
+        <dd>
+          <time id="committed-at" datetime="${escapeHtml(latestCommitInfo.committedAt)}">${escapeHtml(latestCommitInfo.committedAt)} UTC</time>
+          <span id="committed-zone"></span>
+        </dd>
+        <dt>提交时间戳(ms)</dt>
+        <dd><code>${latestCommitInfo.committedAtTimestamp}</code></dd>
+        <dt>当前时间</dt>
+        <dd>
+          <time id="current-at" datetime="${escapeHtml(generatedAt)}">${escapeHtml(generatedAt)} UTC</time>
+          <span id="current-zone"></span>
+        </dd>
+        <dt>距最新提交</dt>
+        <dd><span id="commit-age" data-timestamp="${latestCommitInfo.committedAtTimestamp}">${escapeHtml(commitAge)}</span></dd>
         <dt>版本接口</dt>
         <dd><a href="latest.json">latest.json</a></dd>
       </dl>
@@ -456,7 +527,108 @@ function writeIndexHtml(outputDir, options, latest, oldCommits) {
         </tbody>
       </table>` : '<p class="empty">当前没有生成旧版本更新包。</p>'}
     </section>
+
+    <section>
+      <h2>最近更新</h2>
+      ${commitInfos.length ? `<table>
+        <thead>
+          <tr>
+            <th>序号</th>
+            <th>提交</th>
+            <th>提交时间</th>
+            <th>时间戳(ms)</th>
+            <th>作者</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody>${commitRows}
+        </tbody>
+      </table>` : '<p class="empty">当前没有提交信息。</p>'}
+    </section>
   </main>
+  <script>
+    (() => {
+      const formatter = new Intl.DateTimeFormat(undefined, {
+        dateStyle: "medium",
+        timeStyle: "medium",
+      });
+      const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+      function formatLocalTime(timeId, zoneId) {
+        const time = document.getElementById(timeId);
+        const zone = document.getElementById(zoneId);
+        const dateTime = time?.dateTime;
+        if (!time || !dateTime) {
+          return;
+        }
+
+        const date = new Date(dateTime);
+        if (Number.isNaN(date.getTime())) {
+          return;
+        }
+
+        time.textContent = formatter.format(date);
+        time.title = dateTime;
+        if (zone && timeZone) {
+          zone.textContent = \` (\${timeZone})\`;
+        }
+      }
+
+      function formatDuration(milliseconds) {
+        const sign = milliseconds < 0 ? "-" : "";
+        let rest = Math.abs(Math.trunc(milliseconds));
+        const days = Math.floor(rest / 86400000);
+        rest %= 86400000;
+        const hours = Math.floor(rest / 3600000);
+        rest %= 3600000;
+        const minutes = Math.floor(rest / 60000);
+        rest %= 60000;
+        const seconds = Math.floor(rest / 1000);
+        const millis = rest % 1000;
+
+        return \`\${sign}\${days}天 \${hours}时 \${minutes}分 \${seconds}秒 \${millis}毫秒\`;
+      }
+
+      function renderCurrentTimes() {
+        const now = new Date();
+        const current = document.getElementById("current-at");
+        const currentZone = document.getElementById("current-zone");
+        if (current) {
+          const currentAt = now.toISOString();
+          current.dateTime = currentAt;
+          current.textContent = formatter.format(now);
+          current.title = currentAt;
+        }
+        if (currentZone && timeZone) {
+          currentZone.textContent = \` (\${timeZone})\`;
+        }
+
+        const commitAge = document.getElementById("commit-age");
+        const committedAtTimestamp = Number(commitAge?.dataset.timestamp);
+        if (commitAge && Number.isFinite(committedAtTimestamp)) {
+          commitAge.textContent = formatDuration(now.getTime() - committedAtTimestamp);
+        }
+      }
+
+      formatLocalTime("generated-at", "generated-zone");
+      formatLocalTime("committed-at", "committed-zone");
+      for (const time of document.querySelectorAll("time.local-time")) {
+        const dateTime = time.dateTime;
+        const date = new Date(dateTime);
+        if (Number.isNaN(date.getTime())) {
+          continue;
+        }
+        time.textContent = formatter.format(date);
+        time.title = dateTime;
+      }
+      function tick() {
+        renderCurrentTimes();
+        requestAnimationFrame(tick);
+      }
+
+      tick();
+    })();
+  </script>
 </body>
 </html>
 `;
@@ -476,6 +648,7 @@ async function main() {
     repoRoot,
   ).split(/\r?\n/).filter(Boolean);
   const oldCommits = commits.filter((commit) => commit !== latest);
+  const commitInfos = commits.map((commit) => getCommitInfo(commit, repoRoot));
   const outputDir = path.resolve(repoRoot, options.output);
 
   fs.rmSync(outputDir, { recursive: true, force: true });
@@ -491,7 +664,7 @@ async function main() {
     await buildPack(latest, old, latestDir, repoRoot);
   }
   cleanupPackArtifacts(latestDir);
-  writeIndexHtml(outputDir, options, latest, oldCommits);
+  writeIndexHtml(outputDir, options, latest, oldCommits, commitInfos);
 
   console.log("Build git-over-cdn files");
   console.log(`  branch : ${options.branch}`);
