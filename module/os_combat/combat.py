@@ -1,3 +1,9 @@
+"""大世界战斗处理器模块。
+
+针对大世界（Operation Siren）场景定制战斗流程，继承标准战斗处理器
+和地图事件处理器。提供连续战斗检测（塞壬扫描装置场景）、S 评价
+延迟点击、大世界专用物品获取逻辑，以及战斗统计计时等功能。
+"""
 from module.combat.assets import *
 from module.combat.combat import Combat as Combat_
 from module.logger import logger
@@ -135,7 +141,7 @@ class Combat(Combat_, MapEventHandler):
             auto (str): 自动战斗模式。
             fleet_index (int): 舰队索引。
         """
-        logger.info('Combat preparation.')
+        logger.info('战斗准备。')
         self.device.stuck_record_clear()
         self.device.click_record_clear()
         skip_first_screenshot = True
@@ -161,7 +167,7 @@ class Combat(Combat_, MapEventHandler):
             # 结束
             pause = self.is_combat_executing()
             if pause:
-                logger.attr('BattleUI', pause)
+                logger.attr('战斗界面', pause)
                 break
 
     def _get_exp_info_sleep(self):
@@ -329,13 +335,13 @@ class Combat(Combat_, MapEventHandler):
         for count in range(3):
             self._clear_battle_status_s_timer()
             if count >= 2:
-                logger.warning('Too many continuous combat')
+                logger.warning('[大世界战斗] 连续战斗过多')
 
             try:
                 super().combat(*args, save_get_items=save_get_items, **kwargs)
                 break
             except ContinuousCombat:
-                logger.info('Continuous combat detected')
+                logger.info('[大世界战斗] 检测到连续战斗')
                 continue
             finally:
                 self._clear_battle_status_s_timer()
@@ -357,9 +363,9 @@ class Combat(Combat_, MapEventHandler):
         """
         if self.appear(status_button, interval=self.battle_status_click_interval):
             if status_letter == 'S':
-                logger.info(f'Battle Status {status_letter}')
+                logger.info(f'[大世界战斗] 战斗评价 {status_letter}')
             else:
-                logger.warning(f'Battle Status {status_letter}')
+                logger.warning(f'[大世界战斗] 战斗评价 {status_letter}')
             if drop:
                 drop.handle_add(self)
             else:
@@ -505,7 +511,7 @@ class Combat(Combat_, MapEventHandler):
         
         cl1_combat_timer = Timer(300, count=300)
         
-        logger.info('Auto search combat loading')
+        logger.info('[大世界战斗] 自动搜索战斗加载中')
         self.device.stuck_record_clear()
         self.device.click_record_clear()
         self.device.screenshot_interval_set('combat')
@@ -521,12 +527,12 @@ class Combat(Combat_, MapEventHandler):
                 break
             pause = self.is_combat_executing()
             if pause:
-                logger.attr('BattleUI', pause)
+                logger.attr('战斗UI', pause)
                 break
             if self.is_in_map():
                 break
 
-        logger.info('Auto Search combat execute')
+        logger.info('[大世界战斗] 自动搜索战斗执行')
         self.submarine_call_reset()
         self.device.stuck_record_clear()
         self.device.click_record_clear()
@@ -572,7 +578,7 @@ class Combat(Combat_, MapEventHandler):
                 battle_status_s_timer.clear()
                 continue
             
-        logger.info('Combat end.')
+        logger.info('战斗结束。')
         
         # 记录战斗结束，统计耗时 (侵蚀1 / 短猫)
         try:

@@ -1,3 +1,15 @@
+"""大世界港口商店模块。
+
+执行大世界港口商店的补给物资购买，包括：
+- 遍历所有友方港口购买补给
+- 黄币和紫币余额检查
+- 月度购买限制日期配置
+- 港口间的自动导航和购买执行
+
+继承自 OSMap，提供港口导航和商店购买的完整操作链路，
+是大世界代币消耗的重要途径之一。
+"""
+
 from datetime import datetime, timedelta
 
 from module.config.time_source import now as current_time
@@ -36,11 +48,11 @@ class OpsiShop(OSMap):
             not_empty = self.handle_port_supply_buy()
             next_reset = self._os_shop_delay(not_empty)
             logger.info('大世界商店+已完成，延迟到下次重置')
-            logger.attr('OpsiShopNextReset', next_reset)
+            logger.attr('大世界商店下次重置', next_reset)
         else:
             next_reset = get_os_next_reset()
-            logger.warning('There is no shop in the port, skip to the next month.')
-            logger.attr('OpsiShopNextReset', next_reset)
+            logger.warning('[大世界-商店] 港口中没有商店，跳到下个月')
+            logger.attr('大世界商店下次重置', next_reset)
 
         self.port_shop_quit()
         self.port_quit()

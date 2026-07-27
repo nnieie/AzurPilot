@@ -288,7 +288,7 @@ class TaskConfigMixin(WebUIMixinBase):
             pin_on_change(
                 name="_".join(path), onchange=partial(put_queue, ".".join(path))
             )
-        logger.info("Init config watcher done.")
+        logger.info("[WebUI-任务配置] 配置监听器初始化完成")
 
     def _alas_thread_update_config(self) -> None:
         modified = {}
@@ -406,7 +406,7 @@ class TaskConfigMixin(WebUIMixinBase):
                 else:
                     modified.pop(k)
                     invalid.append(k)
-                    logger.warning(f"Invalid value {v} for key {k}, skip saving.")
+                    logger.warning(f"[WebUI-任务配置] 无效值 {v}，键 {k}，跳过保存")
             self.pin_remove_invalid_mark(valid)
             self.pin_set_invalid_mark(invalid)
             if modified:
@@ -417,7 +417,7 @@ class TaskConfigMixin(WebUIMixinBase):
                     color="success",
                 )
                 logger.info(
-                    f"Save config {filepath_config(config_name)}, {dict_to_kv(modified)}"
+                    f"[WebUI-任务配置] 保存配置 {filepath_config(config_name)}, {dict_to_kv(modified)}"
                 )
                 config_updater.write_file(config_name, config)
         except Exception as e:

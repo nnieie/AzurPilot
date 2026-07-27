@@ -1,3 +1,7 @@
+"""WebUI 底层工具函数集，提供 LocalStorage 读写、JS 注入执行、
+CSS 样式管理、时间格式转换等功能，
+以及维持 UI 刷新的任务调度控制器。"""
+
 # 此文件提供了 WebUI 相关的底层工具函数。
 # 包含 LocalStorage 读写、JavaScript 代码注入执行、CSS 样式管理、时间格式转换以及维持 UI 刷新的任务调度控制器。
 import datetime
@@ -160,9 +164,9 @@ class TaskHandler:
         添加后台运行的任务。
         """
         if task in self.tasks:
-            logger.warning(f"Task {task} already in tasks list.")
+            logger.warning(f"[WebUI-工具] 任务 {task} 已在任务列表中")
             return
-        logger.info(f"Add task {task}")
+        logger.info(f"添加任务 {task}")
         with self._lock:
             self.tasks.append(task)
         if pending_delete:
@@ -171,10 +175,10 @@ class TaskHandler:
     def _remove_task(self, task: Task) -> None:
         if task in self.tasks:
             self.tasks.remove(task)
-            logger.info(f"Task {task} removed.")
+            logger.info(f"[WebUI-工具] 任务 {task} 已移除")
         else:
             logger.warning(
-                f"Failed to remove task {task}. Current tasks list: {self.tasks}"
+                f"[WebUI-工具] 移除任务 {task} 失败。当前任务列表: {self.tasks}"
             )
 
     def remove_task(self, task: Task, nowait: bool = False) -> None:
@@ -246,7 +250,7 @@ class TaskHandler:
                     time.sleep(0.05)
             else:
                 time.sleep(0.5)
-        logger.info("End of task handler loop")
+        logger.info("任务处理循环结束")
 
     def _get_thread(self) -> threading.Thread:
         thread = threading.Thread(target=self.loop, daemon=True)
@@ -256,9 +260,9 @@ class TaskHandler:
         """
         启动任务处理器。
         """
-        logger.info("Start task handler")
+        logger.info("启动任务处理")
         if self._thread is not None and self._thread.is_alive():
-            logger.warning("Task handler already running!")
+            logger.warning("[WebUI-工具] 任务处理器已在运行！")
             return
         self._thread = self._get_thread()
         self._thread.start()
@@ -273,7 +277,7 @@ class TaskHandler:
         if threading.current_thread() is not self._thread:
             self._thread.join(timeout=2)
             if not self._thread.is_alive():
-                logger.info("Finish task handler")
+                logger.info("完成任务处理")
                 return True
             else:
                 logger.warning("[WebUI] 任务处理器未在 2 秒内停止")
@@ -699,7 +703,7 @@ def get_next_time(t: datetime.time):
 
 
 def on_task_exception(self):
-    logger.exception("An internal error occurred in the application")
+    logger.exception("[WebUI-工具] 应用发生内部错误")
     toast_msg = (
         "应用发生内部错误"
         if "zh" in session_info.user_language

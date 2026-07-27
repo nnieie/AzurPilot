@@ -1,3 +1,10 @@
+"""
+实例进程管理器。
+
+管理 Alas 多实例运行时的进程生命周期，包括进程池维护、状态追踪
+（运行中/停止/异常）及进程间通信的安全处理逻辑。
+"""
+
 import argparse
 
 # 此文件专门用于管理 Alas 运行时各实例进程的生存周期及其子进程。
@@ -222,16 +229,16 @@ class ProcessManager:
                         Text(f"[{self.config_name}] exited. Reason: Manual stop\n")
                     )
             if not stopped:
-                logger.error(f"[{self.config_name}] failed to stop worker PID {pid}")
+                logger.error(f"[{self.config_name}] 停止工作进程失败 PID {pid}")
             log_queue_handler = self.thd_log_queue_handler
             if log_queue_handler is not None:
                 log_queue_handler.join(timeout=1)
                 if log_queue_handler.is_alive():
                     logger.warning(
-                        "Log queue handler thread does not stop within 1 seconds"
+                        "[WebUI-进程管理] 日志队列处理线程未在 1 秒内停止"
                     )
         if stopped:
-            logger.info(f"[{self.config_name}] exited")
+            logger.info(f"[{self.config_name}] 已退出")
         else:
             logger.warning(f"[{self.config_name}] worker 未完全停止")
         return stopped
@@ -338,10 +345,10 @@ class ProcessManager:
                     return ProcessManager._wait_pid_exit(pid, timeout=3)
                 if not ProcessManager._pid_exists(pid):
                     return True
-                logger.warning(f"Failed to stop worker PID {pid}: taskkill returned {result.returncode}")
+                logger.warning(f"[WebUI-进程管理] 停止工作进程失败 PID {pid}: taskkill 返回 {result.returncode}")
                 return False
             except (OSError, subprocess.TimeoutExpired) as exc:
-                logger.warning(f"Failed to stop worker PID {pid}: {exc}")
+                logger.warning(f"[WebUI-进程管理] 停止工作进程失败 PID {pid}: {exc}")
                 return False
         else:
             try:
@@ -506,7 +513,7 @@ class ProcessManager:
             self.renderables.append(log)
             if len(self.renderables) > self.renderables_max_length:
                 self.renderables = self.renderables[self.renderables_reduce_length :]
-        logger.info("End of log queue handler loop")
+        logger.info("日志队列处理循环结束")
 
     @property
     def alive(self) -> bool:
@@ -639,11 +646,11 @@ class ProcessManager:
         set_func_logger(func=q.put)
 
         if os.environ.get("DEMO") == "1":
-            logger.info("Log3")
+            logger.info("[WebUI-进程] 日志3")
             time.sleep(1)
-            logger.info("Log2")
+            logger.info("[WebUI-进程] 日志2")
             time.sleep(1)
-            logger.info("Log1")
+            logger.info("[WebUI-进程] 日志1")
             time.sleep(1)
             logger.info("[WebUI] 此版本为演示用途")
             return
@@ -726,7 +733,7 @@ class ProcessManager:
             instances: 需要重启的实例列表，元素为 ProcessManager 或配置名称字符串。
             ev: 用于通知子进程执行更新的事件对象。
         """
-        logger.hr("Restart alas")
+        logger.hr("[WebUI-进程管理] 重启 Alas")
 
         # 加载 MOD_CONFIG_DICT
         list_mod_instance()
@@ -751,11 +758,11 @@ class ProcessManager:
             pass
 
         for process in _instances:
-            logger.info(f"Starting [{process.config_name}]")
+            logger.info(f"启动中 [{process.config_name}]")
             process.start(func=get_config_mod(process.config_name), ev=ev)
 
         try:
             os.remove("./config/reloadalas")
         except:
             pass
-        logger.info("Start alas complete")
+        logger.info("[WebUI-进程管理] 启动 Alas 完成")

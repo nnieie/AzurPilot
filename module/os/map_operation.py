@@ -1,3 +1,26 @@
+"""
+大世界海域操作模块。
+
+负责大世界（Operation Siren）模式下的海域层面操作，包括海域名称识别、
+当前海域检测、海域初始化、特殊海域退出等功能。
+
+主要类:
+    OSMapOperation: 海域操作类，整合命令处理器、任务处理器、港口处理器等。
+
+功能:
+    - 多服务器海域名称 OCR 识别（CN/EN/JP/TW），包含大量服务器特有的 OCR 修正逻辑。
+    - 海域初始化：处理弹窗、动画延迟、海域名称识别。
+    - 特殊海域（隐秘海域、深渊海域、要塞）的进入和退出。
+    - 指挥喵搜索状态检测和进度读取。
+
+术语:
+    海域 (Zone): 大世界地图上的一个可进入区域，有安全区/危险区等类型。
+    隐秘海域 (Obscure Zone): 特殊海域类型，需要特定条件才能进入。
+    深渊海域 (Abyssal Zone): 特殊海域类型，包含强力敌人。
+    要塞 (Stronghold): 塞壬要塞，特殊海域类型。
+    安全区 (Safe Zone): 已完全清理的海域。
+    危险区 (Danger Zone): 未完全清理的海域。
+"""
 from module.base.decorator import Config
 from module.base.timer import Timer
 from module.base.utils import *
@@ -16,6 +39,15 @@ from module.ui.assets import BACK_ARROW, OS_CHECK
 
 
 class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandler, OSFleetSelector):
+    """大世界海域操作类。
+
+    整合地图命令处理器、任务处理器、港口处理器、仓库处理器和舰队选择器，
+    提供海域层面的完整操作能力。
+
+    Attributes:
+        zone (Zone): 当前海域对象。
+        is_zone_name_hidden (bool): 海域名称是否被安全区标记遮挡。
+    """
     zone: Zone
     is_zone_name_hidden = False
 
@@ -150,7 +182,7 @@ class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandle
             ScriptError: 脚本错误时抛出。
         """
         name = self.get_zone_name()
-        logger.info(f'Map name processed: {name}')
+        logger.info(f'[大世界-地图操作] 地图名称已处理: {name}')
         try:
             self.zone = self.name_to_zone(name)
         except ScriptError as e:
@@ -160,6 +192,10 @@ class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandle
         return self.zone
 
     def zone_config_set(self):
+        """根据当前海域区域设置地图检测参数。
+
+        区域 5（极地海域）使用不同的边缘颜色范围和角落检测方向。
+        """
         if self.zone.region == 5:
             self.config.HOMO_EDGE_COLOR_RANGE = (0, 8)
             self.config.MAP_ENSURE_EDGE_INSIGHT_CORNER = 'bottom'
@@ -181,9 +217,9 @@ class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandle
         Raises:
             MapDetectionError: 解析海域名称失败时抛出。
         """
-        logger.hr('Zone init')
+        logger.hr('[大世界-地图操作] 区域初始化')
         self.wait_os_map_buttons()
-        logger.info('Get zone name')
+        logger.info('[大世界-地图操作] 获取区域名称')
         timeout = Timer(1.5, count=5).start()
         for _ in self.loop():
             # 处理弹窗
@@ -210,7 +246,7 @@ class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandle
                 continue
 
             if timeout.reached():
-                logger.warning('Zone init timeout')
+                logger.warning('[大世界-地图操作] 区域初始化超时')
                 break
             if self.is_in_map():
                 try:
@@ -221,13 +257,13 @@ class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandle
                 timeout.reset()
 
         if fallback_init:
-            logger.warning('Unable to get zone name, get current zone from globe map instead')
+            logger.warning('[大世界-地图] 无法获取区域名称，从地球仪获取当前区域')
             if hasattr(self, 'get_current_zone_from_globe'):
                 return self.get_current_zone_from_globe()
             else:
-                logger.warning('OperationSiren.get_current_zone_from_globe() not exists')
+                logger.warning('[大世界-地图] OperationSiren.get_current_zone_from_globe() 不存在')
                 if not self.is_in_map():
-                    logger.warning('Trying to get zone name, but not in OS map')
+                    logger.warning('[大世界-地图操作] 尝试获取区域名称，但不在大世界地图中')
                 return self.get_current_zone()
 
     def is_in_special_zone(self):
@@ -245,7 +281,7 @@ class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandle
             in: is_in_map
             out: is_in_map, 来源海域
         """
-        logger.hr('Map exit')
+        logger.hr('[大世界-地图操作] 地图退出')
         confirm_timer = Timer(1, count=2)
         changed = False
         for _ in self.loop():

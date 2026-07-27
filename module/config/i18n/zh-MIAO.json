@@ -111,7 +111,7 @@
       "help": "Task.CoalitionScuttle.help"
     },
     "MaritimeEscort": {
-      "name": "商船护航护送喵",
+      "name": "商路护航喵",
       "help": "保护商船，正义的雪风大人登场！ᕦ(ò_óˇ)ᕤ"
     },
     "EventShop": {
@@ -603,6 +603,12 @@
       "minitouch": "minitouch喵",
       "Hermit": "Hermit喵",
       "MaaTouch": "MaaTouch喵"
+    },
+    "GameSettings": {
+      "name": "自动应用推荐游戏设置",
+      "help": "在启动游戏前，自动尝试应用推荐的帧率、剧情、大型作战、提示及确认设置。仅在游戏进程已完全停止、具备 root 或 su 权限且写入校验通过时执行。设置数据仅在内存中处理，不创建备份或恢复文件；无法安全执行时将跳过，不影响游戏正常启动。",
+      "True": "开启",
+      "False": "关闭"
     },
     "ScreenshotDedithering": {
       "name": "去除图片色彩喵",
@@ -1918,11 +1924,11 @@
   },
   "MaritimeEscort": {
     "_info": {
-      "name": "商船护航",
+      "name": "商路护航",
       "help": "进去就撤退，约70%奖励喵。 (´・ω・`)"
     },
     "Enable": {
-      "name": "启用商船护航喵",
+      "name": "启用商路护航喵",
       "help": ""
     }
   },
@@ -2816,7 +2822,7 @@
       "help": "每日S胜解锁扫荡，未解锁回退传统出击喵。 (´・ω・`)"
     },
     "EscortMission": {
-      "name": "商船护送",
+      "name": "商路护航",
       "help": "",
       "skip": "不打喵",
       "first": "第一个喵",
@@ -2824,7 +2830,7 @@
       "third": "第三个喵"
     },
     "EscortMissionFleet": {
-      "name": "商船护送出击舰队",
+      "name": "商路护航出击舰队",
       "help": "",
       "1": "1喵",
       "2": "2喵",

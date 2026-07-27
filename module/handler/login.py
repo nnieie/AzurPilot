@@ -1,3 +1,18 @@
+"""登录流程处理器。
+
+管理碧蓝航线的登录和游戏重启流程，包括：
+- 应用启动和登录画面检测
+- 各种登录弹窗处理（公告、活动、签到等）
+- 游戏崩溃/卡死时的重启恢复
+- 服务器连接异常处理
+
+登录流程覆盖了游戏启动后的各种 UI 状态，
+通过截图循环检测并处理所有可能出现的弹窗和确认框，
+最终确保游戏回到主界面。
+
+继承自 UI，利用页面导航能力处理跨页面的弹窗。
+"""
+
 # 基于原版 login.py 增加了智能的游戏重启逻辑
 # 用于处理登录流程中的各种弹窗、公告以及在应用崩溃时执行重启恢复操作。
 # Last Updated: 2025-08-25 20:41
@@ -22,6 +37,17 @@ from module.ui.ui import UI
 
 
 class LoginHandler(UI):
+    """登录和游戏重启处理器。
+
+    处理游戏启动后的登录流程，包括各种弹窗、公告、签到奖励的自动关闭，
+    以及游戏崩溃后的重启恢复逻辑。
+
+    主要方法：
+    - _handle_app_login(): 完整的登录流程，从任意页面到主界面
+    - app_restart(): 重启游戏应用
+    - handle_app_login(): 带重试的登录入口
+    """
+
     def _handle_app_login(self):
         """
         Pages:
@@ -33,7 +59,7 @@ class LoginHandler(UI):
             GameTooManyClickError: 点击次数过多。
             GameNotRunningError: 游戏未运行。
         """
-        logger.hr('App login')
+        logger.hr('应用登录')
 
         confirm_timer = Timer(1.5, count=4).start()
         orientation_timer = Timer(5)
@@ -53,7 +79,7 @@ class LoginHandler(UI):
             # 结束条件
             if self.is_in_main():
                 if confirm_timer.reached():
-                    logger.info('Login to main confirm')
+                    logger.info('[登录] 登录到主界面确认')
                     break
             else:
                 confirm_timer.reset()
@@ -62,10 +88,10 @@ class LoginHandler(UI):
             if self.match_template_color(LOGIN_CHECK, offset=(30, 30), interval=5):
                 self.device.click(LOGIN_CHECK)
                 if not login_success:
-                    logger.info('Login success')
+                    logger.info('[登录] 登录成功')
                     login_success = True
             if self.appear(ANDROID_NO_RESPOND, offset=(30, 30), interval=5):
-                logger.warning('Emulator no respond')
+                logger.warning('[登录] 模拟器无响应')
                 self.device.click_record_add(ANDROID_NO_RESPOND)
                 self.device.click_record_check()
                 self.device.click(ANDROID_NO_RESPOND, control_check=False)
@@ -150,7 +176,7 @@ class LoginHandler(UI):
             GameTooManyClickError: 点击次数过多。
             GameNotRunningError: 游戏未运行。
         """
-        logger.info('handle_app_login')
+        logger.info('[登录] 处理应用登录')
         self.device.screenshot_interval_set(1.0)
         try:
             self._handle_app_login()
@@ -158,11 +184,11 @@ class LoginHandler(UI):
             self.device.screenshot_interval_set()
 
     def app_stop(self):
-        logger.hr('App stop')
+        logger.hr('应用停止')
         self.device.app_stop()
 
     def app_start(self):
-        logger.hr('App start')
+        logger.hr('应用启动')
         self.device.app_start()
         self.handle_app_login()
         # self.ensure_no_unfinished_campaign()
@@ -176,7 +202,7 @@ class LoginHandler(UI):
     #     self.config.task_delay(server_update=True)
 
     def app_restart(self):
-        logger.hr('App restart')
+        logger.hr('应用重启')
         # 智能的多次尝试重启逻辑
         RESTART_TRIES = 4
         FIRST_TRY_WAIT_SECONDS = 30
@@ -186,31 +212,31 @@ class LoginHandler(UI):
 
         clear_cache = getattr(self.config, 'Restart_ClearCache', False)
         for i in range(RESTART_TRIES):
-            logger.info(f"App restart attempt {i + 1}/{RESTART_TRIES}...")
+            logger.info(f"[重启] 应用重启尝试 {i + 1}/{RESTART_TRIES}...")
             self.device.app_stop()
             if clear_cache:
                 self.device.app_clear()
             self.device.sleep(3)
             self.device.app_start()
             wait_seconds = FIRST_TRY_WAIT_SECONDS if i == 0 else SUBSEQUENT_TRY_WAIT_SECONDS
-            logger.info(f"Waiting {wait_seconds} seconds for app to launch and stabilize...")
+            logger.info(f"[重启] 等待 {wait_seconds} 秒让应用启动和稳定...")
             self.device.sleep(wait_seconds)
 
             # 验证应用是否已运行
             if self.device.app_is_running():
-                logger.info(">>> App started successfully and is running.")
+                logger.info("[重启] 应用启动成功并正在运行")
                 is_restart_success = True
                 break  # 成功启动，跳出循环
             else:
-                logger.warning(f"Attempt {i + 1} failed. App is not running after launch (likely crashed).")
+                logger.warning(f"[重启] 尝试 {i + 1} 失败。应用启动后未运行（可能崩溃）")
                 if i < RESTART_TRIES - 1:
-                    logger.info("Retrying...")
-        
+                    logger.info("[重启] 重试中...")
+
         # 所有尝试均失败则抛出异常
         if not is_restart_success:
-            logger.critical(f"[Handler] 重试 {RESTART_TRIES} 次了！还是死活起不来，你的运行环境是碳基生物能搞出来的？")
+            logger.critical(f"[重启] 重试 {RESTART_TRIES} 次了！还是死活起不来，你的运行环境是碳基生物能搞出来的？")
             from module.exception import RequestHumanTakeover
-            raise RequestHumanTakeover("App restart failed repeatedly")
+            raise RequestHumanTakeover("[重启] 应用重启多次失败")
         self.handle_app_login()
         # self.ensure_no_unfinished_campaign()
 

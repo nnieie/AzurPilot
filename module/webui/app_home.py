@@ -136,7 +136,7 @@ class HomeMixin(WebUIMixinBase):
             data = ApiClient.get_announcement(timeout=10)
             self._announcement_result = (data, force)
         except Exception as e:
-            logger.error(f"Announcement fetch failed: {e}")
+            logger.error(f"[WebUI-主页] 获取公告失败: {e}")
             self._announcement_result = (None, force, str(e))
         finally:
             self._announcement_fetching = False
@@ -203,7 +203,7 @@ class HomeMixin(WebUIMixinBase):
             url_json = json.dumps(data.get("url", ""))
             force_json = "true" if force else "false"
 
-            logger.info(f"Pushing announcement: {data.get('title')}")
+            logger.info(f"[WebUI-主页] 推送公告: {data.get('title')}")
             run_js(
                 f"window.alasShowAnnouncement({title_json}, {content_json}, {announcement_id_json}, {url_json}, {force_json});"
             )
@@ -239,6 +239,24 @@ class HomeMixin(WebUIMixinBase):
     def run(self, initial_page="home") -> None:
         # setup gui
         set_env(title="AzurPilot", output_animation=False)
+        if get_localstorage("clarity_notice_shown") != "1":
+            set_localstorage("clarity_notice_shown", "1")
+            toast(
+                "本 WebUI 使用 Microsoft Clarity 收集页面访问、点击交互和性能数据，用于分析并改进使用体验。",
+                color="info",
+                duration=12,
+            )
+        # 加载 Microsoft Clarity 行为分析脚本，同一会话仅注入一次。
+        run_js(
+            "if (!document.getElementById('microsoft-clarity-script')) {"
+            "(function(c,l,a,r,i,t,y){"
+            "c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};"
+            "t=l.createElement(r);t.id='microsoft-clarity-script';t.async=1;"
+            "t.src='https://www.clarity.ms/tag/'+i;"
+            "y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);"
+            "})(window,document,'clarity','script','xszl2nrp3q');"
+            "}"
+        )
         run_js(
             "document.head.append(Object.assign(document.createElement('link'), { rel: 'manifest', href: '/static/assets/spa/manifest.json' }))"
         )
