@@ -352,3 +352,66 @@ class TestUpdaterReload(unittest.TestCase):
         updater._run_update.assert_not_called()
         updater.event.clear.assert_called_once_with()
         restart.assert_called_once_with([worker], updater.event)
+
+
+class TestUpdaterForceUpdate(unittest.TestCase):
+    @staticmethod
+    def _updater():
+        updater = object.__new__(Updater)
+        updater.state = 0
+        updater.force_update = False
+        updater._force_update_checking = False
+        return updater
+
+    def test_detected_update_starts_immediately_when_force_update_is_enabled(self):
+        updater = self._updater()
+        updater.force_update = True
+        updater._check_update = Mock(return_value=True)
+        updater.run_update = Mock()
+
+        updater._check_update_thread()
+
+        self.assertEqual(1, updater.state)
+        updater.run_update.assert_called_once_with()
+
+    def test_detected_update_waits_for_manual_or_scheduled_update_when_force_is_disabled(self):
+        updater = self._updater()
+        updater._check_update = Mock(return_value=True)
+        updater.run_update = Mock()
+
+        updater._check_update_thread()
+
+        self.assertEqual(1, updater.state)
+        updater.run_update.assert_not_called()
+
+    def test_existing_update_starts_when_force_update_is_later_enabled(self):
+        updater = self._updater()
+        updater._check_cloud_update = Mock(return_value=True)
+        updater._check_cloud_force_update = Mock(return_value=True)
+        updater.run_update = Mock()
+
+        updater._check_force_update_thread()
+
+        self.assertTrue(updater.force_update)
+        self.assertFalse(updater._force_update_checking)
+        updater.run_update.assert_called_once_with()
+
+    def test_force_update_uses_one_second_check_schedule(self):
+        updater = self._updater()
+        object.__setattr__(updater, "CheckUpdateInterval", 5)
+        updater.read = Mock()
+        updater.check_update = Mock()
+        handler = types.SimpleNamespace(_task=types.SimpleNamespace(delay=None))
+        loop = updater.check_update_loop()
+        next(loop)
+
+        with patch(
+            "module.webui.updater.time.monotonic", side_effect=[0.0, 0.5, 1.5]
+        ):
+            loop.send(handler)
+            next(loop)
+            updater.force_update = True
+            next(loop)
+
+        self.assertEqual(2, updater.check_update.call_count)
+        self.assertEqual(1, handler._task.delay)

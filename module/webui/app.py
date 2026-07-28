@@ -22,6 +22,7 @@ from module.webui.app_dependencies import (
     argparse,
     asgi_app,
     get_device_id,
+    get_localstorage_values,
     info,
     lang,
     load_webui_styles,
@@ -35,6 +36,7 @@ from module.webui.app_dependencies import (
     task_handler,
     time,
     updater,
+    webconfig,
 )
 from module.webui.app_developer_menu import DeveloperMenuMixin
 from module.webui.app_developer_settings import DeveloperSettingsMixin
@@ -127,6 +129,9 @@ PUBLIC_WEBUI_PASSWORD_GENERATE_FAILED_MESSAGE = (
 )
 WEBUI_AUTO_PASSWORD_FILE = "password.txt"
 DEMO_DEVICE_ID_TEXT = "此程序是为了演示用途构建的版本/This application is a version built for demonstration purposes."
+
+
+INITIAL_WEBUI_CSS = "/static/assets/gui/css/alas.css"
 
 
 class AlasGUI(
@@ -5360,21 +5365,34 @@ def app():
 
     def _run_gui(initial_page: str = "home") -> None:
         set_env(title="AzurPilot", output_animation=False)
-        load_webui_styles(theme=AlasGUI.theme, is_mobile=info.user_agent.is_mobile)
+        load_webui_styles(
+            theme=AlasGUI.theme,
+            is_mobile=info.user_agent.is_mobile,
+            preloaded_styles=("alas",),
+        )
         if _block_restricted_device() or _block_public_webui_password_error():
             return
-        if is_webui_password_set(key) and not login(key):
+        localstorage = None
+        if is_webui_password_set(key):
+            localstorage = get_localstorage_values(
+                ("password", "clarity_notice_shown", "aside")
+            )
+        if is_webui_password_set(key) and not login(
+            key, stored_password=localstorage.get("password")
+        ):
             logger.warning(f"[WebUI] {info.user_ip} 登录失败")
             time.sleep(1.5)
             run_js("location.reload();")
             return
         gui = AlasGUI()
         local.gui = gui
-        gui.run(initial_page=initial_page)
+        gui.run(initial_page=initial_page, localstorage=localstorage)
 
+    @webconfig(css_file=INITIAL_WEBUI_CSS)
     def index() -> None:
         _run_gui()
 
+    @webconfig(css_file=INITIAL_WEBUI_CSS)
     def manage() -> None:
         _run_gui(initial_page="manage")
 

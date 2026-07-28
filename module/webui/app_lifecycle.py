@@ -41,7 +41,7 @@ def startup() -> None:
     lang.reload()
     updater.event = State.manager.Event()
     if updater.delay > 0:
-        task_handler.add(updater.check_update, updater.delay)
+        task_handler.add(updater.check_update_loop(), 1)
     task_handler.add(updater.schedule_update(), 86400)
     task_handler.start()
     if State.deploy_config.DiscordRichPresence:

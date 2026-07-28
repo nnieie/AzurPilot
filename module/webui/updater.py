@@ -30,6 +30,8 @@ class Updater(DeployConfig, GitManager):
         self.state = 0
         self.event: threading.Event = None
         self._update_lock = threading.Lock()
+        self.force_update = False
+        self._force_update_checking = False
 
     def alas_kill(self):
         import os
@@ -82,6 +84,10 @@ class Updater(DeployConfig, GitManager):
         """检查云端更新开关"""
         return self.cloud_auto_update_enabled()
 
+    def _check_cloud_force_update(self) -> bool:
+        """检查云端强制更新开关。"""
+        return self.cloud_force_update_enabled()
+
     def _check_update(self) -> bool:
         self.state = "checking"
 
@@ -90,8 +96,14 @@ class Updater(DeployConfig, GitManager):
             self.cloud_update_access_failed(fatal=False)
             return False
         if not cloud_update:
+            self.force_update = False
             logger.info("云更新标志为false，跳过更新检查")
             return False
+
+        force_update = self._check_cloud_force_update()
+        self.force_update = force_update is True
+        if force_update is None:
+            logger.warning("强制更新开关不可访问，按关闭处理")
 
         if State.deploy_config.GitOverCdn:
             status = self.goc_client.get_status()
@@ -211,9 +223,30 @@ class Updater(DeployConfig, GitManager):
         try:
             result = self._check_update()
             self.state = result
+            if result and self.force_update:
+                logger.info("强制更新开关已开启，立即执行更新")
+                self.run_update()
         except Exception as e:
             logger.exception(e)
             self.state = 0
+
+    def _check_force_update_thread(self):
+        """已有更新时，仅检查强制更新开关以保留前端状态。"""
+        try:
+            cloud_update = self._check_cloud_update()
+            if cloud_update is not True:
+                self.force_update = False
+                return
+
+            force_update = self._check_cloud_force_update()
+            self.force_update = force_update is True
+            if self.force_update:
+                logger.info("强制更新开关已开启，立即执行已检测到的更新")
+                self.run_update()
+        except Exception as e:
+            logger.exception(e)
+        finally:
+            self._force_update_checking = False
 
     def check_update(self):
         if self.state in (0, "failed", "finish"):
@@ -222,6 +255,25 @@ class Updater(DeployConfig, GitManager):
                 target=self._check_update_thread,
                 daemon=True
             ).start()
+        elif self.state == 1 and not self._force_update_checking:
+            self._force_update_checking = True
+            threading.Thread(
+                target=self._check_force_update_thread,
+                daemon=True,
+            ).start()
+
+    def check_update_loop(self) -> Generator:
+        """按普通或强制模式调度更新检查。"""
+        th: TaskHandler
+        th = yield
+        next_check = 0.0
+        while True:
+            now = time.monotonic()
+            if self.force_update or now >= next_check:
+                self.check_update()
+                next_check = now + (1 if self.force_update else self.delay)
+            th._task.delay = 1
+            yield
 
     @retry(ExecutionError, tries=3, delay=5, logger=None)
     def git_install(self):
