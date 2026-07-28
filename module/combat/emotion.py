@@ -285,6 +285,9 @@ class Emotion:
         仅在心情整数值发生变化时更新 Record 时间戳，
         并将 Record 回扣 fractional_seconds 对应的等效秒数，
         使未满1点的恢复余数可在下次 update() 时继续累积。
+
+        注意：FleetEmotion.value 和 FleetEmotion.record 是 @property，
+        从 self.config 实时读取。setattr 到 config 后属性自动更新，无需手动赋值。
         """
         if self.using_public:
             fleet = self.public_fleet
