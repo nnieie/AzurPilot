@@ -4,6 +4,7 @@ import subprocess
 import sys
 from typing import Optional, Union
 
+from deploy.geo import get_country_code
 from deploy.logger import logger
 from deploy.utils import *
 
@@ -84,6 +85,7 @@ class DeployConfig(ConfigModel):
         self.template_file = get_deploy_template()
         self.config = {}
         self.config_template = {}
+        self._github_location_checked = False
         self.read()
 
         self.show_config()
@@ -124,6 +126,7 @@ class DeployConfig(ConfigModel):
         每次 `read()` 之后必须调用。
         """
         self.config.pop('AutoUpdate', None)
+        self._redirect_github_repository()
         if self.Repository in [
             'https://gitee.com/LmeSzinc/AzurLaneAutoScript',
             'https://gitee.com/lmeszinc/azur-lane-auto-script-mirror',
@@ -148,6 +151,22 @@ class DeployConfig(ConfigModel):
             super().__setattr__('Repository', 'https://github.com/nnieie/AzurPilot')
         if self.Repository in ['cn']:
             super().__setattr__('Repository', 'https://github.com/nnieie/AzurPilot')
+
+    def _redirect_github_repository(self):
+        """为官方 GitHub 源一次性选择适合当前网络的更新镜像。"""
+        if self._github_location_checked or self.Repository != GITHUB_REPOSITORY:
+            return
+
+        self._github_location_checked = True
+        country_code = get_country_code()
+        if country_code == 'cn':
+            logger.info('检测到中国大陆网络，切换至国内 Git 更新源')
+            self.Repository = GIT_OVER_CDN_REPOSITORY
+            self.config['Repository'] = GIT_OVER_CDN_REPOSITORY
+        elif country_code is None:
+            logger.warning('无法检测网络所在国家，保留 GitHub 更新源')
+        else:
+            logger.info('当前网络不在中国大陆，保留 GitHub 更新源')
 
     def filepath(self, key):
         """根据配置键获取绝对文件路径。

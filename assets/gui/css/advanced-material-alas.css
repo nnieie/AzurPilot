@@ -31,9 +31,6 @@
    1. CSS 变量定义
    ========================================== */
 
-/* 引入 Google Fonts 字体：Inter，包含常规、中等和半粗字重 */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-
 :root {
 	/* === 色彩系统 === */
 	--alas-apple-bg: #f5f5f7;
