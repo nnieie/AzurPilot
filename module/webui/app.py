@@ -45,6 +45,7 @@ from module.webui.app_developer_settings import DeveloperSettingsMixin
 from module.webui.app_developer_tools import DeveloperToolsMixin
 from module.webui.app_developer_update import DeveloperUpdateMixin
 from module.webui.app_event_tools import EventToolsMixin
+from module.webui.app_fleet_management import FleetManagementMixin
 from module.webui.app_helpers import (
     DEMO_DEVICE_ID_TEXT,
     WEBUI_AUTO_PASSWORD_FILE,
@@ -155,6 +156,7 @@ class AlasGUI(
     OpsiExportMixin,
     ShipExperienceStatisticsMixin,
     CommissionIncomeStatisticsMixin,
+    FleetManagementMixin,
     TaskConfigMixin,
     EventToolsMixin,
     OverviewMixin,
