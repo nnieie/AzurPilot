@@ -5,7 +5,13 @@ from urllib.parse import urljoin
 
 from starlette.testclient import TestClient
 
+from module.webui.app import (
+    INITIAL_LOADING_JS,
+    _initial_loading_css,
+    _initial_style_names,
+)
 from module.webui.fastapi import asgi_app
+from module.webui.utils import Icon
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -55,14 +61,18 @@ class TestWebUIStaticAssets(unittest.TestCase):
         css_url = urljoin(
             "https://example.test/azur/", "static/assets/gui/css/alas.css"
         )
-        font_url = urljoin(css_url, "../../spa/MiSans-Demibold.ttf")
+        icon_url = urljoin(
+            "https://example.test/azur/",
+            "static/assets/spa/spa-icon-192x192.png",
+        )
         logo_url = urljoin(css_url, "../../../doc/logo.webp")
 
         self.assertEqual(
             css_url, "https://example.test/azur/static/assets/gui/css/alas.css"
         )
         self.assertEqual(
-            font_url, "https://example.test/azur/static/assets/spa/MiSans-Demibold.ttf"
+            icon_url,
+            "https://example.test/azur/static/assets/spa/spa-icon-192x192.png",
         )
         self.assertEqual(logo_url, "https://example.test/azur/static/doc/logo.webp")
 
@@ -86,3 +96,35 @@ class TestWebUIStaticAssets(unittest.TestCase):
         self.assertIn('url("https://api.yppp.net/api.php")', theme_css)
         self.assertNotIn("fonts.googleapis.com", obs_overlay)
         self.assertNotIn("fonts.gstatic.com", obs_overlay)
+
+    def test_initial_shell_uses_inline_loading_fallback(self):
+        loading_css = _initial_loading_css("default")
+
+        self.assertIn("#pywebio-scope-ROOT:empty", loading_css)
+        self.assertIn("alas-initial-ready", loading_css)
+        self.assertIn("MutationObserver", INITIAL_LOADING_JS)
+        self.assertIn("input-cards", INITIAL_LOADING_JS)
+
+    def test_initial_styles_are_loaded_before_websocket_output(self):
+        self.assertEqual(
+            ("alas", "entry-alas", "light-alas"),
+            _initial_style_names("default"),
+        )
+        self.assertEqual(
+            (
+                "alas",
+                "entry-alas",
+                "advanced-material-alas",
+                "dark-advanced-material-overrides-alas",
+            ),
+            _initial_style_names("dark_advanced_material"),
+        )
+
+    def test_header_icon_is_a_static_resource(self):
+        self.assertIn("static/assets/spa/spa-icon-192x192.png", Icon.ALAS)
+        self.assertNotIn("base64", Icon.ALAS)
+
+    def test_initial_css_does_not_download_full_misans_font(self):
+        css = (PROJECT_ROOT / "assets/gui/css/alas.css").read_text(encoding="utf-8")
+
+        self.assertNotIn("MiSans-Demibold.ttf", css)

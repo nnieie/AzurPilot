@@ -400,10 +400,7 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
             self.config.OpsiMeowfficerFarming_ActionPointPreserve = 500
 
         if ap_preserve is None:
-            preserve = min(
-                self.get_action_point_limit(self.config.OpsiMeowfficerFarming_APPreserveUntilReset),
-                self.config.OpsiMeowfficerFarming_ActionPointPreserve,
-            )
+            preserve = self.config.OpsiMeowfficerFarming_ActionPointPreserve
         else:
             preserve = int(ap_preserve)
         if preserve == 0:
