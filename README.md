@@ -2,6 +2,14 @@
 # AzurPilot — 碧蓝航线自动化辅助工具
 
 <p align="center">
+  <a href="README.md"><img src="https://img.shields.io/badge/简体中文-中文-blue?style=flat-square" alt="简体中文"></a>
+  <a href="README.zh-TW.md"><img src="https://img.shields.io/badge/繁體中文-繁體-green?style=flat-square" alt="繁體中文"></a>
+  <a href="README.en.md"><img src="https://img.shields.io/badge/English-English-red?style=flat-square" alt="English"></a>
+  <a href="README.ja.md"><img src="https://img.shields.io/badge/日本語-日本語-orange?style=flat-square" alt="日本語"></a>
+  <a href="README.ko.md"><img src="https://img.shields.io/badge/한국어-한국어-violet?style=flat-square" alt="한국어"></a>
+</p>
+
+<p align="center">
   <img src="doc/logo.webp" alt="AzurPilot Logo" width="400">
 </p>
 
@@ -528,6 +536,7 @@ AzurPilot 提供 MCP 服务，可供支持 MCP 的客户端或工具调用。
 - [GitHub 仓库](https://github.com/wess09/AzurPilot) — 源码、Issue、Pull Request
 - [QQ 交流群](https://join.nanoda.work/#/) — 碧蓝航线自动化社区交流
 - [AzurLaneAutoScript 上游项目](https://github.com/LmeSzinc/AzurLaneAutoScript) — ALAS 原版
+- [AzurPilot 树莓派版](https://github.com/nnieie/AzurPilot) — 面向树莓派 / Termux 真机的 AzurPilot CN 部署版
 
 ## 开发与贡献
 
@@ -584,4 +593,4 @@ uv run -m module.config.config_updater
   </a>
   <br>
   <b>支持本项目（用于支付服务器费用或训练新模型等？）</b>
-</p>  
+</p>
