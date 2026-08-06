@@ -48,7 +48,7 @@
     <img src="https://img.shields.io/badge/Web-ダウンロード-blue?style=for-the-badge&logo=google-chrome&logoColor=white" />
   </a>
   &nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://addgroup.nanoda.work/#/">
+  <a href="https://join.nanoda.work/#/">
     <img src="https://img.shields.io/badge/交流群-QQ-red?style=for-the-badge&logo=tencent-qq&logoColor=white" />
   </a>
 </div>

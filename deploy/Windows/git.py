@@ -3,7 +3,7 @@ import os
 import shutil
 import subprocess
 
-from deploy.Windows.config import DeployConfig
+from deploy.Windows.config import DeployConfig, ExecutionError
 from deploy.Windows.logger import Progress, logger
 from deploy.Windows.utils import cached_property
 from deploy.git_over_cdn.client import GitOverCdnClient
