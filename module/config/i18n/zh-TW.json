@@ -573,6 +573,7 @@
       "en-3": "[EN] Washington",
       "en-4": "[EN] Amagi",
       "en-5": "[EN] Little Enterprise",
+      "en-6": "[EN] Belfast",
       "jp-0": "[JP] ブレスト",
       "jp-1": "[JP] 横須賀",
       "jp-2": "[JP] 佐世保",
@@ -590,7 +591,12 @@
       "jp-14": "[JP] キール",
       "jp-15": "[JP] 若松",
       "jp-16": "[JP] オデッサ",
-      "jp-17": "[JP] スイートバン"
+      "jp-17": "[JP] スイートバン",
+      "tw-0": "[TW] 珍珠港",
+      "tw-1": "[TW] 珊瑚海",
+      "tw-2": "[TW] 中途島",
+      "tw-3": "[TW] 瓜達康納爾",
+      "tw-4": "[TW] 雷伊泰灣"
     },
     "ScreenshotMethod": {
       "name": "選擇截圖方案",
@@ -2020,9 +2026,13 @@
       "oil": "鑽石>石油>魔方",
       "custom": "自定義"
     },
+    "DynamicProgramming": {
+      "name": "選擇全域最佳策略（實驗性）",
+      "help": "此實驗功能預設關閉。開啟後依次比較價值向量、各層編號總和與最晚結束時間；同一委託集合若僅順序不同，會按篩選器順序去重，再比較完成時間總和。"
+    },
     "CustomFilter": {
       "name": "自定義委託過濾器",
-      "help": "使用自定義過濾器需將 \"委託過濾器\" 設定為 \"自定義\"，並閱讀 https://github.com/LmeSzinc/AzurLaneAutoScript/wiki/filter_string_cn"
+      "help": "請將委託篩選器設為自訂。開啟實驗性動態規劃時可用 tier 分隔價值層級，並用 ignore 標記演算法分界：ignore 前使用動態規劃；ignore 後按照傳統篩選順序填充槽位，但委託耗時不得超過動態規劃為該槽位預留的時間窗口。關閉動態規劃時 tier 和 ignore 均會被忽略。"
     },
     "DoMajorCommission": {
       "name": "做主要委託（1200油/1000油委託）",

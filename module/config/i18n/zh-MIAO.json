@@ -573,6 +573,7 @@
       "en-3": "[EN] Washington",
       "en-4": "[EN] Amagi",
       "en-5": "[EN] Little Enterprise",
+      "en-6": "[EN] Belfast",
       "jp-0": "[JP] ブレスト",
       "jp-1": "[JP] 横須賀",
       "jp-2": "[JP] 佐世保",
@@ -590,7 +591,12 @@
       "jp-14": "[JP] キール",
       "jp-15": "[JP] 若松",
       "jp-16": "[JP] オデッサ",
-      "jp-17": "[JP] スイートバン"
+      "jp-17": "[JP] スイートバン",
+      "tw-0": "[TW] 珍珠港",
+      "tw-1": "[TW] 珊瑚海",
+      "tw-2": "[TW] 中途島",
+      "tw-3": "[TW] 瓜達康納爾",
+      "tw-4": "[TW] 雷伊泰灣"
     },
     "ScreenshotMethod": {
       "name": "模拟器截图法术 ∩",
@@ -2020,9 +2026,13 @@
       "oil": "钻石>石油>魔方喵",
       "custom": "自定义喵"
     },
+    "DynamicProgramming": {
+      "name": "选择全局最优策略（实验性）",
+      "help": "此实验功能默认关闭喵。开启后依次比较价值向量、各层编号和与最晚结束时间；同一委托集合若只有顺序不同，会按过滤器顺序去重，再比较完成时间总和喵。"
+    },
     "CustomFilter": {
       "name": "自定义委托过滤器",
-      "help": "需将过滤器设自定义并阅读文档。乱设漏委托别叫喵→ https://github.com/LmeSzinc/AzurLaneAutoScript/wiki/filter_string_cn"
+      "help": "需将过滤器设为自定义喵。开启动态规划实验功能时可用 tier 分隔价值层级，并用 ignore 标记算法分界：ignore 前使用动态规划；ignore 后按照传统过滤顺序填充槽位，但委托耗时不得超过动态规划为该槽位预留的时间窗口喵。关闭动态规划时 tier 和 ignore 均会被忽略喵。"
     },
     "DoMajorCommission": {
       "name": "做主要委托 (1200油/1000油)",

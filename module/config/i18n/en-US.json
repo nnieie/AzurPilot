@@ -573,6 +573,7 @@
       "en-3": "[EN] Washington",
       "en-4": "[EN] Amagi",
       "en-5": "[EN] Little Enterprise",
+      "en-6": "[EN] Belfast",
       "jp-0": "[JP] ブレスト",
       "jp-1": "[JP] 横須賀",
       "jp-2": "[JP] 佐世保",
@@ -590,7 +591,12 @@
       "jp-14": "[JP] キール",
       "jp-15": "[JP] 若松",
       "jp-16": "[JP] オデッサ",
-      "jp-17": "[JP] スイートバン"
+      "jp-17": "[JP] スイートバン",
+      "tw-0": "[TW] 珍珠港",
+      "tw-1": "[TW] 珊瑚海",
+      "tw-2": "[TW] 中途島",
+      "tw-3": "[TW] 瓜達康納爾",
+      "tw-4": "[TW] 雷伊泰灣"
     },
     "ScreenshotMethod": {
       "name": "Select Screenshot Method",
@@ -2020,9 +2026,13 @@
       "oil": "Diamond > Oil > Cubes",
       "custom": "Customize"
     },
+    "DynamicProgramming": {
+      "name": "Global optimal strategy (Experimental)",
+      "help": "This experimental option is disabled by default. Dynamic programming compares the value vector, per-tier index sums, and latest finish time. Plans selecting the same commissions in a different order are deduplicated by filter order before later tie-breakers such as total completion time."
+    },
     "CustomFilter": {
       "name": "Custom Commission Filter",
-      "help": "Custom commission filter syntax is the same as the Commission Preset filter"
+      "help": "Set Commission Filter to Customize to use this filter. With experimental dynamic programming enabled, tier separates value levels and ignore marks the algorithm boundary: rules before ignore use dynamic programming; rules after it fill slots in traditional filter order, but a commission must fit within the time window reserved by dynamic programming for that slot. When dynamic programming is disabled, both tier and ignore are ignored."
     },
     "DoMajorCommission": {
       "name": "Run Major Commissions (1200/1000 Oil)",
