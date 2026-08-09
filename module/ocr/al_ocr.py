@@ -4,14 +4,9 @@
 - ONNX Runtime 推理（默认），支持 DirectML (Windows GPU) 和 CoreML (macOS ANE) 加速
 - NCNN 推理，推理速度更快但模型覆盖较窄
 - Windows ML 设备选择，精确控制 GPU/CPU 推理设备
-- 自定义 CNN-CTC 英文识别模型（900k 参数），专为碧蓝航线优化
 
-模型按语言区分：
-- azur_lane：英文数字识别（游戏 UI 中的数字、等级、时间等）
-- azur_lane_jp：日文服务器专用识别模型
-- cn：中文识别（中+英混合）
-- jp：日文识别
-- tw：繁体中文识别
+统一使用通用 PP-OCRv6 识别模型，所有语言共用同一套模型与字典。
+不同语言通过配置项映射到同一模型版本。
 
 工作线程模型：
 - OCR 推理在专用后台线程 (AlOcrQueue) 中执行，避免阻塞主循环
@@ -67,7 +62,6 @@ try:
     from rapidocr import RapidOCR, OCRVersion
     from rapidocr.utils.output import RapidOCROutput
     from rapidocr.ch_ppocr_rec import TextRecognizer
-    from rapidocr.ch_ppocr_rec.typings import TextRecOutput
     from rapidocr.cal_rec_boxes import CalRecBoxes
     from rapidocr.ch_ppocr_det import TextDetector, TextDetOutput
     from rapidocr.ch_ppocr_det.utils import DBPostProcess
@@ -80,24 +74,63 @@ except Exception as e:
 
 DET_DEBUG = False
 REPO_ROOT = Path(__file__).resolve().parents[2]
-PPOCRV6_EN_REC_KEYS_PATH = "bin/ocr_models/ppocr-v6/ppocrv6_en_dict.txt"
 OCR_MODEL_VERSION_AUTO = 'auto'
-ALAS_CTC_MODEL_VERSION = "alocr_en_900k"
-ALAS_CTC_MODEL_PATH = "bin/ocr_models/azur_lane/alocr-en-us-900k-w768.dml.onnx"
-ALAS_CTC_CHARSET = "0123456789:-/ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-ALAS_CTC_BLANK_ID = 0
-ALAS_CTC_IMAGE_HEIGHT = 48
-ALAS_CTC_MAX_WIDTH = 768
-GENERIC_PPOCR_V6_PARAMS = (
-    "bin/ocr_models/ppocr-v6/PP-OCRv6_small_rec.onnx",
-    "bin/ocr_models/ppocr-v6/ppocrv6_dict.txt",
-    OCRVersion.PPOCRV6,
-)
-AZUR_LANE_JP_V6_PARAMS = (
-    "bin/ocr_models/azur_lane_jp/ap_azurlane_jp-v6_small_rec_nvidia.onnx",
-    "bin/ocr_models/azur_lane_jp/ppocrv6_azurlane_jp_dict.txt",
-    OCRVersion.PPOCRV6,
-)
+
+# PP-OCRv6 三档模型：lite(tiny) / standard(small) / pro(medium)。
+# lite 的类别数(6906)与 standard/pro(18710) 不同，字典需分别对齐。
+PPOCR_V6_LITE_MODEL = "bin/ocr_models/ppocr-v6/PP-OCRv6_tiny_rec.onnx"
+PPOCR_V6_STANDARD_MODEL = "bin/ocr_models/ppocr-v6/PP-OCRv6_small_rec.onnx"
+PPOCR_V6_PRO_MODEL = "bin/ocr_models/ppocr-v6/PP-OCRv6_medium_rec.onnx"
+PPOCR_V6_FULL_DICT = "bin/ocr_models/ppocr-v6/ppocrv6_dict.txt"
+PPOCR_V6_TINY_DICT = "bin/ocr_models/ppocr-v6/ppocrv6_tiny_dict.txt"
+# azur_lane 逻辑模型使用受限 en 字典（仅数字/字母/符号，其余类别留空），
+# 将非 en 输出静默过滤，避免误识别出中文等无关内容。
+PPOCR_V6_EN_RESTRICTED_DICT = "bin/ocr_models/ppocr-v6/ppocrv6_en_restricted_dict.txt"
+PPOCR_V6_TINY_EN_RESTRICTED_DICT = "bin/ocr_models/ppocr-v6/ppocrv6_tiny_en_restricted_dict.txt"
+
+# 各逻辑模型的三档参数。azur_lane/azur_lane_jp 使用受限 en 字典，
+# 其余使用完整字典。
+ONNX_MODEL_PARAMS = {
+    "azur_lane": {
+        "lite": (PPOCR_V6_LITE_MODEL, PPOCR_V6_TINY_EN_RESTRICTED_DICT, OCRVersion.PPOCRV6),
+        "standard": (PPOCR_V6_STANDARD_MODEL, PPOCR_V6_EN_RESTRICTED_DICT, OCRVersion.PPOCRV6),
+        "pro": (PPOCR_V6_PRO_MODEL, PPOCR_V6_EN_RESTRICTED_DICT, OCRVersion.PPOCRV6),
+    },
+    "azur_lane_jp": {
+        "lite": (PPOCR_V6_LITE_MODEL, PPOCR_V6_TINY_EN_RESTRICTED_DICT, OCRVersion.PPOCRV6),
+        "standard": (PPOCR_V6_STANDARD_MODEL, PPOCR_V6_EN_RESTRICTED_DICT, OCRVersion.PPOCRV6),
+        "pro": (PPOCR_V6_PRO_MODEL, PPOCR_V6_EN_RESTRICTED_DICT, OCRVersion.PPOCRV6),
+    },
+    "ppocr_v6": {
+        "lite": (PPOCR_V6_LITE_MODEL, PPOCR_V6_TINY_DICT, OCRVersion.PPOCRV6),
+        "standard": (PPOCR_V6_STANDARD_MODEL, PPOCR_V6_FULL_DICT, OCRVersion.PPOCRV6),
+        "pro": (PPOCR_V6_PRO_MODEL, PPOCR_V6_FULL_DICT, OCRVersion.PPOCRV6),
+    },
+    "cn": {
+        "lite": (PPOCR_V6_LITE_MODEL, PPOCR_V6_TINY_DICT, OCRVersion.PPOCRV6),
+        "standard": (PPOCR_V6_STANDARD_MODEL, PPOCR_V6_FULL_DICT, OCRVersion.PPOCRV6),
+        "pro": (PPOCR_V6_PRO_MODEL, PPOCR_V6_FULL_DICT, OCRVersion.PPOCRV6),
+    },
+    "jp": {
+        "lite": (PPOCR_V6_LITE_MODEL, PPOCR_V6_TINY_DICT, OCRVersion.PPOCRV6),
+        "standard": (PPOCR_V6_STANDARD_MODEL, PPOCR_V6_FULL_DICT, OCRVersion.PPOCRV6),
+        "pro": (PPOCR_V6_PRO_MODEL, PPOCR_V6_FULL_DICT, OCRVersion.PPOCRV6),
+    },
+    "tw": {
+        "lite": (PPOCR_V6_LITE_MODEL, PPOCR_V6_TINY_DICT, OCRVersion.PPOCRV6),
+        "standard": (PPOCR_V6_STANDARD_MODEL, PPOCR_V6_FULL_DICT, OCRVersion.PPOCRV6),
+        "pro": (PPOCR_V6_PRO_MODEL, PPOCR_V6_FULL_DICT, OCRVersion.PPOCRV6),
+    },
+}
+
+DEFAULT_ONNX_MODEL_VERSION = {
+    "azur_lane": "standard",
+    "azur_lane_jp": "standard",
+    "ppocr_v6": "standard",
+    "cn": "standard",
+    "jp": "standard",
+    "tw": "standard",
+}
 
 
 def _ocr_windowsml_install_ep():
@@ -441,100 +474,15 @@ def _run_ocr_queued(func, *args, **kwargs):
     return job.result
 
 
-ONNX_MODEL_PARAMS = {
-    "azur_lane": {
-        "azur_lane_v6_6": (
-            "bin/ocr_models/azur_lane/ap_azurlane-v6.6_small_rec_dcu.onnx",
-            "bin/ocr_models/azur_lane/ppocrv6_azurlane_dict.txt",
-            OCRVersion.PPOCRV6,
-        ),
-        "azur_lane_v6_5": (
-            "bin/ocr_models/azur_lane/ap_azurlane-v6.5_small_rec_nvidia.onnx",
-            "bin/ocr_models/azur_lane/ppocrv6_azurlane_dict.txt",
-            OCRVersion.PPOCRV6,
-        ),
-        "ppocr_v6": GENERIC_PPOCR_V6_PARAMS,
-        "alocr_en_v2_6": (
-            "bin/ocr_models/azur_lane/alocr-en-us-v2.6.nvc.onnx",
-            "bin/ocr_models/azur_lane/en_dict.txt",
-            OCRVersion.PPOCRV4,
-        ),
-        "alocr_en_v2_0": (
-            "bin/ocr_models/azur_lane/alocr-en-us-v2.0.nvc.onnx",
-            "bin/ocr_models/azur_lane/en_dict.txt",
-            OCRVersion.PPOCRV4,
-        ),
-        "alocr_en_v1_0": (
-            "bin/ocr_models/azur_lane/alocr-en-v1.0.onnx",
-            "bin/ocr_models/azur_lane/en_dict.txt",
-            OCRVersion.PPOCRV4,
-        ),
-    },
-    "azur_lane_jp": {
-        "azur_lane_jp_v6": AZUR_LANE_JP_V6_PARAMS,
-        "ppocr_v6": GENERIC_PPOCR_V6_PARAMS,
-    },
-    "ppocr_v6": {
-        "ppocr_v6": GENERIC_PPOCR_V6_PARAMS,
-    },
-    "cn": {
-        "cn_v6_1": (
-            "bin/ocr_models/zh-CN/ap_zh-cn-v6.1_small_rec_dcu.onnx",
-            "bin/ocr_models/zh-CN/ppocrv6_cn_dict.txt",
-            OCRVersion.PPOCRV6,
-        ),
-        "cn_v6": (
-            "bin/ocr_models/zh-CN/ap_zh-cn-v6_small_rec_dcu.onnx",
-            "bin/ocr_models/zh-CN/ppocrv6_cn_dict.txt",
-            OCRVersion.PPOCRV6,
-        ),
-        "ppocr_v6": GENERIC_PPOCR_V6_PARAMS,
-        "alocr_cn_v3": (
-            "bin/ocr_models/zh-CN/alocr-zh-cn-v3.dtk.onnx",
-            "bin/ocr_models/zh-CN/cn.txt",
-            OCRVersion.PPOCRV5,
-        ),
-        "alocr_cn_v2_5": (
-            "bin/ocr_models/zh-CN/alocr-zh-cn-v2.5.dtk.onnx",
-            "bin/ocr_models/zh-CN/cn.txt",
-            OCRVersion.PPOCRV5,
-        ),
-    },
-    "jp": {
-        "azur_lane_jp_v6": AZUR_LANE_JP_V6_PARAMS,
-        "ppocr_v6": GENERIC_PPOCR_V6_PARAMS,
-    },
-    "tw": {
-        "ppocr_v6": GENERIC_PPOCR_V6_PARAMS,
-    },
-}
-
-CUSTOM_CTC_MODEL_PARAMS = {
-    "azur_lane": {
-        ALAS_CTC_MODEL_VERSION: ALAS_CTC_MODEL_PATH,
-    },
-}
-
-DEFAULT_ONNX_MODEL_VERSION = {
-    "azur_lane": "alocr_en_v2_6",
-    "azur_lane_jp": "azur_lane_jp_v6",
-    "ppocr_v6": "ppocr_v6",
-    "cn": "cn_v6_1",
-    "jp": "ppocr_v6",
-    "tw": "ppocr_v6",
-}
-
-
 def _resolve_onnx_model_version(name):
     specs = ONNX_MODEL_PARAMS.get(name)
-    custom_specs = CUSTOM_CTC_MODEL_PARAMS.get(name, {})
-    if specs is None and not custom_specs:
+    if specs is None:
         raise ValueError(f"Unsupported OCR model: {name}")
 
     requested = config.ocr_model_version(name)
     if requested == OCR_MODEL_VERSION_AUTO:
         return DEFAULT_ONNX_MODEL_VERSION[name]
-    if requested in specs or requested in custom_specs:
+    if requested in specs:
         return requested
 
     fallback = DEFAULT_ONNX_MODEL_VERSION[name]
@@ -556,13 +504,6 @@ def _get_onnx_model_params(name):
         (model_path, rec_keys_path, ocr_version) 三元组。
     """
     version = _resolve_onnx_model_version(name)
-    if version in CUSTOM_CTC_MODEL_PARAMS.get(name, {}):
-        fallback = "azur_lane_v6_6" if name == "azur_lane" else DEFAULT_ONNX_MODEL_VERSION[name]
-        logger.info(
-            f"OCR model '{version}' is recognition-only, using '{fallback}' "
-            f"for RapidOCR-compatible pipeline"
-        )
-        return ONNX_MODEL_PARAMS[name][fallback]
     return ONNX_MODEL_PARAMS[name][version]
 
 
@@ -604,7 +545,8 @@ def _create_ocr(name):
         if not supports_ncnn_model(name):
             raise ValueError(f"Unsupported ncnn OCR model: {name}")
         logger.info("[OCR] OCR后端为ncnn，使用ncnn专用识别模型")
-        return NcnnRecOCR(name, device=config.ocr_device)
+        version = _resolve_onnx_model_version(name)
+        return NcnnRecOCR(name, device=config.ocr_device, version=version)
     else:
         ocr_device = config.ocr_device
         version = _resolve_onnx_model_version(name)
