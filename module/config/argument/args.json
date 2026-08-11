@@ -632,7 +632,8 @@
           "auto",
           "lite",
           "standard",
-          "pro"
+          "pro",
+          "alocr_en_v2_6"
         ]
       },
       "OcrModelVersionChinese": {
@@ -642,7 +643,8 @@
           "auto",
           "lite",
           "standard",
-          "pro"
+          "pro",
+          "alocr_cn_v3"
         ]
       },
       "OcrModelVersionJapanese": {
