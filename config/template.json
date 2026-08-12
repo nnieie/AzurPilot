@@ -492,6 +492,8 @@
       "AllowLowVanguardLevel": false,
       "DelayTaskIFNoFlagship": false,
       "CommissionLimit": false,
+      "HighValueCommissionFilterCount": 32,
+      "HighValueCommissionReserve": 2,
       "VanguardLevelMin": 1,
       "VanguardLevelMax": 125
     },
@@ -579,6 +581,8 @@
       "AllowLowVanguardLevel": false,
       "DelayTaskIFNoFlagship": false,
       "CommissionLimit": false,
+      "HighValueCommissionFilterCount": 32,
+      "HighValueCommissionReserve": 2,
       "VanguardLevelMin": 1,
       "VanguardLevelMax": 125
     },
@@ -666,6 +670,8 @@
       "AllowLowVanguardLevel": false,
       "DelayTaskIFNoFlagship": false,
       "CommissionLimit": false,
+      "HighValueCommissionFilterCount": 32,
+      "HighValueCommissionReserve": 2,
       "VanguardLevelMin": 1,
       "VanguardLevelMax": 28
     },
@@ -3038,7 +3044,9 @@
     },
     "IslandRancher": {
       "MinChicken": 300,
+      "ChickenFilter": "WorkerJuu",
       "MinPork": 300,
+      "PigFilter": "WorkerJuu",
       "Milk": true,
       "RancherFilter": "WorkerJuu",
       "Wool": true,
