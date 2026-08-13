@@ -42,6 +42,7 @@ config/usb_color
 tmp/
 .trae
 docs/
+.claude
 # Created by .ignore support plugin (hsz.mobi)
 
 ### JetBrains template

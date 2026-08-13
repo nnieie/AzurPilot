@@ -37,7 +37,12 @@ import urllib.request
 from datetime import datetime, timezone
 
 # 用于定位/更新同一条评论的标记。
+# 占位评论与最终报告都携带 PLACEHOLDER_MARKER，便于在 re-run 时更新同一条。
+# REPORT_MARKER 兼容旧的报告评论。
+PLACEHOLDER_MARKER = "<!-- ci-report-placeholder -->"
 REPORT_MARKER = "<!-- ci-report -->"
+# 我们的评论统一由 GitHub Actions bot 发布（GITHUB_TOKEN）。
+SELF_BOT_LOGIN = "github-actions[bot]"
 
 _STATUS_ICON = {
     "success": "✅",
@@ -172,7 +177,7 @@ def build_report(repo: str, run_id: str, commit: str, jobs: list[dict],
     run_url = f"https://github.com/{repo}/actions/runs/{run_id}"
     lines = [
         "## CI 检查报告",
-        REPORT_MARKER,
+        PLACEHOLDER_MARKER,
         "",
         f"- 运行：[{run_id}]({run_url})",
         f"- 提交：`{commit[:12]}`" if commit else "",
@@ -211,10 +216,18 @@ def build_report(repo: str, run_id: str, commit: str, jobs: list[dict],
 
 
 def find_self_comment(comments: list[dict]) -> int | None:
-    """查找带标记的评论（通常是由本机器人发布的）。"""
+    """查找我们自己的评论（带标记 + 由 GitHub Actions bot 发布）。
+
+    只按标记文本识别会误伤其他 bot：例如审查机器人（sourcery-ai）的评论
+    可能引用 PR 描述中出现的 ``<!-- ci-report -->`` 字样。因此同时校验
+    评论作者必须是 github-actions[bot]，绝不更新其他 bot/用户的评论。
+    """
     for comment in comments:
         body = comment.get("body") or ""
-        if REPORT_MARKER in body:
+        login = (comment.get("user") or {}).get("login", "")
+        if login == SELF_BOT_LOGIN and (
+            PLACEHOLDER_MARKER in body or REPORT_MARKER in body
+        ):
             return comment.get("id")
     return None
 

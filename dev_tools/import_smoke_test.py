@@ -163,6 +163,11 @@ def main() -> int:
                         help="将扫描汇总写入 JSON 文件（供 CI 报告使用），即使失败也会写入")
     args = parser.parse_args()
 
+    # 模拟真实运行环境：应用启动时会创建 ./log/ 目录。
+    # 全新 checkout 无该目录时，部分模块（如 module.azur_stats.image.* 的
+    # 导入链）初始化日志文件会抛 FileNotFoundError，导致误报意外失败。
+    (REPO_ROOT / "log").mkdir(parents=True, exist_ok=True)
+
     start = time.time()
     print(f"[import-smoke] 扫描 module/ + deploy/" + (" + campaign/" if args.include_campaign else "")
           + f"，超时 {args.timeout}s，并行 {args.workers}")
