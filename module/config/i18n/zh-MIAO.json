@@ -479,6 +479,10 @@
       "help": "重启客户端时，在强行停止应用后删除 /sdcard/Android/data/<包名>/cache/ 下的外部缓存文件喵。",
       "True": "开启喵",
       "False": "关闭喵"
+    },
+    "LoginWaitTimeout": {
+      "name": "登录等待宽容时间",
+      "help": "游戏重启后，等待登录/启动完成的最大宽容时间（秒）喵。\n当模拟器在后台运行导致游戏启动较慢时，可适当调大喵，避免被误判为卡死而反复重启喵。\n默认 30 秒，仅影响重启后的登录等待阶段喵。"
     }
   },
   "Emulator": {
@@ -1259,6 +1263,7 @@
       "event_20260417_cn": "Vacation Lane – Beachside Brilliance",
       "event_20260520_cn": "Alliance Before the Hagiobull",
       "event_20260625_cn": "Miracle by Midnight",
+      "event_20260813_cn": "沉溺于星光之城",
       "raid_20200624": "Air Raid Drills with Essex Rerun",
       "raid_20210708": "Cross Wave rerun",
       "raid_20220127": "Mystery Investigation",
