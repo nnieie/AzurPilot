@@ -1263,7 +1263,7 @@
       "event_20260417_cn": "Vacation Lane – Beachside Brilliance",
       "event_20260520_cn": "Alliance Before the Hagiobull",
       "event_20260625_cn": "Miracle by Midnight",
-      "event_20260813_cn": "沉溺于星光之城",
+      "event_20260813_cn": "Depths of the Astrarium",
       "raid_20200624": "Air Raid Drills with Essex Rerun",
       "raid_20210708": "Cross Wave rerun",
       "raid_20220127": "Mystery Investigation",
@@ -3689,7 +3689,7 @@
     },
     "WorkerFilter": {
       "name": "农田使用角色喵",
-      "help": "以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune 仅识别默认排序前两排；指定舰娘不可用时回退 WorkerJuu。"
+      "help": "以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune > 达芬奇：DaVinci 仅识别默认排序前两排；指定舰娘不可用时回退 WorkerJuu。"
     },
     "MinFarm": {
       "name": "田里庄稼底线喵",
@@ -3720,7 +3720,7 @@
     },
     "WorkerFilter": {
       "name": "果园使用角色喵",
-      "help": "以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune 仅识别默认排序前两排；指定舰娘不可用时回退 WorkerJuu。"
+      "help": "以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune > 达芬奇：DaVinci 仅识别默认排序前两排；指定舰娘不可用时回退 WorkerJuu。"
     },
     "MinOrchard": {
       "name": "水果收割线喵",
@@ -3757,7 +3757,7 @@
     },
     "WorkerFilter": {
       "name": "苗圃使用角色喵",
-      "help": "以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune 仅识别默认排序前两排；指定舰娘不可用时回退 WorkerJuu。"
+      "help": "以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune > 达芬奇：DaVinci 仅识别默认排序前两排；指定舰娘不可用时回退 WorkerJuu。"
     },
     "MinNursery": {
       "name": "苗圃作物底线喵",
@@ -3786,7 +3786,7 @@
     },
     "ChickenFilter": {
       "name": "养鸡使用角色喵",
-      "help": "以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune 仅识别默认排序前两排；指定舰娘不可用时回退 WorkerJuu。"
+      "help": "以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune > 达芬奇：DaVinci 仅识别默认排序前两排；指定舰娘不可用时回退 WorkerJuu。"
     },
     "MinPork": {
       "name": "猪肉底线喵",
@@ -3794,7 +3794,7 @@
     },
     "PigFilter": {
       "name": "养猪使用角色喵",
-      "help": "以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune 仅识别默认排序前两排；指定舰娘不可用时回退 WorkerJuu。"
+      "help": "以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune > 达芬奇：DaVinci 仅识别默认排序前两排；指定舰娘不可用时回退 WorkerJuu。"
     },
     "Milk": {
       "name": "养牛喵",
@@ -3802,7 +3802,7 @@
     },
     "RancherFilter": {
       "name": "使用角色喵",
-      "help": "以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune 仅识别默认排序前两排；指定舰娘不可用时回退 WorkerJuu。"
+      "help": "以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune > 达芬奇：DaVinci 仅识别默认排序前两排；指定舰娘不可用时回退 WorkerJuu。"
     },
     "Wool": {
       "name": "养羊喵",
@@ -3810,7 +3810,7 @@
     },
     "WoolWorkerFilter": {
       "name": "养羊使用角色喵",
-      "help": "以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune 仅识别默认排序前两排；指定舰娘不可用时回退 WorkerJuu。"
+      "help": "以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune > 达芬奇：DaVinci 仅识别默认排序前两排；指定舰娘不可用时回退 WorkerJuu。"
     }
   },
   "IslandFishery": {
@@ -3867,7 +3867,7 @@
     },
     "RancherFilter": {
       "name": "使用角色喵",
-      "help": "以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune 仅识别默认排序前两排；指定舰娘不可用时回退 WorkerJuu。"
+      "help": "以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune > 达芬奇：DaVinci 仅识别默认排序前两排；指定舰娘不可用时回退 WorkerJuu。"
     }
   },
   "IslandMine": {
@@ -3894,7 +3894,7 @@
     },
     "WorkerFilter": {
       "name": "矿山使用角色喵",
-      "help": "以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune 仅识别默认排序前两排；指定舰娘不可用时回退 WorkerJuu。"
+      "help": "以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune > 达芬奇：DaVinci 仅识别默认排序前两排；指定舰娘不可用时回退 WorkerJuu。"
     },
     "MinCopper": {
       "name": "铜矿底线喵",
@@ -3941,7 +3941,7 @@
     },
     "WorkerFilter": {
       "name": "林场使用角色喵",
-      "help": "以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune 仅识别默认排序前两排；指定舰娘不可用时回退 WorkerJuu。"
+      "help": "以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune > 达芬奇：DaVinci 仅识别默认排序前两排；指定舰娘不可用时回退 WorkerJuu。"
     },
     "MinElegant": {
       "name": "优雅木材底线喵",
@@ -3963,7 +3963,7 @@
     },
     "WorkerFilter": {
       "name": "采集角色喵",
-      "help": "以>连接，最多填写3个角色，分别对应第1~3个采集槽位。 以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune 每日采集不能选择 WorkerJuu，填写后会自动忽略。 仅识别默认排序前两排；指定角色不可用时该槽位回退现有采集逻辑。"
+      "help": "以>连接，最多填写3个角色，分别对应第1~3个采集槽位。 以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune > 达芬奇：DaVinci 每日采集不能选择 WorkerJuu，填写后会自动忽略。 仅识别默认排序前两排；指定角色不可用时该槽位回退现有采集逻辑。"
     }
   },
   "IslandRestaurant": {
@@ -3979,7 +3979,7 @@
     },
     "ChefFilter": {
       "name": "厨师喵",
-      "help": "以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune 仅识别默认排序前两排；指定舰娘不可用时回退 WorkerJuu。"
+      "help": "以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune > 达芬奇：DaVinci 仅识别默认排序前两排；指定舰娘不可用时回退 WorkerJuu。"
     },
     "DoubleBambooShoots": {
       "name": "季节餐优先制作喵",
@@ -4208,7 +4208,7 @@
     },
     "ChefFilter": {
       "name": "厨师喵",
-      "help": "以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune 仅识别默认排序前两排；指定舰娘不可用时回退 WorkerJuu。"
+      "help": "以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune > 达芬奇：DaVinci 仅识别默认排序前两排；指定舰娘不可用时回退 WorkerJuu。"
     },
     "Seasonal": {
       "name": "季节饮品优先制作喵",
@@ -4419,7 +4419,7 @@
     },
     "ChefFilter": {
       "name": "厨师喵",
-      "help": "以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune 仅识别默认排序前两排；指定舰娘不可用时回退 WorkerJuu。"
+      "help": "以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune > 达芬奇：DaVinci 仅识别默认排序前两排；指定舰娘不可用时回退 WorkerJuu。"
     },
     "Meal1": {
       "name": "餐品1喵",
@@ -4590,7 +4590,7 @@
     },
     "ChefFilter": {
       "name": "厨师喵",
-      "help": "以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune 仅识别默认排序前两排；指定舰娘不可用时回退 WorkerJuu。"
+      "help": "以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune > 达芬奇：DaVinci 仅识别默认排序前两排；指定舰娘不可用时回退 WorkerJuu。"
     },
     "Meal1": {
       "name": "餐品1喵",
@@ -4779,7 +4779,7 @@
     },
     "ChefFilter": {
       "name": "厨师喵",
-      "help": "以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune 仅识别默认排序前两排；指定舰娘不可用时回退 WorkerJuu。"
+      "help": "以>连接，例如肇和 新泽西 小天城：ChaoHo > NewJersey > Amagi_chan 小加加：Saratoga > 明石：Akashi > 塔什干：Tashkent > 应瑞：YingSwei 恶毒：LeMalin > 独角兽：Unicorn > 岛风：Shimakaze > 柴郡：Cheshire 镇海：ChenHai > 威廉D波特：WilliamDPorter 海伦娜：Helena > 大帝：Friedrich > 愛宕：Atago 逸仙：Yixian > 奥古斯特：August > 欧根亲王：Eugen > 胡德：Hood > 标枪：Javelin > 拉菲：Laffey > 探索者：Explorer > 领航员：Navigator > 领洋者：OceanCrosser > 飞云：FeiYun > 高雄：Takao > 安克雷奇：Anchorage > 贝尔法斯特：Belfast > 长风：ChangFeng > 莫加多尔：Mogador > 皇家财富号：RoyalFortune > 达芬奇：DaVinci 仅识别默认排序前两排；指定舰娘不可用时回退 WorkerJuu。"
     },
     "Friedrich": {
       "name": "大帝",
@@ -5163,7 +5163,8 @@
       "Belfast": "贝尔法斯特",
       "ChangFeng": "长风",
       "Mogador": "莫加多尔",
-      "RoyalFortune": "皇家财富号"
+      "RoyalFortune": "皇家财富号",
+      "DaVinci": "达芬奇"
     },
     "Char2": {
       "name": "角色2喵",
@@ -5201,7 +5202,8 @@
       "Belfast": "贝尔法斯特",
       "ChangFeng": "长风",
       "Mogador": "莫加多尔",
-      "RoyalFortune": "皇家财富号"
+      "RoyalFortune": "皇家财富号",
+      "DaVinci": "达芬奇"
     },
     "Product1": {
       "name": "餐品1喵",
@@ -5327,7 +5329,8 @@
       "Belfast": "贝尔法斯特",
       "ChangFeng": "长风",
       "Mogador": "莫加多尔",
-      "RoyalFortune": "皇家财富号"
+      "RoyalFortune": "皇家财富号",
+      "DaVinci": "达芬奇"
     },
     "Char2": {
       "name": "角色2喵",
@@ -5365,7 +5368,8 @@
       "Belfast": "贝尔法斯特",
       "ChangFeng": "长风",
       "Mogador": "莫加多尔",
-      "RoyalFortune": "皇家财富号"
+      "RoyalFortune": "皇家财富号",
+      "DaVinci": "达芬奇"
     },
     "Product1": {
       "name": "餐品1喵",
@@ -5503,7 +5507,8 @@
       "Belfast": "贝尔法斯特",
       "ChangFeng": "长风",
       "Mogador": "莫加多尔",
-      "RoyalFortune": "皇家财富号"
+      "RoyalFortune": "皇家财富号",
+      "DaVinci": "达芬奇"
     },
     "Char2": {
       "name": "角色2喵",
@@ -5541,7 +5546,8 @@
       "Belfast": "贝尔法斯特",
       "ChangFeng": "长风",
       "Mogador": "莫加多尔",
-      "RoyalFortune": "皇家财富号"
+      "RoyalFortune": "皇家财富号",
+      "DaVinci": "达芬奇"
     },
     "Product1": {
       "name": "餐品1喵",
@@ -5639,7 +5645,8 @@
       "Belfast": "贝尔法斯特",
       "ChangFeng": "长风",
       "Mogador": "莫加多尔",
-      "RoyalFortune": "皇家财富号"
+      "RoyalFortune": "皇家财富号",
+      "DaVinci": "达芬奇"
     },
     "Char2": {
       "name": "角色2喵",
@@ -5677,7 +5684,8 @@
       "Belfast": "贝尔法斯特",
       "ChangFeng": "长风",
       "Mogador": "莫加多尔",
-      "RoyalFortune": "皇家财富号"
+      "RoyalFortune": "皇家财富号",
+      "DaVinci": "达芬奇"
     },
     "Product1": {
       "name": "餐品1喵",
@@ -5780,7 +5788,8 @@
       "Belfast": "贝尔法斯特",
       "ChangFeng": "长风",
       "Mogador": "莫加多尔",
-      "RoyalFortune": "皇家财富号"
+      "RoyalFortune": "皇家财富号",
+      "DaVinci": "达芬奇"
     },
     "Char2": {
       "name": "角色2喵",
@@ -5818,7 +5827,8 @@
       "Belfast": "贝尔法斯特",
       "ChangFeng": "长风",
       "Mogador": "莫加多尔",
-      "RoyalFortune": "皇家财富号"
+      "RoyalFortune": "皇家财富号",
+      "DaVinci": "达芬奇"
     },
     "Product1": {
       "name": "餐品1喵",
