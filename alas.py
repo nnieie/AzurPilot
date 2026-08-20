@@ -28,6 +28,20 @@ from module.exception import *
 from module.logger import logger
 from module.notify import handle_notify, notify_webui
 
+
+# 看门狗配置
+# 守护线程每 N 秒检查一次任务运行状态；任务执行期间若超过配置的
+# 超时时间，则判定任务逻辑死循环，强制杀死模拟器进程以中断任务。
+# 看门狗仅在任务执行阶段（self.run() 期间）激活，空闲等待（wait_until、
+# 服务器维护检查）期间自动暂停，避免误触发。
+WATCHDOG_CHECK_INTERVAL = 30
+# 单个任务最长运行时间（分钟），仅作为配置读取失败的兜底默认值
+# 实际值从配置 Error.WatchdogTaskTimeout 读取，0 表示禁用
+WATCHDOG_TASK_TIMEOUT_DEFAULT = 120
+# 模拟器 stop/start 单次操作的硬超时秒数
+RESTART_EMULATOR_OP_TIMEOUT = 120
+
+
 # 缓存 i18n 任务名查找
 _i18n_task_names = None
 def _get_task_display_name(task_command):
@@ -75,10 +89,18 @@ class AzurLaneAutoScript:
         # 连续卡死/ADB 离线计数，用于判断是否需要重启模拟器
         self.consecutive_game_stuck = 0
         self.consecutive_adb_offline = 0
+        # 未预期异常连续计数，先重启游戏，连续多次才重启模拟器
+        self.consecutive_unexpected_error = 0
         # ScriptError 连续计数，达到阈值后退出（代码 bug 重试无意义）
         self.script_error_count = 0
         # 上次计划重启模拟器的时间戳
         self.last_emulator_restart_time = time.monotonic()
+        # 看门狗状态
+        self._watchdog_stop = threading.Event()
+        self._watchdog_active = False  # 仅在任务执行期间激活
+        self._watchdog_thread = None
+        self._watchdog_task_start = 0.0  # 当前任务开始时间（monotonic）
+        self._watchdog_task_name = ''    # 当前任务名
 
     def _try_restart_emulator(self):
         """
@@ -120,10 +142,18 @@ class AzurLaneAutoScript:
                     device = PlatformWindows(self.config)
 
             logger.info('[Alas] 正在停止模拟器...')
-            device.emulator_stop()
+            self._emulator_op_with_timeout(
+                device.emulator_stop,
+                timeout=RESTART_EMULATOR_OP_TIMEOUT,
+                operation_name='模拟器停止',
+            )
             time.sleep(5)
             logger.info('[Alas] 正在启动模拟器...')
-            device.emulator_start()
+            self._emulator_op_with_timeout(
+                device.emulator_start,
+                timeout=RESTART_EMULATOR_OP_TIMEOUT,
+                operation_name='模拟器启动',
+            )
             logger.info('[Alas] 模拟器重启完成')
 
             # 清除 device 缓存，下次访问时重新建立连接
@@ -588,7 +618,7 @@ class AzurLaneAutoScript:
             )
             return 'recoverable'
         except Exception as e:
-            # 未预期异常，尝试重启恢复而非直接终止
+            # 未预期异常，先重启游戏，连续多次失败才重启模拟器
             logger.exception_context(
                 title=f'任务执行发生未处理异常（{command}）', exc=e,
                 impact='当前任务无法确认执行结果，调度器将尝试重启恢复。',
@@ -597,8 +627,23 @@ class AzurLaneAutoScript:
             )
             self.save_error_log()
             self._check_sensitive_exit(command, e)
-            logger.warning('[Alas] 未处理异常，尝试重启模拟器恢复')
-            self._try_restart_emulator()
+
+            self.consecutive_unexpected_error += 1
+            limit = int(self.config.Error_GameStuckThreshold)
+            if self.consecutive_unexpected_error >= limit:
+                # 连续多次未预期异常，说明重启游戏无法解决，重启模拟器
+                logger.warning(
+                    f'[Alas] 未处理异常连续 {self.consecutive_unexpected_error}/{limit} 次，'
+                    f'重启模拟器恢复'
+                )
+                self._try_restart_emulator()
+                self.consecutive_unexpected_error = 0
+            else:
+                # 首次或前几次异常，先尝试重启游戏（较轻的恢复）
+                logger.warning(
+                    f'[Alas] 未处理异常 {self.consecutive_unexpected_error}/{limit} 次，'
+                    f'先尝试重启游戏恢复'
+                )
             self.config.task_call('Restart')
             handle_notify(
                 self.config.Error_OnePushConfig,
@@ -1379,6 +1424,11 @@ class AzurLaneAutoScript:
 
         from module.config.utils import is_oobe_needed
 
+        # 启动看门狗：守护线程在任务执行期间监测日志心跳，若主线程长时间
+        # 无日志输出（如卡死在 u2 HTTP 调用或 ADB shell 中），则强制杀死
+        # 模拟器进程以解除阻塞，使主线程的下次 I/O 失败并触发异常恢复。
+        self._start_watchdog()
+
         if is_oobe_needed():
             logger.error_context(
                 title='未检测到配置文件',
@@ -1442,7 +1492,17 @@ class AzurLaneAutoScript:
                 self.device.stuck_record_clear()
                 self.device.click_record_clear()
                 logger.hr(task, level=0)
-                success = self.run(inflection.underscore(task))
+                # 激活看门狗：任务执行期间监测日志心跳和运行时间
+                # 防止主线程卡死在 I/O 调用中或陷入逻辑死循环
+                self._watchdog_active = True
+                self._watchdog_task_start = time.monotonic()
+                self._watchdog_task_name = task
+                try:
+                    success = self.run(inflection.underscore(task))
+                finally:
+                    self._watchdog_active = False
+                    self._watchdog_task_start = 0.0
+                    self._watchdog_task_name = ''
                 logger.info(f'[Alas] 调度器: 结束任务 `{task}`')
                 self.is_first_task = False
 
@@ -1535,6 +1595,7 @@ class AzurLaneAutoScript:
                     consecutive_global_failures = 0 # 任务成功时重置全局失败计数器
                     self.consecutive_game_stuck = 0
                     self.consecutive_adb_offline = 0
+                    self.consecutive_unexpected_error = 0
                     continue
                 elif success == 'recoverable' or self.config.Error_HandleError:
                     # 可恢复错误或启用了错误处理，刷新配置后继续循环
@@ -1613,6 +1674,8 @@ class AzurLaneAutoScript:
                     f"调度器将在 {wait_seconds} 秒后从头重试（第 {consecutive_global_failures} 次重试，"
                     f"永不放弃）。"
                 )
+                # 退避等待期间暂停看门狗，避免误触发（此为主动 sleep）
+                self._watchdog_active = False
                 time.sleep(wait_seconds)
 
 if __name__ == '__main__':
