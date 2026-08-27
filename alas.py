@@ -139,12 +139,11 @@ class AzurLaneAutoScript:
 
     def _get_daily_summary_settings(self):
         """读取最新日报设置，不重载正在执行任务的完整配置对象。"""
-        config = self.config
         try:
             config_path = filepath_config(self.config_name)
             modified_at = os.stat(config_path).st_mtime_ns
         except OSError:
-            return config
+            return self.config
 
         if (
             self._daily_summary_settings is not None
@@ -152,6 +151,7 @@ class AzurLaneAutoScript:
         ):
             return self._daily_summary_settings
 
+        config = self.config
         try:
             with open(config_path, encoding='utf-8') as file:
                 data = json.load(file)
