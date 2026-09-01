@@ -1076,9 +1076,6 @@
       "ForceAdbNcScreenshot": false,
       "Sensitive": false
     },
-    "RaidScuttle": {
-      "Sacrifice": "vanguard"
-    },
     "Raid": {
       "Mode": "hard",
       "UseTicket": false
