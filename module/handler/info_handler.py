@@ -518,7 +518,7 @@ class InfoHandler(ModuleBase):
             options: 检测到的剧情选项按钮列表。
 
         Returns:
-            需要点击的按钮，若非塞壬研究装置则返回 None。
+            需要点击的按钮，若识别为非塞壬装置剧情则返回 None。
         """
         if len(options) != 5:
             return None
@@ -609,10 +609,12 @@ class InfoHandler(ModuleBase):
             elif options_count == self._story_option_record:
                 if self._story_option_confirm.reached():
                     select = self._identify_siren_device_option(options)
-                    
+
                     is_siren_device = select is not None
-                    self.is_siren_device_confirmed = is_siren_device
-                    
+                    if is_siren_device:
+                        # 识别到塞壬装置则锁定确认，避免后续非装置剧情段把状态覆盖回 False
+                        self.is_siren_device_confirmed = True
+
                     if not is_siren_device:
                         try:
                             select = options[self.config.STORY_OPTION]
