@@ -329,7 +329,7 @@ class MapOperation(MysteryHandler, FleetPreparation, Retirement, FastForwardHand
             return True
 
         if mode == 'normal':
-            if self.match_template_color(MAP_MODE_SWITCH_NORMAL, offset=(20, 20)):
+            if self.match_template_color(MAP_MODE_SWITCH_NORMAL, offset=(-20, -20, 80, 20)):
                 logger.attr('地图模式', '普通')
                 return True
             if self._is_mod_switch_hard_appear(active=False, interval=2):
@@ -342,7 +342,7 @@ class MapOperation(MysteryHandler, FleetPreparation, Retirement, FastForwardHand
             if self._is_mod_switch_hard_appear(active=True):
                 logger.attr('地图模式', '困难')
                 return True
-            if self.match_template_color(MAP_MODE_SWITCH_NORMAL, offset=(20, 20), interval=2):
+            if self.match_template_color(MAP_MODE_SWITCH_NORMAL, offset=(-20, -20, 80, 20), interval=2):
                 logger.attr('地图模式', '普通')
                 MAP_MODE_SWITCH_HARD.clear_offset()
                 self.device.click(MAP_MODE_SWITCH_HARD)
