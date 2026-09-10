@@ -1592,7 +1592,8 @@
       "hunt_only": "Hunt Only",
       "boss_only": "Boss Only",
       "hunt_and_boss": "Hunt and Boss",
-      "every_combat": "Every Combat"
+      "every_combat": "Every Combat",
+      "advanced": "advanced"
     },
     "AutoSearchMode": {
       "name": "Select Submarine Auto Plan",
@@ -1607,6 +1608,10 @@
       "1_grid_to_boss": "1 Tile from Boss",
       "2_grid_to_boss": "2 Tiles from Boss",
       "use_open_ocean_support": "Use Open Ocean Support"
+    },
+    "AdvancedConfig": {
+      "name": "Submarine.AdvancedConfig.name",
+      "help": "Submarine.AdvancedConfig.help"
     }
   },
   "Emotion": {
@@ -3190,6 +3195,10 @@
       "name": "Shop Filter",
       "help": "By default, only Action Points are purchased nanoda. If you want to buy purple coins, set to 'ActionPoint > PurpleCoins'"
     },
+    "DebugClipRetentionDays": {
+      "name": "Clip retention days",
+      "help": "Retention for the post-battle debug recordings of Erosion-1 leveling and Meowfficer farming. Clips under log/clips/ older than this many days are deleted automatically, so recordings cannot fill up your disk. Set to 0 to keep them forever with no auto cleanup."
+    },
     "NotifyOpsiMail": {
       "name": "Push Operation Siren notifications",
       "help": "Send notifications about Corrosion 1 and Meowfficer farming through OnePush. Launcher notifications are controlled separately by \"Launcher notifications\". May be noisy due to high message volume."
@@ -3552,7 +3561,7 @@
     },
     "DebugClip": {
       "name": "Post-battle debug recording",
-      "help": "When enabled, during each erosion-1 round's post-battle handling (rescan / event resolution / forced movement), record what ALAS itself sees into an mp4 under log/clips/. Rounds with no event produce no file. Use this to manually verify whether Akashi is missed. Videos are kept indefinitely (no auto cleanup) — watch disk space."
+      "help": "When enabled, during each erosion-1 round's post-battle handling (rescan / event resolution / forced movement), record what ALAS itself sees into an mp4 under log/clips/. Every round is saved, whether or not an event occurred, so you can review each round. Use this to manually verify whether Akashi is missed. Clips are cleaned up automatically according to the clip retention setting under OS General Settings."
     }
   },
   "OpsiSirenBug": {

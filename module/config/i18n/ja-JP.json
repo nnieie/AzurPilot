@@ -1592,7 +1592,8 @@
       "hunt_only": "狩猟のみ",
       "boss_only": "BOSS戦のみ",
       "hunt_and_boss": "狩猟及びBOSS戦",
-      "every_combat": "毎戦出撃"
+      "every_combat": "毎戦出撃",
+      "advanced": "advanced"
     },
     "AutoSearchMode": {
       "name": "潜水艦自律プランを選択",
@@ -1607,6 +1608,10 @@
       "1_grid_to_boss": "BOSSから1マス",
       "2_grid_to_boss": "BOSSから2マス",
       "use_open_ocean_support": "遠洋支援を使用する"
+    },
+    "AdvancedConfig": {
+      "name": "Submarine.AdvancedConfig.name",
+      "help": "Submarine.AdvancedConfig.help"
     }
   },
   "Emotion": {
@@ -3190,6 +3195,10 @@
       "name": "ショップフィルター",
       "help": "デフォルトでは体力ナノダのみ購入されます。紫色のコインを購入したい場合は、「ActionPoint > PurpleCoins」に設定します。"
     },
+    "DebugClipRetentionDays": {
+      "name": "録画の保存日数",
+      "help": "大世界の戦後デバッグ録画（侵蝕1・短猫相接）の保存日数です。log/clips/ 内の録画が指定した日数を超えると自動削除され、ディスク容量の圧迫を防ぎます。0 を指定すると自動削除せず永久に保存します。"
+    },
     "NotifyOpsiMail": {
       "name": "セイレーン作戦関連情報をプッシュ",
       "help": "侵蝕1と短猫相接の記録機能を使用する場合には、このオプションを有効にしてください"
@@ -3552,7 +3561,7 @@
     },
     "DebugClip": {
       "name": "戦後デバッグ録画",
-      "help": "有効にすると、各侵蚀1ラウンドの戦後処理（再走査・イベント処理・強制移動）中に、ALAS 自身が見た画面を mp4 で log/clips/ に録画します。イベントが無かったラウンドはファイルを保存しません。明石を取りこぼしていないか手動で確認するための機能です。動画は自動削除されず残り続けるため、ディスク容量に注意してください。"
+      "help": "有効にすると、各侵蚀1ラウンドの戦後処理（再走査・イベント処理・強制移動）中に、ALAS 自身が見た画面を mp4 で log/clips/ に録画します。イベントの有無にかかわらず毎ラウンド保存されるため、1 ラウンドずつ見返せます。明石を取りこぼしていないか手動で確認するための機能です。動画は「大世界通用設置」の保存日数に従って自動削除されます。"
     }
   },
   "OpsiSirenBug": {

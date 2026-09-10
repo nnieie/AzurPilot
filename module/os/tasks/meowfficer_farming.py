@@ -5,6 +5,7 @@
 - 智能海域选择和路径规划
 - 代币资源保护和行动力管理
 - 失败重试和异常恢复机制
+- 战后 debug 录像（可选，见 OpsiMeowfficerFarming.DebugClip）
 
 继承自 CoinTaskMixin 和 OSMap，提供代币保护和地图导航能力，
 通过指定海域列表实现高效的指挥喵资源收集。
@@ -20,7 +21,7 @@ from module.exception import (
 )
 from module.logger import logger
 from module.map.map_grids import SelectedGrids
-from module.os.map import OSMap
+from module.os.map import ALREADY_SOLVED_MAP_EVENTS, OSMap
 from module.os_handler.action_point import ActionPointLimit
 from module.os.tasks.scheduling import CoinTaskMixin
 
@@ -186,6 +187,42 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
                 self.check_and_notify_action_point_threshold()
             return True
         return ap_checked
+
+    def _meow_fixed_patrol_scan(self):
+        """
+        战后效率模式强制移动（套用侵蚀一，可开关，默认关闭）。
+
+        开启后遍历 1~4 号舰队的雷达清剩余问号：只切换舰队看雷达、
+        不挪动舰队；已解决目标事件（明石/记录塔/信息探测装置）时跳过。
+        结束后恢复短猫舰队（clear_question_any_fleet 不会恢复原舰队）。
+
+        Pages:
+            in: page_os
+        """
+        if not self.config.OpsiMeowfficerFarming_ExecuteFixedPatrolScan:
+            return
+        if self._solved_map_event & ALREADY_SOLVED_MAP_EVENTS:
+            return
+        logger.info('[大世界-耄耋相接] 触发效率模式强制移动')
+        self.clear_question_any_fleet()
+        self.fleet_set(self.config.OpsiFleet_Fleet)
+
+    def _meow_debug_clip(self):
+        """战后 debug 录像的上下文，开关为 OpsiMeowfficerFarming.DebugClip。
+
+        录制「打完找事件 / 处理事件 / 强制移动」这一段的真实游戏画面，每一轮都保存，
+        方便逐轮回看有没有漏掉问号或事件。保留天数统一在「大世界通用设置」里配置。
+
+        Returns:
+            contextlib.AbstractContextManager: with 块退出时自动保存录像。
+        """
+        from module.base.debug_clip import CLIP_PREFIX_MEOW, clip_recording
+
+        return clip_recording(
+            self.config,
+            self.config.OpsiMeowfficerFarming_DebugClip,
+            prefix=CLIP_PREFIX_MEOW,
+        )
 
     def _meow_handle_traditional_zone(self, zone):
         logger.hr(f'大世界-耄耋相接, zone_id={zone.zone_id}', level=1)
@@ -386,7 +423,7 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
         self.on_meow_search_end()
 
         self.config.check_task_switch()
-        
+
     def os_meowfficer_farming(self):
         """耄耋相接任务入口。"""
         self.run_meowfficer_farming()
