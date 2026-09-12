@@ -5,74 +5,29 @@ from module.webui.app_dependencies import (
     State,
     logger,
     os,
-    secrets,
-    string,
     t,
 )
+from module.webui.password_utils import (
+    WEBUI_AUTO_PASSWORD_FILE,
+    ensure_password_for_host,
+    generate_webui_password,
+    is_demo_mode,
+    is_public_webui_host,
+    is_webui_password_set,
+)
 
-WEBUI_AUTO_PASSWORD_FILE = "password.txt"
+__all__ = [
+    "WEBUI_AUTO_PASSWORD_FILE",
+    "DEMO_DEVICE_ID_TEXT",
+    "ensure_password_for_host",
+    "ensure_public_webui_password",
+    "generate_webui_password",
+    "is_demo_mode",
+    "is_public_webui_host",
+    "is_webui_password_set",
+]
+
 DEMO_DEVICE_ID_TEXT = "此程序是为了演示用途构建的版本/This application is a version built for demonstration purposes."
-
-
-def is_demo_mode():
-    """
-    判断是否处于演示环境。
-
-    Returns:
-        bool: True 表示 DEMO=1。
-    """
-    return os.environ.get("DEMO") == "1"
-
-
-def is_public_webui_host(host):
-    """
-    判断 WebUI 是否监听所有网络接口。
-
-    Args:
-        host (str): WebUI 监听地址。
-
-    Returns:
-        bool: True 表示 WebUI 允许所有设备访问。
-    """
-    host = str(host or "").strip().lower()
-    return host in ("0.0.0.0", "::", "[::]")
-
-
-def is_webui_password_set(password):
-    """
-    判断 WebUI 密码是否有效设置。
-
-    Args:
-        password: WebUI 密码配置。
-
-    Returns:
-        bool: True 表示密码包含非空白字符。
-    """
-    return bool(str(password or "").strip())
-
-
-def generate_webui_password(length=32):
-    """
-    生成包含大小写字母和数字的 WebUI 密码。
-
-    Args:
-        length (int): 密码长度。
-
-    Returns:
-        str: 随机密码。
-    """
-    letters_upper = string.ascii_uppercase
-    letters_lower = string.ascii_lowercase
-    digits = string.digits
-    alphabet = letters_upper + letters_lower + digits
-    password = [
-        secrets.choice(letters_upper),
-        secrets.choice(letters_lower),
-        secrets.choice(digits),
-    ]
-    password.extend(secrets.choice(alphabet) for _ in range(length - len(password)))
-    secrets.SystemRandom().shuffle(password)
-    return "".join(password)
 
 
 def ensure_public_webui_password(key):
@@ -89,22 +44,18 @@ def ensure_public_webui_password(key):
         return key, None
 
     host = State.webui_host or State.deploy_config.WebuiHost
-    if not is_public_webui_host(host) or is_webui_password_set(key):
-        return key, None
-
     try:
-        password = generate_webui_password()
-        from deploy.atomic import atomic_write
+        password = ensure_password_for_host(key, host)
+    except Exception as e:
+        logger.exception(f"WebUI 自动生成密码失败: {e}")
+        return None, str(e)
 
-        atomic_write(WEBUI_AUTO_PASSWORD_FILE, f"{password}\n")
+    if password != key:
         State.deploy_config.Password = password
         logger.warning(
             f"[WebUI] WebUI 已自动生成密码，请在根目录 {WEBUI_AUTO_PASSWORD_FILE} 查看。"
         )
-        return password, None
-    except Exception as e:
-        logger.exception(f"WebUI 自动生成密码失败: {e}")
-        return None, str(e)
+    return password, None
 
 
 def timedelta_to_text(delta=None):

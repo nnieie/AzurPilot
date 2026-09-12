@@ -259,6 +259,10 @@ class AutoSearchCombat(MapOperation, Combat, CampaignStatus):
                 continue
             if self.handle_vote_popup():
                 continue
+            # 加载期间出现的红脸（低心情）弹窗同样没有任何其他处理器会认，
+            # 不处理会一直等到 GameStuckError。ignore 模式下点「确定」继续出击
+            if self.handle_combat_low_emotion():
+                continue
             # 过图期间弹出的「船坞已满」弹窗没有任何其他处理器会认，
             # 不处理会一直等到 GameStuckError。处理完退役/强化后重新开启
             # 自动搜索，等待游戏自己再次进入战斗加载

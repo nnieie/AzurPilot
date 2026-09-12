@@ -261,6 +261,10 @@ Reward:
     Awaken:
       - Scheduler
       - Awaken
+    OperationHandover:
+      - Scheduler
+      - Campaign
+      - OperationHandover
 DailyMission:
   menu: collapse
   page: setting
