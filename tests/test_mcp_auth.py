@@ -3,7 +3,7 @@
 import asyncio
 import unittest
 
-from module.webui import mcp_auth
+from module.runtime import mcp_auth
 
 
 def _headers(**kwargs):

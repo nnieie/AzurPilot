@@ -52,12 +52,15 @@ class TestFarmingCombatConfig(unittest.TestCase):
         """旧配置补齐索敌选项，并保留原有潜艇行为和任务边界。"""
         for task in TASKS:
             config = make_config(task, Submarine={'Fleet': 1, 'Mode': 'hunt_only'})
-            self.assertEqual(config.EnemyPriority_EnemyScaleBalanceWeight, 'default_mode')
+            # 8c36c56e4 起低耗任务在 default.yaml 里带了专属索敌默认值，
+            # 补齐旧配置时用的是它，而不是全局默认的 default_mode。
+            self.assertEqual(config.EnemyPriority_EnemyScaleBalanceWeight, 'S1_enemy_first')
             self.assertEqual(config.bound['EnemyPriority_EnemyScaleBalanceWeight'],
                              f'{task}.EnemyPriority.EnemyScaleBalanceWeight')
             self.assertEqual(config.Submarine_Mode, 'hunt_only')
             self.assertEqual(config.Submarine_AutoSearchMode, 'sub_standby')
-            self.assertEqual(config.Submarine_DistanceToBoss, 'use_open_ocean_support')
+            # 全局默认就是 2_grid_to_boss（与上游一致），不是 use_open_ocean_support。
+            self.assertEqual(config.Submarine_DistanceToBoss, '2_grid_to_boss')
         config = make_config('Ambush11', Submarine={'AutoSearchMode': 'sub_auto_call'})
         self.assertEqual(config.Submarine_AutoSearchMode, 'sub_standby')
 

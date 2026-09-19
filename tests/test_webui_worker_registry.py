@@ -10,8 +10,8 @@ from contextlib import contextmanager
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from module.webui import worker_registry
-from module.webui.setting import State
+from module.runtime import worker_registry
+from module.runtime.setting import State
 
 
 def _wait_forever():
@@ -321,7 +321,7 @@ import time
 from pathlib import Path
 
 sys.argv[0] = f"registryclaim{os.getpid()}.py"
-from module.webui import worker_registry
+from module.runtime import worker_registry
 
 work_dir = Path(os.environ["WORKER_REGISTRY_TEST_DIR"])
 pid = os.getpid()
@@ -501,9 +501,9 @@ class TestStateWorkerOwnership(unittest.TestCase):
         State._init = False
 
         with (
-            patch("module.webui.setting.multiprocessing.Manager", return_value=manager),
+            patch("module.runtime.setting.multiprocessing.Manager", return_value=manager),
             patch(
-                "module.webui.worker_registry.claim_owner",
+                "module.runtime.worker_registry.claim_owner",
                 side_effect=worker_registry.WorkerRegistryOwnershipError("owner exists"),
             ),
         ):

@@ -136,7 +136,7 @@ class CampaignRun(CampaignEvent, ShopStatus):
             self.status_get_gems()
             # 金币限制
             self.get_coin()
-            if self.get_oil() < max(500, self.config.StopCondition_OilLimit):
+            if self.get_oil() < max(self.config.StopCondition_OilLimitHardFloor, self.config.StopCondition_OilLimit):
                 logger.hr('触发停止条件: 石油上限')
                 self.config.task_delay(minute=(120, 240))
                 return True
@@ -231,14 +231,11 @@ class CampaignRun(CampaignEvent, ShopStatus):
                     logger.warning(f'Cannot get the latest event, fallback to campaign_main')
                     folder = 'campaign_main'
         # 支持已适配活动的 D3 三战撤退入口
-        if folder in ['event_20251218_cn', 'event_20260908_cn']:
-            # 将 d3-3 / d3_3 转换为 d3_3 以使用三战撤退逻辑
-            if name in ['d3-3', 'd3_3']:
-                name = 'd3_3'
-                logger.info('[战役-运行] 关卡名转换为d3_3 (三战撤退逻辑)')
-            # d3 保持不变，使用标准逻辑
-            elif name == 'd3':
-                logger.info('[战役-运行] 关卡名d3使用标准逻辑')
+        # 活动目录提供 d3_3 别名地图时生效，不再硬编码活动列表（#275）
+        if name in ['d3-3', 'd3_3'] and folder \
+                and os.path.exists(f'./campaign/{folder}/d3_3.py'):
+            name = 'd3_3'
+            logger.info('[战役-运行] 关卡名转换为d3_3 (三战撤退逻辑)')
         # 处理特殊 SP 地图名称
         if folder == 'event_20201126_cn' and name == 'vsp':
             name = 'sp'

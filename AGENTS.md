@@ -46,7 +46,7 @@ uv run -m dev_tools.button_extract               # 从截图提取按钮定义
 | 文件 | 用途 |
 |---|---|
 | `alas.py` | 核心调度器——`AzurLaneAutoScript.loop()` 运行无限调度循环，55 个任务方法 |
-| `gui.py` | WebUI 后端——PyWebIO + Starlette + uvicorn，每个配置实例在独立子进程中运行 |
+| `gui.py` | WebUI 启动器——Starlette + REST/WebSocket API + Vite 构建的本地 React 前端，每个配置实例在独立子进程中运行 |
 | `mcp_server_sse.py` | MCP SSE 服务器——通过 SSE 暴露 18 个工具供外部 AI Agent 集成 |
 
 ---
@@ -320,7 +320,8 @@ Device ← Screenshot + Control + AppControl + Input
 | `notify/` | 推送通知（onepush 集成） |
 | `llm.py` | LLM 错误分析（OpenAI API 集成） |
 | `logger.py` | 日志系统（Rich、文件轮转、Web UI 流式输出） |
-| `webui/` | WebUI 应用 |
+| `module/api/` | WebUI REST 与 WebSocket API 服务 |
+| `module/runtime/` | WebUI 运行时服务、任务派发与进程管理 |
 | `submodule/` | 外部桥接（AlasFpyBridge、AlasMaaBridge） |
 
 ---
@@ -493,7 +494,7 @@ server.server = 'en'
 | `assets/` | UI 模板图像（按服务器和模块组织） |
 | `config/` | 配置模板 |
 | `deploy/` | 安装脚本、Docker |
-| `webapp/` | Electron + Vue 3 桌面应用 |
+| `frontend/` | React 19 + TypeScript + Vite 前端应用 |
 | `dev_tools/` | 开发工具 |
 | `bin/` | 二进制工具和 OCR 模型 |
 
@@ -547,26 +548,34 @@ server.server = 'en'
 
 ---
 
-## Webapp（Electron）
+## Frontend（WebUI 前端）
 
-- **技术栈**：Vue 3 + Ant Design Vue + Electron，pnpm + Vite + electron-builder
-- **命令**：`pnpm lint`、`pnpm typecheck`、`pnpm test`（Playwright）
-- **构建**：`pnpm build && pnpm compile`
-- **Monorepo**：`webapp/packages/main`（主进程）、`webapp/packages/preload`（预加载）、`webapp/packages/renderer`（Vue 前端）
+- **技术栈**：React 19 + TypeScript + Vite + Lucide-react + ECharts
+- **包管理器**：npm
+- **命令**（在 `frontend/` 目录下）：
+  - `npm run build`：生产构建（产物输出至 `frontend/dist/`）
+  - `npm test`：运行 Vitest 单元测试
+  - `npm run typecheck`：TypeScript 类型检查
+  - `npm run test:e2e`：Playwright 端到端测试
+- **运行机制**：后端 `gui.py` 启动时通过 `deploy.frontend.ensure_frontend()` 自动校验或构建前端静态文件，由 Starlette 统一挂载提供。
 
 ---
 
 ## 测试
 
-- **没有 Python 测试套件** — 测试通过运行任务对接真实模拟器进行
-- Webapp 有基本的 Playwright 测试（`webapp/tests/app.spec.js`）
+- **Python 单元测试**：`tests/` 目录包含约 500 个自动化测试用例，覆盖 API、生命周期、配置事务与核心调度
+  ```bash
+  uv run python -m unittest discover -s tests
+  ```
+- **CI 导入冒烟测试**：`uv run python -m dev_tools.import_smoke_test`
+- **前端测试**：`npm test --prefix frontend` 与 `npm run test:e2e --prefix frontend`
 
 ---
 
 ## CI
 
 GitHub Actions 使用 `uv sync --frozen` 和 `uv run`：
-- `lint.yml` — Ruff lint + button_extract + config_updater（检查未提交的 diff）
+- `ci.yml` — 统一 PR 检查（前端构建/测试/E2E、Ruff lint、button/config 校验、import-smoke、CI 单元测试）
 - `docker-publish.yml` — tag 推送时构建并推送 Docker 镜像
 - `sync2.yml` — 推送到 master/dev 时同步到 GitCode 镜像
 - `ai-issue-labeler.yml` — 基于 AI 的 issue 标签
@@ -577,13 +586,14 @@ GitHub Actions 使用 `uv sync --frozen` 和 `uv run`：
 ## Python 依赖
 
 关键依赖：
-- **核心**：numpy、scipy、pillow、opencv-python、imageio
-- **设备**：adbutils、uiautomator2
-- **OCR**：rapidocr、ncnn、onnxruntime-directml (Windows)、onnxruntime (Linux/Mac)
-- **Web**：pywebio、starlette、uvicorn、aiofiles
-- **AI**：openai（LLM 错误分析）、mcp、sse-starlette
-- **通知**：onepush
-- **工具**：pyyaml、psutil、watchdog、numba、lz4
+- **核心**：numpy、scipy、pillow、opencv-python、imageio、imageio-ffmpeg
+- **设备**：adbutils、uiautomator2、uiautomator2cache
+- **OCR**：rapidocr、ncnn、onnxruntime-windowsml (Windows)、onnxruntime (Linux/Mac)、windowsml (Windows)
+- **Web**：starlette、uvicorn[standard]、anyio
+- **AI / MCP**：openai（LLM 错误分析）、mcp
+- **网络与远程**：aiohttp、aiortc
+- **通知与状态**：onepush、pypresence
+- **工具与加速**：pyyaml、inflection、jellyfish、psutil、matplotlib、pycryptodome、pydantic、numba、uv、lz4、packaging
 
 ---
 

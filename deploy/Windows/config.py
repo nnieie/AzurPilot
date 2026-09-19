@@ -70,6 +70,9 @@ class ConfigModel:
     DpiScaling: bool = True
     Password: Optional[str] = None
     CDN: Union[str, bool] = False
+    # --watermark. 关闭未经验证版本的水印。默认 False，即默认显示水印；
+    # 需与 deploy/config.py 保持一致，否则 Windows 启动器读不到该开关。
+    DisableBranchWatermark: bool = False
     Run: Optional[str] = None
     AppAsarUpdate: bool = True
     NoSandbox: bool = True

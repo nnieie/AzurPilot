@@ -24,15 +24,11 @@ from io import BytesIO
 from module.config.config import AzurLaneConfig
 from module.config.time_source import now as current_time
 from module.config.utils import DEFAULT_CONFIG_NAME, alas_instance
-from module.webui.process_manager import ProcessManager
+from module.runtime.process_manager import ProcessManager
 from module.config.mcp_helper import McpConfigHelper
-from module.webui import mcp_auth
-from module.webui.setting import State
+from module.runtime import mcp_auth
+from module.runtime.setting import State
 
-try:
-    from module.webui.fake_pil_module import remove_fake_pil_module
-except ImportError:
-    remove_fake_pil_module = None
 
 # 初始化日志
 logging.basicConfig(level=logging.INFO)
@@ -303,8 +299,6 @@ async def _tool_get_screenshot(arguments: Dict[str, Any]) -> ToolResponse:
     inst = arguments["instance"]
     if "ALAS_CONFIG_NAME" not in os.environ:
         os.environ["ALAS_CONFIG_NAME"] = inst
-    if remove_fake_pil_module:
-        remove_fake_pil_module()
 
     from module.device.device import Device
     from PIL import Image
@@ -405,8 +399,6 @@ async def _tool_restart_emulator(arguments: Dict[str, Any]) -> ToolResponse:
     if "ALAS_CONFIG_NAME" not in os.environ:
         os.environ["ALAS_CONFIG_NAME"] = inst
     manager = ProcessManager.get_manager(inst)
-    if remove_fake_pil_module:
-        remove_fake_pil_module()
 
     from module.device.device import Device
     try:
@@ -453,7 +445,7 @@ async def _tool_restart_adb(arguments: Dict[str, Any]) -> ToolResponse:
 
 async def _tool_update_alas(arguments: Dict[str, Any]) -> ToolResponse:
     try:
-        from module.webui.updater import updater
+        from module.runtime.updater import updater
 
         def do_update():
             updater.update()
@@ -522,7 +514,7 @@ DENIED_MESSAGES = {
 def configure_auth(key, public_bind=False):
     """注入 MCP 的访问密码（复用 WebUI 密码）。
 
-    由 `module.webui.app` 在挂载 /mcp 之前调用；独立模式的 `__main__`
+    由 `module.api.app` 在挂载 /mcp 之前调用；独立模式的 `__main__`
     也会调用。传入空值即关闭鉴权（仅在监听回环或演示环境下允许）。
 
     Args:
@@ -705,7 +697,7 @@ def _resolve_standalone_password():
     Returns:
         str | None: 有效密码，None 表示未配置。
     """
-    from module.webui.password_utils import ensure_password_for_host, is_demo_mode
+    from module.runtime.password_utils import ensure_password_for_host, is_demo_mode
 
     password = State.deploy_config.Password
     try:

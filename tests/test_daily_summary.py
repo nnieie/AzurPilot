@@ -24,6 +24,16 @@ from module.statistics.daily_summary import (
 from module.statistics.daily_summary_store import DailySummaryStore
 
 
+def temporary_directory():
+    """建一个容忍清理失败的临时目录。
+
+    Windows 上 SQLite 文件在最后一个连接关闭后仍可能被短暂占用
+    （杀毒扫描、句柄回收延迟等），cleanup 会抛 WinError 32/145。
+    目录本来就在 %TEMP% 下，清不掉不该判定用例失败。
+    """
+    return tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
+
+
 def sample_facts():
     return {
         'window': {
@@ -154,7 +164,7 @@ class TestDailySummaryWindow(unittest.TestCase):
 
 class TestDailySummaryStore(unittest.TestCase):
     def setUp(self):
-        self.temporary_directory = tempfile.TemporaryDirectory()
+        self.temporary_directory = temporary_directory()
         self.store = DailySummaryStore(
             Path(self.temporary_directory.name) / 'daily_summary.db'
         )
@@ -247,7 +257,7 @@ class TestDailySummaryStore(unittest.TestCase):
 
 class TestDailySummaryDataIntervals(unittest.TestCase):
     def setUp(self):
-        self.temporary_directory = tempfile.TemporaryDirectory()
+        self.temporary_directory = temporary_directory()
         self.resource_db = Path(self.temporary_directory.name) / 'resources.db'
         self.original_resource_db = resource_stats._LOCAL_DB
         self.original_table_ensured = resource_stats._table_ensured

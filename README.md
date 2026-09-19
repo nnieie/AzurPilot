@@ -1,6 +1,9 @@
 
 # AzurPilot — 碧蓝航线自动化辅助工具
 
+> 前端已迁移到 `frontend/` 中的 React 控制台，业务通信采用版本化 WebSocket API。
+> 首次源码启动需要 Node.js 22.12+；[启动与开发说明](frontend/README.md) · [API 协议](frontend/API.md)。
+
 <p align="center">
   <a href="README.md"><img src="https://img.shields.io/badge/简体中文-中文-blue?style=flat-square" alt="简体中文"></a>
   <a href="README.zh-TW.md"><img src="https://img.shields.io/badge/繁體中文-繁體-green?style=flat-square" alt="繁體中文"></a>

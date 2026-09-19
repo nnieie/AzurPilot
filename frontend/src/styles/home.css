@@ -1,0 +1,98 @@
+.update-notice.sidebar-update-notice {padding: 4px 8px; border-radius: 999px; background: var(--red); color: #fff; font-size: 10px; font-weight: 750; line-height: 1; flex-shrink: 0}
+.sidebar-brand {padding-top: 0; margin-bottom: 20px}
+.brand-title {color: var(--text); text-decoration: none}
+.sidebar-brand-left {display: flex; align-items: center; gap: 8px; min-width: 0}
+.sidebar-update-notice span {position: relative; z-index: 1}
+.nav-instance-name {min-width: 0; overflow: hidden; text-overflow: ellipsis}
+.topbar {position: sticky; top: 0; z-index: 30; gap: 16px}
+.breadcrumb {min-width: 0}
+.breadcrumb-current {overflow: hidden; text-overflow: ellipsis; white-space: nowrap}
+.breadcrumb > a, .breadcrumb > span, .breadcrumb > strong {flex-shrink: 0}
+.breadcrumb > .breadcrumb-current {flex-shrink: 1}
+.breadcrumb .instance-picker {margin: 0; min-width: 0}
+.breadcrumb .instance-switcher {display: inline-flex; align-items: center; gap: 2px; padding: 0; border: 0; background: transparent; width: auto}
+.breadcrumb .instance-caption {display: inline-flex; align-items: center; color: var(--text); text-decoration: none; border-radius: 4px; padding: 4px 6px; transition: color .15s, background-color .15s}
+.breadcrumb .instance-caption:hover {color: var(--accent); background: var(--accent-soft)}
+.breadcrumb .instance-caption strong {font-size: 11px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap}
+.breadcrumb .instance-toggle {display: inline-flex; align-items: center; justify-content: center; padding: 4px 5px; border: 0; background: transparent; color: var(--muted); border-radius: 4px; cursor: pointer; transition: color .15s, background-color .15s}
+.breadcrumb .instance-toggle:hover, .breadcrumb .instance-toggle[aria-expanded='true'] {color: var(--accent); background: var(--accent-soft)}
+.breadcrumb .instance-menu {right: auto; width: 240px; max-width: calc(100vw - 110px)}
+.breadcrumb .instance-menu span {color: inherit}
+.topbar-right {flex-shrink: 0; gap: 16px}
+.update-notice {display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; color: var(--accent); background: var(--accent-soft); border-radius: 20px; white-space: nowrap}
+.task-nav-heading {margin-bottom: 8px; flex-shrink: 0}
+.sidebar-label .icon-button {width: 28px; height: 28px; padding: 6px}
+.filter-active {color: var(--accent) !important; background: var(--accent-soft) !important}
+.main-shell > main:has(> .home-editorial) {max-width: none; min-height: calc(var(--viewport-height) - 56px); padding: 0; display: flex}
+.home-editorial {flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(280px, 38%) minmax(0, 1fr)}
+.home-visual {position: relative; isolation: isolate; min-width: 0; padding: clamp(30px, 4vw, 64px); display: flex; flex-direction: column; justify-content: space-between; color: #fff; text-shadow: 0 2px 18px #000b}
+.home-active .wallpaper::after {content: ''; position: absolute; inset: 0; background: rgb(0 0 0 / .42); pointer-events: none}
+.home-visual-copy {margin: auto 0; padding: 48px 0}
+.home-visual h1 {max-width: 560px; margin: 13px 0 18px; font-size: clamp(38px, 3.8vw, 58px); line-height: .98; letter-spacing: -.055em; overflow-wrap: normal}
+.home-workspace {min-width: 0; padding: clamp(28px, 4vw, 58px); background: var(--surface); color: var(--text)}
+.home-workspace-heading {min-height: 72px; padding-bottom: 26px; display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; border-bottom: 1px solid var(--border)}
+.home-workspace-heading h2 {margin: 0; font-size: clamp(24px, 2.4vw, 32px); letter-spacing: -.7px}
+.home-instance-list {margin-top: 10px}
+.home-instance-row {min-height: 120px; padding: 20px 4px; display: grid; grid-template-columns: minmax(150px, 1.25fr) minmax(100px, .7fr) minmax(120px, .8fr) 36px; align-items: center; gap: 22px; color: var(--text); text-decoration: none; border-bottom: 1px solid var(--border)}
+.home-instance-row:hover .home-instance-arrow {border-color: var(--text); transform: translateX(3px)}
+.home-instance-identity {min-width: 0}
+.home-instance-identity h3 {margin: 0 0 7px; font-size: 18px; font-weight: 680; overflow-wrap: anywhere}
+.instance-device {display: flex; flex-wrap: wrap; gap: 4px 10px; color: var(--muted); font-size: 11px; overflow-wrap: anywhere}
+.instance-device > span:first-child {text-transform: uppercase; flex-shrink: 0}
+.home-instance-row .status {justify-self: start}
+.home-instance-task {min-width: 0; font-size: 12px; font-weight: 650; overflow-wrap: anywhere}
+.home-instance-arrow {width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 50%; transition: border-color .15s, transform .15s}
+.home-instance-empty {width: 100%; min-height: 180px; display: flex; align-items: center; justify-content: center; gap: 12px; border: 1px dashed var(--border); border-radius: 16px; color: var(--accent); background: transparent}
+[data-theme='minimal'] .home-visual {color: var(--text); background: var(--surface-muted); text-shadow: none}
+[data-theme='minimal'] .main-shell > main:has(> .home-editorial) {min-height: calc(var(--viewport-height) - var(--topbar-height))}
+[data-theme='minimal'] .home-visual::before {content: none}
+.head-grid {display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-bottom: 24px}
+.head-card {padding: 22px; display: grid; gap: 15px}
+.head-card > span {display: flex; align-items: center; gap: 8px; color: var(--muted)}
+.head-card code {font-size: 13px; overflow-wrap: anywhere; user-select: all}
+.update-summary {display: flex; align-items: center; flex-wrap: wrap; gap: 20px; margin-bottom: 24px; color: var(--muted)}
+.update-summary > span {display: flex; align-items: center; gap: 6px}
+.update-summary .update-available {color: var(--accent)}
+.commit-row {display: flex; gap: 16px; padding: 19px 24px; border-top: 1px solid var(--border)}
+.commit-node {margin-top: 2px; color: var(--accent); flex-shrink: 0}
+.commit-detail {min-width: 0; flex: 1}
+.commit-subject {line-height: 1.7; overflow-wrap: anywhere}
+.commit-ref {display: inline-block; font-size: 10px; padding: 0 7px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: 5px; margin-left: 9px; white-space: nowrap}
+.commit-ref.upstream {background: var(--accent-soft); color: var(--accent)}
+.commit-meta {display: flex; align-items: center; flex-wrap: wrap; gap: 12px; font-size: 11px; color: var(--muted); margin-top: 8px}
+.commit-meta code {user-select: all}
+.commit-detail details {margin-top: 6px; color: var(--muted); font-size: 12px}
+.commit-detail summary {cursor: pointer}
+.commit-detail pre {white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; line-height: 1.8; color: var(--text)}
+.commit-pagination {display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 18px 24px; border-top: 1px solid var(--border)}
+.commit-pagination > span {margin-right: auto; color: var(--muted); font-size: 12px}
+@media (max-width: 950px) {
+  .topbar {gap: 8px}
+  .sidebar {z-index: 100}
+  .topbar-right {gap: 8px}
+  .topbar-right .connection-label span {display: none}
+  .breadcrumb .instance-caption strong {max-width: 100px}
+  .breadcrumb {gap: 6px; flex: 1}
+  .breadcrumb > a[href$='/task/Alas'], .breadcrumb > a[href$='/task/Alas'] + span {display: none}
+  .update-notice {font-size: 10px; padding: 5px 6px}
+  .update-notice > svg {display: none}
+  .head-grid {grid-template-columns: 1fr}
+  .head-card {padding: 18px}
+  .commit-row {padding: 16px; gap: 10px}
+  .commit-pagination {padding: 16px; gap: 8px}
+  .home-editorial {grid-template-columns: 1fr}
+  .home-visual {min-height: 430px; padding: 32px}
+  .home-visual-copy {padding: 58px 0}
+  .home-visual h1 {font-size: clamp(40px, 10vw, 64px)}
+  .home-workspace {padding: 30px 26px}
+}
+
+@media (max-width: 620px) {
+  .home-visual {min-height: 380px; padding: 26px 22px}
+  .home-visual-copy {padding: 42px 0}
+  .home-workspace {padding: 26px 20px}
+  .home-workspace-heading {align-items: flex-start; flex-direction: column}
+  .home-instance-row {grid-template-columns: minmax(0, 1fr) 36px; gap: 13px; padding: 22px 2px}
+  .home-instance-row .status, .home-instance-task {grid-column: 1}
+  .home-instance-arrow {grid-column: 2; grid-row: 1 / 4}
+}

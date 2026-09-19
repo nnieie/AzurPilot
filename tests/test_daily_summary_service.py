@@ -1,5 +1,6 @@
 import sys
 import tempfile
+import threading
 import types
 import unittest
 import json
@@ -9,6 +10,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
+from requests import Response
+
 from alas import AzurLaneAutoScript
 import module.statistics.daily_summary as daily_summary
 import module.notify.notify as notify_module
@@ -17,9 +20,29 @@ from module.statistics.daily_summary_store import DailySummaryStore
 from tests.test_daily_summary import sample_facts, summary_config, valid_report_text
 
 
+# 打桩 daily_summary.threading.Thread 会把全局 threading.Thread 一起换掉，
+# 所以这里先存下真类，供需要真的起线程的用例构造线程。
+_REAL_THREAD = threading.Thread
+
+# 日报周期的终态：到了这些状态后台线程就不会再改库了。
+_TERMINAL_STATUSES = ('sent', 'failed', 'skipped')
+
+
+def _track_thread(threads, *args, **kwargs):
+    """构造真实线程并记下对象，返回给被测代码自行 start()。"""
+    thread = _REAL_THREAD(*args, **kwargs)
+    threads.append(thread)
+    return thread
+
+
 class TestDailySummaryService(unittest.TestCase):
     def setUp(self):
-        self.temporary_directory = tempfile.TemporaryDirectory()
+        # Windows 上 SQLite 文件在最后一个连接关闭后仍可能被短暂占用
+        # （后台线程收尾、杀毒扫描等），cleanup 会抛 WinError 32/145。
+        # 临时目录本来就在 %TEMP%，清不掉不该判定用例失败。
+        self.temporary_directory = tempfile.TemporaryDirectory(
+            ignore_cleanup_errors=True
+        )
         self.store = DailySummaryStore(
             Path(self.temporary_directory.name) / 'daily_summary.db'
         )
@@ -90,9 +113,15 @@ class TestDailySummaryService(unittest.TestCase):
             Emulator_PackageName='auto',
             Emulator_ServerName='cn_android-0',
         )
+        # 这是本文件里唯一真的起后台线程的用例。状态变成 sent 只说明事务提交了，
+        # 线程此时可能还在收尾（关 SQLite 连接），而 Windows 上文件被占用就删不掉
+        # 临时目录 —— 下一轮用例的 tearDown 会跟着报错。所以拦住线程对象等它退出。
+        threads = []
         with (
             patch.object(daily_summary, 'server_time_offset_for', return_value=timedelta()),
             patch('module.base.async_executor.async_executor.flush'),
+            patch.object(daily_summary.threading, 'Thread',
+                         side_effect=lambda *a, **kw: _track_thread(threads, *a, **kw)),
             patch.object(self.service, 'build_facts', return_value=sample_facts()),
             patch.object(self.service, '_generate_report', return_value=('日报正文', 1)),
             patch.object(self.service, '_send_report', return_value=(True, 1)) as send,
@@ -100,12 +129,18 @@ class TestDailySummaryService(unittest.TestCase):
             self.assertTrue(
                 self.service.check_due(config, now=datetime(2026, 8, 22, 0, 10, 2))
             )
+            # 状态要经过 generating → sending → sent。只等 generating 结束会在
+            # sending 阶段提前退出（全量跑时更容易碰上），所以要等终态。
             deadline = time.monotonic() + 2
             period = self.store.get_period('alpha', 'cn:2026-08-22:0010')
-            while period is not None and period['status'] == 'generating':
+            while period is not None and period['status'] not in _TERMINAL_STATUSES:
                 self.assertLess(time.monotonic(), deadline)
                 time.sleep(0.01)
                 period = self.store.get_period('alpha', 'cn:2026-08-22:0010')
+
+        for thread in threads:
+            thread.join(timeout=5)
+            self.assertFalse(thread.is_alive(), '日报后台线程没有在超时内退出')
 
         self.assertEqual('sent', period['status'])
         send.assert_called_once_with('provider: json', '日报正文')
@@ -487,6 +522,11 @@ class TestDailySummaryNotify(unittest.TestCase):
 
             def notify(self, **kwargs):
                 self.kwargs = kwargs
+                # onepush 成功时返回 requests.Response；handle_notify 明确把
+                # None（请求异常被 onepush 吞掉）判为失败，所以假实现不能返回 None。
+                response = Response()
+                response.status_code = 200
+                return response
 
         notifier = FakeCustom()
         with (

@@ -190,7 +190,13 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
 
     def _meow_fixed_patrol_scan(self):
         """
-        战后效率模式强制移动（套用侵蚀一，可开关，默认关闭）。
+        短猫相接的战后强制移动：短猫舰队没找到事件就换其他舰队扫雷达。
+
+        这是短猫唯一的强制移动形式——等价于侵蚀一的 L0/L1（换队扫雷达清问号），
+        **没有**侵蚀一的 L2。侵蚀一 L2 会把舰队逐个挪到固定的 C1/D1/E1/F1，
+        那是照侵蚀一那张图定的，短猫跑的海域地图各不相同，挪了没意义、还可能
+        把舰队挪到不该去的地方。共享的 _execute_fixed_patrol_scan 也会直接
+        跳过短猫，短猫不走那条路。
 
         开启后遍历 1~4 号舰队的雷达清剩余问号：只切换舰队看雷达、
         不挪动舰队；已解决目标事件（明石/记录塔/信息探测装置）时跳过。
@@ -293,6 +299,7 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
         # 结束短猫搜索计时
         self.on_meow_search_end()
 
+        self._meow_record_akashi_if_solved()
         self.config.check_task_switch()
 
     def _meow_handle_siren_detector_search(self):
@@ -422,6 +429,7 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
         # 结束短猫搜索计时
         self.on_meow_search_end()
 
+        self._meow_record_akashi_if_solved()
         self.config.check_task_switch()
 
     def os_meowfficer_farming(self):

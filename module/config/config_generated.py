@@ -172,16 +172,22 @@ class GeneratedConfig:
 
     # 配置组 `DropRecord`
     DropRecord_SaveFolder = './screenshots'
+    DropRecord_RetentionDays = 0
     DropRecord_AzurStatsID = None
     DropRecord_API = 'default'  # default, cn_gz_reverse_proxy
     DropRecord_ResearchRecord = 'do_not'  # do_not, save, upload, save_and_upload
     DropRecord_CommissionRecord = 'do_not'  # do_not, save, upload, save_and_upload
+    DropRecord_CommissionIncomeScreenshot = 'save'  # do_not, save
     DropRecord_CombatRecord = 'do_not'  # do_not, save
     DropRecord_OpsiRecord = 'upload'  # do_not, save, upload, save_and_upload
     DropRecord_MeowfficerBuy = 'do_not'  # do_not, save
     DropRecord_MeowfficerTalent = 'do_not'  # do_not, save, upload, save_and_upload
     DropRecord_TelemetryReport = True
     DropRecord_BugReport = True
+
+    # 配置组 `Backup`
+    Backup_Enable = True
+    Backup_KeepDays = 7
 
     # 配置组 `Log`
     Log_LogKeepCount = 3
@@ -240,10 +246,12 @@ class GeneratedConfig:
     OperationHandover_ConsumeAllBookTime = '00:00'
     OperationHandover_MaintainOverride = False  # True, False
     OperationHandover_OilLimit = 1000
-    OperationHandover_ConsumeAllBookRecord = None
+    OperationHandover_ConsumeAllBookRecord = datetime.datetime(2020, 1, 1, 0, 0)
+    OperationHandover_CommissionEnd = datetime.datetime(2020, 1, 1, 0, 0)
 
     # 配置组 `StopCondition`
     StopCondition_OilLimit = 1000
+    StopCondition_OilLimitHardFloor = 500
     StopCondition_CoinLimit = 0
     StopCondition_RunCount = 0
     StopCondition_MapAchievement = 'non_stop'  # non_stop, non_stop_clear_all, 100_percent_clear, map_3_stars, threat_safe, threat_safe_without_3_stars
@@ -253,6 +261,10 @@ class GeneratedConfig:
 
     # 配置组 `WarArchives`
     WarArchives_DailyRunCount = 0
+    WarArchives_AutoClear = False
+    WarArchives_AutoSelectEvent = False
+    WarArchives_AutoClearTarget = 'three_star'  # normal_3_star, three_star, clear_100
+    WarArchives_AutoClearProgress = None
     WarArchives_DailyRunCountRemain = 0
     WarArchives_DailyRunCountRecord = datetime.datetime(2020, 1, 1, 0, 0)
     WarArchives_DailyRunCountLimit = 0
@@ -278,6 +290,7 @@ class GeneratedConfig:
 
     # 配置组 `Emotion`
     Emotion_Mode = 'calculate'  # calculate, ignore, calculate_ignore
+    Emotion_IgnoreShipwreck = False
     Emotion_Fleet1Value = 119
     Emotion_Fleet1Record = datetime.datetime(2020, 1, 1, 0, 0)
     Emotion_Fleet1Control = 'prevent_green_face'  # keep_exp_bonus, prevent_green_face, prevent_yellow_face, prevent_red_face
@@ -380,6 +393,10 @@ class GeneratedConfig:
     EventShop_PresetFilter = 'all'  # all, custom
     EventShop_CustomFilter = 'EquipUR > EquipSSR > Cube > GachaTicket\n> Array > Chip > CatT3 \n> Meta > SkinBox\n> Oil > Coin > Medal > ExpBookT1 > FoodT1\n> DR > PR\n> AugmentCore > AugmentEnhanceT2 > AugmentChangeT2 > AugmentChangeT1\n> CatT2 > CatT1 > PlateGeneralT3 > PlateT3 > BoxT4\n> ShipSSR'
 
+    # 配置组 `ShopAdvanced`
+    ShopAdvanced_Mode = 'legacy'  # legacy, advanced
+    ShopAdvanced_Script = ''
+
     # 配置组 `Commission`
     Commission_PresetFilter = 'cube'  # cube, cube_24h, chip, chip_24h, oil, custom
     Commission_DynamicProgramming = True
@@ -393,6 +410,10 @@ class GeneratedConfig:
     Commission_DoMajorCommission = False
     Commission_CommissionNotifyReward = False
     Commission_CommissionNotifyRewardStatistics = True
+    Commission_DetectShipDrop = False  # True, False
+    Commission_GemNotify = True
+    Commission_GemStatistics = False
+    Commission_GemStatisticsPeriod = 'month'  # today, week, month
 
     # 配置组 `Tactical`
     Tactical_TacticalFilter = 'SameT4 > SameT3 > SameT2 > SameT1\n> BlueT2 > YellowT2 > RedT2\n> BlueT3 > YellowT3 > RedT3\n> BlueT4 > YellowT4 > RedT4\n> BlueT1 > YellowT1 > RedT1\n> first'
@@ -418,7 +439,7 @@ class GeneratedConfig:
     Research_AllowDelay = True
     Research_AllowGenreT = False
     Research_RemainingCommissions = -1
-    Research_PresetFilter = 'series_9_blueprint_ta152'  # custom, series_9_blueprint_ta152, series_9_blueprint_only, series_9_ta152_only, series_8_blueprint_305, series_8_blueprint_only, series_8_305_only, series_7_blueprint_la9, series_7_blueprint_only, series_7_la9_only, series_6_blueprint_203, series_6_blueprint_only, series_6_203_only, series_5_blueprint_152, series_5_blueprint_only, series_5_152_only, series_4_blueprint_tenrai, series_4_blueprint_only, series_4_tenrai_only, series_3_blueprint_234, series_3_blueprint_only, series_3_234_only, series_2_than_3_457_234, series_2_blueprint_457, series_2_blueprint_only, series_2_457_only
+    Research_PresetFilter = 'series_9_blueprint_ta152'  # custom, series_9_blueprint_ta152, series_9_blueprint_only, series_9_ta152_only, series_8_blueprint_305, series_8_blueprint_only, series_8_305_only, series_8_305_e_first, series_7_blueprint_la9, series_7_blueprint_only, series_7_la9_only, series_6_blueprint_203, series_6_blueprint_only, series_6_203_only, series_5_blueprint_152, series_5_blueprint_only, series_5_152_only, series_4_blueprint_tenrai, series_4_blueprint_only, series_4_tenrai_only, series_3_blueprint_234, series_3_blueprint_only, series_3_234_only, series_2_than_3_457_234, series_2_blueprint_457, series_2_blueprint_only, series_2_457_only
     Research_CustomFilter = 'S9-DR0.5 > S9-PRY0.5 > S9-Q0.5 > S9-H0.5 > Q0.5 > S9-DR2.5\n> S9-G1.5 > S9-Q1 > S9-DR5 > 0.5 > S9-G4 > S9-Q2 > S9-PRY2.5 > reset\n> S9-DR8 > Q1 > 1 > S9-E-315 > S9-G2.5 > G1.5 > 1.5 > S9-E-031\n> S9-Q4 > Q2 > E2 > 2 > DR2.5 > PRY2.5 > G2.5 > 2.5 > S9-PRY5\n> S9-PRY8 > Q4 > G4 > 4 > S9-C6 > DR5 > PRY5 > 5 > C6 > 6 > S9-C8\n> S9-C12 > DR8 > PRY8 > C8 > 8 > C12 > 12'
 
     # 配置组 `Dorm`
@@ -467,6 +488,15 @@ class GeneratedConfig:
     # 配置组 `Awaken`
     Awaken_LevelCap = 'level120'  # level120, level125
     Awaken_Favourite = False
+
+    # 配置组 `Secretary`
+    Secretary_CustomFilter = 'ultra > super_rare > elite > rare > common'
+    Secretary_LowFavorabilityPriority = False
+    Secretary_FavouriteOnly = True
+    Secretary_BackupEnable = True
+    Secretary_CheckInterval = 0
+    Secretary_Notify = True
+    Secretary_OnePushConfig = 'provider: null'
 
     # 配置组 `GeneralShop`
     GeneralShop_Enable = True
@@ -688,7 +718,7 @@ class GeneratedConfig:
     OpsiHazard1Leveling_TargetZone = 0  # 0, 44, 22
     OpsiHazard1Leveling_OperationCoinsPreserve = 40000
     OpsiHazard1Leveling_MinimumActionPointReserve = 200
-    OpsiHazard1Leveling_ExecuteFixedPatrolScan = 0  # 0, 1, 2
+    OpsiHazard1Leveling_ExecuteFixedPatrolScan = False
     OpsiHazard1Leveling_SkipHpCheck = False  # True, False
     OpsiHazard1Leveling_Cl1Filter = 'ActionPoint'
     OpsiHazard1Leveling_RecordNonCL1AP = True
@@ -722,6 +752,7 @@ class GeneratedConfig:
     OpsiScheduling_EnableAbyssal = False  # True, False
     OpsiScheduling_EnableStronghold = False  # True, False
     OpsiScheduling_TaskPriority = 'OpsiStronghold > OpsiObscure > OpsiAbyssal > OpsiMeowfficerFarming'
+    OpsiScheduling_ObscureAbyssalCheckDelayDays = 0
     OpsiScheduling_MonthEndActionPointCleanupEnable = False  # True, False
     OpsiScheduling_MonthEndActionPointCleanupDays = 0
     OpsiScheduling_MonthEndActionPointPreserve = 0
@@ -1055,6 +1086,7 @@ class GeneratedConfig:
     EmulatorManagement_ScheduledEmulatorRestart = False
     EmulatorManagement_ForceScheduledRestart = False
     EmulatorManagement_RestartIntervalHours = 4
+    EmulatorManagement_DeepRestartAfterFailures = 0
 
     # 配置组 `EmulatorManager`
     EmulatorManager_EnableRemoteSSH = False  # True, False

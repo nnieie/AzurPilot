@@ -3,6 +3,8 @@ log
 cache/
 .codex
 config/backup/*
+# 每日备份目录（AzurPilot_Data_Backup/）：默认落在项目根目录，含个人统计数据与配置，不应入库
+/AzurPilot_Data_Backup/
 config/*.ini
 !config/template.ini
 config/*.yaml

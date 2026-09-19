@@ -1,7 +1,7 @@
 {
   "Menu": {
     "Alas": {
-      "name": "スマートポートPlus",
+      "name": "システム",
       "help": ""
     },
     "Farm": {
@@ -43,7 +43,7 @@
   },
   "Task": {
     "Alas": {
-      "name": "AzurPilot設定",
+      "name": "システム設定",
       "help": ""
     },
     "General": {
@@ -185,6 +185,10 @@
     "Awaken": {
       "name": "認知覚醒",
       "help": ""
+    },
+    "Secretary": {
+      "name": "秘書艦",
+      "help": "秘書艦の好感度を自動で監視し、好感度が 90 に達すると自動で変更します"
     },
     "OperationHandover": {
       "name": "作戦委託契約",
@@ -370,13 +374,13 @@
       "name": "週間パール取引",
       "help": "minitouchのみ対応。毎週火曜日01:00にパールを自動処理：まず今週のパールを購入し、次に既存のパールを販売します。コインが200x220個分の購入に十分であることを確認してください。これが今週のパールを一括購入するための最低要件です。不足するとエラーが発生する可能性があります。"
     },
-    "FleetScan": {
-      "name": "艦隊スキャン",
-      "help": "艦隊に編成されている艦船をスキャンします"
-    },
     "FleetInfo": {
       "name": "艦隊情報",
       "help": "最新の艦隊スキャン結果を表示します"
+    },
+    "FleetScan": {
+      "name": "艦隊スキャン",
+      "help": "艦隊に編成されている艦船をスキャンします"
     },
     "Daemon": {
       "name": "半自動クリック",
@@ -426,7 +430,7 @@
     },
     "Enable": {
       "name": "この機能を有効にする",
-      "help": "このタスクをスケジューラに追加します\n委託、科研、収穫タスクは強制的にオンになっています",
+      "help": "このタスクをスケジューラに追加します",
       "True": "有効",
       "False": "無効"
     },
@@ -629,12 +633,13 @@
     },
     "ControlMethod": {
       "name": "コントロール方式を選択",
-      "help": "速度: minitouch > Hermit >>> uiautomator2 ~= ADB\nminitouchを推奨。vmos下を除き、Hermitは非推奨。",
+      "help": "クリック・スワイプの注入方式。速度: minitouch ≈ MaaTouch > ADB >>> uiautomator2。MaaTouch を推奨（minitouch は新しい Android 端末では不安定な場合があります）。\n⚠️ nemu_ipc はスクリーンショット方式が nemu_ipc の場合に自動で連動します（起動時）。注意：nemu_ipc のタッチ注入はエミュレータ内部 RPC 経由のため、低スペック PC ではスワイプが飛びやすく、稀にハングしてクリックが欠落することがあります。異常があれば minitouch / MaaTouch に戻してください。",
       "ADB": "ADB",
       "uiautomator2": "uiautomator2",
       "minitouch": "minitouch",
       "Hermit": "Hermit",
-      "MaaTouch": "MaaTouch"
+      "MaaTouch": "MaaTouch",
+      "nemu_ipc": "nemu_ipc"
     },
     "GameSettings": {
       "name": "推奨ゲーム設定を自動適用",
@@ -969,8 +974,8 @@
     "CloseEmulatorDuringLongWait": {
       "name": "長時間待機中にエミュレーターを閉じる",
       "help": "次のタスクまで 3 時間を超える場合、待機中にエミュレーターを閉じてメモリと CPU を節約します。",
-      "True": "True",
-      "False": "False"
+      "True": "オン",
+      "False": "オフ"
     },
     "WhenTaskQueueEmpty": {
       "name": "タスクキューが空になった時",
@@ -990,8 +995,8 @@
     "WarmupEnable": {
       "name": "次のタスクの前にエミュレーターとゲームを先に起動する",
       "help": "待機中にエミュレーター/ゲームを閉じた場合（長時間待機時にエミュレーターを終了、タスク待ち時にゲームを終了）に、次のタスク開始前に起動してログインします。タスク開始時のコールドスタートによる遅延を防ぎます。有効時、先行時間に満たない短い待機ではゲームを終了しません。",
-      "True": "True",
-      "False": "False"
+      "True": "オン",
+      "False": "オフ"
     },
     "WarmupMinutes": {
       "name": "タスクの X 分前に起動を開始する",
@@ -1006,6 +1011,10 @@
     "SaveFolder": {
       "name": "ドロップ保存ディレクトリ",
       "help": ""
+    },
+    "RetentionDays": {
+      "name": "スクリーンショット保存日数",
+      "help": "ドロップレコードのスクリーンショットがこの日数を超えると自動削除します\n0 = 日数による削除を行わない（委託報酬のスクリーンショットは最新50枚のみ保持）"
     },
     "AzurStatsID": {
       "name": "AzurStat ID",
@@ -1032,6 +1041,12 @@
       "save": "保存",
       "upload": "アップロード",
       "save_and_upload": "保存してアップロードする"
+    },
+    "CommissionIncomeScreenshot": {
+      "name": "委託報酬スクリーンショット",
+      "help": "委託精算時に「アイテム入手」のスクリーンショットを保存し、統計ページの「スクリーンショットを見る」で使用します\nオフにしても報酬データは記録され、画像のみ保存されません",
+      "do_not": "保存しない",
+      "save": "保存"
     },
     "CombatRecord": {
       "name": "戦闘ドロップスクリーンショット",
@@ -1068,6 +1083,20 @@
     "BugReport": {
       "name": "バグログレポート",
       "help": "有効にすると、例外が発生したときにバグ ログが匿名でサーバーに報告され、ID 生成の改善に役立ちます。詳細についてはソースコードを参照してください。"
+    }
+  },
+  "Backup": {
+    "_info": {
+      "name": "毎日バックアップ",
+      "help": "毎日最初にスケジューラを起動したとき、データベースとユーザー設定をプロジェクトのルートディレクトリにある AzurPilot_Data_Backup フォルダへ自動でバックアップします。"
+    },
+    "Enable": {
+      "name": "毎日バックアップを有効にする",
+      "help": "オフにすると新しいバックアップを作成せず、既存のバックアップも削除しません。"
+    },
+    "KeepDays": {
+      "name": "バックアップの保存日数",
+      "help": "この日数を超えたバックアップは、バックアップ完了後に自動で削除されます。例えば 7 なら直近 7 日分だけを保持します。"
     }
   },
   "Log": {
@@ -1477,8 +1506,12 @@
       "help": "燃料がこの値より少ない間はタスクを延期し、足りたら再開します\n0 で無効"
     },
     "ConsumeAllBookRecord": {
-      "name": "一括消費の記録",
-      "help": "スクリプトが記録する実行済みの週です"
+      "name": "前回の一括消費時刻",
+      "help": "前回「作戦全権委託書」を一括消費した時刻です。\n今週内であれば今週は再実行しません。\n空にするか先週以前にすると、今週もう一度実行できます"
+    },
+    "CommissionEnd": {
+      "name": "委託の終了予定時刻",
+      "help": "委託開始時にスクリプトが記録し、報酬を受け取りに戻る時刻の判断に使います"
     }
   },
   "StopCondition": {
@@ -1489,6 +1522,10 @@
     "OilLimit": {
       "name": "燃料がX以下になったら延期",
       "help": "燃料が少なすぎる場合はタスクを延期し、燃料が十分になったら出撃を続行します"
+    },
+    "OilLimitHardFloor": {
+      "name": "石油停止下限",
+      "help": "実際の停止しきい値は max(下限, 石油上限) です。500 は歴史的な安全網であり、低消費周回でさらに石油を使い切りたい場合は小さくしてください。0 にすると石油上限がそのまま有効になります"
     },
     "CoinLimit": {
       "name": "物資がXに達したら延期",
@@ -1529,6 +1566,25 @@
     "DailyRunCount": {
       "name": "毎日X回出撃",
       "help": "作戦アーカイブを1日に実行する最大回数です。\n0は無制限です。\n上限に達すると、タスクを無効化せず次回サーバー更新まで延期します。"
+    },
+    "AutoClear": {
+      "name": "自動開墾",
+      "help": "イベントの全ステージを自動的に攻略します。\nステージ名の入力は不要で、開墾目標に応じてスクリプトが自動的に判定します。\n完了したステージは自動的にスキップされます。\n通常マップ3つ星・全マップ3つ星モード：2つ目の星は周回、3つ目の星は全滅攻略。\n100%攻略モード：全滅攻略のみ。中間ステージは達成度100%で次へ進みます。"
+    },
+    "AutoSelectEvent": {
+      "name": "自動イベント選択",
+      "help": "有効にするとイベント名の入力は無視され、作戦アーカイブのリストを上から下へ順に選択して開墾します。\n現在のイベントを完了すると、自動的に次のイベントへ進みます。\n自動開墾の有効化が必要です。"
+    },
+    "AutoClearTarget": {
+      "name": "開墾目標",
+      "help": "自動開墾の範囲と戦略：\n通常マップ3つ星：通常マップの全ステージを3つ星まで周回します\n（2つ目の星は周回で累積、3つ目の星は全滅攻略）、完了で終了します。\n全マップ3つ星：通常・HARDの全ステージを3つ星まで周回します\n（2つ目の星は周回で累積、3つ目の星は全滅攻略）；\n通常ステージ終了後、HARDへ自動的に進みます。\n100%攻略：HARDを全滅攻略し、中間ステージは達成度100%で次へ進み\n（各1回の全滅攻略で十分）、最後のステージのみ3つ星まで周回します。\nステージ名の入力は不要です。",
+      "normal_3_star": "通常マップ3つ星",
+      "three_star": "全マップ3つ星",
+      "clear_100": "100%攻略（HARD）"
+    },
+    "AutoClearProgress": {
+      "name": "自動開墾の進捗",
+      "help": "スクリプトが記録した開墾完了ステージ。次回実行時、完了したステージはスキップされます。"
     },
     "DailyRunCountRemain": {
       "name": "本日の残り出撃回数",
@@ -1650,11 +1706,11 @@
       "boss_only": "BOSS戦のみ",
       "hunt_and_boss": "狩猟及びBOSS戦",
       "every_combat": "毎戦出撃",
-      "advanced": "advanced"
+      "advanced": "上級"
     },
     "AutoSearchMode": {
       "name": "潜水艦自律プランを選択",
-      "help": "自律索敵の場合にのみ有効",
+      "help": "自律尋敵（オートサーチ）時にこの設定を適用します。手動操作時に「待機」を選択していれば、出撃前ゲーム内の自動召喚も待機に同期します（周回済みマップのみ）",
       "sub_standby": "待機",
       "sub_auto_call": "潜水艦を自動的に召喚する"
     },
@@ -1667,8 +1723,8 @@
       "use_open_ocean_support": "遠洋支援を使用する"
     },
     "AdvancedConfig": {
-      "name": "Submarine.AdvancedConfig.name",
-      "help": "Submarine.AdvancedConfig.help"
+      "name": "上級設定",
+      "help": "上級設定は、潜水艦出撃プランが「上級」の場合のみ有効です。設定は厳密に YAML 形式に従います。\n\n【基本パラメータ】\n- ammo: 潜水艦の総弾薬数。\n- support: 遠洋支援の使用可能回数。\n- range: 狩猟範囲。長さ7の文字列を7つで構成します。「N」はカバー範囲、「O」は非カバー範囲、「H」は潜水艦の位置（4行4列・中央のみ）を表します。\n\n【ルール rules】\n- 戦闘インデックス: battle_0（すべての戦闘）、battle_N（N番目の戦闘、1始まり）、battle_-N（後ろからN番目の戦闘）。1つの戦闘が複数のルールにマッチする場合、「召喚 > 狩猟 > 出撃しない」の順で処理されます。\n- type: 出撃タイプ。hunt（狩猟）、call（召喚）。\n- condition: 発動条件（省略時は無条件で出撃）。\n    ammo: 弾薬の条件式。例：「>2」「>=2」「=3」。対応演算子：「>」「>=」「<」「<=」「=」「!=」。\n    support: 遠洋支援回数の条件式。例：「>2」「>=2」「=3」。対応演算子：「>」「>=」「<」「<=」「=」「!=」。\n    enemy: 対象の敵艦タイプリスト。規模+艦種で表します。例：「3M」は大型主力艦隊。ワイルドカード「*」に対応。例：「3*」はすべての大型艦隊、「*T」はすべての輸送船。\n    - 規模：1：小型艦隊；2：中型艦隊；3：大型艦隊；0：規模不明。\n    - 艦種：L：偵察艦隊；M：主力艦隊；C：航空艦隊；T：輸送船；E：不明タイプ。\n    in_range（true/false）: 狩猟範囲内かどうか。範囲外で潜水艦を召喚すると遠洋支援回数を消費します。\n- move: 範囲が足りない場合、対象をカバーできる最小燃料の位置まで潜水艦を移動させるか（true/false）。遠洋支援回数が残っている場合は移動せず遠洋支援を使用します。"
     }
   },
   "Emotion": {
@@ -1682,6 +1738,10 @@
       "calculate": "コンディション消費を計算する",
       "ignore": "赤顔出撃警告を無視する",
       "calculate_ignore": "コンディション消費を計算 + 赤顔出撃警告を無視"
+    },
+    "IgnoreShipwreck": {
+      "name": "轟沈コンディションペナルティを無視",
+      "help": "有効にすると、戦闘中に艦船が轟沈した場合（S 評価以外）の追加 10 コンディション減少を計上しません。「コンディション消費を計算する」が有効な場合のみ機能します。"
     },
     "Fleet1Value": {
       "name": "第一艦隊コンディション値",
@@ -2134,6 +2194,22 @@
       "help": "カスタムフィルターを使用するには「イベントショップフィルター」を「カスタム」に設定し、https://github.com/LmeSzinc/AzurLaneAutoScript/wiki/filter_string_cn を参照してください。"
     }
   },
+  "ShopAdvanced": {
+    "_info": {
+      "name": "高度なショップ戦略",
+      "help": "制限付き Lua 風ルールでショップ購入計画を作成します。"
+    },
+    "Mode": {
+      "name": "戦略モード",
+      "help": "シンプルモードは既存フィルターを使用します。高度なモードでは下の戦略スクリプトを使用します。",
+      "legacy": "シンプル",
+      "advanced": "高度"
+    },
+    "Script": {
+      "name": "戦略スクリプト",
+      "help": "制限付き Lua 風ルールのみ対応します。検証に失敗した場合、この実行では購入しません。"
+    }
+  },
   "Commission": {
     "_info": {
       "name": "軍事委託",
@@ -2192,6 +2268,27 @@
     "CommissionNotifyRewardStatistics": {
       "name": "通知に統計情報を含める",
       "help": "通知に今日/週間/月間の累積ダイヤ数を表示"
+    },
+    "DetectShipDrop": {
+      "name": "艦船ドロップを検出",
+      "help": "委託報酬受け取り後に「艦船獲得」画面を検出して閉じます。艦船がドロップする委託を実行しない場合はオフにして検出エラーを回避できます。",
+      "True": "オン",
+      "False": "オフ"
+    },
+    "GemNotify": {
+      "name": "ダイヤ委託実行通知",
+      "help": "新しいダイヤ委託を開始した後、現在実行中のダイヤ委託一覧を通知します"
+    },
+    "GemStatistics": {
+      "name": "ダイヤ委託統計詳細",
+      "help": "オンにすると、報酬通知にダイヤ委託の統計（成功率、累積報酬など）を付加します"
+    },
+    "GemStatisticsPeriod": {
+      "name": "ダイヤ委託統計期間",
+      "help": "ダイヤ委託報酬の統計期間",
+      "today": "本日",
+      "week": "今週",
+      "month": "今月"
     }
   },
   "Tactical": {
@@ -2314,6 +2411,7 @@
       "series_8_blueprint_305": "8期 図面+305",
       "series_8_blueprint_only": "8期 図面のみ",
       "series_8_305_only": "8期 305のみ",
+      "series_8_305_e_first": "8期 305外装優先",
       "series_7_blueprint_la9": "7期 図面+La9",
       "series_7_blueprint_only": "7期 図面のみ",
       "series_7_la9_only": "7期 La9のみ",
@@ -2515,6 +2613,40 @@
     "Favourite": {
       "name": "常用艦船のみ覚醒する",
       "help": ""
+    }
+  },
+  "Secretary": {
+    "_info": {
+      "name": "秘書艦設定",
+      "help": "秘書艦の自動変更および通知設定を行います"
+    },
+    "CustomFilter": {
+      "name": "レアリティフィルター",
+      "help": "レアリティはUR(ultra)、SSR(super_rare)、SR(elite)、R(rare)、N(common)を含みます\n下記にカスタム順序を入力してください\nデフォルト優先度：ultra > super_rare > elite > rare > common"
+    },
+    "LowFavorabilityPriority": {
+      "name": "低好感度優先",
+      "help": "好感度が低い順に秘書艦を選択します"
+    },
+    "FavouriteOnly": {
+      "name": "常用艦船のみから選択",
+      "help": "有効にすると、ドックで「常用」に登録した艦船の中からのみ秘書艦を選びます。無効にすると、全ての艦船からレアリティと好感度順に選びます"
+    },
+    "BackupEnable": {
+      "name": "予備秘書艦",
+      "help": "秘書艦グループの艦船を予備秘書艦として使用し、優先的に交代します。"
+    },
+    "CheckInterval": {
+      "name": "カスタム確認間隔（時間）",
+      "help": "秘書艦を交代した後、設定した時間ごとに確認します。0 に設定すると好感度に応じて自動計算されます。秘書艦を出撃させて好感度を上げる場合、この項目を設定することでより早く交代できます。"
+    },
+    "Notify": {
+      "name": "秘書艦通知",
+      "help": "OnePush を使用して秘書艦に関する通知を送信します。"
+    },
+    "OnePushConfig": {
+      "name": "OnePush 設定",
+      "help": "秘書艦変更通知用の設定です。空欄の場合はグローバル設定を使用します"
     }
   },
   "GeneralShop": {
@@ -2967,7 +3099,7 @@
     },
     "TargetInteract": {
       "name": "毎日のコンディションを消費",
-      "help": "選択した艩娘と対話して今日のコンディションを消費します"
+      "help": "選択した艦娘と対話して今日のコンディションを消費します"
     },
     "TargetShip": {
       "name": "毎日対話する艦娘を選択してください",
@@ -2978,7 +3110,7 @@
       "new_jersey": "ニュージャージー",
       "taihou": "大鳳",
       "aegir": "エーギル",
-      "nakhimov": "nakhimov"
+      "nakhimov": "ナヒーモフ"
     }
   },
   "Daily": {
@@ -3045,7 +3177,7 @@
       "6": "6"
     },
     "TacticalTraining": {
-      "name": "戦術研修（精神ユニット本）",
+      "name": "戦術研修（メンタルユニット本）",
       "help": "",
       "skip": "スキップ",
       "first": "1番目",
@@ -3234,7 +3366,7 @@
     },
     "UseRepairPack": {
       "name": "修理ボックスを使用してボートを修理する",
-      "help": "電源を入れると、倉庫にある修理ボックスを使用して船を修理します。エロージョン1レベリング機能と併用することをお勧めします。"
+      "help": "電源を入れると、倉庫にある修理ボックスを使用して船を修理します。侵蝕1レベリング機能と併用することをお勧めします。"
     },
     "RepairPackThreshold": {
       "name": "いずれかの船のHPがX以下になったら、修理ボックスを使用して船を修理してください。",
@@ -3246,7 +3378,7 @@
     },
     "DoRandomMapEvent": {
       "name": "マップ上のランダムイベントを完了する",
-      "help": "自主索敵完了後、再度マップをスキャンし、明石ストアを購入し、サイレン情報収集装置を使用し、サイレン探知装置を使用し、2つの艦隊のメカニズムをアンロックします。"
+      "help": "自律索敵完了後、再度マップをスキャンし、明石ストアを購入し、サイレン情報収集装置を使用し、サイレン探知装置を使用し、2つの艦隊のメカニズムをアンロックします。"
     },
     "AkashiShopFilter": {
       "name": "ショップフィルター",
@@ -3572,7 +3704,7 @@
   "OpsiHazard1Leveling": {
     "_info": {
       "name": "侵蝕 1 レベリング",
-      "help": "戦闘供給トークンを消費して、大量の経験と少量の行動力を獲得します\n最も高い平均時給を得るには、事前装填済みの航空母艦を 1 ～ 2 隻持参することをお勧めします。\n\n悲しいかな、オリジナルのいくつかの絶対確実な制限が解除されました。パラメータを慎重に設定してください。"
+      "help": "戦闘供給トークンを消費して、大量の経験と少量の行動力を獲得します\n最も高い平均時給を得るには、事前装填済みの航空母艦を 1 ～ 2 隻持参することをお勧めします。\n\n残念ながら、オリジナルのいくつかの絶対確実な制限が解除されました。パラメータを慎重に設定してください。"
     },
     "TargetZone": {
       "name": "指定海域",
@@ -3590,11 +3722,8 @@
       "help": "やってみよう、自転車がバイクに変わる、雪風様がナノダ指揮官に幸運を与えてくれた、さあナノダ！"
     },
     "ExecuteFixedPatrolScan": {
-      "name": "強制移動レベル",
-      "help": "明石が艦隊アイコンに隠れたりレーダー範囲外に出たりしたときに、艦隊を動かして対処するか。0=オフ：処理しない。1=効率モード：艦隊を切り替えて各レーダーを見るだけ、どの艦隊も動かさず最速；見つからなければ諦める。2=保守モード：まずレーダーだけ確認（動かさない）、見つからなければ艦隊を1隻ずつ動かして再走査、見つけたら即停止；確実だが艦隊を動かし遅い。既定値 0（オフ）；旧ブール true は 2、false は 0 に変換。",
-      "0": "オフ",
-      "1": "効率モード",
-      "2": "保守モード"
+      "name": "戦後の強制移動（効率モード）",
+      "help": "有効にすると、戦後に艦隊1〜4のレーダーを順に見て残りの「?」を探し（艦隊を切り替えるだけで、どの艦隊も動かしません）、明石/記録塔/装置が見つかればそのまま処理します。それでも足りない場合は、艦隊を1隻ずつ動かしてマップ全体を再走査します。移動先は固定の C1/D1/E1/F1 で、侵蝕1 のマップ専用です：問号が見えているのに到達できない艦隊がある場合（遮られている／移動範囲外）はそのまま動かします。全艦隊のレーダーに手がかりがない場合のみ、画面上の現在の行動力を確認し、7 より多いときだけ動かし、そうでなければ次ラウンドに残します。既定値はオフ。短猫相接はこの仕組みを使わず、艦隊を切り替えてレーダーを見るだけです。"
     },
     "SkipHpCheck": {
       "name": "HPチェックをスキップ",
@@ -3618,7 +3747,7 @@
     },
     "DebugClip": {
       "name": "戦後デバッグ録画",
-      "help": "有効にすると、各侵蚀1ラウンドの戦後処理（再走査・イベント処理・強制移動）中に、ALAS 自身が見た画面を mp4 で log/clips/ に録画します。イベントの有無にかかわらず毎ラウンド保存されるため、1 ラウンドずつ見返せます。明石を取りこぼしていないか手動で確認するための機能です。動画は「大世界通用設置」の保存日数に従って自動削除されます。"
+      "help": "有効にすると、各侵蝕1ラウンドの戦後処理（再走査・イベント処理・強制移動）中に、ALAS 自身が見た画面を mp4 で log/clips/ に録画します。イベントの有無にかかわらず毎ラウンド保存されるため、1 ラウンドずつ見返せます。明石を取りこぼしていないか手動で確認するための機能です。動画は「セイレーン作戦共通設定」の保存日数に従って自動削除されます。"
     }
   },
   "OpsiSirenBug": {
@@ -3724,19 +3853,19 @@
     },
     "EnableObscure": {
       "name": "隠秘海域を有効にする",
-      "help": "黄色のコインを補充するためにインテリジェントなスケジューリングでHidden Seaミッションを有効にするかどうか",
+      "help": "黄色のコインを補充するため、スマートスケジューリングで隠秘海域ミッションを有効にするかどうか",
       "True": "有効",
       "False": "無効"
     },
     "EnableAbyssal": {
       "name": "深淵座標を有効にする",
-      "help": "イエローコインを補充するためのインテリジェントなスケジューリングで深海ミッションを有効にするかどうか",
+      "help": "イエローコインを補充するため、スマートスケジューリングで深淵座標ミッションを有効にするかどうか",
       "True": "有効",
       "False": "無効"
     },
     "EnableStronghold": {
       "name": "セイレーン要塞を有効にする",
-      "help": "黄色のコインを補充するためにインテリジェント スケジューリングで Siren Fortress タスクを有効にするかどうか",
+      "help": "黄色のコインを補充するため、スマートスケジューリングでセイレーン要塞タスクを有効にするかどうか",
       "True": "有効",
       "False": "無効"
     },
@@ -3744,25 +3873,29 @@
       "name": "作戦コイン補充優先度",
       "help": "作戦コイン（黄）が不足している場合、作戦コイン補充任務の実行優先順位。> で区切ります。"
     },
+    "ObscureAbyssalCheckDelayDays": {
+      "name": "隠秘・深淵再チェック日数",
+      "help": "隠秘海域と深淵座標を使い切った後、スマートスケジュールは指定した日数の間チェックをスキップし、補給コイン獲得の流れを速めます。0 で毎回チェック。大世界リセットで更新されるため、リセット後は通常どおりチェックします。"
+    },
     "MonthEndActionPointCleanupEnable": {
-      "name": "OpsiScheduling.MonthEndActionPointCleanupEnable.name",
-      "help": "OpsiScheduling.MonthEndActionPointCleanupEnable.help",
-      "True": "True",
-      "False": "False"
+      "name": "月末の行動力クリーンアップを有効にする",
+      "help": "月末の行動力クリーンアップ機能を有効にするかどうか。有効にすると、大世界リセットまでの残り日数が「月末クリーンアップ日数」以下になった時点で、月末クリーンアップモードを開始して行動力を消費します。",
+      "True": "オン",
+      "False": "オフ"
     },
     "MonthEndActionPointCleanupDays": {
-      "name": "OpsiScheduling.MonthEndActionPointCleanupDays.name",
-      "help": "OpsiScheduling.MonthEndActionPointCleanupDays.help"
+      "name": "月末クリーンアップ日数",
+      "help": "大世界リセットまでの残り日数がこの値以下になった時点で、月末クリーンアップモードを開始します。0 で無効。有効にすると、短猫相接・商店購入・隠秘海域・深淵座標を循環実行して行動力を消費し、初回実行時にはセイレーン要塞も呼び出します。"
     },
     "MonthEndActionPointPreserve": {
-      "name": "OpsiScheduling.MonthEndActionPointPreserve.name",
-      "help": "OpsiScheduling.MonthEndActionPointPreserve.help"
+      "name": "月末クリーンアップ時の行動力保留値",
+      "help": "月末クリーンアップモードにおける行動力の保留値。跨月デイリーを有効にしている場合は最低 200 行動力を確保してください。この値が最低確保値より大きい場合はこの値が使われます。"
     },
     "MonthEndShopPurchase": {
-      "name": "OpsiScheduling.MonthEndShopPurchase.name",
-      "help": "OpsiScheduling.MonthEndShopPurchase.help",
-      "True": "True",
-      "False": "False"
+      "name": "月末クリーンアップ時の商店購入",
+      "help": "月末クリーンアップ時に大世界商店の購入を実行するかどうか。オフにすると、月末クリーンアップのループで商店購入ステップをスキップします。",
+      "True": "オン",
+      "False": "オフ"
     }
   },
   "OpsiPreventActionPointOverflow": {
@@ -4114,7 +4247,7 @@
     "Meal1": {
       "name": "メニュー1",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "tofu": "豆腐",
       "omurice": "オムライス",
       "cabbage_tofu": "白菜豆腐スープ",
@@ -4122,7 +4255,7 @@
       "tofu_meat": "肉みそ豆腐",
       "tofu_combo": "クラシック豆腐セット",
       "hearty_meal": "まん玉定食",
-      "double_bamboo_shoots": "涼拌双筍",
+      "double_bamboo_shoots": "若竹の和え物",
       "asparagus_shrimp": "筍と海老の炒め物",
       "fish_chip": "フィッシュアンドチップス",
       "fo_tiao": "仏跳牆",
@@ -4137,7 +4270,7 @@
     "Meal2": {
       "name": "メニュー2",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "tofu": "豆腐",
       "omurice": "オムライス",
       "cabbage_tofu": "白菜豆腐スープ",
@@ -4145,7 +4278,7 @@
       "tofu_meat": "肉みそ豆腐",
       "tofu_combo": "クラシック豆腐セット",
       "hearty_meal": "まん玉定食",
-      "double_bamboo_shoots": "涼拌双筍",
+      "double_bamboo_shoots": "若竹の和え物",
       "asparagus_shrimp": "筍と海老の炒め物",
       "fish_chip": "フィッシュアンドチップス",
       "fo_tiao": "仏跳牆",
@@ -4160,7 +4293,7 @@
     "Meal3": {
       "name": "メニュー3",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "tofu": "豆腐",
       "omurice": "オムライス",
       "cabbage_tofu": "白菜豆腐スープ",
@@ -4168,7 +4301,7 @@
       "tofu_meat": "肉みそ豆腐",
       "tofu_combo": "クラシック豆腐セット",
       "hearty_meal": "まん玉定食",
-      "double_bamboo_shoots": "涼拌双筍",
+      "double_bamboo_shoots": "若竹の和え物",
       "asparagus_shrimp": "筍と海老の炒め物",
       "fish_chip": "フィッシュアンドチップス",
       "fo_tiao": "仏跳牆",
@@ -4183,7 +4316,7 @@
     "Meal4": {
       "name": "メニュー4",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "tofu": "豆腐",
       "omurice": "オムライス",
       "cabbage_tofu": "白菜豆腐スープ",
@@ -4191,7 +4324,7 @@
       "tofu_meat": "肉みそ豆腐",
       "tofu_combo": "クラシック豆腐セット",
       "hearty_meal": "まん玉定食",
-      "double_bamboo_shoots": "涼拌双筍",
+      "double_bamboo_shoots": "若竹の和え物",
       "asparagus_shrimp": "筍と海老の炒め物",
       "fish_chip": "フィッシュアンドチップス",
       "fo_tiao": "仏跳牆",
@@ -4206,7 +4339,7 @@
     "Meal5": {
       "name": "メニュー5",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "tofu": "豆腐",
       "omurice": "オムライス",
       "cabbage_tofu": "白菜豆腐スープ",
@@ -4214,7 +4347,7 @@
       "tofu_meat": "肉みそ豆腐",
       "tofu_combo": "クラシック豆腐セット",
       "hearty_meal": "まん玉定食",
-      "double_bamboo_shoots": "涼拌双筍",
+      "double_bamboo_shoots": "若竹の和え物",
       "asparagus_shrimp": "筍と海老の炒め物",
       "fish_chip": "フィッシュアンドチップス",
       "fo_tiao": "仏跳牆",
@@ -4229,7 +4362,7 @@
     "Meal6": {
       "name": "メニュー6",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "tofu": "豆腐",
       "omurice": "オムライス",
       "cabbage_tofu": "白菜豆腐スープ",
@@ -4237,7 +4370,7 @@
       "tofu_meat": "肉みそ豆腐",
       "tofu_combo": "クラシック豆腐セット",
       "hearty_meal": "まん玉定食",
-      "double_bamboo_shoots": "涼拌双筍",
+      "double_bamboo_shoots": "若竹の和え物",
       "asparagus_shrimp": "筍と海老の炒め物",
       "fish_chip": "フィッシュアンドチップス",
       "fo_tiao": "仏跳牆",
@@ -4252,7 +4385,7 @@
     "Meal7": {
       "name": "メニュー7",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "tofu": "豆腐",
       "omurice": "オムライス",
       "cabbage_tofu": "白菜豆腐スープ",
@@ -4260,7 +4393,7 @@
       "tofu_meat": "肉みそ豆腐",
       "tofu_combo": "クラシック豆腐セット",
       "hearty_meal": "まん玉定食",
-      "double_bamboo_shoots": "涼拌双筍",
+      "double_bamboo_shoots": "若竹の和え物",
       "asparagus_shrimp": "筍と海老の炒め物",
       "fish_chip": "フィッシュアンドチップス",
       "fo_tiao": "仏跳牆",
@@ -4275,7 +4408,7 @@
     "Meal8": {
       "name": "メニュー8",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "tofu": "豆腐",
       "omurice": "オムライス",
       "cabbage_tofu": "白菜豆腐スープ",
@@ -4283,7 +4416,7 @@
       "tofu_meat": "肉みそ豆腐",
       "tofu_combo": "クラシック豆腐セット",
       "hearty_meal": "まん玉定食",
-      "double_bamboo_shoots": "涼拌双筍",
+      "double_bamboo_shoots": "若竹の和え物",
       "asparagus_shrimp": "筍と海老の炒め物",
       "fish_chip": "フィッシュアンドチップス",
       "fo_tiao": "仏跳牆",
@@ -4304,7 +4437,7 @@
     "AwayCook": {
       "name": "常設メニュー",
       "help": "上記すべてが完了したら常設メニューを生産します。",
-      "None": "None",
+      "None": "なし",
       "tofu": "豆腐",
       "omurice": "オムライス",
       "cabbage_tofu": "白菜豆腐スープ",
@@ -4312,7 +4445,7 @@
       "tofu_meat": "肉みそ豆腐",
       "tofu_combo": "クラシック豆腐セット",
       "hearty_meal": "まん玉定食",
-      "double_bamboo_shoots": "涼拌双筍",
+      "double_bamboo_shoots": "若竹の和え物",
       "asparagus_shrimp": "筍と海老の炒め物",
       "fish_chip": "フィッシュアンドチップス",
       "fo_tiao": "仏跳牆",
@@ -4343,7 +4476,7 @@
     "Meal1": {
       "name": "メニュー1",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "apple_juice": "アップルジュース",
       "banana_mango": "バナナマンゴージュース",
       "honey_lemon": "ハニーレモンウォーター",
@@ -4364,7 +4497,7 @@
     "Meal2": {
       "name": "メニュー2",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "apple_juice": "アップルジュース",
       "banana_mango": "バナナマンゴージュース",
       "honey_lemon": "ハニーレモンウォーター",
@@ -4385,7 +4518,7 @@
     "Meal3": {
       "name": "メニュー3",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "apple_juice": "アップルジュース",
       "banana_mango": "バナナマンゴージュース",
       "honey_lemon": "ハニーレモンウォーター",
@@ -4406,7 +4539,7 @@
     "Meal4": {
       "name": "メニュー4",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "apple_juice": "アップルジュース",
       "banana_mango": "バナナマンゴージュース",
       "honey_lemon": "ハニーレモンウォーター",
@@ -4427,7 +4560,7 @@
     "Meal5": {
       "name": "メニュー5",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "apple_juice": "アップルジュース",
       "banana_mango": "バナナマンゴージュース",
       "honey_lemon": "ハニーレモンウォーター",
@@ -4448,7 +4581,7 @@
     "Meal6": {
       "name": "メニュー6",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "apple_juice": "アップルジュース",
       "banana_mango": "バナナマンゴージュース",
       "honey_lemon": "ハニーレモンウォーター",
@@ -4469,7 +4602,7 @@
     "Meal7": {
       "name": "メニュー7",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "apple_juice": "アップルジュース",
       "banana_mango": "バナナマンゴージュース",
       "honey_lemon": "ハニーレモンウォーター",
@@ -4490,7 +4623,7 @@
     "Meal8": {
       "name": "メニュー8",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "apple_juice": "アップルジュース",
       "banana_mango": "バナナマンゴージュース",
       "honey_lemon": "ハニーレモンウォーター",
@@ -4517,7 +4650,7 @@
     "AwayCook": {
       "name": "常設メニュー",
       "help": "上記すべてが完了したら常設メニューを生産します。",
-      "None": "None",
+      "None": "なし",
       "apple_juice": "アップルジュース",
       "banana_mango": "バナナマンゴージュース",
       "honey_lemon": "ハニーレモンウォーター",
@@ -4550,7 +4683,7 @@
     "Meal1": {
       "name": "メニュー1",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "roasted_skewer": "炭焼き串",
       "chicken_potato": "鶏肉じゃがいも盛り合わせ",
       "carrot_omelette": "にんじん厚焼き玉子",
@@ -4567,7 +4700,7 @@
     "Meal2": {
       "name": "メニュー2",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "roasted_skewer": "炭焼き串",
       "chicken_potato": "鶏肉じゃがいも盛り合わせ",
       "carrot_omelette": "にんじん厚焼き玉子",
@@ -4584,7 +4717,7 @@
     "Meal3": {
       "name": "メニュー3",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "roasted_skewer": "炭焼き串",
       "chicken_potato": "鶏肉じゃがいも盛り合わせ",
       "carrot_omelette": "にんじん厚焼き玉子",
@@ -4601,7 +4734,7 @@
     "Meal4": {
       "name": "メニュー4",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "roasted_skewer": "炭焼き串",
       "chicken_potato": "鶏肉じゃがいも盛り合わせ",
       "carrot_omelette": "にんじん厚焼き玉子",
@@ -4618,7 +4751,7 @@
     "Meal5": {
       "name": "メニュー5",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "roasted_skewer": "炭焼き串",
       "chicken_potato": "鶏肉じゃがいも盛り合わせ",
       "carrot_omelette": "にんじん厚焼き玉子",
@@ -4635,7 +4768,7 @@
     "Meal6": {
       "name": "メニュー6",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "roasted_skewer": "炭焼き串",
       "chicken_potato": "鶏肉じゃがいも盛り合わせ",
       "carrot_omelette": "にんじん厚焼き玉子",
@@ -4652,7 +4785,7 @@
     "Meal7": {
       "name": "メニュー7",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "roasted_skewer": "炭焼き串",
       "chicken_potato": "鶏肉じゃがいも盛り合わせ",
       "carrot_omelette": "にんじん厚焼き玉子",
@@ -4669,7 +4802,7 @@
     "Meal8": {
       "name": "メニュー8",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "roasted_skewer": "炭焼き串",
       "chicken_potato": "鶏肉じゃがいも盛り合わせ",
       "carrot_omelette": "にんじん厚焼き玉子",
@@ -4692,7 +4825,7 @@
     "AwayCook": {
       "name": "常設メニュー",
       "help": "上記すべてが完了したら常設メニューを生産します。",
-      "None": "None",
+      "None": "なし",
       "roasted_skewer": "炭焼き串",
       "chicken_potato": "鶏肉じゃがいも盛り合わせ",
       "carrot_omelette": "にんじん厚焼き玉子",
@@ -4721,7 +4854,7 @@
     "Meal1": {
       "name": "メニュー1",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "apple_pie": "アップルパイ",
       "corn_cup": "コーンカップ",
       "orange_pie": "オレンジパイ",
@@ -4740,7 +4873,7 @@
     "Meal2": {
       "name": "メニュー2",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "apple_pie": "アップルパイ",
       "corn_cup": "コーンカップ",
       "orange_pie": "オレンジパイ",
@@ -4759,7 +4892,7 @@
     "Meal3": {
       "name": "メニュー3",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "apple_pie": "アップルパイ",
       "corn_cup": "コーンカップ",
       "orange_pie": "オレンジパイ",
@@ -4778,7 +4911,7 @@
     "Meal4": {
       "name": "メニュー4",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "apple_pie": "アップルパイ",
       "corn_cup": "コーンカップ",
       "orange_pie": "オレンジパイ",
@@ -4797,7 +4930,7 @@
     "Meal5": {
       "name": "メニュー5",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "apple_pie": "アップルパイ",
       "corn_cup": "コーンカップ",
       "orange_pie": "オレンジパイ",
@@ -4816,7 +4949,7 @@
     "Meal6": {
       "name": "メニュー6",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "apple_pie": "アップルパイ",
       "corn_cup": "コーンカップ",
       "orange_pie": "オレンジパイ",
@@ -4835,7 +4968,7 @@
     "Meal7": {
       "name": "メニュー7",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "apple_pie": "アップルパイ",
       "corn_cup": "コーンカップ",
       "orange_pie": "オレンジパイ",
@@ -4854,7 +4987,7 @@
     "Meal8": {
       "name": "メニュー8",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "apple_pie": "アップルパイ",
       "corn_cup": "コーンカップ",
       "orange_pie": "オレンジパイ",
@@ -4879,7 +5012,7 @@
     "AwayCook": {
       "name": "常設メニュー",
       "help": "上記すべてが完了したら常設メニューを生産します。",
-      "None": "None",
+      "None": "なし",
       "apple_pie": "アップルパイ",
       "corn_cup": "コーンカップ",
       "orange_pie": "オレンジパイ",
@@ -4914,7 +5047,7 @@
     "Meal1": {
       "name": "メニュー1",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "iced_coffee": "アイスコーヒー",
       "omelette": "オムレツ",
       "cheese": "チーズ",
@@ -4932,7 +5065,7 @@
     "Meal2": {
       "name": "メニュー2",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "iced_coffee": "アイスコーヒー",
       "omelette": "オムレツ",
       "cheese": "チーズ",
@@ -4950,7 +5083,7 @@
     "Meal3": {
       "name": "メニュー3",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "iced_coffee": "アイスコーヒー",
       "omelette": "オムレツ",
       "cheese": "チーズ",
@@ -4968,7 +5101,7 @@
     "Meal4": {
       "name": "メニュー4",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "iced_coffee": "アイスコーヒー",
       "omelette": "オムレツ",
       "cheese": "チーズ",
@@ -4986,7 +5119,7 @@
     "Meal5": {
       "name": "メニュー5",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "iced_coffee": "アイスコーヒー",
       "omelette": "オムレツ",
       "cheese": "チーズ",
@@ -5004,7 +5137,7 @@
     "Meal6": {
       "name": "メニュー6",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "iced_coffee": "アイスコーヒー",
       "omelette": "オムレツ",
       "cheese": "チーズ",
@@ -5022,7 +5155,7 @@
     "Meal7": {
       "name": "メニュー7",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "iced_coffee": "アイスコーヒー",
       "omelette": "オムレツ",
       "cheese": "チーズ",
@@ -5040,7 +5173,7 @@
     "Meal8": {
       "name": "メニュー8",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "iced_coffee": "アイスコーヒー",
       "omelette": "オムレツ",
       "cheese": "チーズ",
@@ -5064,7 +5197,7 @@
     "AwayCook": {
       "name": "常設メニュー",
       "help": "上記すべてが完了したら常設メニューを生産します。",
-      "None": "None",
+      "None": "なし",
       "iced_coffee": "アイスコーヒー",
       "omelette": "オムレツ",
       "cheese": "チーズ",
@@ -5222,20 +5355,20 @@
     "Batch1Shops": {
       "name": "第1バッチ店舗",
       "help": "最初のバッチで経営する店舗を選択",
-      "1": "有魚餐馆",
-      "2": "白熊飲品",
-      "3": "啾啾簡餐",
-      "4": "烏魚烤肉",
-      "5": "啾珈琲"
+      "1": "有魚レストラン",
+      "2": "白熊ドリンク",
+      "3": "ジュウ簡餐",
+      "4": "イカ焼き",
+      "5": "ジュウコーヒー"
     },
     "Batch2Shops": {
       "name": "第2バッチ店舗",
       "help": "2番目のバッチで経営する店舗を選択",
-      "1": "有魚餐馆",
-      "2": "白熊飲品",
-      "3": "啾啾簡餐",
-      "4": "烏魚烤肉",
-      "5": "啾珈琲"
+      "1": "有魚レストラン",
+      "2": "白熊ドリンク",
+      "3": "ジュウ簡餐",
+      "4": "イカ焼き",
+      "5": "ジュウコーヒー"
     },
     "SeasonalReplaceEnabled": {
       "name": "季節限定置き換え",
@@ -5256,7 +5389,7 @@
     "Char1": {
       "name": "キャラクター1",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "WorkerJuu": "WorkerJuu",
       "Cheshire": "Cheshire",
       "YingSwei": "YingSwei",
@@ -5296,7 +5429,7 @@
     "Char2": {
       "name": "キャラクター2",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "WorkerJuu": "WorkerJuu",
       "Cheshire": "Cheshire",
       "YingSwei": "YingSwei",
@@ -5336,8 +5469,8 @@
     "Product1": {
       "name": "メニュー1",
       "help": "",
-      "None": "None",
-      "double_bamboo_shoots": "涼拌双筍",
+      "None": "なし",
+      "double_bamboo_shoots": "若竹の和え物",
       "tofu_meat": "肉みそ豆腐",
       "tofu_combo": "クラシック豆腐セット",
       "hearty_meal": "まん玉定食",
@@ -5349,8 +5482,8 @@
     "Product2": {
       "name": "メニュー2",
       "help": "",
-      "None": "None",
-      "double_bamboo_shoots": "涼拌双筍",
+      "None": "なし",
+      "double_bamboo_shoots": "若竹の和え物",
       "tofu_meat": "肉みそ豆腐",
       "tofu_combo": "クラシック豆腐セット",
       "hearty_meal": "まん玉定食",
@@ -5362,8 +5495,8 @@
     "Product3": {
       "name": "メニュー3",
       "help": "",
-      "None": "None",
-      "double_bamboo_shoots": "涼拌双筍",
+      "None": "なし",
+      "double_bamboo_shoots": "若竹の和え物",
       "tofu_meat": "肉みそ豆腐",
       "tofu_combo": "クラシック豆腐セット",
       "hearty_meal": "まん玉定食",
@@ -5375,8 +5508,8 @@
     "Product4": {
       "name": "メニュー4",
       "help": "",
-      "None": "None",
-      "double_bamboo_shoots": "涼拌双筍",
+      "None": "なし",
+      "double_bamboo_shoots": "若竹の和え物",
       "tofu_meat": "肉みそ豆腐",
       "tofu_combo": "クラシック豆腐セット",
       "hearty_meal": "まん玉定食",
@@ -5388,13 +5521,13 @@
     "Product5": {
       "name": "メニュー5",
       "help": "",
-      "None": "None",
-      "double_bamboo_shoots": "涼拌双筍",
+      "None": "なし",
+      "double_bamboo_shoots": "若竹の和え物",
       "tofu_meat": "肉みそ豆腐",
       "tofu_combo": "クラシック豆腐セット",
       "hearty_meal": "まん玉定食",
       "fo_tiao": "仏跳牆",
-      "amaranth_rice_ball": "苋菜饭团",
+      "amaranth_rice_ball": "アマランスおにぎり",
       "matsutake_chicken_soup": "松茸チキンスープ",
       "persimmon_cake": "柿のケーキ"
     },
@@ -5402,12 +5535,12 @@
       "name": "季節代替メニュー",
       "help": "季節限定メニューの在庫不足時に置き換えるメニュー",
       "None": "なし",
-      "double_bamboo_shoots": "涼拌双筍",
-      "tofu_meat": "肉末焼豆腐",
-      "tofu_combo": "經典豆腐套餐",
-      "hearty_meal": "綿玉定食",
-      "fo_tiao": "佛跳牆",
-      "amaranth_rice_ball": "莧菜飯糰",
+      "double_bamboo_shoots": "若竹の和え物",
+      "tofu_meat": "肉みそ豆腐",
+      "tofu_combo": "クラシック豆腐セット",
+      "hearty_meal": "まん玉定食",
+      "fo_tiao": "仏跳牆",
+      "amaranth_rice_ball": "アマランスおにぎり",
       "matsutake_chicken_soup": "松茸チキンスープ",
       "persimmon_cake": "柿のケーキ"
     },
@@ -5424,7 +5557,7 @@
     "Char1": {
       "name": "キャラクター1",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "WorkerJuu": "WorkerJuu",
       "Cheshire": "Cheshire",
       "YingSwei": "YingSwei",
@@ -5464,7 +5597,7 @@
     "Char2": {
       "name": "キャラクター2",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "WorkerJuu": "WorkerJuu",
       "Cheshire": "Cheshire",
       "YingSwei": "YingSwei",
@@ -5504,7 +5637,7 @@
     "Product1": {
       "name": "メニュー1",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "spring_flower_tea": "春花茶",
       "strawberry_lemon": "ストレーモン",
       "strawberry_honey": "いちごハニースムージー",
@@ -5519,7 +5652,7 @@
     "Product2": {
       "name": "メニュー2",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "spring_flower_tea": "春花茶",
       "strawberry_lemon": "ストレーモン",
       "strawberry_honey": "いちごハニースムージー",
@@ -5534,7 +5667,7 @@
     "Product3": {
       "name": "メニュー3",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "spring_flower_tea": "春花茶",
       "strawberry_lemon": "ストレーモン",
       "strawberry_honey": "いちごハニースムージー",
@@ -5549,7 +5682,7 @@
     "Product4": {
       "name": "メニュー4",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "spring_flower_tea": "春花茶",
       "strawberry_lemon": "ストレーモン",
       "strawberry_honey": "いちごハニースムージー",
@@ -5564,7 +5697,7 @@
     "Product5": {
       "name": "メニュー5",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "spring_flower_tea": "春花茶",
       "strawberry_lemon": "ストレーモン",
       "strawberry_honey": "いちごハニースムージー",
@@ -5572,14 +5705,14 @@
       "fruit_paradise": "フルーツパラダイス",
       "lavender_tea": "ラベンダーティー",
       "sunny_honey": "サニーハニー",
-      "watermelon_juice": "西瓜汁",
+      "watermelon_juice": "スイカジュース",
       "chrysanthemum_tea": "菊花茶",
       "carrot_pear_juice": "ニンジン秋梨ジュース"
     },
     "SeasonalFallback": {
       "name": "季節ドリンク予備",
       "help": "白熊ドリンクの季節ドリンクの在庫が不足している場合に置き換えるドリンク",
-      "None": "None",
+      "None": "なし",
       "spring_flower_tea": "春花茶",
       "strawberry_lemon": "ストレーモン",
       "strawberry_honey": "いちごハニースムージー",
@@ -5604,7 +5737,7 @@
     "Char1": {
       "name": "キャラクター1",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "WorkerJuu": "WorkerJuu",
       "Cheshire": "Cheshire",
       "YingSwei": "YingSwei",
@@ -5644,7 +5777,7 @@
     "Char2": {
       "name": "キャラクター2",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "WorkerJuu": "WorkerJuu",
       "Cheshire": "Cheshire",
       "YingSwei": "YingSwei",
@@ -5684,7 +5817,7 @@
     "Product1": {
       "name": "メニュー1",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "orchard_duo": "果樹園デュオ",
       "succulently_sweet": "スイートコンボ",
       "berry_orange": "ベリーオレンジデザートセット",
@@ -5694,7 +5827,7 @@
     "Product2": {
       "name": "メニュー2",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "orchard_duo": "果樹園デュオ",
       "succulently_sweet": "スイートコンボ",
       "berry_orange": "ベリーオレンジデザートセット",
@@ -5704,7 +5837,7 @@
     "Product3": {
       "name": "メニュー3",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "orchard_duo": "果樹園デュオ",
       "succulently_sweet": "スイートコンボ",
       "berry_orange": "ベリーオレンジデザートセット",
@@ -5714,7 +5847,7 @@
     "Product4": {
       "name": "メニュー4",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "orchard_duo": "果樹園デュオ",
       "succulently_sweet": "スイートコンボ",
       "berry_orange": "ベリーオレンジデザートセット",
@@ -5724,7 +5857,7 @@
     "Product5": {
       "name": "メニュー5",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "orchard_duo": "果樹園デュオ",
       "succulently_sweet": "スイートコンボ",
       "berry_orange": "ベリーオレンジデザートセット",
@@ -5744,7 +5877,7 @@
     "Char1": {
       "name": "キャラクター1",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "WorkerJuu": "WorkerJuu",
       "Cheshire": "Cheshire",
       "YingSwei": "YingSwei",
@@ -5784,7 +5917,7 @@
     "Char2": {
       "name": "キャラクター2",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "WorkerJuu": "WorkerJuu",
       "Cheshire": "Cheshire",
       "YingSwei": "YingSwei",
@@ -5824,7 +5957,7 @@
     "Product1": {
       "name": "商品1",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "roasted_skewer": "炭焼き串",
       "stir_fried_chicken": "鶏肉炒め",
       "steak_bowl": "ハンバーグ丼",
@@ -5835,7 +5968,7 @@
     "Product2": {
       "name": "商品2",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "roasted_skewer": "炭焼き串",
       "stir_fried_chicken": "鶏肉炒め",
       "steak_bowl": "ハンバーグ丼",
@@ -5846,7 +5979,7 @@
     "Product3": {
       "name": "商品3",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "roasted_skewer": "炭焼き串",
       "stir_fried_chicken": "鶏肉炒め",
       "steak_bowl": "ハンバーグ丼",
@@ -5857,7 +5990,7 @@
     "Product4": {
       "name": "商品4",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "roasted_skewer": "炭焼き串",
       "stir_fried_chicken": "鶏肉炒め",
       "steak_bowl": "ハンバーグ丼",
@@ -5868,7 +6001,7 @@
     "Product5": {
       "name": "商品5",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "roasted_skewer": "炭焼き串",
       "stir_fried_chicken": "鶏肉炒め",
       "steak_bowl": "ハンバーグ丼",
@@ -5883,13 +6016,13 @@
   },
   "IslandBusinessShop5": {
     "_info": {
-      "name": "ジューコーヒー",
+      "name": "ジュウコーヒー",
       "help": "メニューは1～8の順に生産されます。生産目標はメニューX数量オプションで、前の項目が完全に満たされてから次の項目が実行されます。後続の項目は実行時にそれ以前の項目の達成に影響しません。"
     },
     "Char1": {
       "name": "キャラクター1",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "WorkerJuu": "WorkerJuu",
       "Cheshire": "Cheshire",
       "YingSwei": "YingSwei",
@@ -5929,7 +6062,7 @@
     "Char2": {
       "name": "キャラクター2",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "WorkerJuu": "WorkerJuu",
       "Cheshire": "Cheshire",
       "YingSwei": "YingSwei",
@@ -5969,7 +6102,7 @@
     "Product1": {
       "name": "商品1",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "cheese": "チーズ",
       "citrus_coffee": "シトラスコーヒー",
       "strawberry_milkshake": "いちごミルクティー",
@@ -5980,7 +6113,7 @@
     "Product2": {
       "name": "商品2",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "cheese": "チーズ",
       "citrus_coffee": "シトラスコーヒー",
       "strawberry_milkshake": "いちごミルクティー",
@@ -5991,7 +6124,7 @@
     "Product3": {
       "name": "商品3",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "cheese": "チーズ",
       "citrus_coffee": "シトラスコーヒー",
       "strawberry_milkshake": "いちごミルクティー",
@@ -6002,7 +6135,7 @@
     "Product4": {
       "name": "商品4",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "cheese": "チーズ",
       "citrus_coffee": "シトラスコーヒー",
       "strawberry_milkshake": "いちごミルクティー",
@@ -6013,7 +6146,7 @@
     "Product5": {
       "name": "商品5",
       "help": "",
-      "None": "None",
+      "None": "なし",
       "cheese": "チーズ",
       "citrus_coffee": "シトラスコーヒー",
       "strawberry_milkshake": "いちごミルクティー",
@@ -6043,7 +6176,7 @@
   "Daemon": {
     "_info": {
       "name": "半自動クリック",
-      "help": "これは、適応していないレベルを攻撃するときに役立ち、多くの手動操作を減らすことができます。\n悲しいことに、クリックして戦闘の準備をしたり、クリックして戦闘を解決したり、プロットをスキップしたり、自動的にリタイアしたり、さまざまなポップアップウィンドウを閉じたりするのに役立ちます。手動で敵を選択するだけです。"
+      "help": "これは、適応していないレベルを攻撃するときに役立ち、多くの手動操作を減らすことができます。\n残念ながら、クリックして戦闘の準備をしたり、クリックして戦闘を解決したり、プロットをスキップしたり、自動的にリタイアしたり、さまざまなポップアップウィンドウを閉じたりするのに役立ちます。手動で敵を選択するだけです。"
     },
     "EnterMap": {
       "name": "自動的にクリックして画像の準備に入ります",
@@ -6118,32 +6251,32 @@
     "EnableSlot1": {
       "name": "装備スロット 1 を交換",
       "help": "有効な場合、第 1 装備スロットが空のときだけ自動装備を試みます。",
-      "True": "True",
-      "False": "False"
+      "True": "有効",
+      "False": "無効"
     },
     "EnableSlot2": {
       "name": "装備スロット 2 を交換",
       "help": "有効な場合、第 2 装備スロットが空のときだけ自動装備を試みます。",
-      "True": "True",
-      "False": "False"
+      "True": "有効",
+      "False": "無効"
     },
     "EnableSlot3": {
       "name": "装備スロット 3 を交換",
       "help": "有効な場合、第 3 装備スロットが空のときだけ自動装備を試みます。",
-      "True": "True",
-      "False": "False"
+      "True": "有効",
+      "False": "無効"
     },
     "EnableSlot4": {
       "name": "装備スロット 4 を交換",
       "help": "有効な場合、第 4 装備スロットが空のときだけ自動装備を試みます。",
-      "True": "True",
-      "False": "False"
+      "True": "有効",
+      "False": "無効"
     },
     "EnableSlot5": {
       "name": "装備スロット 5 を交換",
       "help": "有効な場合、第 5 装備スロットが空のときだけ自動装備を試みます。",
-      "True": "True",
-      "False": "False"
+      "True": "有効",
+      "False": "無効"
     }
   },
   "Benchmark": {
@@ -6155,8 +6288,8 @@
       "name": "デバイスタイプを選択",
       "help": "",
       "emulator": "エミュレータ",
-      "plone_cloud_with_adb": "クラウド携帯電話は公衆網ADBを搭載",
-      "phone_cloud_without_adb": "公衆網ADBを使わないクラウド携帯電話",
+      "plone_cloud_with_adb": "パブリックネットワークADB付きクラウド端末",
+      "phone_cloud_without_adb": "パブリックネットワークADBなしクラウド端末",
       "android_phone": "Android の実機",
       "android_phone_vmos": "Android 実機 VMOS 仮想マシン"
     },
@@ -6204,6 +6337,10 @@
     "RestartIntervalHours": {
       "name": "どれくらいの頻度で再起動（時間）",
       "help": "何時間おきにエミュレータを再起動するか。"
+    },
+    "DeepRestartAfterFailures": {
+      "name": "連続失敗後にディープ再起動",
+      "help": "エミュレーターの再起動がこの回数連続で失敗したら「ディープ再起動」に切り替えます：MuMu のすべてのプロセス（バックグラウンドサービスと仮想マシンを含む）を終了してから起動し直します。\n非力な PC で通常の再起動では復帰しないときの最後の手段です。\n注意：多重起動している他のインスタンスも終了します。\n0 で無効（インスタンスの再起動のみ）。既定値は 0。"
     }
   },
   "EmulatorManager": {
@@ -6428,7 +6565,19 @@
       "Pending": "キューにいます",
       "Waiting": "待っている",
       "NoTask": "タスクがありません",
-      "Stat": "統計"
+      "Stat": "統計",
+      "BackgroundCurrentDefault": "**現在使用中**：Web（既定）",
+      "BackgroundCurrentLocal": "**現在使用中**：ローカル",
+      "BackgroundCurrentMixed": "**現在使用中**：ミックス",
+      "BackgroundCurrentUrl": "**現在使用中**：Web",
+      "BackgroundCustomUrls": "**カスタム URL**",
+      "BackgroundDirectLink": "現在の画像直リンク：",
+      "BackgroundExtractToLocal": "ローカルに抽出",
+      "BackgroundLocalCount": "ローカル：{n} 枚",
+      "BackgroundOpenFolder": "フォルダを開く",
+      "BackgroundOpenInNewWindow": "この画像を新しいウィンドウで開く",
+      "BackgroundTitle": "### 背景画像",
+      "BackgroundUrlCount": "解決済みリンク：{n} 件"
     },
     "Dashboard": {
       "TimeError": "時間誤差",
@@ -6510,18 +6659,18 @@
       "UpToDate": "すでに最新バージョン",
       "HaveUpdate": "新しいバージョンが利用可能です",
       "UpdateStart": "アップデートを開始する",
-      "UpdateWait": "悲しいかな、全員が現在のタスクを完了するまで待ちます",
+      "UpdateWait": "残念ながら、全員が現在のタスクを完了するまで待ちます",
       "UpdateRun": "更新中",
       "UpdateSuccess": "アップデートが成功しました。再起動します",
       "UpdateFailed": "更新に失敗しました。エラー ログは ./log/*_gui.txt にあります。",
       "UpdateChecking": "アップデートをチェックしています",
       "UpdateCancel": "アップデートをキャンセルして再起動してください",
       "UpdateFinish": "アップデートは成功しました。手動で再起動してください",
-      "Local": "地元",
-      "Upstream": "上流倉庫",
+      "Local": "ローカル",
+      "Upstream": "上流リモート",
       "Author": "著者",
-      "Time": "提出時間",
-      "Message": "情報の送信",
+      "Time": "コミット時間",
+      "Message": "コミットメッセージ",
       "DisabledWarn": "更新モジュールが有効になっていません。更新するには手動で再起動する必要があります。",
       "DetailedHistory": "詳細なコミット履歴"
     },
@@ -6652,7 +6801,10 @@
       "WebuiSSLKey": "SSL キーファイル",
       "WebuiSSLKeyHelp": "WebUI HTTPS 用の SSL キーです。証明書とセットで設定してください。",
       "WebuiSSLCert": "SSL 証明書ファイル",
-      "WebuiSSLCertHelp": "WebUI HTTPS 用の SSL 証明書です。キーとセットで設定してください。"
+      "WebuiSSLCertHelp": "WebUI HTTPS 用の SSL 証明書です。キーとセットで設定してください。",
+      "DisableBranchWatermark": "未検証バージョンの透かしを非表示にする",
+      "DisableBranchWatermarkHelp": "【チェックしない場合は透かしを表示します】\n⚠ AzurPilot や master / dev などのブランチの役割を理解していない場合は、この項目を有効にしないでください。\n⚠ スクリーンショットで問題を報告する場合や、他者に調査を依頼する場合は、この項目を有効にしないでください。透かしのバージョン情報は、実際に動作しているコードを特定する唯一の手がかりであり、隠すと問題の特定が不可能になります。\n変更後は AzurPilot の再起動が必要です。",
+      "WatermarkHiddenNow": "透かしを非表示にしました。再度表示するにはページを再読み込みするか、AzurPilot を再起動してください。"
     },
     "StartupRun": {
       "Title": "起動時に自動実行",
@@ -6668,6 +6820,9 @@
       "InvalidFeedBack": "フォーマットエラー。例: {0}",
       "Clear": "クリア",
       "RunNow": "今すぐ実行",
+      "RunNowSchedulerStopped": "スケジューラーが起動していません。上部のスイッチまたは概要ページから起動してください",
+      "RunNowTaskDisabled": "このタスクは無効です。「スケジュール有効」にチェックしてから実行してください",
+      "SchedulerQuickBar": "スケジューラー",
       "EnterPassword": "パスワードを入力してください",
       "ChooseFile": "ファイルを選択"
     },
@@ -6783,7 +6938,54 @@
       "ResourceChartTitle": "全リソース推移",
       "LoadResourceDataFailed": "リソースデータの読み込みに失敗しました: {e}",
       "NoResourceData": "リソース変動データがありません。スクリプト実行後に自動記録されます",
-      "NoValidResourceData": "有効なリソースデータがありません"
+      "NoValidResourceData": "有効なリソースデータがありません",
+      "BackgroundBtn": "背景",
+      "ChartAp": "行動力: ",
+      "ChartApLabel": "行動力",
+      "ChartAsset": "資産: ",
+      "ChartChange": "騰落: ",
+      "ChartChangeLabel": "変化",
+      "ChartClose": "終値: ",
+      "ChartDelta": "変化量: ",
+      "ChartDensity": "データ点密度: ",
+      "ChartDistance": "海里数: ",
+      "ChartHigh": "高値: ",
+      "ChartLow": "安値: ",
+      "ChartMa10": "  MA10(10期間平均): ",
+      "ChartMa5": "  MA5(5期間平均): ",
+      "ChartMaxLabel": "最高",
+      "ChartMean": "平均: ",
+      "ChartMeanLabel": "平均",
+      "ChartMinLabel": "最低",
+      "ChartOpen": "始値: ",
+      "ChartPanelTitle": "行動力の推移 - {view}",
+      "ChartPurple": "紫コイン: ",
+      "ChartResetBtn": "リセット",
+      "ChartSeriesAp": "行動力",
+      "ChartSeriesAsset": "資産",
+      "ChartSeriesDistance": "海里数",
+      "ChartSeriesPurple": "紫コイン",
+      "ChartSeriesYellow": "黄コイン",
+      "ChartSource": "出典: ",
+      "ChartYellow": "黄コイン: ",
+      "ExtractAlreadyLocal": "現在の背景はすでにローカル画像のため、抽出は不要です。",
+      "ExtractDone": "bg/{sub}/{name} に抽出しました",
+      "ExtractFailed": "抽出に失敗しました：{error}",
+      "ExtractHint": "抽出は保存のみで、背景には自動適用されません。使用するには bg/ へ移動してください。",
+      "ExtractNoImage": "抽出できる背景画像がありません。",
+      "ExtractNoImageData": "抽出できる画像がありません",
+      "ExtractRunning": "抽出中…",
+      "ExtractSkipped": "この画像はすでに抽出済みです：{name}",
+      "ExtractUnknownError": "不明なエラー",
+      "MaterialAdvancedOnly": "高級マテリアルのみ有効",
+      "MaterialBlur": "ブラー",
+      "MaterialCards": "カード",
+      "MaterialReset": "リセット",
+      "MaterialTiles": "タイル",
+      "MaterialTitle": "インターフェース素材",
+      "MaterialTransparency": "透明度",
+      "Readme": "このフォルダに画像を置くと WebUI の背景として使用できます。\n対応形式：{{exts}}\n複数ある場合はランダムに 1 枚選ばれます。\n\nサブフォルダ「{{sub}}」には、画面の【抽出】ボタンでダウンロードした画像が保存されます。\n手動で追加した画像とは分けて管理され、画面に各画像の出所が表示されます。\nこのファイルは削除しても機能に影響しません。\n",
+      "ScreenshotPreviewBtn": "スクリーンショットプレビュー"
     },
     "Tactical": {
       "SkillAutoSwitch": "スキル自動切替"

@@ -155,10 +155,8 @@ Deploy:
     # Useful when expose AzurPilot to the public network
     # WebuiHost 为 0.0.0.0 或 :: 时必须设置密码
     Password: null
-    # --cdn. Use jsdelivr cdn for pywebio static files (css, js).
-    # 'true' for jsdelivr cdn
-    # 'false' for self host cdn (automatically)
-    # 'https://path.to.your/cdn' to use custom cdn
+    # --cdn. 已废弃，React 前端静态资源始终由本地提供
+    # --cdn. Deprecated. React frontend static assets are always served locally.
     CDN: false
     # --run. Auto-run specified config when startup
     # 'null' default no specified config

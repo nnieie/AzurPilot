@@ -68,6 +68,9 @@ class ConfigModel:
     DpiScaling: bool = True
     Password: Optional[str] = "123456"
     CDN: Union[str, bool] = False
+    # --watermark. 关闭未经验证版本的水印。默认 False，即默认显示水印，
+    # 用于提醒当前运行的是未经验证的构建（见 module/webui/app_shell.py）。
+    DisableBranchWatermark: bool = False
     Run: Optional[str] = None
 
     # 动态配置
