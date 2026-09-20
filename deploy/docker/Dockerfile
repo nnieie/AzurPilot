@@ -28,6 +28,8 @@ ENV PATH=/app/AzurPilot/.venv/bin:${PATH}
 
 WORKDIR /app/AzurPilot
 
+COPY --from=frontend-build /usr/local/bin/node /usr/local/bin/node
+COPY --from=frontend-build /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 COPY pyproject.toml uv.lock ./
 
@@ -52,7 +54,11 @@ RUN git config --global --add safe.directory '*' && \
         git config --global https.proxy "$HTTPS_PROXY"; \
     fi
 
-RUN uv venv --relocatable --python /usr/local/bin/python .venv && \
+RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
+    ln -s ../lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx && \
+    node --version && \
+    npm --version && \
+    uv venv --relocatable --python /usr/local/bin/python .venv && \
     uv sync --frozen --no-dev --no-install-project && \
     cp /usr/local/bin/uv .venv/bin/uv && \
     cp /usr/bin/adb .venv/bin/adb && \
@@ -61,7 +67,7 @@ RUN uv venv --relocatable --python /usr/local/bin/python .venv && \
 
 COPY . .
 COPY --from=frontend-build /frontend/dist ./frontend/dist
-# 镜像内已有对应产物，运行时无需 Node 或 npm。
+# 保留 Node.js 与 npm，使源码挂载或在线更新后也能重新构建前端。
 RUN .venv/bin/python -c "from pathlib import Path; from deploy.frontend import source_fingerprint; p=Path('frontend'); (p/'dist/.source-fingerprint').write_text(source_fingerprint(p))"
 
 CMD [".venv/bin/python", "gui.py"]
