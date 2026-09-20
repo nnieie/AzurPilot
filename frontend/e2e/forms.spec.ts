@@ -112,7 +112,8 @@ test('弹窗内选择配置后能够提交，菜单不会被 dialog 遮挡', asy
   await select.click()
   await page.keyboard.press('Escape')
   await expect(dialog).toBeVisible()
-  await dialog.getByLabel('实例名称').fill(`select_${Date.now()}`)
+  const name = `select_${Date.now()}`
+  await dialog.getByLabel('实例名称').fill(name)
   await dialog.getByRole('button', {name: '创建实例', exact: true}).click()
-  await expect(page.locator('[id="Alas.Emulator.Serial"]')).toBeVisible()
+  await expect(page).toHaveURL(new RegExp(`/i/${name}/overview$`))
 })

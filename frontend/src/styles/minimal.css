@@ -8,6 +8,7 @@
 @import './minimal-palette.css';
 @import './theme-primitives.css';
 @import './forms.css';
+@import './compact.css';
 
 :root {--form-shadow: none}
 /* 关闭共享组件里的装饰效果，不创建额外的滤镜或动画合成层。 */
@@ -34,12 +35,15 @@ body {background-attachment: scroll}
 .task-submenu-item {font-size: 13px; min-height: 38px}
 .task-group-button.expanded {border-color: var(--accent)}
 .topbar {position: sticky; top: 0; z-index: 80; height: var(--topbar-height); margin: 0; padding: 0 24px}
-.app-shell.with-rail .topbar {width: calc(100% + var(--right-rail-width))}
+/* 只在分页模式下横跨到屏幕右缘（原模式的顶栏不该伸进右栏，那会撑出横向滚动条）。 */
+/* 同 apple：用视口单位而不是百分比，精确贴到屏幕右缘。 */
+.app-shell.with-rail:has(.instance-tabs) .topbar {width: calc(100vw - var(--sidebar-width))}
 .right-rail {top: var(--topbar-height); height: calc(var(--viewport-height) - var(--topbar-height)); z-index: 70}
 .breadcrumb, .breadcrumb .instance-caption strong {font-size: 13px}
 .connection-dot {background: var(--theme-warning)}
 .connection-dot.online {background: var(--green)}
-main {padding: 48px 28px 24px}
+/* 上内边距只留一点：控件行与下面那个大容器之间的距离要紧凑。 */
+main {padding: 0 28px 24px}
 main:focus {outline: none}
 .page-title h1 {font-size: clamp(26px, 2.5vw, 34px); letter-spacing: -.6px; overflow-wrap: anywhere}
 .home-intro {padding: 8px 0 24px}
@@ -116,7 +120,7 @@ button:disabled, input:disabled, textarea:disabled, select:disabled, .select-tri
 .rail-task-item strong {font-size: 12px}
 .rail-task-item small {font-size: 11px}
 .rail-task-item .task-state {font-size: 10px}
-.modal::backdrop {background: var(--bg)}
+.modal::backdrop {background: color-mix(in srgb, var(--bg) 22%, transparent)}
 .modal {border: 2px solid var(--border)}
 .toast {border: 1px solid var(--border)}
 .skip-link {position: fixed; top: -100px; left: 16px; z-index: 200; background: var(--surface); color: var(--accent); padding: 14px; border-radius: 8px}

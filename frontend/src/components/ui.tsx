@@ -1,12 +1,17 @@
-import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useRef, type CSSProperties, type KeyboardEvent, type ReactNode } from 'react'
 import { AlertCircle, LoaderCircle, X } from 'lucide-react'
 import { GlassMaterial } from './GlassMaterial'
 import type { Status } from '../api/types'
 import { useApp } from '../app/context'
+import { useDevOverride } from '../app/devOverride'
+import { usesMaterial } from '../app/theme'
 
-export function StatusBadge({status}: {status: Status}) {
+export function StatusBadge({status, simulate = false}: {status: Status; simulate?: boolean}) {
   const {ui} = useApp()
-  return <span className={`status ${status}`}><i />{{running: ui('status.running'), stopped: ui('status.stopped'), error: ui('status.error'), updating: ui('status.updating')}[status]}</span>
+  /* 实例列表上的徽章跟随开发者工具的「模拟状态」；控件预览里的徽章不跟随。 */
+  const override = useDevOverride().status
+  const shown = simulate && override ? override : status
+  return <span className={`status ${shown}`}><i />{{running: ui('status.running'), stopped: ui('status.stopped'), error: ui('status.error'), updating: ui('status.updating')}[shown]}</span>
 }
 export function Empty({icon, title, children}: {icon?: ReactNode; title: string; children?: ReactNode}) {
   return <div className="empty">{icon}<strong>{title}</strong><div>{children}</div></div>
@@ -19,11 +24,13 @@ export function ErrorBox({message, retry}: {message: string; retry?: () => void}
   const {ui} = useApp()
   return <div role="alert" className="error-box"><AlertCircle size={18}/><span>{message}</span>{retry && <button onClick={retry}>{ui('common.retry')}</button>}</div>
 }
-export function Modal({title, children, onClose, className = ''}: {title: string; children: ReactNode; onClose: () => void; className?: string}) {
+export function Modal({title, children, onClose, className = '', cancelGuard, onKeyDown}: {title: string; children: ReactNode; onClose: () => void; className?: string; cancelGuard?: () => boolean; onKeyDown?: (event: KeyboardEvent<HTMLDialogElement>) => void}) {
   const ref = useRef<HTMLDialogElement>(null)
   const {ui} = useApp()
   useEffect(() => { ref.current?.showModal(); return () => ref.current?.close() }, [])
-  return <dialog ref={ref} onCancel={onClose} className={`modal ${className}`.trim()}>
+  /* cancelGuard 可以在这一次 cancel 不该关弹窗时把它吃下来；keydown 挂在 dialog 上，
+     焦点落在标题栏关闭按钮时也收得到。 */
+  return <dialog ref={ref} onKeyDown={onKeyDown} onCancel={event => {if (cancelGuard?.()) event.preventDefault(); else onClose()}} className={`modal ${className}`.trim()}>
     <div className="panel-heading"><h2>{title}</h2><button className="icon-button" aria-label={ui('common.close')} onClick={onClose}><X size={20}/></button></div>
     {children}
   </dialog>
@@ -38,6 +45,6 @@ function createTitleMask(title: string) {
 
 export function PageTitle({title, actions, className = ''}: {title: string; actions?: ReactNode; className?: string}) {
   const {theme} = useApp()
-  const titleStyle = theme === 'minimal' ? undefined : {'--page-title-mask': createTitleMask(title)} as CSSProperties
+  const titleStyle = usesMaterial(theme) ? {'--page-title-mask': createTitleMask(title)} as CSSProperties : undefined
   return <div className={`page-title ${className}`.trim()}><h1 aria-label={title} data-text={title} style={titleStyle}>{title}</h1>{actions && <div className="title-actions"><GlassMaterial/>{actions}</div>}</div>
 }

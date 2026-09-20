@@ -48,6 +48,10 @@ input[aria-invalid='true']:focus, select[aria-invalid='true']:focus, textarea[ar
 .password-reveal:focus-visible {outline-offset: -4px}
 .form-stack label > .select-control, .form-stack label > .password-control, .login-card .password-control {width: 100%}
 
+/* 文件选择包在 label 里做成按钮：input 藏起来但仍可被 label 激活，label 也不再按字段那样竖排。
+   不能用 display:none —— 那会让 label 跳过激活，点击冒泡到 <dialog> 被当成点背景，弹窗会直接关掉。 */
+.form-stack label.file-button {position: relative; display: inline-flex; flex-direction: row; align-items: center; align-self: flex-start; gap: 0; cursor: pointer}
+.form-stack label.file-button > input {position: absolute; width: 1px; height: 1px; opacity: 0}
 .input-icon {border-radius: var(--theme-radius-control); border-color: var(--form-edge); color: var(--theme-muted); box-shadow: var(--form-shadow); transition: border-color .16s, box-shadow .16s}
 .input-icon:focus-within {border-color: var(--theme-focus); box-shadow: 0 0 0 3px var(--theme-focus-ring)}
 .input-icon > input, .input-icon > input:focus {background: transparent; border: 0; box-shadow: none; padding-left: 0}

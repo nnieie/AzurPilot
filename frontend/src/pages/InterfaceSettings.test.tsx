@@ -76,4 +76,25 @@ describe('界面设置页自定义背景显示逻辑', () => {
     expect(html).not.toContain('自定义背景')
     expect(html).toContain('配色方案')
   })
+
+  it('旧版浅色/深色不渲染自定义背景，也没有换配色概念', () => {
+    for (const theme of ['legacy-light', 'legacy-dark'] as const) {
+      const html = render(theme)
+      expect(html).not.toContain('自定义背景')
+      expect(html).not.toContain('配色方案')
+    }
+  })
+
+  it('主题下拉列出全部六个主题', () => {
+    const html = render('light')
+    for (const label of ['浅色', '深色', '简约', '紧凑', '旧版·浅色', '旧版·深色']) {
+      expect(html).toContain(label)
+    }
+  })
+
+  it('紧凑主题与简约同属朴素外观，渲染配色方案而非自定义背景', () => {
+    const html = render('extreme')
+    expect(html).toContain('配色方案')
+    expect(html).not.toContain('自定义背景')
+  })
 })

@@ -1,10 +1,12 @@
-"""验证生产服务公开完整构建资源，且不会把缺失图片当作页面。"""
+"""验证生产服务公开完整构建资源（含正确 MIME），且不会把缺失图片当作页面。"""
+import mimetypes
 import tempfile
 import unittest
 
 from starlette.testclient import TestClient
 
 from module.api.app import create_app
+from module.api.static import ensure_static_mime_types
 from tests.test_api import fixture
 
 
@@ -46,3 +48,47 @@ class FrontendStaticTests(unittest.TestCase):
                      '/%2e%2e/%2e%2e/config/testpilot.json']:
             with self.subTest(path=path):
                 self.assertEqual(self.client.get(path).status_code, 404)
+
+
+class StaticMimeTypeTests(unittest.TestCase):
+    """系统把 .js 关联成 text/plain 时，服务端必须自己写回标准 MIME。
+
+    浏览器对 ES module 的 MIME 检查是强制的：资源带 text/plain 就直接拒绝执行，
+    前端一个字节都跑不起来，界面整片空白（2026-09-20 实机白屏即此因）。
+    Windows 上 Python 的 mimetypes 会读注册表的文件关联，而且是直接覆盖标准表，
+    所以映射不能交给系统决定。
+    """
+
+    def setUp(self):
+        self.addCleanup(self._restore_js_mapping)
+        self.original = mimetypes.guess_type('probe.js')[0]
+
+    def _restore_js_mapping(self):
+        """还原测试前的映射，避免污染同一进程里后续的其他测试。"""
+        if self.original:
+            mimetypes.add_type(self.original, '.js')
+
+    def test_polluted_system_mapping_is_overridden(self):
+        # 模拟被改坏的注册表项：read_windows_registry 正是这样写进标准表的
+        mimetypes.add_type('text/plain', '.js')
+        self.assertEqual(mimetypes.guess_type('probe.js')[0], 'text/plain')
+
+        ensure_static_mime_types()
+
+        self.assertEqual(mimetypes.guess_type('probe.js')[0], 'text/javascript')
+
+    def test_served_assets_keep_executable_mime(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        root = fixture(temporary.name)
+        dist = root / 'frontend/dist'
+        (dist / 'assets').mkdir(parents=True)
+        (dist / 'index.html').write_text('<html>前端页面</html>', encoding='utf-8')
+        (dist / 'assets/index.js').write_text('export const ok = 1')
+        (dist / 'assets/app.css').write_text('body {color: red}')
+        mimetypes.add_type('text/plain', '.js')
+        ensure_static_mime_types()
+        client = TestClient(create_app(root=root, password='', manage_runtime=False, mount_mcp=False))
+
+        self.assertIn('text/javascript', client.get('/assets/index.js').headers['content-type'])
+        self.assertIn('text/css', client.get('/assets/app.css').headers['content-type'])

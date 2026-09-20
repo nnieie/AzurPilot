@@ -132,7 +132,8 @@ button:focus-visible, a:focus-visible, summary:focus-visible {outline-color: var
 .toast {background: var(--theme-toast-bg); color: var(--theme-toast-text); box-shadow: var(--theme-shadow-popover)}
 .toast.error {background: var(--theme-toast-error-bg); color: var(--theme-on-accent)}
 .modal {background: var(--theme-surface); color: var(--theme-text); border-color: var(--theme-glass-edge); border-radius: var(--theme-radius-panel); box-shadow: var(--theme-shadow-modal)}
-.modal::backdrop {background: var(--theme-overlay); backdrop-filter: var(--theme-overlay-filter, none)}
+/* 弹窗只是小窗，遮罩要能让背后的页面仍然看得见：一律半透明且不模糊。 */
+.modal::backdrop {background: var(--theme-overlay, color-mix(in srgb, var(--bg) 30%, transparent)); backdrop-filter: none}
 
 .login-page {background: var(--theme-bg)}
 .login-art {background: var(--theme-login-art-bg); color: var(--theme-login-art-text)}

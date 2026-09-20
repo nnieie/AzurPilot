@@ -73,6 +73,32 @@
 .breadcrumb a:hover {color: var(--accent)}
 .breadcrumb a strong {color: var(--text); font-weight: 500; transition: color .15s}
 .breadcrumb a:hover strong {color: var(--accent)}
+/* 顶栏模式开关：开着时所有实例铺成一行分页，关着时仍收在下拉里。 */
+.topbar-mode-toggle {flex-shrink: 0}
+.breadcrumb.with-tabs {min-width: 0; flex: 1}
+.instance-tabs {display: flex; align-items: center; gap: 2px; min-width: 0; overflow-x: auto; scrollbar-width: none}
+.instance-tabs::-webkit-scrollbar {display: none}
+.instance-tab {display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1px solid transparent; border-radius: 5px; background: transparent; color: var(--theme-muted); font-size: 11px; white-space: nowrap; cursor: pointer; transition: color .15s, background .15s, border-color .15s}
+.instance-tab:hover {background: var(--theme-surface-muted); color: var(--theme-text)}
+.instance-tab.current {background: var(--theme-accent-soft); border-color: var(--theme-accent); color: var(--theme-accent); animation: instance-tab-in .22s ease-out}
+.instance-tab.running {color: var(--theme-success)}
+.instance-tab.error {color: var(--theme-danger)}
+.instance-tab-name {max-width: 9rem; overflow: hidden; text-overflow: ellipsis}
+.instance-tab-icon {flex-shrink: 0}
+.instance-tab.running .instance-tab-icon {animation: instance-tab-pulse 1.6s ease-in-out infinite}
+.instance-tab.updating .instance-tab-icon {animation: instance-tab-spin 1.1s linear infinite}
+.instance-tab-create {display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 22px; height: 22px; border-radius: 5px; background: transparent; color: var(--theme-muted); cursor: pointer}
+.instance-tab-create:hover {background: var(--theme-surface-muted); color: var(--theme-accent)}
+@keyframes instance-tab-in {from {opacity: .4; transform: scale(.94)} to {opacity: 1; transform: none}}
+@keyframes instance-tab-pulse {0%, 100% {opacity: 1} 50% {opacity: .35}}
+@keyframes instance-tab-spin {to {transform: rotate(360deg)}}
+/* 动效只是强化：关掉后状态仍靠图标形状与颜色区分。 */
+@media (prefers-reduced-motion: reduce) {
+  .instance-tab.current, .instance-tab.running .instance-tab-icon, .instance-tab.updating .instance-tab-icon {animation: none}
+}
+@media (max-width: 950px) {
+  .instance-tab-name {max-width: 5rem}
+}
 .topbar-right {display: flex; align-items: center; gap: 20px; color: var(--muted); font-size: 10px}
 .connection-label {display: flex; align-items: center; gap: 6px; color: var(--accent)}
 .topbar-divider {width: 1px; height: 14px; background: var(--border)}

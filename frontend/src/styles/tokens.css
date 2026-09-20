@@ -39,4 +39,9 @@ svg {flex-shrink: 0; vertical-align: middle}
 .small-label {font-size: 11px}
 .spin {animation: spin 1.2s linear infinite}
 @keyframes spin {to {transform: rotate(360deg)}}
+
+/* 实例分页的两种活动动画：运行中的实例常亮呼吸，被切到的标签页闪一下再落回静态高亮。 */
+@keyframes instance-pulse {0%, 100% {opacity: 1} 50% {opacity: .35}}
+@keyframes instance-highlight {from {background: var(--accent); color: #fff; box-shadow: 0 0 0 4px var(--accent-soft)} to {background: var(--accent-soft); color: var(--accent); box-shadow: none}}
+@keyframes instance-rise {from {transform: translateY(4px); opacity: .6} to {transform: translateY(0); opacity: 1}}
 @media (prefers-reduced-motion: reduce) {*, *::before, *::after {animation: none !important; transition: none !important; scroll-behavior: auto !important}}

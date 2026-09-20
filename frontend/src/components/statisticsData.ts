@@ -25,3 +25,35 @@ export function downloadCsv(name: string, rows: Scalar[][]) {
   const url = URL.createObjectURL(new Blob(['\uFEFF' + rows.map(row => row.map(escape).join(',')).join('\r\n')], {type: 'text/csv;charset=utf-8'}))
   const link = document.createElement('a'); link.href = url; link.download = `${name}.csv`; link.click(); URL.revokeObjectURL(url)
 }
+
+export function mergeMultiSeriesRows(
+  seriesList: {key: string; label: string; points: StatPoint[]}[],
+  from = '',
+  to = '',
+): Scalar[][] {
+  const timeMap = new Map<string, {values: Record<string, number>; source: string}>()
+  for (const s of seriesList) {
+    for (const p of s.points) {
+      const t = p.time.replace(' ', 'T')
+      if (from && t < from) continue
+      if (to && t > `${to}:59.999`) continue
+      const existing = timeMap.get(p.time)
+      if (existing) {
+        existing.values[s.key] = p.value
+        if (!existing.source && p.source) existing.source = p.source
+      } else {
+        timeMap.set(p.time, {values: {[s.key]: p.value}, source: p.source ?? ''})
+      }
+    }
+  }
+  const sortedTimes = [...timeMap.keys()].sort((a, b) => b.localeCompare(a))
+  return sortedTimes.map(time => {
+    const entry = timeMap.get(time)!
+    return [
+      time,
+      ...seriesList.map(s => (entry.values[s.key] != null ? entry.values[s.key] : '—')),
+      entry.source || '—',
+    ]
+  })
+}
+

@@ -79,7 +79,6 @@
   --theme-input-text: var(--text);
   --theme-input-border: var(--border);
   --theme-focus: var(--accent);
-  --theme-focus-ring: color-mix(in srgb, var(--accent) 20%, transparent);
   --theme-toggle-off: #bcbcc2;
   --theme-toggle-on: #34c759;
   --theme-toggle-knob: #fff;

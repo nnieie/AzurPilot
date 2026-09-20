@@ -21,7 +21,9 @@ class Router:
             'system.ping': Method(p.Params, lambda _: {'pong': True}),
             'schema.get': Method(p.SchemaParams, lambda x: configs.schema(x.language)),
             'instances.list': Method(p.Params, lambda _: runtime.instances()),
-            'instances.create': Method(p.CreateParams, lambda x: configs.create(x.name, x.source), True),
+            'instances.create': Method(p.CreateParams, lambda x: configs.create(x.name, x.source, x.import_file), True),
+            'instances.importable': Method(p.Params, lambda _: configs.importable()),
+            'instances.importConfig': Method(p.ImportParams, lambda x: configs.save_import(x.name, x.content), True),
             'instances.delete': Method(p.RevisionParams, self.delete, True),
             'config.get': Method(p.InstanceParams, lambda x: configs.get(x.instance)),
             'config.patch': Method(p.PatchParams, lambda x: configs.patch(x.instance, x.revision, x.changes), True),
@@ -34,6 +36,9 @@ class Router:
             'preview.capture': Method(p.InstanceParams, lambda x: runtime.capture(x.instance)),
             'statistics.refreshLoot': Method(p.InstanceParams, self.refresh_loot, True),
             'statistics.report': Method(p.StatisticsReportParams, self.statistics_report),
+            'meowfficer.scoreReport': Method(p.MeowfficerScoreReportParams, self.meowfficer_score_report),
+            'meowfficer.clearReport': Method(p.MeowfficerClearReportParams,
+                                             self.meowfficer_clear_report, True),
             'statistics.resources': Method(p.StatisticsParams, lambda x: runtime.statistics(x.instance, x.days, x.resource)),
             'settings.get': Method(p.Params, self.settings),
             'settings.patch': Method(p.DeployParams, self.save_settings, True),
@@ -68,6 +73,14 @@ class Router:
     def statistics_report(self, params):
         from module.api.statistics_service import report
         return report(self.configs, params.instance, params.category, params.month, params.days, params.period)
+
+    def meowfficer_score_report(self, params):
+        from module.api.meowfficer_service import report
+        return report(self.configs, params.instance, params.limit)
+
+    def meowfficer_clear_report(self, params):
+        from module.api.meowfficer_service import clear
+        return clear(self.configs, params.instance)
 
     def dispatch(self, method, params):
         entry = self.methods.get(method)

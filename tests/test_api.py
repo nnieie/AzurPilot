@@ -44,6 +44,53 @@ class ConfigApiTests(unittest.TestCase):
         self.configs.get('testpilot')
         self.assertEqual(before, path.stat().st_mtime_ns)
 
+    def test_importable_lists_configs_in_import_folder(self):
+        """可导入列表只来自导入目录；解不开的 JSON、符号链接、以及实例目录里的文件都不算。"""
+        imports = self.configs.import_directory
+        imports.mkdir()
+        shutil.copyfile(self.configs.directory / 'testpilot.json', imports / 'shared.json')
+        (imports / 'broken.json').write_text('{ not json', encoding='utf-8')
+        (imports / 'link.json').symlink_to(imports / 'shared.json')
+
+        names = [entry['name'] for entry in self.configs.importable()]
+        self.assertIn('shared', names)
+        self.assertNotIn('broken', names)     # 解不开的 JSON
+        self.assertNotIn('link', names)       # 符号链接
+        self.assertNotIn('testpilot', names)  # 实例目录里的不会被当作导入源
+
+        # 文件名不合规的不能被列出来：read_import 会拒掉它，列出来就是一个选不了的选项
+        shutil.copyfile(self.configs.directory / 'testpilot.json', imports / 'bad#name.json')
+        self.assertNotIn('bad#name', [entry['name'] for entry in self.configs.importable()])
+        # 导入创建：从导入目录取内容写到实例目录，导入源保持不动
+        self.configs.create('imported', import_file='shared')
+        self.assertIn('imported', self.configs.names())
+        self.assertTrue((imports / 'shared.json').is_file())
+
+    def test_importable_path_traversal_and_bad_json_are_rejected(self):
+        imports = self.configs.import_directory
+        imports.mkdir()
+        (imports / 'broken.json').write_text('{ not json', encoding='utf-8')
+        for name in ['../testpilot', 'a/b', 'a\\b', 'c:foo', 'a*b', '']:
+            with self.subTest(name=name), self.assertRaises(ApiError):
+                self.configs.read_import(name)
+        with self.assertRaises(ApiError):
+            self.configs.read_import('broken')
+
+    def test_save_import_accepts_config_and_rejects_junk(self):
+        """上传只收「有 Alas 段的 JSON」；坏 JSON、缺 Alas 段、非法名都不落盘。"""
+        good = (self.configs.directory / 'testpilot.json').read_text(encoding='utf-8')
+        self.configs.save_import('uploaded', good)
+        self.assertIn('uploaded', [entry['name'] for entry in self.configs.importable()])
+
+        bad = [('nobody', '{"Other": {}}'), ('notjson', '{ not json'), ('../escape', good),
+               ('c:foo', good), ('template', good)]
+        for name, content in bad:
+            with self.subTest(name=name), self.assertRaises(ApiError):
+                self.configs.save_import(name, content)
+        self.assertFalse((self.configs.import_directory / 'nobody.json').exists())
+        self.assertFalse((self.configs.import_directory / 'notjson.json').exists())
+        self.assertFalse((self.configs.directory.parent / 'escape.json').exists())
+
     def test_schema_language_is_request_local(self):
         original = self.configs.schema()
         english = self.configs.schema('en-US')
@@ -53,20 +100,33 @@ class ConfigApiTests(unittest.TestCase):
             self.configs.schema('../deploy')
 
     def test_rejects_path_traversal_and_reserved_names(self):
-        for name in ['../template', 'a/b', 'a\\b', 'template', 'CON', 'c:foo', 'bad.name', '']:
+        for name in ['../template', 'a/b', 'a\\b', 'template', 'template.fpy', 'CON', 'c:foo', '']:
             with self.subTest(name=name), self.assertRaises(ApiError):
                 self.configs.path(name, exists=False)
 
-    def test_accepts_chinese_instance_names(self):
-        """汉字可出现在名称任意位置，首字符仍须是字母或汉字。"""
+    def test_accepts_names_upstream_treats_as_configs(self):
+        """数字开头、点号、空格都要能用 —— 这些名字在上游就是合法的配置文件名。"""
         # 真实落盘一个汉字实例名，确认创建、列举、读取都按原样往返。
         self.configs.create('测试实例')
         self.assertIn('测试实例', self.configs.names())
         self.assertEqual('测试实例', self.configs.get('测试实例')['instance'])
-        for name in ['测试', 'alas测试', '测试-2']:
+        for name in ['测试', 'alas测试', '测试-2', '测试.1', '1测试', '2ap', 'zz.v2', 'ap 2',
+                     'テスト', 'テスト2', 'アズール', 'ひらがな', 'ｱｽﾞｰﾙ']:
             with self.subTest(name=name):
                 self.configs.path(name, exists=False)
-        for name in ['1测试', '-测试', '测 试', '测试.1', '测试#1', 'テスト']:
+
+    def test_create_returns_the_normalized_name(self):
+        """首尾空白与尾点会被归一化，返回的实例名要与落盘名一致 —— 客户端拿它做路由。"""
+        for given in ['zztrim ', 'zztrim.', ' zztrim ']:
+            with self.subTest(given=given):
+                (self.configs.directory / 'zztrim.json').unlink(missing_ok=True)
+                result = self.configs.create(given)
+                self.assertEqual('zztrim', result['instance'])
+                self.assertEqual('zztrim', self.configs.get('zztrim')['instance'])
+                (self.configs.directory / 'zztrim.json').unlink(missing_ok=True)
+
+    def test_still_rejects_unsafe_names(self):
+        for name in ['-测试', '测试#1', '.隐藏', '测试/实例', ' ']:
             with self.subTest(name=name), self.assertRaises(ApiError):
                 self.configs.path(name, exists=False)
 

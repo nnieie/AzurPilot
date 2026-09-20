@@ -62,7 +62,8 @@ body {background: var(--bg); background-attachment: fixed}
 .rail-schedule {margin: 0 10px 10px; padding: 14px 4px 4px; border-top: 1px solid color-mix(in srgb, var(--border) 68%, transparent)}
 .rail-task-item {margin: 3px 0; padding: 9px 8px; border-bottom: 0; border-radius: 13px}
 .rail-task-item:hover {background: color-mix(in srgb, var(--surface) 72%, transparent)}
-.main-shell {min-width: 0; min-height: calc(var(--viewport-height) - 28px)}
+/* 用 flex 撑满外壳的剩余高度，不再靠「视口 − 常数 − 顶栏」的算术：算术补不齐外壳的 gap，底部会留缝。 */
+.main-shell {min-width: 0; min-height: 0; display: flex; flex-direction: column; align-self: stretch}
 .sidebar-brand {height: 56px; margin-bottom: 10px; padding: 0 10px}
 .brand-title {font-size: 23px; letter-spacing: -.7px; gap: 10px}
 .brand-logo {width: 32px; height: 32px; border-radius: 9px}
@@ -81,16 +82,20 @@ body {background: var(--bg); background-attachment: fixed}
 .nav-search {border-radius: 10px; background: var(--surface-muted); color: var(--muted)}
 .nav-search input {font-size: 13px; min-height: 38px}
 .topbar {position: sticky; z-index: 80; margin: 0 0 0 24px; top: 0; height: 56px; padding: 0 18px; border: 1px solid var(--glass-edge); border-radius: 26px 0 0 26px; background: transparent; box-shadow: var(--glass-shadow); isolation: isolate}
-.app-shell.with-rail .topbar {width: calc(100% + var(--right-rail-width) + 14px - 24px)}
+/* 只在分页模式下横跨到屏幕右缘（原模式的顶栏不该伸进右栏，那会撑出横向滚动条）。 */
+/* 分页模式下顶栏横跨到屏幕右缘。用视口单位而不是百分比：百分比以内容盒为基准，
+   加上顶栏自身的 margin-left 后会比视口长出一截。 */
+.app-shell.with-rail:has(.instance-tabs) .topbar {width: calc(100vw - var(--sidebar-width) - 14px - 24px)}
 .topbar > :not(.glass-material), .title-actions > :not(.glass-material) {position: relative; z-index: 1}
 .breadcrumb {font-size: 13px; gap: 10px}
 .breadcrumb .instance-caption strong {font-size: 13px}
 .breadcrumb span {color: var(--muted)}
 .breadcrumb .instance-switcher {min-height: 38px}
 .connection-label {color: var(--green); font-size: 12px}
-main {padding: 36px 32px 32px}
+/* 上内边距只留一点：控件行与下面那个大容器之间的距离要紧凑。 */
+main {padding: 0 32px 32px}
 main:focus {outline: none}
-.page-title {margin-bottom: 28px; align-items: center}
+.page-title {margin-bottom: 14px; align-items: center}
 .page-title h1 {
   position: relative;
   isolation: isolate;
@@ -138,7 +143,8 @@ main:focus {outline: none}
   filter: blur(.25px);
   pointer-events: none;
 }
-.instance-page-title h1 {font-size: 48px; line-height: 1.05; letter-spacing: -1.4px}
+/* 实例页标题原来用 48px，这一行本身就成了控件行与下方容器之间最大的一段间隔；收到 32px。 */
+.instance-page-title h1 {font-size: 32px; line-height: 1.1; letter-spacing: -1px}
 .title-actions {position: relative; isolation: isolate; border-radius: 22px; padding: 5px; gap: 6px; box-shadow: var(--glass-shadow); max-width: 100%}
 
 /* 库默认使用居中定位和 Tailwind 工具类；在此限定为不参与布局的背景。 */
@@ -234,7 +240,7 @@ input, select, textarea {border-radius: 10px; min-height: 40px; background: var(
 .toggle.on {background: #34c759}
 .toggle.on > span {transform: translateX(18px)}
 .modal {border-radius: 26px; padding: 26px; border-color: var(--glass-edge); box-shadow: 0 24px 100px #0003}
-.modal::backdrop {background: #11111b40; backdrop-filter: blur(8px)}
+.modal::backdrop {background: #11111b2b}
 .modal h2 {font-size: 20px; letter-spacing: -.4px}
 .toast {border-radius: 22px; background: var(--text); color: var(--surface); box-shadow: 0 8px 32px #0002; font-size: 13px}
 .toast.error {background: #c9342c; color: #fff}

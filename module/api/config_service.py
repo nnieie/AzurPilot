@@ -15,14 +15,41 @@ from module.api.protocol import ApiError
 from module.config.transaction import config_transaction
 
 ROOT = Path(__file__).resolve().parents[2]
-# 实例名会成为配置文件名，字符集必须避开路径分隔符与系统保留字符。
-# 汉字（扩展 A、基本区、兼容区）允许出现在名称任意位置，其余字符仍限定为字母、数字、
-# 短横线和下划线，保证名称既能在文件系统中安全落地，也能原样放进前端路由。
+TEMPLATE = 'template'
+# 实例名会成为配置文件名。允许中日文、字母、数字、下划线、点号、空格与短横线，
+# 也与上游一致：config/ 下除 template 外任何 *.json 都算实例。
+HIRAGANA = r'\u3041-\u3096'
+KATAKANA = r'\u30a1-\u30fa\u30fc\u31f0-\u31ff\uff66-\uff9f'
 HAN = r'\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff'
-NAME = re.compile(r'[A-Za-z' + HAN + r'][A-Za-z0-9_' + HAN + r'\-]{0,63}\Z')
-RESERVED = {'template', 'deploy', 'backup', 'con', 'prn', 'aux', 'nul',
+CJK = HIRAGANA + KATAKANA + HAN
+# 首字符不能是下划线、点号或空格，它们只出现在名称中段与末尾。
+NAME = re.compile(r'[A-Za-z0-9' + CJK + r'][A-Za-z0-9_. ' + CJK + r'\-]{0,63}\Z')
+# 名字里以点分段的基名与这些词相同时继续拦下：template 是模板，其余是 Windows 设备名。
+RESERVED = {TEMPLATE, 'deploy', 'backup', 'con', 'prn', 'aux', 'nul',
             *(f'com{i}' for i in range(1, 10)), *(f'lpt{i}' for i in range(1, 10))}
 
+
+def validate_name(value):
+    """校验实例名并返回它的规范形式。
+
+    末尾的空白与点归一化掉：Windows 上 `ap .json` 落盘就是 `ap.json`，
+    两者本就是同一个文件。前导点不削，`.` 与 `..` 是路径成分，`.隐藏` 这类名字一概拒。
+    以点分段的基名命中 RESERVED 即拒：`template` 与 `template.fpy` 都是模板。
+    """
+    if not isinstance(value, str):
+        raise ApiError('INVALID_PARAMS', '实例名无效')
+    name = re.sub(r'[\s.]+\Z', '', value.strip())
+    if not NAME.fullmatch(name) or name.split('.')[0].lower() in RESERVED:
+        raise ApiError('INVALID_PARAMS', '实例名无效：不能含路径分隔符或 Windows 保留字符，不能以点开头，不能是保留名')
+    return name
+
+
+def accepts_name(value):
+    """列举时用的宽松版：不合规的文件名当作不存在，不让一个坏文件名打断整份列表。"""
+    try:
+        return validate_name(value) == value
+    except ApiError:
+        return False
 
 class ConfigService:
     """只访问白名单配置，读操作不会触发运行器的配置写回。"""
@@ -30,6 +57,8 @@ class ConfigService:
     def __init__(self, root: Path = ROOT):
         self.root = root
         self.directory = root / 'config'
+        # 导入源单独一个目录：config/ 下的 *.json 都算实例，导入源不能与实例列表混在一起。
+        self.import_directory = self.directory / 'import'
         self.lock = threading.RLock()
         argument = root / 'module/config/argument'
         self.args = self.read_json(argument / 'args.json')
@@ -48,8 +77,7 @@ class ConfigService:
         return value if isinstance(value, str) and value != key else key.split('.')[-1]
 
     def path(self, name, exists=True):
-        if not isinstance(name, str) or not NAME.fullmatch(name) or name.lower() in RESERVED:
-            raise ApiError('INVALID_PARAMS', '实例名须以字母或汉字开头，仅包含字母、数字、汉字、短横线或下划线')
+        name = validate_name(name)
         path = self.directory / f'{name}.json'
         if path.is_symlink() or path.resolve().parent != self.directory.resolve():
             raise ApiError('INVALID_PARAMS', '配置路径无效')
@@ -59,14 +87,48 @@ class ConfigService:
 
     def names(self):
         return sorted(p.stem for p in self.directory.glob('*.json')
-                      if NAME.fullmatch(p.stem) and p.stem.lower() not in RESERVED
-                      and not p.is_symlink() and self.is_instance(p))
+                      if accepts_name(p.stem) and not p.is_symlink() and self.is_instance(p))
+
+    def save_import(self, name, content):
+        """把上传的配置写进导入目录；先解成 JSON 并确认有 Alas 段，坏文件不入库。"""
+        name = validate_name(name)
+        try:
+            data = json.loads(content)
+        except ValueError as exc:
+            raise ApiError('INVALID_PARAMS', '不是合法的 JSON 配置文件') from exc
+        if not isinstance(data, dict) or not isinstance(data.get('Alas'), dict):
+            raise ApiError('INVALID_PARAMS', '配置文件缺少 Alas 段')
+        self.import_directory.mkdir(parents=True, exist_ok=True)
+        path = self.import_directory / f'{name}.json'
+        if path.is_symlink() or path.resolve().parent != self.import_directory.resolve():
+            raise ApiError('INVALID_PARAMS', '导入路径无效')
+        with path.open('w', encoding='utf-8') as file:
+            json.dump(data, file, ensure_ascii=False, indent=2)
+        return {'name': name}
 
     def is_instance(self, path):
         try:
             return isinstance(self.read_json(path).get('Alas'), dict)
         except (OSError, ValueError, AttributeError):
             return False
+
+    def importable(self):
+        """导入目录里可供挑选的配置文件，供创建实例时直接选一个来源。"""
+        if not self.import_directory.is_dir():
+            return []
+        return [{'name': path.stem, 'modified': path.stat().st_mtime}
+                for path in sorted(self.import_directory.glob('*.json'))
+                if accepts_name(path.stem) and not path.is_symlink() and self.is_instance(path)]
+
+    def read_import(self, name):
+        """读导入目录里的一份配置；与实例名同样用白名单校验，不做任意路径读取。"""
+        name = validate_name(name)
+        path = self.import_directory / f'{name}.json'
+        if path.is_symlink() or path.resolve().parent != self.import_directory.resolve():
+            raise ApiError('INVALID_PARAMS', '导入路径无效')
+        if not path.is_file() or not self.is_instance(path):
+            raise ApiError('NOT_FOUND', '导入文件不存在')
+        return self.read_json(path)
 
     def read(self, name):
         path = self.path(name)
@@ -98,10 +160,17 @@ class ConfigService:
         data, revision = self.read(name)
         return {'instance': name, 'revision': revision, 'values': data}
 
-    def create(self, name, source=None):
+    def create(self, name, source=None, import_file=None):
+        # 先归一化，落盘名与返回给客户端的实例名才是同一个。
+        name = validate_name(name)
         with self.lock:
+            if import_file:
+                data = self.read_import(import_file)
+            elif source:
+                data = self.read(source)[0]
+            else:
+                data = copy.deepcopy(self.template)
             path = self.path(name, exists=False)
-            data = self.read(source)[0] if source else copy.deepcopy(self.template)
             # 排他创建避免不同会话覆盖已有配置。
             try:
                 with path.open('x', encoding='utf-8') as file:
@@ -214,11 +283,25 @@ class ConfigService:
                     raise ApiError('INVALID_PARAMS', '同一次保存不能重复修改同一个参数')
                 seen.add(change.path)
                 data.setdefault(task, {}).setdefault(group, {})[arg] = change.value
+                self._sync_record_time(data[task][group], arg)
                 if group == 'ShopAdvanced':
                     affected_shop_tasks.add(task)
             self.validate_shop_advanced_groups(data, affected_shop_tasks)
             atomic_write(str(self.path(name)), json.dumps(data, ensure_ascii=False, indent=2))
             return self.get(name)
+
+    @staticmethod
+    def _sync_record_time(fields, arg):
+        """把 Value 参数对应的时间戳重置为当前时间。
+
+        情绪等参数由“值 + 记录时间”两个字段推算实时状态，改值不刷新时间戳时，
+        下次计算会把旧时间戳之后的恢复量重复计入。
+        """
+        if not arg.endswith('Value'):
+            return
+        record = arg[:-len('Value')] + 'Record'
+        if record in fields:
+            fields[record] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     def delete(self, name, revision):
         with self.lock, config_transaction(self.path(name)):

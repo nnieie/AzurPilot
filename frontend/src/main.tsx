@@ -14,19 +14,25 @@ import { InterfaceSettings } from './pages/InterfaceSettings'
 import { RemoteAccess } from './pages/RemoteAccess'
 import { Settings } from './pages/Settings'
 import { DevControls } from './pages/DevControls'
+import { ConfigManager } from './pages/ConfigManager'
 import { translateCurrentUi } from './i18n'
 
+/* 顶层兜底与路由级兜底共用同一页：路由渲染出错时 React Router 会先接住，
+   没有 errorElement 就落到它自带的崩溃页（带堆栈），所以两级都要挂上。 */
+function ErrorPage() {
+  return <div className="welcome"><h1>{translateCurrentUi('error.pageTitle')}</h1><p>{translateCurrentUi('error.pageHint')}</p><button className="button primary" onClick={() => location.reload()}>{translateCurrentUi('error.reload')}</button></div>
+}
 class ErrorBoundary extends Component<{children: ReactNode}, {failed: boolean}> {
   state = {failed: false}
   static getDerivedStateFromError() { return {failed: true} }
   render() {
-    if (this.state.failed) return <div className="welcome"><h1>{translateCurrentUi('error.pageTitle')}</h1><p>{translateCurrentUi('error.pageHint')}</p><button className="button primary" onClick={() => location.reload()}>{translateCurrentUi('error.reload')}</button></div>
+    if (this.state.failed) return <ErrorPage/>
     return this.props.children
   }
 }
 const router = createHashRouter([
-  {path: '/', element: <App/>, children: [{index: true, element: <Home/>}, {path: 'interface', element: <InterfaceSettings/>}, {path: 'remote', element: <RemoteAccess/>}, {path: 'settings', element: <Settings/>}, {path: 'updater', element: <Updater/>}, {path: 'dev', element: <DevControls/>}]},
-  {path: '/i/:instance', element: <App/>, children: [
+  {path: '/', element: <App/>, errorElement: <ErrorPage/>, children: [{index: true, element: <Home/>}, {path: 'interface', element: <InterfaceSettings/>}, {path: 'remote', element: <RemoteAccess/>}, {path: 'settings', element: <Settings/>}, {path: 'updater', element: <Updater/>}, {path: 'configs', element: <ConfigManager/>}, {path: 'dev', element: <DevControls/>}]},
+  {path: '/i/:instance', element: <App/>, errorElement: <ErrorPage/>, children: [
     {index: true, element: <Navigate to="overview" replace/>},
     {path: 'overview', element: <Overview/>}, {path: 'task/:task', element: <TaskConfig/>},
     {path: 'logs', element: <Navigate to="../overview" replace/>}, {path: 'statistics', element: <Statistics/>}, {path: 'settings', element: <Navigate to="/settings" replace/>},

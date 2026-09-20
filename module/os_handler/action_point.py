@@ -245,7 +245,9 @@ class ActionPointHandler(UI, MapEventHandler):
         # （防止行动力溢出任务会临时关闭该开关，导致统计快照丢箱、图表出现深坑）
         self._action_point_total_with_box = int(current + box_sum)
         self.config._action_point_total_with_box = self._action_point_total_with_box
-        LogRes(self.config).ActionPoint = {'Value': current, 'Total': total}
+        # 仪表盘的 Total 同样使用恒含体力箱口径：写入受开关影响的 total 时，
+        # 防溢出任务运行期间它会退化成 current，WebUI 的行动力卡片会在整段时间里不显示总行动力
+        LogRes(self.config).ActionPoint = {'Value': current, 'Total': self._action_point_total_with_box}
         self.config.update()
         self._action_point_current = current
         self._action_point_box = box

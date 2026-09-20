@@ -32,7 +32,9 @@ export class ApiClient {
     if (!this.password) { try { this.password = window.localStorage.getItem('azurpilot.access-password') ?? '' } catch { /* 浏览器禁用存储时保留会话登录。 */ } }
     this.stopped = false
     this.setState('connecting')
-    const url = new URL('/api/v1/ws', window.location.href)
+    // 远程访问隧道把页面挂在 /<peer_id>/ 前缀下（index.html 用 <base> 固定该前缀），
+    // 绝对路径 /api/v1/ws 会打到隧道服务端而不是本机，必须跟着 document.baseURI 走。
+    const url = new URL('api/v1/ws', document.baseURI)
     url.protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const socket = this.socket = new WebSocket(url)
     socket.onmessage = event => {

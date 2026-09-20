@@ -22,6 +22,14 @@ describe('WebUI i18n', () => {
     expect(translateUi('ja-JP', 'resource.Oil')).toBe('燃料')
     expect(translateUi('zh-TW', 'fleet.vanguard')).toBe('先鋒艦隊')
     expect(translateUi('zh-TW', 'stats.toolboxSave')).toBe('儲存圖表')
+    expect(translateUi('zh-TW', 'stats.axisMode')).toBe('座標軸')
+    expect(translateUi('ja-JP', 'stats.axisMode')).toBe('軸モード')
+    expect(translateUi('en-US', 'stats.axisMode')).toBe('Axis mode')
+    expect(translateUi('zh-CN', 'stats.axisMode')).toBe('坐标轴')
+    expect(translateUi('zh-TW', 'stats.candlestickOverlay')).toBe('K 線 + 折線疊加')
+    expect(translateUi('ja-JP', 'stats.candlestickOverlay')).toBe('ローソク足 + 折れ線')
+    expect(translateUi('en-US', 'stats.candlestickOverlay')).toBe('Candlestick + line overlay')
+    expect(translateUi('zh-CN', 'stats.candlestickOverlay')).toBe('K 线 + 折线叠加')
   })
 
   it('translates the advanced-mode script prerequisite in every UI language', () => {

@@ -49,9 +49,56 @@
   .monitor-panel .preview-screen {width:min(calc(100% - 32px),calc((100cqh - 32px)*16/9));max-height:none}
 }
 .statistics-controls {display:flex;flex-wrap:wrap;align-items:end;gap:14px;padding:18px 22px}.statistics-controls label {display:flex;flex-direction:column;gap:7px;font-size:11px;color:var(--muted)}.statistics-controls select,.statistics-controls input {max-width:200px;min-height:34px}.period-controls {padding:0 0 18px;align-items:center}.period-controls strong {margin-right:auto}.period-controls > span {font-size:12px;color:var(--muted)}
+/* 以下工具栏规则只服务紧凑主题：分类、时间范围与操作合并为一行并置顶，滚动时仍可切换与刷新。
+   非旧版版式由 body 滚动，需让开吸顶的顶栏；旧版版式的 .instance-page-main 自身滚动，贴顶即可。 */
+:root[data-theme='extreme'] .statistics-toolbar-row {position:sticky;top:var(--topbar-height);z-index:30;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:8px 0;margin-bottom:12px;background:var(--bg)}
+/* 分段控件放不下时换成单按钮下拉（指针移入即展开，见 Select 的 openOnFocus）。
+   is-compact 由 Statistics 测量可用宽度得出，不用固定断点：右侧控件宽度随分类变化。 */
+:root[data-theme='extreme'] .statistics-toolbar-row .statistics-category-select {display:none}
+:root[data-theme='extreme'] .statistics-toolbar-row.is-compact .statistics-category-control {display:none}
+:root[data-theme='extreme'] .statistics-toolbar-row.is-compact .statistics-category-select {display:inline-flex}
+:root[data-theme='extreme'] .instance-page-main > .statistics-toolbar-row {top:0}
+:root[data-theme='extreme'] .statistics-toolbar-row .statistics-category-control {margin-bottom:0;flex:0 0 auto;width:max-content}
+:root[data-theme='extreme'] .statistics-toolbar-right {display:flex;align-items:center;gap:12px;margin-left:auto;flex-wrap:wrap}
+:root[data-theme='extreme'] .statistics-actions {display:flex;align-items:center;gap:8px}
+:root[data-theme='extreme'] .statistics-inline-control {display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);white-space:nowrap}
+:root[data-theme='extreme'] .statistics-inline-control select,:root[data-theme='extreme'] .statistics-inline-control input {max-width:200px;min-height:var(--form-height)}
+.sr-title {position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .date-input-wrap {position:relative;display:inline-flex;align-items:center;width:100%;max-width:200px}.date-input-wrap input {width:100%}.date-empty {color:transparent}.date-empty::-webkit-datetime-edit {color:transparent}.date-empty::-webkit-calendar-picker-indicator {opacity:1}.date-input-placeholder {position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;font-size:11px;user-select:none;font-variant-numeric:tabular-nums;letter-spacing:0.5px}
 .statistics-sections {display:grid;gap:20px}.statistics-note {padding:13px 17px;background:var(--surface);border-left:3px solid #159b88;border-radius:5px;font-size:12px;line-height:1.8;color:var(--muted);margin:0}
 .stat-metrics {display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:16px;padding:20px 22px}.stat-metrics span {display:block;color:var(--muted);font-size:11px;margin-bottom:10px}.stat-metrics strong {display:block;font-size:23px;font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.stat-metrics small {font-size:11px;font-weight:400;margin-left:6px;color:var(--muted)}.summary-metrics {padding:0;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}.summary-metrics section {padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:12px}
+.summary-metric-card {transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+.summary-metric-card:hover {border-color:color-mix(in srgb,var(--accent) 35%,var(--border));box-shadow:0 4px 16px #0000000a}
+.summary-metric-head {display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.summary-metrics .summary-metric-label {display:block;margin-bottom:0;color:var(--muted);font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.summary-metric-icon {display:inline-flex;align-items:center;justify-content:center;color:var(--accent);opacity:.85;flex-shrink:0;transition:transform .18s ease,opacity .18s ease}
+.summary-metric-card:hover .summary-metric-icon {opacity:1;transform:scale(1.1)}
+.statistics-metrics-container {display:flex;flex-direction:column;gap:8px;padding:14px 22px 0}
+.statistics-metrics-label {font-size:11px;color:var(--muted);font-weight:500}
+.statistics-metrics-chips {display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.stat-chip {display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:12px;cursor:pointer;user-select:none;transition:all .15s ease}
+.stat-chip:hover:not(:disabled) {border-color:var(--accent);background:var(--surface-muted)}
+.stat-chip.active {border-color:var(--accent);background:var(--surface-muted);font-weight:600;box-shadow:0 0 0 1px var(--accent-soft)}
+.stat-chip.empty {opacity:.45;cursor:not-allowed}
+.stat-chip small {font-size:10px;color:var(--muted);margin-left:2px}
+.stat-chip-dot {width:9px;height:9px;border-radius:50%;background:var(--border);flex-shrink:0;transition:all .15s ease}
+.stat-chip-badge {font-size:10px;padding:1px 5px;border-radius:4px;font-weight:600;line-height:1.2;margin-left:4px;transition:all .15s ease}
+.stat-chip-badge.primary {background:var(--accent);color:#fff}
+.stat-chip-badge.secondary {background:var(--surface-muted);color:var(--muted);border:1px solid var(--border)}
+.stat-chip-badge.secondary:hover {border-color:var(--accent);color:var(--text)}
+.stat-multi-metrics {display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;padding:16px 22px}
+.stat-metric-card {background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.stat-metric-header {display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600}
+.stat-metric-body {display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px}
+.stat-metric-body span {display:block;color:var(--muted);font-size:11px;margin-bottom:4px}
+.stat-metric-body strong {display:block;font-size:16px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.stat-metric-body strong.positive {color:#10b981}
+.stat-metric-body strong.negative {color:#ef4444}
+.stat-metric-body strong.neutral {color:var(--text)}
 .chart-canvas {height:410px;width:100%}.chart-expanded {position:fixed;inset:20px;z-index:100;overflow:auto;background:var(--surface);box-shadow:0 0 0 50px #0008}.chart-expanded .chart-canvas {height:55vh}
+/* 放大视图铺满窗口后，右上角是 Electron 的窗口控制按钮，会压住「收起图表」；
+   同时面板自身可滚动，滚动后标题行会滚出视口。右侧让开按钮宽度并让它吸顶。
+   这里必须带 !important：紧凑主题用 padding 简写加 !important 压过面板内边距。 */
+.panel.chart-expanded .panel-heading {position:sticky;top:0;z-index:2;padding-right:160px !important;background:var(--surface)}
 .statistics-table {min-width:0}.statistics-table h3 {margin:0;font-size:14px}.table-toolbar {padding:10px 22px;margin:0;flex-wrap:wrap}.table-toolbar input {max-width:240px}.table-scroll {overflow:auto;max-height:480px}.statistics-table table {border-collapse:collapse;width:100%;font-size:12px;white-space:nowrap}.statistics-table td,.statistics-table th {padding:13px 20px;text-align:left;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums}.statistics-table th {position:sticky;top:0;background:var(--surface-muted);z-index:1}.statistics-table th button {border:0;background:none;color:var(--text);cursor:pointer;font:inherit}.statistics-table tbody tr:hover {background:var(--surface-muted)}
 @media(max-width:950px) {.resource-grid {grid-template-columns:repeat(auto-fit,minmax(140px,1fr)) !important}.resource-card-editor,.resource-picker-grid {grid-template-columns:1fr}.resource-settings-heading {gap:10px}.task-row {grid-template-columns:minmax(0,1fr) 48px 74px 10px !important}.stat-metrics {grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.statistics-controls {padding:15px;gap:10px}.statistics-controls label {max-width:100%}.statistics-controls input {max-width:100%}.schedule-panel, .monitor-panel {height:500px}.chart-canvas {height:340px}.chart-expanded {inset:5px}.statistics-note {font-size:11px}}

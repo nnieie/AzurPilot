@@ -4,8 +4,12 @@ import { useApp } from '../app/context'
 
 type Option = {value: string; label: string; disabled: boolean}
 
-/** 自绘列表通过顶层弹出层避开卡片裁切；原生节点仅用于值与变更事件桥接。 */
-export function Select({children, id, className, style, disabled, autoFocus, ...props}: ComponentProps<'select'>) {
+/**
+ * 自绘列表通过顶层弹出层避开卡片裁切；原生节点仅用于值与变更事件桥接。
+ * openOnFocus 供窄屏下的单按钮形态使用：指针移入或键盘聚焦即展开。键盘用
+ * :focus-visible 判定，否则点击时 onFocus 先展开、又被随后的 onClick 关掉。
+ */
+export function Select({children, id, className, style, disabled, autoFocus, openOnFocus = false, ...props}: ComponentProps<'select'> & {openOnFocus?: boolean}) {
   const {ui} = useApp()
   const generatedId = useId()
   const controlId = id ?? generatedId
@@ -18,6 +22,17 @@ export function Select({children, id, className, style, disabled, autoFocus, ...
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(-1)
   const search = useRef({text: '', time: 0})
+  // 指针移开要收起，但菜单是顶层弹出层、与触发器之间有 6px 间隙，立刻收起会让鼠标
+  // 还没移到菜单上就关掉。这里延迟一小段，指针进入菜单即取消。
+  const hoverClose = useRef<number | undefined>(undefined)
+  // 指针移入已经打开过菜单时，紧随其后的 onClick 不应把它当作「再点一次收起」而关掉。
+  const hoverOpened = useRef(false)
+  const cancelHoverClose = () => {if (hoverClose.current !== undefined) {window.clearTimeout(hoverClose.current); hoverClose.current = undefined}}
+  const scheduleHoverClose = () => {
+    if (!openOnFocus) return
+    cancelHoverClose()
+    hoverClose.current = window.setTimeout(() => setOpen(false), 180)
+  }
 
   useLayoutEffect(() => {
     const select = native.current!
@@ -26,6 +41,7 @@ export function Select({children, id, className, style, disabled, autoFocus, ...
   }, [children, props.value, props.defaultValue])
 
   useEffect(() => {if (disabled) setOpen(false)}, [disabled])
+  useEffect(() => cancelHoverClose, [])
 
   useLayoutEffect(() => {
     if (!open) return
@@ -143,11 +159,18 @@ export function Select({children, id, className, style, disabled, autoFocus, ...
       aria-label={props['aria-label']} aria-labelledby={props['aria-labelledby']} aria-describedby={props['aria-describedby']}
       aria-invalid={props['aria-invalid']} aria-required={props.required} aria-haspopup="listbox" aria-expanded={open} aria-controls={open ? listId : undefined}
       aria-activedescendant={open && active >= 0 ? `${listId}-${active}` : undefined}
-      onClick={() => open ? setOpen(false) : show()} onKeyDown={keyDown} onBlur={() => setOpen(false)}>
+      onClick={() => {
+        // 指针移入刚把菜单打开，这次点击只是「移入后的自然点击」，不应立即收起
+        if (hoverOpened.current) {hoverOpened.current = false; return}
+        open ? setOpen(false) : show()
+      }} onKeyDown={keyDown} onBlur={() => setOpen(false)}
+      onFocus={event => {if (openOnFocus && event.currentTarget.matches(':focus-visible')) show()}}
+      onPointerEnter={() => {if (openOnFocus) {cancelHoverClose(); if (!open) hoverOpened.current = true; show()}}}
+      onPointerLeave={scheduleHoverClose}>
       <span>{options[selected]?.label ?? ui('common.select')}</span><ChevronsUpDown size={15} aria-hidden="true"/>
     </button>
     <select {...props} ref={native} disabled={disabled} hidden aria-label={undefined} aria-labelledby={undefined} aria-hidden="true" tabIndex={-1}>{children}</select>
-    {open && <div ref={popup} id={listId} className="select-menu" role="listbox" aria-labelledby={controlId} popover="manual" onPointerDown={event => event.preventDefault()}>
+    {open && <div ref={popup} id={listId} className="select-menu" role="listbox" aria-labelledby={controlId} popover="manual" onPointerDown={event => event.preventDefault()} onPointerEnter={cancelHoverClose} onPointerLeave={scheduleHoverClose}>
       {options.map((option, index) => <div key={`${index}-${option.value}`} id={`${listId}-${index}`} data-index={index} role="option" aria-selected={index === selected} aria-disabled={option.disabled || undefined}
         className={`select-option ${index === active ? 'is-active' : ''}`} onPointerMove={() => {if (!option.disabled) setActive(index)}} onClick={event => {event.preventDefault(); event.stopPropagation(); choose(index)}}>
         <Check size={15} aria-hidden="true" style={{visibility: index === selected ? 'visible' : 'hidden'}}/><span>{option.label}</span>

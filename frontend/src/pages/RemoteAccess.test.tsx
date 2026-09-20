@@ -65,9 +65,9 @@ describe('远程访问页', () => {
   })
 
   it('就绪时展示地址与复制按钮', () => {
-    state.remote = {enabled: true, state: 'waiting_peer', address: 'https://remurl.nanoda.work/p2p/32d93f1d640077ed', error: ''}
+    state.remote = {enabled: true, state: 'waiting_peer', address: 'https://tunnel.example.com/p2p/example-peer-id', error: ''}
     const html = render()
-    expect(html).toContain('https://remurl.nanoda.work/p2p/32d93f1d640077ed')
+    expect(html).toContain('https://tunnel.example.com/p2p/example-peer-id')
     expect(html).toContain('复制')
     expect(html).toContain('已连接')
   })

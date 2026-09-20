@@ -100,3 +100,5 @@
   .dev-surface-grid,.dev-shadow-grid,.dev-radius-grid {padding:16px}
   .dev-radius-grid {grid-template-columns:repeat(3,minmax(0,1fr))}
 }
+/* 快捷工具下方的状态说明。 */
+.dev-hint {margin: 10px 0 0; color: var(--muted); font-size: 12px; line-height: 1.7}

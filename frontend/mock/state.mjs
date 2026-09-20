@@ -181,7 +181,7 @@ export function createMockState({empty = false} = {}) {
       {key: 'Branch', type: 'string', label: '分支', help: '模拟系统级分组，用于验证系统设置页。', value: 'dev', options: []},
     ]},
   ], notice: '前端测试数据', demo: false, remote: {
-    enabled: true, state: 'waiting_peer', address: 'https://remurl.nanoda.work/p2p/32d93f1d640077ed', error: '',
+    enabled: true, state: 'waiting_peer', address: 'https://tunnel.example.com/p2p/example-peer-id', error: '',
   }}
   const get = name => instances.get(name) ?? fail('NOT_FOUND', '实例不存在')
   const snapshot = name => ({instance: name, revision: revision(get(name).values), values: structuredClone(get(name).values)})
@@ -200,13 +200,24 @@ export function createMockState({empty = false} = {}) {
       values.Main.Emotion.Fleet1Record = '2026-09-12 23:45:12.123456'
       values.Main.Scheduler.NextRun = '2099-01-01 12:00:00'
       values.Alas.Emulator.Serial = `127.0.0.1:${5555 + index * 2}`
-      for (const [key, value] of Object.entries({Oil: 14200, Coin: 186420, Gem: 2468, Cube: 384})) {
-        values.Dashboard[key].Value = value - index * 100
-        values.Dashboard[key].Record = timestamp(new Date())
+      const dashboardDefaults = {
+        Oil: {Value: 14200 - index * 100, Limit: 25000},
+        Coin: {Value: 186420 - index * 1000, Limit: 600000},
+        Gem: {Value: 2468 - index * 10},
+        Cube: {Value: 384 - index * 5},
+        Pt: {Value: 42500 - index * 200},
+        ActionPoint: {Value: 101 - index * 2, Total: 1301 - index * 2},
+        YellowCoin: {Value: 1520 - index * 20},
+        PurpleCoin: {Value: 340 - index * 10},
+        Core: {Value: 1280 - index * 15},
+        Medal: {Value: 650 - index * 5},
+        Merit: {Value: 18400 - index * 100},
+        GuildCoin: {Value: 7600 - index * 50},
       }
-      values.Dashboard.ActionPoint.Value = 101 - index * 2
-      values.Dashboard.ActionPoint.Total = values.Dashboard.ActionPoint.Value + 1200
-      values.Dashboard.ActionPoint.Record = timestamp(new Date())
+      const nowTs = timestamp(new Date())
+      for (const [key, item] of Object.entries(dashboardDefaults)) {
+        if (values.Dashboard[key]) Object.assign(values.Dashboard[key], item, {Record: nowTs})
+      }
       for (const [order, task] of ['Commission', 'Research', 'Dorm', 'Main'].entries()) {
         values[task].Scheduler.Enable = true
         values[task].Scheduler.NextRun = timestamp(new Date(Date.now() + (order - 1) * 1800000))
@@ -246,7 +257,7 @@ export function createMockState({empty = false} = {}) {
       case 'schema.get': return {args, menu, translations: locales[params.language]}
       case 'instances.list': return [...instances].map(([name, item]) => ({name, status: item.status, currentTask: item.status === 'running' ? 'Commission' : null, serial: item.values.Alas.Emulator.Serial, server: item.values.Alas.Emulator.ServerName}))
       case 'instances.create': {
-        if (!/^[A-Za-z\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff][A-Za-z0-9_\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\-]{0,63}$/.test(params.name) || /^(template|deploy|backup|con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(params.name)) fail('INVALID_PARAMS', '实例名称无效')
+        if (!/^[A-Za-z0-9\u3041-\u3096\u30a1-\u30fa\u30fc\u31f0-\u31ff\uff66-\uff9f\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff][A-Za-z0-9_. \u3041-\u3096\u30a1-\u30fa\u30fc\u31f0-\u31ff\uff66-\uff9f\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\-]{0,63}$/.test(params.name) || /^(template|deploy|backup|con|prn|aux|nul|com[1-9]|lpt[1-9])(\.|$)/i.test(params.name)) fail('INVALID_PARAMS', '实例名称无效')
         if ([...instances.keys()].some(name => name.toLowerCase() === params.name.toLowerCase())) fail('ALREADY_EXISTS', '同名实例已存在')
         add(params.name, params.source ? get(params.source).values : template)
         return snapshot(params.name)
@@ -297,18 +308,142 @@ export function createMockState({empty = false} = {}) {
         return {instance: name, image: `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`, capturedAt: get(name).previewAt ?? null}
       }
       case 'statistics.refreshLoot': return {refreshed: true}
+      case 'meowfficer.scoreReport': {
+        // demo-alt 用来验证「还没跑过评分任务」的空状态，其余实例都给一份示例报告。
+        if (name === 'demo-alt') fail('NOT_FOUND', '评分报告尚未生成，请先在「工具Plus → 指挥喵评分」运行一次任务')
+        const cats = [{
+          source: 'shot_0.png', cat: '克雷喵', tags: ['SSR', '铁血', '潜艇', '司令'], fixed: false,
+          note: '指定潜艇司令，狩猎范围+1；初始池小、最好毕业', maxed: true, pointsSpent: 6, primary: 'submarine',
+          talents: [
+            {name: '狼群之首', level: 1, kind: 'special', inferred: false},
+            {name: '雷击长·潜艇', level: 3, kind: 'normal', inferred: false},
+            {name: '装填新手·潜艇', level: 3, kind: 'normal', inferred: true},
+          ],
+          rubrics: [
+            {key: 'submarine', label: '潜艇猫', tier: '准毕业', score: 100, x: 1, y: 6.0,
+              xHits: ['狼群之首 Lv1'], yHits: ['新人雷击士·潜艇 Lv3', '装填新手·潜艇 Lv3'],
+              notes: ['缺 侵略如火：两者是潜艇口径里唯一的两个一档输出彩'],
+              source: '28法则执行篇·潜艇猫；详细上手攻略·潜艇喵', primary: true},
+            {key: 'low_cost', label: '低耗猫', tier: '不适合低耗', score: 35, x: 0, y: 2.0,
+              xHits: [], yHits: ['装填新手·潜艇 Lv3'], notes: [], source: '28法则执行篇·低耗猫', primary: false},
+          ],
+        }, {
+          source: 'shot_1.png', cat: '海伦娜喵', tags: ['SSR', '白鹰', '轻巡'], fixed: true,
+          note: '辅助输出向，主口径取雷暴', maxed: false, pointsSpent: 3, primary: 'torpedo',
+          talents: [{name: '一骑当千', level: 3, kind: 'special', inferred: false}],
+          rubrics: [
+            // 雷暴口径是加权点制：与真实后端一致地给出 null 的 x/y 与语义标签
+            {key: 'torpedo', label: '雷暴猫', tier: '雷暴优秀', score: 88, x: null, y: null,
+              xHits: [], yHits: ['一骑当千 Lv3', '雷击长·轻巡 Lv3'], yLabel: '加权命中',
+              notes: ['适合雷暴队当输出小猫'], source: '28法则执行篇·雷暴猫', primary: true},
+          ],
+        }]
+        return {instance: name, generatedAt: timestamp(new Date()), count: cats.length, cats: cats.slice(-(params.limit ?? 100))}
+      }
       case 'statistics.report': {
-        const resourceLabels = {Oil: '石油', Coin: '物资', Gem: '钻石', Cube: '心智魔方'}
-        const actionLabels = {ActionPoint: '行动力', YellowCoin: '作战补给凭证', PurpleCoin: '特别兑换凭证'}
-        const activeLabels = params.category === 'action' ? actionLabels : resourceLabels
-        const series = Object.entries(activeLabels).map(([key, label]) => ({
-          key, label, points: dispatch('statistics.resources', {instance: name, resource: key, days: params.days}).points
+        const makePoints = (res, days = 7) => {
+          if (name === 'demo-alt') return []
+          const baseMap = {
+            oil: 14200, coin: 186420, gem: 2468, cube: 384, pt: 42500, core: 1280, medal: 650, merit: 18400, guild_coin: 7600,
+            ap: 101, asset: 1301, distance: 4520, yellow_coins: 1520, purple_coins: 340,
+            Chip: 240, total_exp_gained: 152000, battle_count: 36, total_run_time: 2490,
+          }
+          const resKeyMap = {
+            oil: 'Oil', coin: 'Coin', gem: 'Gem', cube: 'Cube', pt: 'Pt', core: 'Core', medal: 'Medal', merit: 'Merit', guild_coin: 'GuildCoin',
+            ap: 'ActionPoint', yellow_coins: 'YellowCoin', purple_coins: 'PurpleCoin',
+          }
+          const dbKey = resKeyMap[res] ?? res
+          const base = get(name).values.Dashboard[dbKey]?.Value ?? baseMap[res] ?? 500
+          const safeDays = Math.max(1, Number(days) || 7)
+          return Array.from({length: 24}, (_, index) => ({
+            time: timestamp(new Date(Date.now() - (23 - index) * safeDays * 3600000)),
+            value: Math.max(0, Math.round(base * (.8 + index / 120 + Math.sin(index) * .03))),
+          }))
+        }
+        const reportSeries = entries => entries.map(([key, label, res = key]) => ({
+          key, label, points: makePoints(res, params.days)
         }))
         const result = {instance: name, category: params.category, month: params.month, metrics: [], series: [], tables: [], notes: []}
-        if (['resources', 'action', 'ships', 'commission'].includes(params.category)) result.series = series
-        if (!['resources', 'action'].includes(params.category)) {
-          result.metrics = [{label: '战斗次数', value: 1234, unit: '场'}, {label: '净行动力', value: 345, unit: ''}]
-          result.tables = [{title: '统计明细', columns: ['项目', '数量', '记录时间'], rows: name === 'demo-alt' ? [] : [['测试数据', 1234, timestamp(new Date())]]}]
+        if (params.category === 'resources') {
+          result.series = reportSeries([
+            ['oil', '石油', 'Oil'], ['coin', '物资', 'Coin'], ['gem', '钻石', 'Gem'], ['cube', '心智魔方', 'Cube'],
+            ['pt', '活动 PT', 'Pt'], ['core', '核心数据', 'Core'], ['medal', '荣誉勋章', 'Medal'],
+            ['merit', '功勋', 'Merit'], ['guild_coin', '舰队币', 'GuildCoin']
+          ])
+        } else if (params.category === 'action') {
+          result.series = reportSeries([
+            ['ap', '行动力', 'ActionPoint'], ['asset', '行动力资产', 'asset'], ['distance', '海里数', 'distance'],
+            ['yellow_coins', '作战补给凭证', 'YellowCoin'], ['purple_coins', '特别兑换凭证', 'PurpleCoin']
+          ])
+        } else if (params.category === 'commission') {
+          result.metrics = [
+            {label: '完成委托', value: 48, unit: '项'}, {label: '钻石', value: 80, unit: ''},
+            {label: '心智魔方', value: 32, unit: ''}, {label: '心智单元', value: 240, unit: ''},
+            {label: '石油', value: 3600, unit: ''}, {label: '物资', value: 28400, unit: ''}
+          ]
+          result.series = reportSeries([
+            ['Gem', '钻石', 'Gem'], ['Cube', '心智魔方', 'Cube'], ['Chip', '心智单元', 'Chip'],
+            ['Oil', '石油', 'Oil'], ['Coin', '物资', 'Coin']
+          ])
+          result.tables = [
+            {title: '委托收益明细', columns: ['资源', '总收益', '掉落记录数', '平均每次掉落'], rows: name === 'demo-alt' ? [] : [
+              ['钻石', 80, 4, 20], ['心智魔方', 32, 16, 2], ['心智单元', 240, 12, 20], ['石油', 3600, 18, 200], ['物资', 28400, 24, 1183.33]
+            ]},
+            {title: '委托结算记录', columns: ['时间', '委托数量', '钻石', '魔方', '心智单元', '石油', '物资'], defaultSort: {index: 0, descending: true}, rows: name === 'demo-alt' ? [] : [
+              [timestamp(new Date(Date.now() - 3600000)), 2, 20, 2, 0, 400, 1500],
+              [timestamp(new Date(Date.now() - 7200000)), 1, 0, 4, 20, 0, 2200],
+              [timestamp(new Date(Date.now() - 14400000)), 3, 40, 0, 40, 800, 3100],
+              [timestamp(new Date(Date.now() - 28800000)), 2, 0, 2, 0, 600, 1800]
+            ]}
+          ]
+        } else if (params.category === 'ships') {
+          result.metrics = [
+            {label: '目标等级', value: 125, unit: ''}, {label: '预估经验效率', value: 48200, unit: '/小时'},
+            {label: '平均战斗时长', value: 42, unit: '秒'}, {label: '平均每轮时长', value: 68, unit: '秒'},
+            {label: '短猫平均战斗时长', value: 25, unit: '秒'}, {label: '今日战斗', value: 36, unit: '场'},
+            {label: '今日经验', value: 152000, unit: ''}, {label: '今日运行', value: 41.5, unit: '分钟'}
+          ]
+          result.series = reportSeries([
+            ['total_exp_gained', '每日经验', 'total_exp_gained'],
+            ['battle_count', '每日战斗', 'battle_count'],
+            ['total_run_time', '每日运行秒数', 'total_run_time']
+          ])
+          result.tables = [{
+            title: '舰船升级进度',
+            columns: ['位置', '等级', '当前经验', '累计经验', '目标经验', '检测后战斗数', '还需经验', '还需战斗', '预估用时'],
+            note: '上次检测：2026-09-20 18:30:00；舰队：1队。',
+            rows: name === 'demo-alt' ? [] : [
+              ['旗舰', 124, 284000, 3284000, 3600000, 36, 316000, 75, '01:15:00'],
+              ['先锋1', 123, 192000, 2792000, 3600000, 36, 808000, 192, '03:12:00'],
+              ['先锋2', 121, 84000, 2184000, 3600000, 36, 1416000, 337, '05:37:00']
+            ]
+          }]
+        } else if (params.category === 'opsi') {
+          result.metrics = [
+            {label: '战斗次数', value: 1420, unit: '场'}, {label: '出击轮数', value: 710, unit: '轮'},
+            {label: '出击消耗', value: 3550, unit: '行动力'}, {label: '明石遭遇', value: 85, unit: '次'},
+            {label: '明石遭遇率', value: 11.97, unit: '%'}, {label: '塞壬研究装置', value: 28, unit: '个'},
+            {label: '装置获取率', value: 3.94, unit: '%'}, {label: '购买行动力', value: 3950, unit: ''},
+            {label: '平均每次购买', value: 46.47, unit: ''}, {label: '净行动力', value: 400, unit: ''},
+            {label: '循环效率', value: 11.27, unit: '%'}
+          ]
+          result.tables = [{
+            title: '短猫运行统计',
+            columns: ['侵蚀等级', '战斗次数', '有效轮数', '平均战斗秒数', '平均每轮秒数', '研究装置', '获取率（%）', '统计来源'],
+            rows: name === 'demo-alt' ? [] : [
+              [3, 420, 210, 38.5, 62.1, 8, 3.81, '实测'],
+              [5, 1000, 500, 44.2, 71.8, 20, 4.0, '实测']
+            ]
+          }]
+        } else if (params.category === 'loot') {
+          result.tables = [{
+            title: '短猫掉落收益',
+            columns: ['侵蚀等级', '上次记录时间', '有效战斗轮数', '平均黄币/轮', '平均金菜/轮', '平均深渊/轮', '平均隐秘/轮'],
+            rows: name === 'demo-alt' ? [] : [
+              [3, timestamp(new Date(Date.now() - 3600000)), 210, 4.125, 0.35, 0.08, 0.12],
+              [5, timestamp(new Date(Date.now() - 1800000)), 500, 5.82, 0.58, 0.15, 0.22]
+            ]
+          }]
         }
         return result
       }

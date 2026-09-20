@@ -5,19 +5,20 @@ import { useApp } from '../app/context'
 import type { UiKey } from '../i18n'
 
 export const resourceLabels: Record<string, UiKey> = {Oil: 'resource.Oil', Coin: 'resource.Coin', Gem: 'resource.Gem', Cube: 'resource.Cube', Pt: 'resource.Pt', ActionPoint: 'resource.ActionPoint', YellowCoin: 'resource.YellowCoin', PurpleCoin: 'resource.PurpleCoin', Core: 'resource.Core', Medal: 'resource.Medal', Merit: 'resource.Merit', GuildCoin: 'resource.GuildCoin', Chip: 'resource.Chip'}
+const iconBase = import.meta.env.BASE_URL
 const iconImages: Record<string, string> = {
-  Oil: '/oil.webp',
-  Coin: '/gold.webp',
-  Gem: '/diamond.webp',
-  Cube: '/cube.webp',
-  Pt: '/pt.webp',
-  ActionPoint: '/guild_coin.webp',
-  YellowCoin: '/supply_token.webp',
-  PurpleCoin: '/special_token.webp',
-  Core: '/core_data.webp',
-  Medal: '/honor_medal.webp',
-  Merit: '/merit.webp',
-  GuildCoin: '/stamina.webp',
+  Oil: `${iconBase}oil.webp`,
+  Coin: `${iconBase}gold.webp`,
+  Gem: `${iconBase}diamond.webp`,
+  Cube: `${iconBase}cube.webp`,
+  Pt: `${iconBase}pt.webp`,
+  ActionPoint: `${iconBase}guild_coin.webp`,
+  YellowCoin: `${iconBase}supply_token.webp`,
+  PurpleCoin: `${iconBase}special_token.webp`,
+  Core: `${iconBase}core_data.webp`,
+  Medal: `${iconBase}honor_medal.webp`,
+  Merit: `${iconBase}merit.webp`,
+  GuildCoin: `${iconBase}stamina.webp`,
 }
 
 function ResourceIcon({resourceKey, size = 32}: {resourceKey: string; size?: number}) {

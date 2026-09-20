@@ -8,7 +8,8 @@ class FakeSocket {
   onmessage?: (event: {data: string}) => void
   onclose?: () => void
   sent: Record<string, unknown>[] = []
-  constructor() {FakeSocket.latest = this}
+  url: string
+  constructor(url: string | URL) {FakeSocket.latest = this; this.url = String(url)}
   send(message: string) {this.sent.push(JSON.parse(message))}
   close() {this.readyState = 3; this.onclose?.()}
   emit(message: unknown) {this.onmessage?.({data: JSON.stringify(message)})}
@@ -19,6 +20,7 @@ describe('WebSocket 客户端', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     vi.stubGlobal('window', {location: {href: 'http://localhost:5173/', protocol: 'http:'}})
+    vi.stubGlobal('document', {baseURI: 'http://localhost:5173/'})
     vi.stubGlobal('WebSocket', FakeSocket)
     client = new ApiClient(); client.connect()
     FakeSocket.latest.emit({v: 1, type: 'event', topic: 'session', seq: 1, data: {authRequired: false}})
@@ -49,6 +51,13 @@ describe('WebSocket 客户端', () => {
     FakeSocket.latest.emit({v: 1, type: 'event', topic: 'session', seq: 1, data: {authRequired: true}})
     await expect(client.request('instances.list', {})).rejects.toMatchObject({code: 'DISCONNECTED'})
     expect(FakeSocket.latest.sent).toHaveLength(0)
+  })
+  it('WebSocket 地址跟随 document.baseURI，远程访问隧道前缀不丢', () => {
+    // 地址与 peer_id 都是占位符，不要填真实隧道。
+    vi.stubGlobal('window', {location: {href: 'https://tunnel.example.com/example-peer-id/', protocol: 'https:'}})
+    vi.stubGlobal('document', {baseURI: 'https://tunnel.example.com/example-peer-id/'})
+    client.disconnect(); client = new ApiClient(); client.connect()
+    expect(FakeSocket.latest.url).toBe('wss://tunnel.example.com/example-peer-id/api/v1/ws')
   })
   it('保留校验失败的诊断详情供脚本编辑器定位行列', async () => {
     const request = client.request('system.ping', {})

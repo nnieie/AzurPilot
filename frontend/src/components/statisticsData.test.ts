@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { aggregatePoints } from './statisticsData'
+import { aggregatePoints, mergeMultiSeriesRows } from './statisticsData'
 
 describe('统计时间聚合', () => {
   it('K 线保留开高低收以及零值，不用平均值代替收盘', () => {
@@ -12,3 +12,29 @@ describe('统计时间聚合', () => {
     expect(aggregatePoints(points, 0)).toHaveLength(3)
   })
 })
+
+describe('多数据源行合并', () => {
+  it('按时间戳将多个数据源对齐合并并降序排列', () => {
+    const seriesList = [
+      {key: 'oil', label: '石油', points: [{time: '2026-09-20 12:00:00', value: 1000, source: '出击'}, {time: '2026-09-20 13:00:00', value: 900, source: '出击'}]},
+      {key: 'coin', label: '物资', points: [{time: '2026-09-20 12:00:00', value: 50000, source: '出击'}, {time: '2026-09-20 14:00:00', value: 60000, source: '委托'}]},
+      {key: 'cube', label: '魔方', points: [{time: '2026-09-20 13:00:00', value: 300, source: '出击'}]},
+    ]
+    const rows = mergeMultiSeriesRows(seriesList)
+    expect(rows).toEqual([
+      ['2026-09-20 14:00:00', '—', 60000, '—', '委托'],
+      ['2026-09-20 13:00:00', 900, '—', 300, '出击'],
+      ['2026-09-20 12:00:00', 1000, 50000, '—', '出击'],
+    ])
+  })
+
+  it('支持时间范围过滤', () => {
+    const seriesList = [
+      {key: 'oil', label: '石油', points: [{time: '2026-09-20 10:00:00', value: 100}, {time: '2026-09-20 12:00:00', value: 200}]},
+    ]
+    const rows = mergeMultiSeriesRows(seriesList, '2026-09-20T11:00')
+    expect(rows).toHaveLength(1)
+    expect(rows[0][0]).toBe('2026-09-20 12:00:00')
+  })
+})
+

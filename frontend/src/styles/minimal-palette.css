@@ -23,7 +23,7 @@
   --theme-warning: #805a14; --theme-warning-soft: #faf0d6; --theme-info: var(--secondary);
   --theme-sidebar: var(--surface); --theme-glass: var(--surface); --theme-glass-edge: var(--border);
   --theme-glass-shadow: none; --theme-material-filter: none; --theme-chrome-filter: none;
-  --theme-popover-filter: none; --theme-overlay-filter: none; --theme-overlay: var(--bg);
+  --theme-popover-filter: none; --theme-overlay-filter: none; --theme-overlay: color-mix(in srgb, var(--bg) 30%, transparent);
   --theme-radius-control: 8px; --theme-radius-button: 8px; --theme-radius-panel: 14px;
   --theme-radius-card: 14px; --theme-radius-popover: 10px; --theme-radius-pill: 999px;
   --theme-shadow-panel: none; --theme-shadow-popover: none; --theme-shadow-modal: none;

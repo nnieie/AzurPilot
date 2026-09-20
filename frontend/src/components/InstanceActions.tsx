@@ -10,15 +10,17 @@ import { FieldInput } from './FieldInput'
 import { ResourceSettings } from './ResourceCards'
 import { ErrorBox, Modal } from './ui'
 
-export function InstanceActions({instance, status, resources, selectedResources, onResourcesChange}: {instance: string; status: Status; resources: Resource[]; selectedResources: string[]; onResourcesChange: (keys: string[]) => void}) {
+/** showLabel：紧凑主题下按钮改挂日志面板工具栏，空间充足故补上文字。 */
+export function InstanceActions({instance, current, status, resources, selectedResources, onResourcesChange, showLabel = false}: {instance: string; current: string; status: Status; resources: Resource[]; selectedResources: string[]; onResourcesChange: (keys: string[]) => void; showLabel?: boolean}) {
   const [open, setOpen] = useState(false)
   const {ui} = useApp()
-  return <><button className="button" aria-label={ui('instance.settings')} title={ui('instance.settings')} onClick={() => setOpen(true)}><Settings2 size={16}/></button>{open && <InstanceSettings instance={instance} status={status} resources={resources} selectedResources={selectedResources} onResourcesChange={onResourcesChange} onClose={() => setOpen(false)}/>}</>
+  // 无障碍名称用「实例设置」，可见文字在紧凑下换成「资源卡片设置」。
+  return <><button className="button" aria-label={ui('instance.settings')} title={ui('instance.settings')} onClick={() => setOpen(true)}><Settings2 size={16}/>{showLabel && <span>{ui('resource.settings')}</span>}</button>{open && <InstanceSettings instance={instance} current={current} status={status} resources={resources} selectedResources={selectedResources} onResourcesChange={onResourcesChange} onClose={() => setOpen(false)}/>}</>
 }
 
-function InstanceSettings({instance, status, resources, selectedResources, onResourcesChange, onClose}: {instance: string; status: Status; resources: Resource[]; selectedResources: string[]; onResourcesChange: (keys: string[]) => void; onClose: () => void}) {
+function InstanceSettings({instance, current, status, resources, selectedResources, onResourcesChange, onClose}: {instance: string; current: string; status: Status; resources: Resource[]; selectedResources: string[]; onResourcesChange: (keys: string[]) => void; onClose: () => void}) {
   const connection = useConnection()
-  const {refresh, notify, ui} = useApp()
+  const {instances, refresh, notify, ui} = useApp()
   const navigate = useNavigate()
   const queue = editor(`startup:${instance}`)
   const edits = useSyncExternalStore(queue.subscribe, queue.getSnapshot)
@@ -40,7 +42,15 @@ function InstanceSettings({instance, status, resources, selectedResources, onRes
     try {
       const config = await api.request('config.get', {instance})
       await api.request('instances.delete', {instance, revision: config.revision})
-      await refresh(); onClose(); navigate('/'); notify(ui('instance.backupNotice'))
+      /* 落点必须在 refresh 之前算：刷新后 instances 已不含被删项，索引会错位。
+         删自己则接前一个（没有前一个就接后一个），删别人则留在当前标签页。 */
+      const order = instances.map(item => item.name)
+      const at = order.indexOf(instance)
+      const currentAt = order.indexOf(current)
+      const landing = at === currentAt ? (order[at - 1] ?? order[at + 1]) : current
+      /* 跳转要在 refresh 之前发出：刷新后 URL 里的实例已不在列表，外壳的兜底守卫会抢先把页面推回主页。 */
+      if (landing) navigate(`/i/${landing}/overview`)
+      await refresh(); onClose(); notify(ui('instance.backupNotice'))
     } catch (error) {setError((error as Error).message)} finally {setBusy(false)}
   }
   return <Modal title={instance} onClose={onClose}><div className="form-stack">
