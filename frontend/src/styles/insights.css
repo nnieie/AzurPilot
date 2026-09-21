@@ -15,9 +15,12 @@
 .monitor-panel {min-width:0;overflow:hidden;display:flex;flex-direction:column}
 .overview-main {display:flex;flex-direction:column;flex:1;min-height:0}
 @media(min-width:951px) {
-  .overview-page {display:flex;flex-direction:column;flex:1;height:calc(var(--viewport-height) - var(--topbar-height, 69px) - 48px);min-height:380px;width:100%}
+  /* 高度取父级 100%：自算高度对不上 main 的内边距与页标题外边距，底部会空一截；
+     flex-basis 会盖过 height，所以这一项不能参与伸缩。 */
+  .overview-page {display:flex;flex-direction:column;flex:0 0 auto;height:100%;width:100%}
   .overview-main .monitor-panel,
-  .monitor-panel {flex:1;min-height:380px;height:auto}
+  /* 不复设最低高度：视口矮时它会顶住，日志栏就伸出容器底、与调度栏不再齐平。 */
+  .monitor-panel {flex:1;min-height:0;height:auto}
   .overview-main {margin-bottom:-10px}
 }
 .schedule-panel .panel-heading,.schedule-panel .schedule-summary {flex-shrink:0}
@@ -65,7 +68,10 @@
 :root[data-theme='extreme'] .statistics-inline-control select,:root[data-theme='extreme'] .statistics-inline-control input {max-width:200px;min-height:var(--form-height)}
 .sr-title {position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .date-input-wrap {position:relative;display:inline-flex;align-items:center;width:100%;max-width:200px}.date-input-wrap input {width:100%}.date-empty {color:transparent}.date-empty::-webkit-datetime-edit {color:transparent}.date-empty::-webkit-calendar-picker-indicator {opacity:1}.date-input-placeholder {position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;font-size:11px;user-select:none;font-variant-numeric:tabular-nums;letter-spacing:0.5px}
-.statistics-sections {display:grid;gap:20px}.statistics-note {padding:13px 17px;background:var(--surface);border-left:3px solid #159b88;border-radius:5px;font-size:12px;line-height:1.8;color:var(--muted);margin:0}
+/* main 是 flex 列，页面才能用 flex 把空白填满；block 父级下的 flex 属性一律无效。 */
+main {display:flex;flex-direction:column;min-height:0}
+/* 统计区吃掉剩余高度，否则只到内容高，底部空一截。 */
+.statistics-sections {display:grid;gap:20px;flex:1 1 0;min-height:0}.statistics-note {padding:13px 17px;background:var(--surface);border-left:3px solid #159b88;border-radius:5px;font-size:12px;line-height:1.8;color:var(--muted);margin:0}
 .stat-metrics {display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:16px;padding:20px 22px}.stat-metrics span {display:block;color:var(--muted);font-size:11px;margin-bottom:10px}.stat-metrics strong {display:block;font-size:23px;font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.stat-metrics small {font-size:11px;font-weight:400;margin-left:6px;color:var(--muted)}.summary-metrics {padding:0;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}.summary-metrics section {padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:12px}
 .summary-metric-card {transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
 .summary-metric-card:hover {border-color:color-mix(in srgb,var(--accent) 35%,var(--border));box-shadow:0 4px 16px #0000000a}

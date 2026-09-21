@@ -1,9 +1,6 @@
 
 # AzurPilot — 碧蓝航线自动化辅助工具
 
-> 前端已迁移到 `frontend/` 中的 React 控制台，业务通信采用版本化 WebSocket API。
-> 首次源码启动需要 Node.js 22.12+；[启动与开发说明](frontend/README.md) · [API 协议](frontend/API.md)。
-
 <p align="center">
   <a href="README.md"><img src="https://img.shields.io/badge/简体中文-中文-blue?style=flat-square" alt="简体中文"></a>
   <a href="README.zh-TW.md"><img src="https://img.shields.io/badge/繁體中文-繁體-green?style=flat-square" alt="繁體中文"></a>
@@ -21,9 +18,7 @@
 </p>
 
 <p align="center">
-  <a href="https://deepwiki.com/wess09/AzurPilot">
-    <img src="https://deepwiki.com/badge.svg" alt="DeepWiki" height="22">
-  </a>
+  <a href="https://deepwiki.com/wess09/AzurPilot"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
 </p>
 
 <p align="center">
@@ -539,7 +534,13 @@ AzurPilot 提供 MCP 服务，可供支持 MCP 的客户端或工具调用。
 - [GitHub 仓库](https://github.com/wess09/AzurPilot) — 源码、Issue、Pull Request
 - [QQ 交流群](https://join.nanoda.work/#/) — 碧蓝航线自动化社区交流
 - [AzurLaneAutoScript 上游项目](https://github.com/LmeSzinc/AzurLaneAutoScript) — ALAS 原版
+
+### 衍生项目与友链
+
 - [AzurPilot 树莓派版](https://github.com/nnieie/AzurPilot) — 面向树莓派 / Termux 真机的 AzurPilot CN 部署版
+- [AzurPilot-private-Ru](https://github.com/AliceLiddell01/AzurPilot-private-Ru) — 个人俄语版本，提供可控更新、透明启动并精简外部网络依赖
+- [PerseusAutoScript](https://github.com/lajiovo/PerseusAutoScript) — 面向 AzurPilot 的综合运维工具库（后台静默控制、闭环自愈与多端推送）
+- [AzurRem](https://github.com/syyxl3111/AzurRem) — AzurPilot 原生安卓客户端（Kotlin + Jetpack Compose 重写，附带 PC 网关）
 
 ## 开发与贡献
 

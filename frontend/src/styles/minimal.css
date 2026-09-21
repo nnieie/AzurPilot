@@ -35,9 +35,10 @@ body {background-attachment: scroll}
 .task-submenu-item {font-size: 13px; min-height: 38px}
 .task-group-button.expanded {border-color: var(--accent)}
 .topbar {position: sticky; top: 0; z-index: 80; height: var(--topbar-height); margin: 0; padding: 0 24px}
-/* 只在分页模式下横跨到屏幕右缘（原模式的顶栏不该伸进右栏，那会撑出横向滚动条）。 */
-/* 同 apple：用视口单位而不是百分比，精确贴到屏幕右缘。 */
-.app-shell.with-rail:has(.instance-tabs) .topbar {width: calc(100vw - var(--sidebar-width))}
+/* 同 apple：用视口单位而不是百分比，精确贴到屏幕右缘。
+   两个模式都要贴到右缘：右栏从顶栏下方开始（top: --topbar-height），顶栏横向压不到它，
+   文档也不会多出横向滚动。只在分页模式生效时，原模式的顶栏只剩中间那列宽，右上角留白。 */
+.app-shell.with-rail .topbar {width: calc(100vw - var(--sidebar-width))}
 .right-rail {top: var(--topbar-height); height: calc(var(--viewport-height) - var(--topbar-height)); z-index: 70}
 .breadcrumb, .breadcrumb .instance-caption strong {font-size: 13px}
 .connection-dot {background: var(--theme-warning)}
@@ -59,6 +60,8 @@ main:focus {outline: none}
 .panel, .resource-card, .summary-metrics section, .instance-card {border-radius: var(--radius)}
 .button {font-size: 13px; font-weight: 600}
 .button.primary:hover:not(:disabled) {transform: none}
+/* 本主题全局关掉了动画与过渡，所以按下反馈不能用位移或缩放，改成底色与字色互换。 */
+.field-control > .field-actions .icon-only:active:not(:disabled) {background: var(--theme-accent); color: var(--theme-on-accent)}
 .button.danger.subtle {border-color: var(--red)}
 .button.danger:not(.subtle), .toast.error {color: var(--theme-on-danger)}
 .icon-button {width: 36px; height: 36px; border-radius: 8px}
@@ -86,9 +89,9 @@ button:disabled, input:disabled, textarea:disabled, select:disabled, .select-tri
 .statistics-note {border-left-color: var(--secondary)}
 .chart-expanded {inset: 0; border-radius: 0; z-index: 150}
 @media (min-width: 951px) {
-  .overview-page {height: calc(var(--viewport-height) - var(--topbar-height) - 72px)}
+  /* 同浅色 / 深色：高度取父级，不再自算。 */
+  .overview-page {flex: 0 0 auto; height: 100%}
   .overview-main {flex: 19; margin-bottom: 0}
-  .overview-page::after {content: ''; display: block; flex: 1; min-height: 0}
 }
 .monitor-tabs {height: auto; min-height: 60px; padding: 10px 16px; flex-wrap: wrap; gap: 8px}
 .monitor-panel .log-toolbar {display: flex; align-items: center; margin-left: auto; gap: 4px}

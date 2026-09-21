@@ -89,5 +89,35 @@ describe('StatisticsChart 多数据源图表组件', () => {
     expect(html).toContain('折线')
     expect(html).toContain('K 线')
   })
+
+  it('折线图模式下，采样粒度应包含“每次记录”且选项不重复', () => {
+    const html = renderToStaticMarkup(
+      <AppContext.Provider value={context}>
+        <StatisticsChart series={mockSeries}/>
+      </AppContext.Provider>,
+    )
+
+    expect(html).toContain('每次记录')
+    expect(html).toContain('5 分钟')
+    expect(html).toContain('每小时')
+    expect(html).toContain('每天')
+    const hourlyMatches = html.match(/每小时/g)
+    expect(hourlyMatches).toHaveLength(1)
+  })
+
+  it('K 线图模式下，采样粒度不应显示“每次记录”，且不应出现重复的“每小时”选项 (#1013)', () => {
+    const html = renderToStaticMarkup(
+      <AppContext.Provider value={context}>
+        <StatisticsChart series={mockSeries} initialMode="candlestick"/>
+      </AppContext.Provider>,
+    )
+
+    expect(html).not.toContain('每次记录')
+    expect(html).toContain('5 分钟')
+    expect(html).toContain('每小时')
+    expect(html).toContain('每天')
+    const hourlyMatches = html.match(/每小时/g)
+    expect(hourlyMatches).toHaveLength(1)
+  })
 })
 

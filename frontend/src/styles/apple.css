@@ -82,10 +82,10 @@ body {background: var(--bg); background-attachment: fixed}
 .nav-search {border-radius: 10px; background: var(--surface-muted); color: var(--muted)}
 .nav-search input {font-size: 13px; min-height: 38px}
 .topbar {position: sticky; z-index: 80; margin: 0 0 0 24px; top: 0; height: 56px; padding: 0 18px; border: 1px solid var(--glass-edge); border-radius: 26px 0 0 26px; background: transparent; box-shadow: var(--glass-shadow); isolation: isolate}
-/* 只在分页模式下横跨到屏幕右缘（原模式的顶栏不该伸进右栏，那会撑出横向滚动条）。 */
-/* 分页模式下顶栏横跨到屏幕右缘。用视口单位而不是百分比：百分比以内容盒为基准，
+/* 顶栏横跨到屏幕右缘，两个模式都如此：右栏的 top 就在顶栏下方，顶栏不伸过去的话
+   两者之间会空出一条缝。用视口单位而不是百分比：百分比以内容盒为基准，
    加上顶栏自身的 margin-left 后会比视口长出一截。 */
-.app-shell.with-rail:has(.instance-tabs) .topbar {width: calc(100vw - var(--sidebar-width) - 14px - 24px)}
+.app-shell.with-rail .topbar {width: calc(100vw - var(--sidebar-width) - 14px - 24px)}
 .topbar > :not(.glass-material), .title-actions > :not(.glass-material) {position: relative; z-index: 1}
 .breadcrumb {font-size: 13px; gap: 10px}
 .breadcrumb .instance-caption strong {font-size: 13px}
@@ -357,3 +357,8 @@ input, select, textarea {border-radius: 10px; min-height: 40px; background: var(
 
 .update-notice.sidebar-update-notice {position: relative; overflow: hidden; flex-shrink: 0; padding: 4px 8px; gap: 0; border: 1px solid #ff0000; border-radius: 999px; color: #fff; background: linear-gradient(135deg, rgb(255 0 0 / .88), rgb(255 0 0 / .68)); box-shadow: inset 0 1px 0 rgb(255 255 255 / .20), inset 0 -1px 0 rgb(120 0 0 / .22), 0 2px 6px rgb(255 0 0 / .14), 0 0 3px rgb(255 0 0 / .06); backdrop-filter: blur(10px) saturate(185%); -webkit-backdrop-filter: blur(10px) saturate(185%); font-size: 10px; font-weight: 750; line-height: 1; letter-spacing: .2px; text-decoration: none}
 .sidebar-update-notice::before {content: ''; position: absolute; inset: 1px 2px auto; height: 38%; border-radius: inherit; background: linear-gradient(180deg, rgb(255 255 255 / .20), transparent); pointer-events: none}
+
+/* 按下「立刻运行」时底色与字色互换，与按钮的缩放动画叠加。 */
+.field-control > .field-actions .icon-only:hover:active:not(:disabled) {background: var(--theme-accent); color: var(--theme-on-accent)}
+/* 深色主题的强调色偏亮，白字压上去只有 2.4:1；沿用本仓库深色按钮的正文色。 */
+[data-theme='dark'] .field-control > .field-actions .icon-only:hover:active:not(:disabled) {color: #102d29}

@@ -142,15 +142,19 @@
 .field-control > input, .field-control > select, .field-control > textarea {width: 100%; font-size: 13px}
 .field-control textarea {resize: none; overflow-y: hidden; min-height: 0; line-height: 1.9}
 .field-actions {display: flex; justify-content: flex-end; margin-top: 7px}
-/* 控件行内带动作按钮时：控件与按钮占一行，保存状态整行折到下面排成小字。
-   顺序完全由 DOM 决定（控件 → 动作按钮 → 保存状态），不做视觉重排。 */
-.field-control:has(> .field-actions) {display: flex; flex-wrap: wrap; align-items: center; gap: 7px}
-.field-control:has(> .field-actions) > input,
-.field-control:has(> .field-actions) > select {width: auto; flex: 1 1 0; min-width: 0}
-.field-control:has(> .field-actions) > .edit-status {flex: 0 0 100%; margin-top: 0; font-size: 11px; justify-content: flex-start; white-space: nowrap; flex-wrap: nowrap}
+/* 控件行内带动作按钮时：整行改成 flex，输入框在前、按钮在后。 */
+.field-control:has(> .field-actions) {display: flex; align-items: center; gap: 7px}
 .field-control > .field-actions {margin-top: 0; flex-shrink: 0}
+/* 保存状态占原按钮那个位子（输入框左侧），脱流所以不挤输入框、也不推按钮。
+   那个位子比文案窄，超出就省略，全文看 title；flex-wrap 要显式关掉，否则图标与文字会折成两行。 */
+.field-control:has(> .edit-status) {position: relative}
+.field-control > .edit-status {position: absolute; right: 100%; top: 50%; transform: translateY(-50%); order: 0; margin: 0 7px 0 0; max-width: 160px; padding: 0; flex-wrap: nowrap; white-space: nowrap; overflow: hidden; text-overflow: ellipsis}
+.field-control > .edit-status > .edit-status-text {overflow: hidden; text-overflow: ellipsis}
 /* 纯图标按钮：宽度收成与自身高度相等，不靠固定尺寸。 */
 .field-control > .field-actions .icon-only {aspect-ratio: 1; padding: 0; gap: 0}
+/* 按下「立刻运行」时按钮回弹一下；颜色取自各主题的 accent，形状对各主题都成立。 */
+@keyframes run-button-press {40% {transform: scale(.88)} 100% {transform: none}}
+.field-control > .field-actions .icon-only:active:not(:disabled) {animation: run-button-press .2s ease-out}
 .settings-notice {font-size: 11px; color: var(--muted); line-height: 1.9; margin: 24px 0 16px}
 .panel-note {font-size: 10px; color: var(--muted); padding: 13px 20px; border-top: 1px solid var(--border)}
 .chart-panel .empty {height: 350px}
