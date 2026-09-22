@@ -44,7 +44,8 @@ dev_tools/usb_capture_lut_accel.lib
 config/usb_color
 tmp/
 .trae
-docs/
+docs/*
+!docs/modules/
 .claude
 # Created by .ignore support plugin (hsz.mobi)
 

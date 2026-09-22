@@ -118,6 +118,10 @@ Deploy:
     # [Default] ssh (find ssh in system PATH)
     # If you don't have one, install OpenSSH or download it here (https://github.com/PowerShell/Win32-OpenSSH/releases)
     SSHExecutable: ssh
+    # 允许远程访问重定向的主机，留空使用默认列表
+    AllowedRedirectHosts: null
+    # 远程访问重定向次数上限
+    MaxRedirects: 2
     # WebRTC signaling server, empty means deriving wss://host/signal from SSHServer
     SignalingServer: null
     # STUN servers as JSON array or comma separated string

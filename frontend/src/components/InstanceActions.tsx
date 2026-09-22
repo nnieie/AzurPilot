@@ -55,7 +55,7 @@ function InstanceSettings({instance, current, status, resources, selectedResourc
   }
   return <Modal title={instance} onClose={onClose}><div className="form-stack">
     {(error || edits.storageError) && <ErrorBox message={error || edits.storageError}/>}
-    <div className="field-row"><label htmlFor="instance-startup">{ui('instance.autoRun')}</label><div><FieldInput id="instance-startup" label={ui('instance.autoRun')} value={edits.edits.enabled?.value ?? startup ?? false} disabled={startup === undefined} onChange={value => queue.change('enabled', value)}/><EditStatus id="instance-startup" edit={edits.edits.enabled} retry={queue.retry}/></div></div>
+    <div className="field-row"><label htmlFor="instance-startup">{ui('instance.autoRun')}</label><div><FieldInput id="instance-startup" label={ui('instance.autoRun')} value={edits.edits.enabled?.value ?? startup ?? false} disabled={startup === undefined} onChange={value => queue.change('enabled', value)}/><EditStatus id="instance-startup" edit={edits.edits.enabled} retry={queue.retry} queue={queue}/></div></div>
     <ResourceSettings resources={resources} selected={selectedResources} onChange={onResourcesChange}/>
     {deleting && <p>{ui('instance.deletePrompt', {name: instance})}</p>}
     <button className="button danger" disabled={busy || connection !== 'ready' || status === 'running' || status === 'updating'} onClick={() => deleting ? void remove() : setDeleting(true)}><Trash2 size={15}/>{deleting ? ui('instance.deleteConfirm') : ui('instance.delete')}</button>

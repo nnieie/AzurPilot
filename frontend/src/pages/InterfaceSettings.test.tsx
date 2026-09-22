@@ -44,6 +44,10 @@ function createMockContext(theme: AppContextValue['theme']): AppContextValue {
     customPalettes: [],
     saveCustomPalette: () => {},
     deleteCustomPalette: () => {},
+    compactRailSide: 'right',
+    setCompactRailSide: () => {},
+    compactRailWidth: 244,
+    setCompactRailWidth: () => {},
     language: 'zh-CN',
     setLanguage: () => {},
   }
@@ -96,5 +100,16 @@ describe('界面设置页自定义背景显示逻辑', () => {
     const html = render('extreme')
     expect(html).toContain('配色方案')
     expect(html).not.toContain('自定义背景')
+  })
+
+  it('紧凑主题在主题选择下方额外渲染布局选项，其它主题都不渲染', () => {
+    const html = render('extreme')
+    expect(html).toContain('紧凑布局')
+    expect(html).toContain('计划栏在右')
+    expect(html).toContain('计划栏在左')
+    expect(html).toContain('标准（244px）')
+    for (const theme of ['light', 'dark', 'minimal', 'legacy-light', 'legacy-dark'] as const) {
+      expect(render(theme)).not.toContain('紧凑布局')
+    }
   })
 })

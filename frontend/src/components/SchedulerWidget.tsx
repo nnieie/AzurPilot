@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { CalendarClock, CirclePlay, Play, Square, TriangleAlert } from 'lucide-react'
 import { api } from '../api/client'
@@ -11,7 +12,7 @@ import { editor } from '../config/editors'
  * 旧版主题下由运行总览页左列渲染，其余主题由右栏渲染，两处共用同一份启停逻辑，
  * 保证「不带旧配置启动调度器」的排队屏障不会在某一处漏掉。
  */
-export function SchedulerWidget({instance, data, onData}: {instance: string; data?: Overview; onData: (data: Overview) => void}) {
+export function SchedulerWidget({instance, data, onData, action}: {instance: string; data?: Overview; onData: (data: Overview) => void; action?: ReactNode}) {
   const connection = useConnection()
   const {notify, ui} = useApp()
   const [busy, setBusy] = useState(false)
@@ -37,7 +38,7 @@ export function SchedulerWidget({instance, data, onData}: {instance: string; dat
 
   return <section className="scheduler-widget" aria-label={ui('scheduler.title')}>
     <div className="scheduler-widget-heading">
-      <div><CalendarClock size={17}/><span>{ui('scheduler.title')}</span></div>
+      <div>{action ?? <CalendarClock size={17}/>}<span>{ui('scheduler.title')}</span></div>
       <span className={`scheduler-status ${data?.status === 'running' ? 'running' : ''}`}>
         {data?.status === 'running' ? <CirclePlay size={13}/> : data?.status === 'error' ? <TriangleAlert size={13}/> : <Square size={12}/>}
         {data?.status === 'running' ? ui('status.running') : data?.status === 'error' ? ui('scheduler.abnormal') : ui('scheduler.stopped')}

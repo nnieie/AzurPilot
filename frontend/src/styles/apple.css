@@ -187,7 +187,12 @@ main:focus {outline: none}
 .resource-heading > div {border-radius: 10px}
 .schedule-panel {height: 700px}
 @media (min-width: 951px) {
-  .monitor-panel {height: auto}
+  /* 外壳给确定高度，内层 height:100% 才解析得到；只设 min-height 时整条链按内容长。 */
+  .app-shell:has(.overview-page) {height: var(--viewport-height)}
+  /* 网格项的最小尺寸默认取内容高，归零后才受外壳高度约束。 */
+  .app-shell:has(.overview-page) .main-shell {min-height: 0}
+  /* 与 .overview-main 同高：内容超出时压缩日志栏而不是顶高面板。 */
+  .monitor-panel {height: auto; min-height: 0}
 }
 .task-state {font-size: 10px; border-radius: 6px}
 .task-row {min-height: 58px}

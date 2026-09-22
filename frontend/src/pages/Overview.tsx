@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import { useParams } from 'react-router-dom'
 import { api } from '../api/client'
 import type { Overview as OverviewData } from '../api/types'
@@ -9,6 +9,9 @@ import { MonitorPanel } from '../components/MonitorPanel'
 import { defaultResourceKeys, ResourceCards } from '../components/ResourceCards'
 import { InstanceActions } from '../components/InstanceActions'
 import { LegacyRail } from '../components/LegacyRail'
+import { Statistics } from './Statistics'
+import { readOverviewPanel, setOverviewPanel, subscribeOverviewPanel } from '../app/overviewPanelPrefs'
+
 
 function loadResourceSelection(instance: string) {
   try {
@@ -25,6 +28,7 @@ export function Overview() {
   const [error, setError] = useState('')
   const [selectedResources, setSelectedResources] = useState<string[]>(() => loadResourceSelection(instance))
   const connection = useConnection()
+  const panel = useSyncExternalStore(subscribeOverviewPanel, readOverviewPanel)
 
   useEffect(() => setSelectedResources(loadResourceSelection(instance)), [instance])
 
@@ -58,14 +62,24 @@ export function Overview() {
   if (usesLegacyLayout(theme)) return <div className="instance-page-grid">
     <h1 className="legacy-sr-title">{instance}</h1>
     <LegacyRail instance={instance} data={data} onData={setData}>
-      <section className="panel legacy-stat-card" aria-label={ui('overview.statCard')}>
-        <span className="legacy-stat-title">{ui('overview.statCard')}</span>
+      {/* 标题即切换主区显示日志还是统计的按钮。 */}
+      <section className="panel legacy-stat-card">
+        <button type="button" className="legacy-stat-title" aria-pressed={panel === 'stats'}
+          aria-label={ui(panel === 'stats' ? 'overview.showLogs' : 'overview.showStats')}
+          title={ui(panel === 'stats' ? 'overview.showLogs' : 'overview.showStats')}
+          onClick={() => {setOverviewPanel(panel === 'stats' ? 'logs' : 'stats')}}
+        >{ui(panel === 'stats' ? 'monitor.logs' : 'overview.statCard')}</button>
         {actions}
       </section>
     </LegacyRail>
     <div className="instance-page-main">
       <ResourceCards resources={data.resources} selected={selectedResources}/>
-      <MonitorPanel instance={instance}/>
+      {/* 换面板时重挂一次，让内容列的淡入重放；方向类决定从哪一侧滑入。 */}
+      <div className={`instance-page-panel ${panel === 'stats' ? 'panel-drop' : 'panel-rise'}`} key={panel}>
+        {panel === 'stats'
+          ? <div className="instance-panel-stats"><Statistics/></div>
+          : <MonitorPanel instance={instance}/>}
+      </div>
     </div>
   </div>
 

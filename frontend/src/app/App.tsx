@@ -1,5 +1,5 @@
 import { PasswordInput, Select } from '../components/FormControls'
-import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent, type KeyboardEvent, type MouseEvent, type ChangeEvent } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent, type MouseEvent, type ChangeEvent } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ArrowRight, CalendarClock, ChartNoAxesCombined, Code2, Compass, FileJson, GalleryHorizontal, LayoutDashboard, Globe, House, Download, ExternalLink, Maximize2, Menu, Minimize2, Palette, PanelTop, Settings2, WifiOff, X } from 'lucide-react'
 import { api } from '../api/client'
@@ -9,6 +9,7 @@ import { GlassMaterial } from '../components/GlassMaterial'
 import { InstanceSwitcher } from '../components/InstanceSwitcher'
 import { InstanceTabs } from '../components/InstanceTabs'
 import { RightRail } from '../components/RightRail'
+import { CompactScrollbars } from '../components/CompactScrollbars'
 import { TaskNav } from '../components/TaskNav'
 import { isDesktopDevice } from '../components/TaskNavFlyout'
 import { TaskSwitcher } from '../components/TaskSwitcher'
@@ -38,18 +39,6 @@ export function CreateInstance({onClose, startWithImport = false}: {onClose: () 
   /* 从「配置管理 → 导入配置」进来时，直接把可导入的配置文件列出来。 */
   useEffect(() => { if (startWithImport) void pickImport() }, [])
 
-  /* 弹窗自己按 Esc 时，页面先收到 keydown Escape 再收到 <dialog> 的 cancel；原生文件选择器
-     被取消时只送来 cancel，没有 keydown。cancelGuard 靠「这次 cancel 之前见过 Esc 吗」区分两者。 */
-  const escapePressed = useRef(false)
-  function escapesFromPage() {
-    const pressed = escapePressed.current
-    escapePressed.current = false
-    return pressed
-  }
-  /* 非 Esc 的按键说明上一次 cancel 已经收尾。 */
-  function trackEscape(event: KeyboardEvent) {
-    escapePressed.current = event.key === 'Escape'
-  }
   /* 上传本机配置文件：读文件文本后上传，浏览器只给内容、给不了服务器路径。 */
   async function uploadImport(event: ChangeEvent<HTMLInputElement>) {
     const input = event.target
@@ -75,17 +64,18 @@ export function CreateInstance({onClose, startWithImport = false}: {onClose: () 
   const [error, setError] = useState('')
   const {instances, refresh, notify, ui} = useApp()
   const navigate = useNavigate()
+  const location = useLocation()
   async function submit(event: FormEvent) {
     event.preventDefault(); setBusy(true); setError('')
     try {
       /* 后端会归一化首尾空白与尾点，导航用返回的规范名。 */
       const created = await api.request('instances.create', {name, source: source || null, import_file: importFile || null})
       await refresh(); onClose(); notify(ui('instance.created'))
-      /* 从总览页发起的创建留在总览页：新实例的运行总览。 */
-      navigate(`/i/${created.instance}/overview`)
+      /* 新实例落在发起创建时所在的分区，从总览页创建就停在总览。 */
+      navigate(`/i/${created.instance}/${location.pathname.split('/').slice(3).join('/') || 'overview'}`)
     } catch (error) { setError((error as Error).message) } finally { setBusy(false) }
   }
-  return <Modal title={ui('instance.createTitle')} onClose={onClose} cancelGuard={escapesFromPage} onKeyDown={trackEscape}><form onSubmit={submit} className="form-stack">
+  return <Modal title={ui('instance.createTitle')} onClose={onClose}><form onSubmit={submit} className="form-stack">
     <p className="muted">{ui('instance.createHint')}</p>
     <label className="button secondary file-button" htmlFor="instance-import-file">{ui('instance.importPick')}<input id="instance-import-file" type="file" accept="application/json,.json" onChange={uploadImport}/></label>
     <button type="button" className="button secondary" disabled={importState.loading} onClick={pickImport}>{importState.loading ? ui('instance.importLoading') : ui('instance.importConfig')}</button>
@@ -121,7 +111,7 @@ export function NavigationMark() {
 
 export function App() {
   const connection = useConnection()
-  const {instancesLoaded, instances, schema, t, ui, notify, previewEnabled, devMode, setDevMode, theme} = useApp()
+  const {instancesLoaded, instances, schema, t, ui, notify, previewEnabled, devMode, setDevMode, theme, compactRailSide} = useApp()
   /* 开发者工具的模拟状态：只影响实例状态徽章与更新角标。 */
   const devOverride = useDevOverride()
   const {instance} = useParams()
@@ -192,6 +182,9 @@ export function App() {
   const legacyHomeShell = (location.pathname === '/' || PRIMARY_NAV_PATHS.includes(location.pathname)) && usesLegacyLayout(theme) && instancesLoaded
   // 旧版把调度器与任务计划放进实例页左列，右栏整体让位，否则同一块内容会出现两处。
   const showRail = showsRightRail(theme, instance)
+  /* 紧凑主题可把调度与任务计划栏换到内容区左侧。换位走 DOM 顺序而不是 CSS order，
+     键盘 Tab 的顺序才会跟看到的顺序一致；列宽与顶栏跨栏方向由 compact.css 按同一偏好调整。 */
+  const railFirst = theme === 'extreme' && compactRailSide === 'left'
   // 开发者工具可以预览「有可用更新」的角标，这里统一算一次。
   const updateAvailable = Boolean(update.data?.available) || devOverride.updatePreview
   const brand = <><Link to="/" className="brand-title" aria-label={`AzurPilot ${ui('nav.home')}`}><img src={`${import.meta.env.BASE_URL}azurpilot.svg`} alt="" className="brand-logo" onClick={handleBrandLogoClick}/><span>AzurPilot</span></Link>{updateAvailable && <Link className="update-notice sidebar-update-notice" to="/updater" aria-label={ui('nav.newVersion')} title={ui('nav.newVersion')}><span>{ui('nav.newBadge')}</span></Link>}</>
@@ -243,12 +236,15 @@ export function App() {
       </nav>
       {instance && <TaskNav/>}
     </aside>
+    {railFirst && instance && showRail && <RightRail instance={instance} onMobileClose={() => setRailOpen(false)}/>}
     <div className="main-shell">{!legacyShell && !legacyHomeShell && topbar}
-      {(legacyShell || legacyHomeShell) && !PRIMARY_NAV_PATHS.includes(location.pathname) && pageNav}
+      {/* 旧版外壳多一行：实例标签条在里面，点标签就能带着当前页型切实例。其它主题此行不开。 */}
+      {usesLegacyLayout(theme) && (legacyShell || legacyHomeShell) ? pageNav : null}
       {connection !== 'ready' && <div className="connection-banner" role="status"><WifiOff size={16}/>{ui('connection.connecting')}</div>}
       <main id="main-content" tabIndex={-1}>{!schema || ((instance || location.pathname === '/') && !instancesLoaded) ? <Loading/> : !instance || current ? <Outlet context={update} key={instance ?? 'home'}/> : <Loading/>}</main>
     </div>
-    {instance && showRail && <RightRail instance={instance} onMobileClose={() => setRailOpen(false)}/>}
+    {!railFirst && instance && showRail && <RightRail instance={instance} onMobileClose={() => setRailOpen(false)}/>}
+    <CompactScrollbars/>
     {creating && <CreateInstance onClose={() => setCreating(false)}/>}
   </div>
 }

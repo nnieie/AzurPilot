@@ -46,7 +46,7 @@ describe('StatisticsChart 多数据源图表组件', () => {
   it('渲染所有可用指标的标签芯片（Chips），无记录项应被置灰', () => {
     const html = renderToStaticMarkup(
       <AppContext.Provider value={context}>
-        <StatisticsChart series={mockSeries}/>
+        <StatisticsChart series={mockSeries} onToggleExpanded={() => {}}/>
       </AppContext.Provider>,
     )
 
@@ -60,7 +60,7 @@ describe('StatisticsChart 多数据源图表组件', () => {
   it('默认选中第一个有数据的指标，并展示单指标概览', () => {
     const html = renderToStaticMarkup(
       <AppContext.Provider value={context}>
-        <StatisticsChart series={mockSeries}/>
+        <StatisticsChart series={mockSeries} onToggleExpanded={() => {}}/>
       </AppContext.Provider>,
     )
 
@@ -79,7 +79,7 @@ describe('StatisticsChart 多数据源图表组件', () => {
     ]
     const html = renderToStaticMarkup(
       <AppContext.Provider value={context}>
-        <StatisticsChart series={opsiSeries}/>
+        <StatisticsChart series={opsiSeries} onToggleExpanded={() => {}}/>
       </AppContext.Provider>,
     )
 
@@ -93,7 +93,7 @@ describe('StatisticsChart 多数据源图表组件', () => {
   it('折线图模式下，采样粒度应包含“每次记录”且选项不重复', () => {
     const html = renderToStaticMarkup(
       <AppContext.Provider value={context}>
-        <StatisticsChart series={mockSeries}/>
+        <StatisticsChart series={mockSeries} onToggleExpanded={() => {}}/>
       </AppContext.Provider>,
     )
 
@@ -108,7 +108,7 @@ describe('StatisticsChart 多数据源图表组件', () => {
   it('K 线图模式下，采样粒度不应显示“每次记录”，且不应出现重复的“每小时”选项 (#1013)', () => {
     const html = renderToStaticMarkup(
       <AppContext.Provider value={context}>
-        <StatisticsChart series={mockSeries} initialMode="candlestick"/>
+        <StatisticsChart series={mockSeries} initialMode="candlestick" onToggleExpanded={() => {}}/>
       </AppContext.Provider>,
     )
 

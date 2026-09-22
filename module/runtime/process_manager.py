@@ -269,9 +269,7 @@ class ProcessManager:
                 with self._runtime_lock:
                     self.exit_result = WorkerResult.MANUAL_STOP
                     self.current_task = None
-                self.renderables.append(
-                    Text(f"[{self.config_name}] exited. Reason: Manual stop\n")
-                )
+                self._append_renderable(Text(f"[{self.config_name}] exited. Reason: Manual stop\n"))
         if not stopped:
             logger.error(f"[{self.config_name}] 停止工作进程失败 PID {pid}")
         log_queue_handler = self.thd_log_queue_handler
@@ -471,9 +469,16 @@ class ProcessManager:
                     self.exit_result = message.result
                     self.current_task = None
                 return
-            self.renderables.append(message)
+        self._append_renderable(message)
+
+    def _append_renderable(self, renderable) -> None:
+        """保存一条日志并在锁外通知订阅者，避免 UI 轮询造成批量刷新。"""
+        with self._runtime_lock:
+            self.renderables.append(renderable)
             if len(self.renderables) > self.renderables_max_length:
                 self.renderables = self.renderables[self.renderables_reduce_length :]
+        from module.runtime.log_hub import hub
+        hub.publish(self.config_name)
 
     def _drain_worker_queue(self, output, run_id, queue_lock=None) -> None:
         """已确认 worker 退出后排空队列，包含其最后一次同步 put。"""

@@ -1,8 +1,9 @@
 import { Select } from '../components/FormControls'
 import { languages, useApp, useConnection } from '../app/context'
-import { usesMaterial } from '../app/theme'
+import { usesMaterial, usesPaletteOptions } from '../app/theme'
 import { PageTitle } from '../components/ui'
 import { ThemePreferences } from '../components/ThemePreferences'
+import { CompactLayoutPreference } from '../components/CompactLayoutPreference'
 import { BackgroundPreferences } from '../components/BackgroundPreferences'
 
 /** 界面设置：主题、配色、背景与语言，只影响当前浏览器，不写进实例配置。 */
@@ -29,7 +30,9 @@ export function InterfaceSettings() {
             </Select>
           </div>
         </div>
-        {(theme === 'minimal' || theme === 'extreme') && <ThemePreferences/>}
+        {/* 紧凑主题的列布局选项紧跟主题选择，切到其它主题即隐藏，偏好仍保存在当前浏览器。 */}
+        {theme === 'extreme' && <CompactLayoutPreference/>}
+        {usesPaletteOptions(theme) && <ThemePreferences/>}
         {usesMaterial(theme) && <BackgroundPreferences/>}
         <div className="field-row">
           <div className="field-label">

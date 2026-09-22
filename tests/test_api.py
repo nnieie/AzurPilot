@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from starlette.testclient import TestClient
 from starlette.websockets import WebSocketDisconnect
@@ -394,6 +394,27 @@ class SocketApiTests(unittest.TestCase):
             self.assertEqual('testpilot', event['data']['instance'])
             self.assertTrue(self.call(ws, 'events.subscribe', {'topics': []})['ok'])
 
+    def test_log_arrival_pushes_websocket_event_without_polling(self):
+        from rich.text import Text
+        from module.runtime.log_hub import hub
+        from module.runtime.process_manager import ProcessManager
+
+        manager = SimpleNamespace(renderables=[])
+        with patch.dict(ProcessManager._processes, {'testpilot': manager}, clear=True), \
+                self.client.websocket_connect('/api/v1/ws') as ws:
+            self.login(ws)
+            self.assertTrue(self.call(ws, 'events.subscribe', {
+                'instance': 'testpilot', 'topics': ['logs'],
+            })['ok'])
+            manager.renderables.append(Text('INFO 到达即推送'))
+            hub.publish('testpilot')
+
+            for _ in range(2):
+                event = ws.receive_json()
+                if event.get('topic') == 'logs' and event['data']['entries']:
+                    break
+            self.assertEqual(['INFO 到达即推送'], [entry['text'] for entry in event['data']['entries']])
+
     def test_demo_mode_rejects_mutation(self):
         with patch.dict('os.environ', {'DEMO': '1'}), self.client.websocket_connect('/api/v1/ws') as ws:
             self.login(ws)
@@ -490,6 +511,64 @@ class LogCursorTests(unittest.TestCase):
             self.assertEqual(1, len(second['entries']))
             self.assertEqual('ERROR', second['entries'][0]['level'])
             self.assertEqual([], runtime.logs('test', second['cursor'])['entries'])
+
+
+
+class ProducerCadenceTests(unittest.IsolatedAsyncioTestCase):
+    """日志按到达事件即时推送，重主题继续按各自节奏采样。"""
+
+    async def test_heavy_topics_keep_independent_cadence(self):
+        counts = {'overview': 0, 'instances': 0}
+        runtime = SimpleNamespace(
+            overview=lambda instance: counts.__setitem__('overview', counts['overview'] + 1) or {'instance': instance},
+            instances=lambda: counts.__setitem__('instances', counts['instances'] + 1) or [],
+        )
+        session = Session(SimpleNamespace(router=SimpleNamespace(runtime=runtime), workers=asyncio.Semaphore(1)), ws=None, local=True)
+        session.subscription = SimpleNamespace(topics=['overview', 'instances'], instance='testpilot')
+        session.event = AsyncMock()
+        task = asyncio.create_task(session.producer())
+        await asyncio.sleep(2.2)
+        task.cancel()
+        with self.assertRaises(asyncio.CancelledError):
+            await task
+        self.assertGreater(counts['overview'], counts['instances'])
+        self.assertGreater(counts['instances'], 0, '重主题也必须被轮询到')
+
+    async def test_logs_wake_immediately_and_new_entries_are_sent_one_by_one(self):
+        from module.api.protocol import SubscribeParams
+        from module.runtime.log_hub import LogHub
+
+        calls = 0
+
+        def logs(instance, after):
+            nonlocal calls
+            calls += 1
+            if calls == 1:
+                return {'instance': instance, 'cursor': 1, 'reset': False,
+                        'entries': [{'id': 1, 'level': 'INFO', 'text': '历史'}]}
+            return {'instance': instance, 'cursor': 3, 'reset': False, 'entries': [
+                {'id': 2, 'level': 'INFO', 'text': '新增一'},
+                {'id': 3, 'level': 'INFO', 'text': '新增二'},
+            ]}
+
+        runtime = SimpleNamespace(logs=logs)
+        session = Session(SimpleNamespace(router=SimpleNamespace(runtime=runtime), workers=asyncio.Semaphore(1)), ws=None, local=True)
+        session.subscription = SubscribeParams(instance='testpilot', topics=['logs'])
+        hub = LogHub()
+        with patch('module.runtime.log_hub.hub', hub):
+            task = asyncio.create_task(session.log_producer())
+            session.logs_changed.set()
+            first = await asyncio.wait_for(session.queue.get(), timeout=.5)
+            self.assertEqual(['历史'], [entry['text'] for entry in first['data']['entries']])
+
+            hub.publish('testpilot')
+            second = await asyncio.wait_for(session.queue.get(), timeout=.5)
+            third = await asyncio.wait_for(session.queue.get(), timeout=.5)
+            self.assertEqual(['新增一'], [entry['text'] for entry in second['data']['entries']])
+            self.assertEqual(['新增二'], [entry['text'] for entry in third['data']['entries']])
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+            self.assertEqual(set(), hub.listeners)
 
 
 if __name__ == '__main__':

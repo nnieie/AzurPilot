@@ -27,7 +27,43 @@ describe('即时配置队列', () => {
     await queue.settled()
     queue.reconcile(confirmed)
     expect(queue.getSnapshot().edits.serial.value).toBe('during-read')
+    // 这一条刚标成已保存，还在最短停留期内，所以此刻不清；停留过了才清。
     queue.reconcile(queue.confirmed())
+    expect(queue.getSnapshot().edits.serial).toBeDefined()
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    expect(queue.getSnapshot().edits.serial).toBeUndefined()
+  })
+
+  it('停手后才显示「已保存」，显示够时长才消失', async () => {
+    const send = vi.fn().mockResolvedValue(undefined)
+    vi.useFakeTimers()
+    vi.setSystemTime(1_000_000)
+    const queue = new EditQueue('test', {ready: () => true, send}, storage())
+    queue.change('serial', 'edited')
+    await queue.settled()
+    expect(queue.getSnapshot().edits.serial.status).toBe('saved')
+
+    // 静默期内不显示。
+    await vi.advanceTimersByTimeAsync(100)
+    expect(queue.savedVisible(queue.getSnapshot().edits.serial)).toBe(false)
+    const cf = queue.confirmed()
+    queue.reconcile(cf)
+    // 回执未过静默期：留在快照里。
+    expect(queue.getSnapshot().edits.serial).toBeDefined()
+    expect(queue.savedVisible(queue.getSnapshot().edits.serial)).toBe(false)
+
+    // 静默期内继续输入：显示时刻随之顺延。
+    await vi.advanceTimersByTimeAsync(400)
+    queue.change('serial', 'edited again')
+    await queue.settled()
+    await vi.advanceTimersByTimeAsync(400)
+    expect(queue.savedVisible(queue.getSnapshot().edits.serial)).toBe(false)
+
+    // 静默期满：转为显示。
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(queue.savedVisible(queue.getSnapshot().edits.serial)).toBe(true)
+
+    await vi.advanceTimersByTimeAsync(2000)
     expect(queue.getSnapshot().edits.serial).toBeUndefined()
   })
 
@@ -132,6 +168,21 @@ describe('即时配置队列', () => {
     expect(send).toHaveBeenCalledWith('serial', 'retained')
     expect(queue.getSnapshot().storageError).toBe(translateCurrentUi('edit.draftPersistError'))
   })
+
+  it('等待连接、保存中与错误状态不经过静默期，立即可见', async () => {
+    vi.useFakeTimers()
+    const pending = deferred()
+    const queue = new EditQueue('test', {ready: () => true, send: () => pending.promise})
+    queue.change('serial', 'edited')
+    await vi.advanceTimersByTimeAsync(50)
+    expect(queue.getSnapshot().edits.serial.status).not.toBe('saved')
+    expect(queue.savedVisible(queue.getSnapshot().edits.serial)).toBe(true)
+
+    pending.reject(new Error('连接失败'))
+    await queue.settled().catch(() => undefined)
+    expect(queue.getSnapshot().edits.serial.status).toBe('error')
+    expect(queue.savedVisible(queue.getSnapshot().edits.serial)).toBe(true)
+  })
 })
 
 describe('保留数值输入原文', () => {
@@ -168,5 +219,35 @@ describe('清空时回落到参数默认值', () => {
   })
   it('非时间非数字字段的清空不受影响', () => {
     expect(prepareValue('', {type: 'input', value: 'text'})).toEqual({payload: ''})
+  })
+})
+
+describe('字段保存成功后回传服务端配置', () => {
+  it('把 send 的返回值交给 onSaved，供页面替换本地配置', async () => {
+    const config = {values: {Alas: {Scheduler: {Enable: true}}}}
+    const send = vi.fn().mockResolvedValue(config)
+    const queue = new EditQueue('test', {ready: () => true, send}, storage())
+    const onSaved = vi.fn()
+    queue.onSaved = onSaved
+    queue.change('Alas.Scheduler.Enable', true, true)
+    await queue.settled()
+    expect(onSaved).toHaveBeenCalledWith(config)
+  })
+
+  it('被更新的输入顶掉的旧响应不再回传', async () => {
+    const first = deferred()
+    const send = vi.fn()
+      .mockImplementationOnce(() => first.promise)
+      .mockResolvedValue({values: {}})
+    const queue = new EditQueue('test', {ready: () => true, send}, storage())
+    const onSaved = vi.fn()
+    queue.onSaved = onSaved
+    queue.change('Alas.Scheduler.Enable', true, true)
+    void queue.flush()
+    queue.change('Alas.Scheduler.Enable', false, false)
+    first.resolve()
+    await queue.settled()
+    expect(onSaved).toHaveBeenCalledTimes(1)
+    expect(onSaved).toHaveBeenCalledWith({values: {}})
   })
 })

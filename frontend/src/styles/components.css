@@ -99,7 +99,7 @@
 .log-search-match {background: #fbbf2445; color: inherit; border-radius: 2px; padding: 0 1px}
 .log-filters {display: flex; align-items: center; gap: 12px; padding: 14px 20px; font-size: 11px; color: var(--muted); flex-shrink: 0}
 .log-filters .input-icon {flex: 1}
-.empty {min-height: 160px; height: 100%; padding: 35px 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--muted); gap: 12px; text-align: center; line-height: 1.8; font-family: "Segoe UI", "Microsoft YaHei", sans-serif; font-size: 11px}
+.empty {flex: 0 1 auto; min-height: 160px; padding: 35px 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--muted); gap: 12px; text-align: center; line-height: 1.8; font-family: "Segoe UI", "Microsoft YaHei", sans-serif; font-size: 11px}
 .empty > svg {color: #a7b9c1; margin-bottom: 3px}
 .empty strong {font-weight: 500; font-size: 12px; color: #8398a5}
 .loading {min-height: 230px; display: flex; gap: 10px; align-items: center; justify-content: center; color: var(--muted)}
@@ -182,6 +182,15 @@
 .config-groups {min-width: 0}
 .field-row-multiline {flex-direction: column; align-items: stretch; gap: 13px}
 .field-row-multiline .field-control {width: 100%; min-width: 0; text-align: left}
+/* 控件占满整行时，提示浮在标题行右上角：进流会触发换行撑高整行，把输入框顶下去。 */
+.field-row-multiline .field-label {position: relative}
+/* 提示浮在标题行右上角：它进了流就会触发换行、把整行撑高，输入框跟着往下走。 */
+.field-row-multiline .field-label > .edit-status {position: absolute; top: 0; right: 0; margin: 0; max-width: 100px; transform: none; text-align: right}
+@media (max-width: 950px) {
+  /* 窄屏下所有控件都撑满整行，同样要给提示腾一行。 */
+  .field-control:has(> .edit-status) {position: static; display: flex; flex-direction: column; align-items: flex-start; gap: 6px}
+  .field-control > .edit-status {position: static; order: -1; margin: 0; max-width: 100%; transform: none}
+}
 .field-row-multiline textarea {padding: 10px 14px; background: var(--surface-muted); font-family: "Cascadia Code", "Consolas", "Microsoft YaHei", monospace}
 .yaml-editor {border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--surface-muted); text-align: left}
 .yaml-editor:focus-within {border-color: var(--accent)}

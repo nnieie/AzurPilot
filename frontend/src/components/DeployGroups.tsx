@@ -28,11 +28,15 @@ export function DeployGroups({data, only, except, edits, queue}: {
         <div className="panel-heading">
           <h2 data-text={t(`Gui.DeploySetting.Group${group.key}`)}>{t(`Gui.DeploySetting.Group${group.key}`)}</h2>
         </div>
-        {group.fields.map(field => (
-          <div className={`field-row ${['textarea', 'yaml', 'task_priority'].includes(field.type) ? 'field-row-multiline' : ''}`} key={field.key}>
+        {group.fields.map(field => {
+          const isMultiline = ['textarea', 'yaml', 'task_priority'].includes(field.type)
+          return (
+          <div className={`field-row ${isMultiline ? 'field-row-multiline' : ''}`} key={field.key}>
             <div className="field-label">
               <label htmlFor={`deploy-${field.key}`}>{field.label}</label>
               <p>{field.key === 'Password' ? ui('settings.passwordHelp') : field.help.replace(/<[^>]*>/g, '')}</p>
+              {/* 多行控件的提示跟标题同一行，浮在它右端。 */}
+              {isMultiline && <EditStatus id={`deploy-${field.key}`} edit={edits.edits[field.key]} retry={queue.retry} queue={queue}/>}
             </div>
             <div className="field-control">
               <FieldInput
@@ -49,10 +53,11 @@ export function DeployGroups({data, only, except, edits, queue}: {
                   queue.change(field.key, value, payload, error)
                 }}
               />
-              <EditStatus id={`deploy-${field.key}`} edit={edits.edits[field.key]} retry={queue.retry} />
+              {!isMultiline && <EditStatus id={`deploy-${field.key}`} edit={edits.edits[field.key]} retry={queue.retry} queue={queue}/>}
             </div>
           </div>
-        ))}
+          )
+        })}
       </section>
     ))}
   </>

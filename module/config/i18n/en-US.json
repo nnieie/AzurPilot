@@ -1193,7 +1193,7 @@
     },
     "TaskPriorityAdjustment": {
       "name": "Task priority adjustment",
-      "help": "Drag task rows to adjust scheduler priority. Tasks closer to the top run first. New tasks are automatically inserted into suitable positions according to the built-in default priority."
+      "help": "Enter task names in order from top to bottom; tasks closer to the top run first. One task per line, or separate them with >. New tasks are automatically inserted into suitable positions according to the built-in default priority."
     }
   },
   "OneClickRetire": {
@@ -1928,6 +1928,10 @@
       "name": "Urgent Commission Farming",
       "help": "Warning: This feature allows players to earn a small amount of Gems, but it is not an efficient way to farm Gems\nNew Azur Lane players often overvalue limit break avoidance and low oil cost, while neglecting ship development\nRunning this feature only makes you feel productive, while your account actually makes zero progress\nPlease press the return button"
     },
+    "EventFallbackStage": {
+      "name": "Stage after event",
+      "help": "When the event PT limit or time limit is reached, or the event is unavailable, continue on this main campaign stage. Default: 2-4. Enter 0 to disable the task and keep the event stage. Only applies to tasks currently farming an event stage."
+    },
     "ChangeFlagship": {
       "name": "Change flagship",
       "help": "White-rarity light carriers and white-rarity carriers will be treated as retirement targets\nOnly 0 limit break, no equipment, white-rarity light carriers will be used as replacement\nControls: When to replace the flagship",
@@ -2023,11 +2027,11 @@
     },
     "PtLimit": {
       "name": "Stop when event PT reaches X",
-      "help": "When accumulated PT reaches the given value, all event tasks are disabled. 0 means no limit. Cannot trigger immediately when using auto-search.\nAfter enabling, you only need to open all event tasks without counting total runs."
+      "help": "When accumulated PT reaches the given value, all event tasks are disabled. 0 means no limit. Cannot trigger immediately when using auto-search.\nAfter enabling, you only need to open all event tasks without counting total runs.\nGems farming and Three-oil low-cost farming follow their own Stage after event setting: continue on a main campaign stage, or stop if set to 0."
     },
     "TimeLimit": {
       "name": "Event time limit",
-      "help": "When local time exceeds the given value, all event tasks are disabled. '2020-01-01 00:00:00' means no limit. Timer resets after triggering once.\nAfter setting, prevents forgetting to close tasks after an event ends."
+      "help": "When local time exceeds the given value, all event tasks are disabled. '2023-01-01 00:00:00' means no limit. Timer resets after triggering once.\nAfter setting, prevents forgetting to close tasks after an event ends.\nGems farming and Three-oil low-cost farming follow their own Stage after event setting: continue on a main campaign stage, or stop if set to 0."
     }
   },
   "TaskBalancer": {

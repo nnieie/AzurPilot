@@ -1,8 +1,10 @@
 export const palettes = ['ocean', 'forest', 'violet', 'sand', 'slate'] as const
 export type PresetPalette = typeof palettes[number]
 export type Palette = PresetPalette | `custom:${string}`
-export type ColorMode = 'auto' | 'light' | 'dark'
-export type ResolvedMode = Exclude<ColorMode, 'auto'>
+export const colorModes = ['auto', 'light', 'dark', 'terminal', 'retro-gray', 'retro-blue', 'retro-red'] as const
+export type ColorMode = typeof colorModes[number]
+/** 实际生效的明暗。自带色值的档位各自固定一个，其余由主题与系统决定。 */
+export type ResolvedMode = 'light' | 'dark'
 export type BrandColors = {primary: string; secondary: string}
 export type CustomPalette = {id: `custom:${string}`; primary: string; secondary: string}
 
@@ -12,6 +14,85 @@ export const presetColors: Record<PresetPalette, Record<ResolvedMode, BrandColor
   violet: {light: {primary: '#7050a3', secondary: '#a14865'}, dark: {primary: '#c1a4ee', secondary: '#efa2bb'}},
   sand: {light: {primary: '#915a2b', secondary: '#426b70'}, dark: {primary: '#e1b082', secondary: '#92c3c8'}},
   slate: {light: {primary: '#45566b', secondary: '#96553b'}, dark: {primary: '#acbdd2', secondary: '#dfaa8e'}},
+}
+
+type FixedMode = {mode: ResolvedMode; tokens: Record<string, string>}
+
+/** 主题模式里「自带整套色值」的档位：选中时忽略配色方案，明暗也由这里固定。
+    加新档位只要往这张表补一条 —— 界面下拉与偏好校验都会从 colorModes 自动跟上。 */
+export const fixedColorModes: Partial<Record<ColorMode, FixedMode>> = {
+  /* 程序员：黑灰白六级，模拟终端。 */
+  terminal: {
+    mode: 'dark',
+    tokens: {
+      '--bg': '#0b0b0b',
+      '--surface': '#141414',
+      '--surface-muted': '#1d1d1d',
+      '--border': '#2b2b2b',
+      '--muted': '#8c8c8c',
+      '--text': '#e8e8e8',
+      '--accent': '#f2f2f2',
+      '--accent-hover': '#ffffff',
+      '--accent-soft': '#232323',
+      '--secondary': '#a0a0a0',
+      '--secondary-soft': '#1f1f1f',
+      '--theme-on-accent': '#111111',
+    },
+  },
+  /* 复古灰：九十年代中期桌面观感 —— 青绿底、银灰窗体、深蓝标题栏。 */
+  'retro-gray': {
+    mode: 'light',
+    tokens: {
+      '--bg': '#008080',
+      '--surface': '#c0c0c0',
+      '--surface-muted': '#d4d0c8',
+      '--border': '#808080',
+      '--muted': '#404040',
+      '--text': '#000000',
+      '--accent': '#000080',
+      '--accent-hover': '#0000a8',
+      '--accent-soft': '#a8b0d0',
+      '--secondary': '#006666',
+      '--secondary-soft': '#a8c8c8',
+      '--theme-on-accent': '#ffffff',
+    },
+  },
+  /* 复古蓝：同期稍晚的一代 —— 蓝底、更亮的银灰、标题栏渐变色的深端。 */
+  'retro-blue': {
+    mode: 'light',
+    tokens: {
+      '--bg': '#3a6ea5',
+      '--surface': '#d4d0c8',
+      '--surface-muted': '#e4e0d8',
+      '--border': '#858585',
+      '--muted': '#4a4a4a',
+      '--text': '#000000',
+      '--accent': '#0a246a',
+      '--accent-hover': '#143a94',
+      '--accent-soft': '#b8c4dc',
+      '--secondary': '#2f5d8a',
+      '--secondary-soft': '#b4c8dc',
+      '--theme-on-accent': '#ffffff',
+    },
+  },
+  /* 复古红：米白机身加红色强调，八位机时代的塑料壳与按键色。 */
+  'retro-red': {
+    mode: 'light',
+    tokens: {
+      '--bg': '#e6e2da',
+      '--surface': '#f7f5f0',
+      '--surface-muted': '#dedad2',
+      '--border': '#b5b0a6',
+      '--muted': '#5c5850',
+      '--text': '#1a1a1a',
+      '--accent': '#a8121e',
+      '--accent-hover': '#8c0e18',
+      '--accent-soft': '#f2d5d7',
+      '--secondary': '#1b4965',
+      '--secondary-soft': '#d4e0e8',
+      '--theme-on-accent': '#ffffff',
+    },
+  },
 }
 
 export const isHexColor = (value: unknown): value is string => typeof value === 'string' && /^#[\da-f]{6}$/i.test(value)

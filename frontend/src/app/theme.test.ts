@@ -24,16 +24,35 @@ describe('主题偏好恢复', () => {
     const custom = {id: 'custom:one', primary: '#123456', secondary: '#654321'}
     const saved: Record<string, string> = {'azurpilot.theme': 'minimal', 'azurpilot.palette': 'custom:one', 'azurpilot.color-mode': 'dark', 'azurpilot.custom-palettes': JSON.stringify([custom])}
     vi.stubGlobal('localStorage', {getItem: (key: string) => saved[key] ?? null})
-    expect(readThemePreference()).toEqual({theme: 'minimal', palette: 'custom:one', colorMode: 'dark', customPalettes: [custom]})
+    expect(readThemePreference()).toEqual({theme: 'minimal', palette: 'custom:one', colorMode: 'dark', customPalettes: [custom], compactRailSide: 'right', compactRailWidth: 244})
     saved['azurpilot.custom-palettes'] = '{损坏的数据'
     saved['azurpilot.color-mode'] = 'invalid'
-    expect(readThemePreference()).toEqual({theme: 'minimal', palette: 'ocean', colorMode: 'auto', customPalettes: []})
+    expect(readThemePreference()).toEqual({theme: 'minimal', palette: 'ocean', colorMode: 'auto', customPalettes: [], compactRailSide: 'right', compactRailWidth: 244})
   })
   it('恢复紧凑主题，未知主题回退到浅色', () => {
     vi.stubGlobal('localStorage', {getItem: (key: string) => key === 'azurpilot.theme' ? 'extreme' : null})
     expect(readThemePreference()).toMatchObject({theme: 'extreme'})
     vi.stubGlobal('localStorage', {getItem: (key: string) => key === 'azurpilot.theme' ? 'huge' : null})
     expect(readThemePreference()).toMatchObject({theme: 'light'})
+  })
+})
+
+// 紧凑布局偏好只在紧凑主题下有定义：位置决定列序，宽度决定右栏宽度；未知值必须回退，
+// 否则 localStorage 里一个手改的值就能把网格列宽写成非法长度。
+describe('紧凑布局偏好', () => {
+  it('没有存过偏好时用计划栏在右与 244px', () => {
+    vi.stubGlobal('localStorage', {getItem: () => null})
+    expect(readThemePreference()).toMatchObject({compactRailSide: 'right', compactRailWidth: 244})
+  })
+  it('恢复计划栏在左与更宽档位', () => {
+    const saved: Record<string, string> = {'azurpilot.compact-rail-side': 'left', 'azurpilot.compact-rail-width': '360'}
+    vi.stubGlobal('localStorage', {getItem: (key: string) => saved[key] ?? null})
+    expect(readThemePreference()).toMatchObject({compactRailSide: 'left', compactRailWidth: 360})
+  })
+  it('拒绝未知方向与档位外的宽度', () => {
+    const saved: Record<string, string> = {'azurpilot.compact-rail-side': 'middle', 'azurpilot.compact-rail-width': '999'}
+    vi.stubGlobal('localStorage', {getItem: (key: string) => saved[key] ?? null})
+    expect(readThemePreference()).toMatchObject({compactRailSide: 'right', compactRailWidth: 244})
   })
 })
 

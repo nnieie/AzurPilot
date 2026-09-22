@@ -13,16 +13,8 @@ class DeployConfig(_DeployConfig):
         pass
 
     def __setattr__(self, key: str, value):
-        """
-        Catch __setattr__, copy to `self.config`, write deploy config.
-        """
-        super().__setattr__(key, value)
-        if key[0].isupper() and key in self.config:
-            if key in self.config:
-                before = self.config[key]
-                if before != value:
-                    self.config[key] = value
-                    self.write()
-            else:
-                self.config[key] = value
-                self.write()
+        """可保存字段通过完整事务更新，落盘失败时恢复属性。"""
+        if key[0].isupper() and key in getattr(self, 'config', {}):
+            self.update_config({key: value})
+        else:
+            super().__setattr__(key, value)

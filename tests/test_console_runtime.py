@@ -236,7 +236,7 @@ class StatisticsTests(unittest.TestCase):
             self.assertEqual(7, len(result['tables'][0]['columns']))
             self.assertEqual(.25, result['tables'][0]['rows'][0][-1])
             self.assertTrue(refresh_loot(configs, 'pilot')['refreshed'])
-            refresh.assert_called_once()
+            refresh.assert_called_once_with(instance='pilot')
 
 
 if __name__ == '__main__':

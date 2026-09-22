@@ -1,10 +1,10 @@
 import { Select } from './FormControls'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import * as echarts from 'echarts/core'
 import { LineChart, CandlestickChart } from 'echarts/charts'
 import { GridComponent, TooltipComponent, DataZoomComponent, ToolboxComponent, LegendComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
-import type { StatSeries } from '../api/types'
+import type { StatSeries, StatisticsReport } from '../api/types'
 import { Empty } from './ui'
 import { StatisticsTable } from './StatisticsTable'
 import { aggregatePoints, mergeMultiSeriesRows } from './statisticsData'
@@ -25,7 +25,19 @@ function getSeriesColor(key: string, index: number, fallback?: string): string {
   return RESOURCE_PALETTE[key] ?? (index === 0 && fallback ? fallback : DEFAULT_PALETTE[index % DEFAULT_PALETTE.length])
 }
 
-export function StatisticsChart({series, initialMode = 'line'}: {series: StatSeries[]; initialMode?: ChartMode}) {
+/** 图表主体。紧凑主题把标题行与「放大查看」上提到页面工具栏（`heading=false`），
+    并把报表附带的表格并进同一面板，避免同一页出现两个顶层区域。 */
+export function StatisticsChart({series, tables = [], heading = true, expanded = false, onToggleExpanded, title, initialMode = 'line'}: {
+  series: StatSeries[]
+  tables?: StatisticsReport['tables']
+  heading?: boolean
+  expanded?: boolean
+  onToggleExpanded: () => void
+  /* 放大视图用当前分区的名字当标题：整页工具栏（含分区切换）被面板盖住后，
+     只写「趋势与细节」就分不出看的是资源趋势还是委托收益。 */
+  title?: string
+  initialMode?: ChartMode
+}) {
   const {ui, language, theme} = useApp()
   const [selectedKeys, setSelectedKeys] = useState<string[]>(() => {
     const active = series.find(item => item.points.length)?.key ?? series[0]?.key
@@ -36,16 +48,44 @@ export function StatisticsChart({series, initialMode = 'line'}: {series: StatSer
   const [bucket, setBucket] = useState(initialMode === 'candlestick' ? 60 : 0)
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
-  const [expanded, setExpanded] = useState(false)
 
   useEffect(() => {
     if (!expanded) return
-    const close = (event: KeyboardEvent) => { if (event.key === 'Escape') setExpanded(false) }
+    const close = (event: KeyboardEvent) => { if (event.key === 'Escape') onToggleExpanded() }
     window.addEventListener('keydown', close)
     return () => window.removeEventListener('keydown', close)
-  }, [expanded])
+  }, [expanded, onToggleExpanded])
 
   const element = useRef<HTMLDivElement>(null)
+
+  /* 图表高度 = 面板可视高度 − 它上方的内容（指标芯片、数值摘要）。
+     若沿用 height:100%，canvas 会比可视区高出一整块上方内容，x 轴与缩放条被推到
+     滚动区外，看上去就是「主区域下方没填满」。这里直接算出来，图表既铺满又不被裁。 */
+  useLayoutEffect(() => {
+    const canvas = element.current
+    const panel = canvas?.closest<HTMLElement>('.statistics-chart')
+    if (!canvas || !panel) return
+    const resize = () => {
+      let above = 0
+      for (const child of panel.children) {
+        if (child === canvas) break
+        above += child.getBoundingClientRect().height
+      }
+      const panelBefore = panel.clientHeight
+      const canvasBefore = canvas.getBoundingClientRect().height
+      const next = Math.max(240, panelBefore - above)
+      if (Math.abs(next - canvasBefore) < 1) return
+      canvas.style.height = `${next}px`
+      /* 面板跟着长高，说明它的高度由内容决定，此时写高会无限增高，于是退回原高度。 */
+      if (panel.clientHeight > panelBefore + 1) canvas.style.height = `${canvasBefore}px`
+    }
+    resize()
+    /* 面板高度、上方内容高度（换语言会让芯片换行）变化时都要重算。 */
+    const observer = new ResizeObserver(resize)
+    observer.observe(panel)
+    for (const child of panel.children) if (child !== canvas) observer.observe(child)
+    return () => observer.disconnect()
+  }, [series, language])
 
   function toggleKey(key: string) {
     setSelectedKeys(prev => (prev.includes(key) ? (prev.length <= 1 ? prev : prev.filter(k => k !== key)) : [...prev, key]))
@@ -94,11 +134,19 @@ export function StatisticsChart({series, initialMode = 'line'}: {series: StatSer
   }, [isCandlestick, seriesData])
 
   const hasPoints = seriesData.some(item => item.points.length > 0)
+  useEffect(() => {
+    const el = element.current
+    return () => {
+      if (el) echarts.getInstanceByDom(el)?.dispose()
+    }
+  }, [])
+
   const single = seriesData[0]
 
   useEffect(() => {
     if (!element.current || !hasPoints) return
-    const chart = echarts.init(element.current, undefined, {locale: language.startsWith('zh') ? 'ZH' : 'EN'})
+    const container = element.current
+    const chart = echarts.getInstanceByDom(container) ?? echarts.init(container, undefined, {locale: language.startsWith('zh') ? 'ZH' : 'EN'})
 
     function render() {
       const colors = getComputedStyle(document.documentElement)
@@ -189,24 +237,99 @@ export function StatisticsChart({series, initialMode = 'line'}: {series: StatSer
       }, true)
     }
 
+    const onWheel = (event: WheelEvent) => {
+      if (!event.ctrlKey && !event.metaKey) {
+        event.stopPropagation()
+      }
+    }
+    container.addEventListener('wheel', onWheel, {capture: true, passive: true})
+
     render()
     const observer = new ResizeObserver(() => chart.resize())
     observer.observe(element.current)
     const themeObserver = new MutationObserver(render)
     themeObserver.observe(document.documentElement, {attributes: true, attributeFilter: ['data-theme', 'data-palette', 'data-color-mode', 'style']})
-    return () => { observer.disconnect(); themeObserver.disconnect(); chart.dispose() }
+    return () => {
+      container.removeEventListener('wheel', onWheel, {capture: true})
+      observer.disconnect()
+      themeObserver.disconnect()
+    }
   }, [seriesData, hasPoints, isCandlestick, axisMode, isSingle, selectedSeries, categoryTimes, language, ui, theme])
 
   const mergedRows = useMemo(() => {
     return isSingle ? single.points.map(p => [p.time, p.value, p.source || '—']) : mergeMultiSeriesRows(selectedSeries, from, to)
   }, [isSingle, single, selectedSeries, from, to])
 
+  /* 图表设置（类型、坐标轴、采样粒度、时间范围）排在图表下方：先看数据，再决定怎么画。 */
+  const controls = <div className="statistics-controls">
+    <label>
+      {ui('stats.chart')}
+      <Select
+        aria-label={ui('stats.chartType')}
+        value={mode}
+        onChange={event => {
+          const nextMode: ChartMode = event.target.value === 'candlestick' ? 'candlestick' : 'line'
+          setMode(nextMode)
+          if (nextMode === 'candlestick' && bucket === 0) {
+            setBucket(60)
+          }
+        }}
+      >
+        <option value="line">{ui('stats.line')}</option>
+        <option value="candlestick">{isSingle ? ui('stats.candlestick') : ui('stats.candlestickOverlay')}</option>
+      </Select>
+    </label>
+
+    {!isSingle && (
+      <label>
+        {ui('stats.axisMode')}
+        <Select aria-label={ui('stats.axisMode')} value={axisMode} onChange={event => setAxisMode(event.target.value as 'separate' | 'unified')}>
+          <option value="separate">{ui('stats.axisSeparate')}</option>
+          <option value="unified">{ui('stats.axisUnified')}</option>
+        </Select>
+      </label>
+    )}
+
+    <label>
+      {ui('stats.bucket')}
+      <Select aria-label={ui('stats.bucket')} value={effectiveBucket} onChange={event => setBucket(Number(event.target.value))}>
+        {!isCandlestick && <option value={0}>{ui('stats.eachRecord')}</option>}
+        <option value={5}>{ui('stats.fiveMinutes')}</option>
+        <option value={60}>{ui('stats.hourly')}</option>
+        <option value={1440}>{ui('stats.daily')}</option>
+      </Select>
+    </label>
+
+    <label>
+      {ui('stats.startTime')}
+      <div className="date-input-wrap">
+        <input type="datetime-local" aria-label={ui('stats.startTime')} value={from} className={from ? '' : 'date-empty'} onChange={event => setFrom(event.target.value)}/>
+        {!from && <span className="date-input-placeholder" aria-hidden="true">---- / -- / --</span>}
+      </div>
+    </label>
+
+    <label>
+      {ui('stats.endTime')}
+      <div className="date-input-wrap">
+        <input type="datetime-local" aria-label={ui('stats.endTime')} value={to} className={to ? '' : 'date-empty'} onChange={event => setTo(event.target.value)}/>
+        {!to && <span className="date-input-placeholder" aria-hidden="true">---- / -- / --</span>}
+      </div>
+    </label>
+
+    <button className="text-button" onClick={() => {setFrom(''); setTo('')}}>{ui('stats.allTime')}</button>
+  </div>
+
+  const rangeError = from && to && from > to ? <p className="preview-error" role="alert">{ui('stats.invalidRange')}</p> : null
+
   return (
     <section className={`panel statistics-chart ${expanded ? 'chart-expanded' : ''}`}>
-      <div className="panel-heading">
-        <h2>{ui('stats.trendDetails')}</h2>
-        <button className="text-button" onClick={() => setExpanded(!expanded)}>{expanded ? ui('stats.collapseChart') : ui('stats.expandChart')}</button>
-      </div>
+      {/* 紧凑主题把标题与「放大查看」上提到页面工具栏：分类切换已经说明了这是什么，
+          面板里再写一遍「趋势与细节」是重复的。但放大视图会盖住整页工具栏（含分区切换），
+          所以放大时必须把标题行放回来，否则只剩 Esc 能退出。 */}
+      {(heading || expanded) && <div className="panel-heading">
+        <h2>{expanded && title ? title : ui('stats.trendDetails')}</h2>
+        <button className="text-button" onClick={onToggleExpanded}>{expanded ? ui('stats.collapseChart') : ui('stats.expandChart')}</button>
+      </div>}
 
       <div className="statistics-metrics-container">
         <span className="statistics-metrics-label">{ui('stats.metric')}</span>
@@ -245,66 +368,6 @@ export function StatisticsChart({series, initialMode = 'line'}: {series: StatSer
         </div>
       </div>
 
-      <div className="statistics-controls">
-        <label>
-          {ui('stats.chart')}
-          <Select
-            aria-label={ui('stats.chartType')}
-            value={mode}
-            onChange={event => {
-              const nextMode: ChartMode = event.target.value === 'candlestick' ? 'candlestick' : 'line'
-              setMode(nextMode)
-              if (nextMode === 'candlestick' && bucket === 0) {
-                setBucket(60)
-              }
-            }}
-          >
-            <option value="line">{ui('stats.line')}</option>
-            <option value="candlestick">{isSingle ? ui('stats.candlestick') : ui('stats.candlestickOverlay')}</option>
-          </Select>
-        </label>
-
-        {!isSingle && (
-          <label>
-            {ui('stats.axisMode')}
-            <Select aria-label={ui('stats.axisMode')} value={axisMode} onChange={event => setAxisMode(event.target.value as 'separate' | 'unified')}>
-              <option value="separate">{ui('stats.axisSeparate')}</option>
-              <option value="unified">{ui('stats.axisUnified')}</option>
-            </Select>
-          </label>
-        )}
-
-        <label>
-          {ui('stats.bucket')}
-          <Select aria-label={ui('stats.bucket')} value={effectiveBucket} onChange={event => setBucket(Number(event.target.value))}>
-            {!isCandlestick && <option value={0}>{ui('stats.eachRecord')}</option>}
-            <option value={5}>{ui('stats.fiveMinutes')}</option>
-            <option value={60}>{ui('stats.hourly')}</option>
-            <option value={1440}>{ui('stats.daily')}</option>
-          </Select>
-        </label>
-
-        <label>
-          {ui('stats.startTime')}
-          <div className="date-input-wrap">
-            <input type="datetime-local" aria-label={ui('stats.startTime')} value={from} className={from ? '' : 'date-empty'} onChange={event => setFrom(event.target.value)}/>
-            {!from && <span className="date-input-placeholder" aria-hidden="true">---- / -- / --</span>}
-          </div>
-        </label>
-
-        <label>
-          {ui('stats.endTime')}
-          <div className="date-input-wrap">
-            <input type="datetime-local" aria-label={ui('stats.endTime')} value={to} className={to ? '' : 'date-empty'} onChange={event => setTo(event.target.value)}/>
-            {!to && <span className="date-input-placeholder" aria-hidden="true">---- / -- / --</span>}
-          </div>
-        </label>
-
-        <button className="text-button" onClick={() => {setFrom(''); setTo('')}}>{ui('stats.allTime')}</button>
-      </div>
-
-      {from && to && from > to && <p className="preview-error" role="alert">{ui('stats.invalidRange')}</p>}
-
       {hasPoints ? (
         <>
           {isSingle ? (
@@ -338,6 +401,8 @@ export function StatisticsChart({series, initialMode = 'line'}: {series: StatSer
           )}
 
           <div ref={element} className="chart-canvas" role="img" aria-label={ui('stats.chartAria', {label: selectedSeries.map(s => s.label).join(' / ')})}/>
+          {controls}
+          {rangeError}
           <p className="panel-note">{ui('stats.chartHint')}</p>
 
           <StatisticsTable
@@ -348,9 +413,14 @@ export function StatisticsChart({series, initialMode = 'line'}: {series: StatSer
               defaultSort: {index: 0, descending: true},
             }}
           />
+          {tables.map(table => <StatisticsTable key={table.title} data={table}/>)}
         </>
       ) : (
-        <Empty title={ui('stats.noValidTitle')}>{ui('stats.noValidHint')}</Empty>
+        <>
+          {controls}
+          {rangeError}
+          <Empty title={ui('stats.noValidTitle')}>{ui('stats.noValidHint')}</Empty>
+        </>
       )}
     </section>
   )

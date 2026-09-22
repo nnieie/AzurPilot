@@ -2,6 +2,8 @@ import threading
 import unittest
 from unittest.mock import Mock, PropertyMock, patch
 
+from rich.text import Text
+
 from module.runtime.process_manager import ProcessManager
 from module.runtime.setting import State
 from module.runtime.worker_events import WorkerResult
@@ -46,6 +48,16 @@ class TestProcessManagerRegistry(unittest.TestCase):
             patch("module.runtime.process_manager.process_matches", return_value=True),
         ):
             self.assertTrue(manager.alive)
+
+    def test_each_renderable_notifies_log_subscribers(self):
+        manager = ProcessManager.get_manager("alas")
+        manager.run_id = "current"
+        with patch("module.runtime.log_hub.hub.publish") as publish:
+            manager._consume_worker_message(Text("第一条"), "current")
+            manager._consume_worker_message(Text("第二条"), "current")
+        self.assertEqual(["第一条", "第二条"], [item.plain for item in manager.renderables])
+        self.assertEqual(2, publish.call_count)
+        publish.assert_called_with("alas")
 
     def test_authoritative_record_repairs_missing_or_stale_pid_cache(self):
         for cached in (None, 23456):

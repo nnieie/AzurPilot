@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react-router-dom'
+import { matchPath, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Activity, AlertTriangle, LoaderCircle, Pause, Play, Plus, Square, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
 import { api } from '../api/client'
@@ -29,7 +29,11 @@ export function InstanceTabs({onCreate}: {onCreate: () => void}) {
     const {instances, ui} = useApp()
     const {instance} = useParams()
     const navigate = useNavigate()
+    const {pathname} = useLocation()
+    /* 标签跳到目标实例的同一页型；不在实例页内（如主页）时统一落到总览。 */
+    const suffix = matchPath('/i/:instance/*', pathname)?.params['*'] || 'overview'
     const [pendingDelete, setPendingDelete] = useState<string>()
+    const jump = (name: string) => { if (name !== instance) navigate(`/i/${name}/${suffix}`) }
 
     return <div className="instance-tabs" role="tablist" aria-label={ui('nav.instanceTabs')}>
         {instances.map(item => {
@@ -43,7 +47,7 @@ export function InstanceTabs({onCreate}: {onCreate: () => void}) {
                 aria-selected={current}
                 className={`instance-tab ${item.status}${current ? ' current' : ''}`}
                 title={hint}
-                onClick={() => { if (!current) navigate(`/i/${item.name}/overview`) }}
+                onClick={() => jump(item.name)}
             >
                 <span className="instance-tab-cell">
                     <StatusIcon className="instance-tab-icon" size={14} aria-hidden="true"/>

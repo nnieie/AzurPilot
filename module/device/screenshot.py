@@ -122,7 +122,6 @@ class Screenshot(Adb, WSA, DroidCast, AScreenCap, Scrcpy, NemuIpc, LDOpenGL, Usb
             if self.config.Emulator_ScreenshotDedithering:
                 # 此操作大约需要 40-60ms
                 cv2.fastNlMeansDenoising(self.image, self.image, h=17, templateWindowSize=1, searchWindowSize=2)
-            self.image = self._handle_orientated_image(self.image)
 
             if self.config.Error_SaveError:
                 self.screenshot_deque.append({'time': current_time(), 'image': self.image})
@@ -153,17 +152,15 @@ class Screenshot(Adb, WSA, DroidCast, AScreenCap, Scrcpy, NemuIpc, LDOpenGL, Usb
         Returns:
             处理后的图像。
         """
-        width, height = image_size(self.image)
-        if width == 1280 and height == 720:
+        width, height = image_size(image)
+        if width >= height:
             return image
 
-        # 仅在非 1280x720 时旋转截图
-        if self.orientation == 0:
+        # 只有四分之一圈的方向信息才能将纵图可靠地纠正为横图。
+        if self.orientation in (0, 2):
             pass
         elif self.orientation == 1:
             image = cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE)
-        elif self.orientation == 2:
-            image = cv2.rotate(image, cv2.ROTATE_180)
         elif self.orientation == 3:
             image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
         else:
@@ -294,40 +291,29 @@ class Screenshot(Adb, WSA, DroidCast, AScreenCap, Scrcpy, NemuIpc, LDOpenGL, Usb
         if self._screen_size_checked:
             return True
 
-        orientated = False
-        for _ in range(2):
-            # 检查屏幕分辨率
-            width, height = image_size(self.image)
-            logger.attr('屏幕分辨率', f'{width}x{height}')
-            if width == 1280 and height == 720:
-                self._screen_size_checked = True
-                return True
-            elif not orientated and (width == 720 and height == 1280):
-                logger.info('[设备-截图] 收到方向截图，处理中')
-                self.get_orientation()
-                self.image = self._handle_orientated_image(self.image)
-                orientated = True
-                width, height = image_size(self.image)
-                if width == 720 and height == 1280:
-                    logger.info('[设备-截图] 无法处理方向截图，暂时继续')
-                    return True
-                else:
-                    continue
-            elif self.config.Emulator_Serial == 'wsa-0':
-                self.display_resize_wsa(0)
-                return False
-            elif hasattr(self, 'app_is_running') and not self.app_is_running():
-                logger.warning('[设备-截图] 收到方向截图，游戏未运行')
-                return True
-            else:
-                logger.error_context(
-                    title='设备分辨率不受支持',
-                    reason=f'当前截图分辨率为 {width}x{height}，项目只支持 1280x720。',
-                    impact='无法可靠识别游戏界面，任务将停止。',
-                    action='将模拟器和游戏窗口调整为 1280x720 后重新连接设备。',
-                    level=50,
-                )
-                raise RequestHumanTakeover
+        width, height = image_size(self.image)
+        logger.attr('屏幕分辨率', f'{width}x{height}')
+        if width == 1280 and height == 720:
+            self._screen_size_checked = True
+            return True
+        elif width < height:
+            logger.info('[设备-截图] 无法处理方向截图，暂时继续')
+            return True
+        elif self.config.Emulator_Serial == 'wsa-0':
+            self.display_resize_wsa(0)
+            return False
+        elif hasattr(self, 'app_is_running') and not self.app_is_running():
+            logger.warning('[设备-截图] 收到方向截图，游戏未运行')
+            return True
+        else:
+            logger.error_context(
+                title='设备分辨率不受支持',
+                reason=f'当前截图分辨率为 {width}x{height}，项目只支持 1280x720。',
+                impact='无法可靠识别游戏界面，任务将停止。',
+                action='将模拟器和游戏窗口调整为 1280x720 后重新连接设备。',
+                level=50,
+            )
+            raise RequestHumanTakeover
 
     def check_screen_black(self):
         """检查截图是否为纯黑色（模拟器异常或设备锁屏）。

@@ -89,6 +89,10 @@ input[type='radio'] {accent-color: var(--theme-primary-bg); width: 18px; height:
 .button svg, .icon-button svg, .text-button svg {stroke-width: 1.8}
 .button:disabled, .icon-button:disabled, .text-button:disabled {opacity: .45; filter: none; box-shadow: none}
 .edit-status {display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 5px; line-height: 1.5; overflow-wrap: anywhere}
+/* 状态文本变化时淡入，避免「等待连接 / 已保存」来回切换时抽一下。 */
+.edit-status-text {animation: edit-status-in .2s ease-out}
+@keyframes edit-status-in {from {opacity: 0} to {opacity: 1}}
+@media (prefers-reduced-motion: reduce) {.edit-status-text {animation: none}}
 .edit-status > svg {flex-shrink: 0}
 .field-row-multiline .edit-status {justify-content: flex-start}
 .field-row {gap: 24px}

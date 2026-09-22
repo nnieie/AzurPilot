@@ -8,16 +8,17 @@
  */
 export type TopbarMode = 'dropdown' | 'tabs'
 
-/** 标签页的档位。顶栏高度是各主题自己定的，所以缩放的落点放在标签页自己身上。 */
-export type TabSize = 'sm' | 'md' | 'lg'
+/** 标签页的档位。顶栏高度是各主题自己定的，所以缩放的落点放在标签页自己身上。
+    五档由小到大：最小 → 小 → 中 → 大 → 最大。 */
+export type TabSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 
 const MODE_KEY = 'azurpilot.topbar-mode'
 const TAB_SIZE_KEY = 'azurpilot.topbar-tab-size'
 const LAST_INSTANCE_KEY = 'azurpilot.last-instance'
 const LAST_PATH_KEY = 'azurpilot.last-path'
 
-/** 点一下循环一档：中 → 大 → 小 → 中。 */
-const TAB_SIZE_ORDER: readonly TabSize[] = ['md', 'lg', 'sm']
+/** 点一下循环一档：最小 → 小 → 中 → 大 → 最大 → 回到最小。 */
+const TAB_SIZE_ORDER: readonly TabSize[] = ['xs', 'sm', 'md', 'lg', 'xl']
 
 /** 档位要落在 :root 上：顶栏高度与标签页尺寸都由这一处驱动。 */
 function applyTabSize(size: TabSize) {

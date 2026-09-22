@@ -15,6 +15,10 @@ from module.api.protocol import ApiError, AuthParams, Request, SubscribeParams, 
 from module.logger import logger
 from module.runtime.password_utils import REMOTE_ACCESS_HEADER, is_local_client
 
+# 重主题仍按各自节奏采样；日志由 worker 队列逐条到达事件直接唤醒。
+TOPIC_INTERVAL = {'overview': 1, 'instances': 2}
+TICK = min(TOPIC_INTERVAL.values())
+
 
 class Gateway:
     def __init__(self, router, password):
@@ -77,8 +81,11 @@ class Session:
         self.cache = {}
         self.responses = OrderedDict()
         self.log_cursor = 0
+        self.logs_initialized = False
         self.window = time.monotonic()
         self.requests = 0
+        self.topic_seen = {}
+        self.logs_changed = asyncio.Event()
         self.preview_changed = asyncio.Event()
         self.preview_pending = None
 
@@ -116,9 +123,10 @@ class Session:
         writer = asyncio.create_task(self.writer())
         producer = asyncio.create_task(self.producer())
         reader = asyncio.create_task(self.reader())
+        logs = asyncio.create_task(self.log_producer())
         preview = asyncio.create_task(self.preview_producer())
         await self.event('session', {'authRequired': not self.authorized, 'protocolVersion': 1})
-        tasks = [writer, producer, reader, preview]
+        tasks = [writer, producer, reader, logs, preview]
         try:
             done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
             for task in done:
@@ -170,6 +178,9 @@ class Session:
                     self.subscription = subscription
                     self.cache.clear()
                     self.log_cursor = 0
+                    self.logs_initialized = False
+                    self.topic_seen.clear()
+                    self.logs_changed.set()
                     self.preview_changed.set()
                     result = {'topics': subscription.topics, 'instance': subscription.instance}
                 else:
@@ -195,30 +206,27 @@ class Session:
 
     async def producer(self):
         while True:
-            await asyncio.sleep(2)
+            await asyncio.sleep(TICK)
             if not self.authorized:
                 continue
             subscription = self.subscription
             runtime = self.gateway.router.runtime
             for topic in subscription.topics:
                 try:
-                    if topic == 'preview':
+                    if topic in ('logs', 'preview'):
                         continue
+                    if (now := time.monotonic()) - self.topic_seen.get(topic, 0) < TOPIC_INTERVAL.get(topic, 2):
+                        continue
+                    self.topic_seen[topic] = now
                     if topic == 'instances':
                         action = runtime.instances
                     elif topic == 'overview':
                         action = lambda: runtime.overview(subscription.instance)
-                    elif topic == 'logs':
-                        action = lambda: runtime.logs(subscription.instance, self.log_cursor)
                     async with self.gateway.workers:
                         data = await asyncio.to_thread(action)
                     # 用户切换实例期间完成的旧结果不允许覆盖新工作区。
                     if subscription is not self.subscription:
                         break
-                    if topic == 'logs':
-                        self.log_cursor = data['cursor']
-                        if not data['entries'] and not data['reset']:
-                            continue
                     fingerprint = json.dumps(data, sort_keys=True, default=str)
                     if self.cache.get(topic) != fingerprint:
                         self.cache[topic] = fingerprint
@@ -237,6 +245,84 @@ class Session:
                         self.cache[topic] = 'INTERNAL_ERROR'
                         await self.event('subscription.error', {'topic': topic, 'instance': subscription.instance,
                                                                'code': 'INTERNAL_ERROR', 'message': '订阅暂时不可用，请检查服务日志'})
+            if subscription.instance and (time.monotonic() - self.topic_seen.get('statistics', 0)) >= 1:
+                self.topic_seen['statistics'] = time.monotonic()
+                try:
+                    from module.api.statistics_service import get_statistics_fingerprint
+                    stats_fp = await asyncio.to_thread(get_statistics_fingerprint, subscription.instance)
+                    if subscription is self.subscription:
+                        old_fp = self.cache.get('statistics')
+                        if old_fp is not None and old_fp != stats_fp:
+                            self.cache['statistics'] = stats_fp
+                            await self.event('statistics', {'instance': subscription.instance, 'updatedAt': time.time()})
+                        elif old_fp is None:
+                            self.cache['statistics'] = stats_fp
+                except (WebSocketDisconnect, asyncio.CancelledError):
+                    raise
+                except Exception:
+                    pass
+
+    async def log_producer(self):
+        """日志到达后立即读取增量；初始化/重置成批发送，实时新增逐条发送。"""
+        from module.runtime.log_hub import hub
+        loop = asyncio.get_running_loop()
+
+        def changed(instance):
+            if instance == self.subscription.instance and not loop.is_closed():
+                with contextlib.suppress(RuntimeError):
+                    loop.call_soon_threadsafe(self.logs_changed.set)
+
+        hub.subscribe(changed)
+        try:
+            while True:
+                await self.logs_changed.wait()
+                self.logs_changed.clear()
+                subscription = self.subscription
+                if not self.authorized or 'logs' not in subscription.topics:
+                    continue
+                initial = not self.logs_initialized
+                try:
+                    async with self.gateway.workers:
+                        data = await asyncio.to_thread(
+                            self.gateway.router.runtime.logs, subscription.instance, self.log_cursor
+                        )
+                    if subscription is not self.subscription:
+                        continue
+                    entries = data['entries']
+                    if not entries and not data['reset']:
+                        self.log_cursor = data['cursor']
+                        self.logs_initialized = True
+                        continue
+                    if initial or data['reset']:
+                        self.log_cursor = data['cursor']
+                        self.logs_initialized = True
+                        await self.event('logs', data)
+                        continue
+                    for entry in entries:
+                        self.log_cursor = entry['id']
+                        await self.event('logs', {
+                            'instance': data['instance'], 'cursor': entry['id'],
+                            'reset': False, 'entries': [entry],
+                        })
+                    self.log_cursor = data['cursor']
+                    self.logs_initialized = True
+                except ApiError as exc:
+                    if subscription is self.subscription:
+                        await self.event('subscription.error', {
+                            'topic': 'logs', 'instance': subscription.instance,
+                            'code': exc.code, 'message': exc.message,
+                        })
+                except (WebSocketDisconnect, asyncio.CancelledError):
+                    raise
+                except Exception:
+                    logger.exception('日志订阅读取失败')
+                    if subscription is self.subscription:
+                        await self.event('subscription.error', {
+                            'topic': 'logs', 'instance': subscription.instance,
+                            'code': 'INTERNAL_ERROR', 'message': '日志订阅暂时不可用，请检查服务日志',
+                        })
+        finally:
+            hub.unsubscribe(changed)
 
     async def preview_producer(self):
         """收到新帧即推送；慢浏览器合并为最新帧，不产生截图请求。"""

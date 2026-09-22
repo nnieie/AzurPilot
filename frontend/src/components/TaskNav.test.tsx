@@ -53,6 +53,7 @@ function contextWith(theme: Theme): AppContextValue {
     setTheme: () => {},
     colorMode: 'auto', resolvedMode: 'light', setColorMode: () => {},
     customPalettes: [], saveCustomPalette: () => {}, deleteCustomPalette: () => {},
+    compactRailSide: 'right', setCompactRailSide: () => {}, compactRailWidth: 244, setCompactRailWidth: () => {},
     palette: 'ocean',
     setPalette: () => {},
     language: 'zh-CN',
@@ -86,9 +87,9 @@ describe('TaskNav 导航组件', () => {
     expect(html).toContain('系统')
     expect(html).toContain('出击Plus')
 
-    // 未展开的分组不渲染任务项，避免侧栏一上来就是长列表
-    expect(html).not.toContain('task-submenu-list')
-    expect(html).not.toContain('通用设置')
+    // 子菜单常驻以便高度过渡；收起态不带 expanded，侧栏一上来不会是长列表
+    expect(html).toContain('task-submenu-list')
+    expect(html).not.toContain('task-submenu-list expanded')
     // 一级菜单不展示任务数量，避免与展开箭头争夺视觉焦点
     expect(html).not.toContain('task-group-badge')
   })

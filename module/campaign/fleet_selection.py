@@ -14,7 +14,9 @@ from module.equipment.assets import (
     FLEET_ENTER_HARD_1,
     FLEET_ENTER_HARD_2
 )
-from module.exception import ScriptError
+from module.exception import (
+    EmulatorNotRunningError, GameStuckError, GameTooManyClickError, RequestHumanTakeover, ScriptError,
+)
 from module.retire.retirement import TEMPLATE_COMMON_CV, TEMPLATE_COMMON_DD
 from module.retire.assets import (
     DOCK_CHECK,
@@ -66,6 +68,9 @@ class FleetSelectionMixin:
                 self.fleet_detail_enter = FLEET_DETAIL_ENTER_HARD_1
                 self.fleet_enter = FLEET_ENTER_HARD_1
         else:
+            # 删除实例上的困难模式绑定，恢复宿主类原有的普通模式方法。
+            for method in ('_ship_detail_enter', '_fleet_detail_enter', '_fleet_back'):
+                self.__dict__.pop(method, None)
             self.hard_mode = False
             self.page_fleet_check_button = page_fleet.check_button
             self.fleet_detail_enter_flagship = FLEET_DETAIL_ENTER_FLAGSHIP
@@ -84,7 +89,7 @@ class FleetSelectionMixin:
         """
         if self.appear(FLEET_PREPARATION, offset=(20, 50)):
             return
-        self.campaign.ensure_campaign_ui(self.stage)
+        self.campaign.ensure_campaign_ui(self.stage, mode=self.campaign.config.Campaign_Mode)
         self.ui_click(
             click_button=self.campaign.ENTRANCE,
             appear_button=BACK_ARROW,
@@ -94,10 +99,13 @@ class FleetSelectionMixin:
         while 1:
             self.device.screenshot()
 
-            if self.appear_then_click(MAP_PREPARATION, interval=1):
-                continue
-            if self.appear_then_click(MAP_PREPARATION_HARD, interval=1):
-                continue
+            # 首次换船可能早于 enter_map，需用地图配置确认准备页难度，
+            # 避免从共用的 A/C、B/D 入口进入普通舰队后按困难布局换船。
+            if self.campaign.handle_map_mode_switch(self.campaign.config.Campaign_Mode):
+                if self.appear_then_click(MAP_PREPARATION, interval=1):
+                    continue
+                if self.appear_then_click(MAP_PREPARATION_HARD, interval=1):
+                    continue
 
             if self.handle_retirement():
                 continue
@@ -112,65 +120,48 @@ class FleetSelectionMixin:
                 break
 
     def flagship_change(self):
-        """
-        更换旗舰并使用装备码更换旗舰装备。
-
-        Returns:
-            bool: 是否成功更换旗舰。
-        """
-
-        logger.hr('更换旗舰', level=1)
-        logger.attr('更换旗舰', self.config.GemsFarming_ChangeFlagship)
-        self._fleet_detail_enter(self.fleet_to_attack)
-        if self.change_flagship_equip:
-            logger.hr('卸下旗舰装备', level=2)
-            self._ship_detail_enter(self.fleet_detail_enter_flagship)
-            self.clear_all_equip()
-            self._fleet_back()
-
-        logger.hr('更换旗舰', level=2)
-        success = self.flagship_change_execute()
-
-        if self.change_flagship_equip:
-            logger.hr('装备旗舰装备', level=2)
-            self._ship_detail_enter(self.fleet_detail_enter_flagship)
-            self.apply_equip_code()
-            self._fleet_back()
-
-        return success
+        """更换旗舰；卸装、选船、复装全部确认后才能继续出击。"""
+        return self._change_ship('flagship')
 
     def vanguard_change(self):
-        """
-        更换先锋并使用装备码更换先锋装备。
+        """更换先锋，装备交接与旗舰使用相同的失败处理。"""
+        return self._change_ship('vanguard')
 
-        Returns:
-            bool: 是否成功更换先锋。
-        """
-        logger.hr('更换前排', level=1)
-        logger.attr('更换前排', self.config.GemsFarming_ChangeVanguard)
-        self._fleet_detail_enter(self.fleet_to_attack)
-        if self.change_vanguard_equip:
-            logger.hr('卸下前排装备', level=2)
-            self._ship_detail_enter(self.fleet_detail_enter)
-            self.clear_all_equip()
-            self._fleet_back()
+    def _change_ship(self, position):
+        label = '旗舰' if position == 'flagship' else '前排'
+        button = self.fleet_detail_enter_flagship if position == 'flagship' else self.fleet_detail_enter
+        change_equip = self.change_flagship_equip if position == 'flagship' else self.change_vanguard_equip
+        self.last_code = None
+        logger.hr(f'更换{label}', level=1)
+        try:
+            self._fleet_detail_enter(self.fleet_to_attack)
+            if change_equip:
+                logger.hr(f'卸下{label}装备', level=2)
+                self._ship_detail_enter(button)
+                self.clear_all_equip()
+                self._fleet_back()
 
-        logger.hr('更换前排', level=2)
-        success = self.vanguard_change_execute()
+            success = getattr(self, f'{position}_change_execute')()
 
-        if self.change_vanguard_equip:
-            logger.hr('装备前排装备', level=2)
-            self._ship_detail_enter(self.fleet_detail_enter)
-            self.apply_equip_code()
-            self._fleet_back()
-
-
-        return success
+            # 未找到替代舰船时也要恢复留在队伍里的舰船装备。
+            if change_equip:
+                logger.hr(f'装备{label}装备', level=2)
+                self._ship_detail_enter(button)
+                self.apply_equip_code()
+                self._fleet_back()
+            return success
+        except (RequestHumanTakeover, GameStuckError, GameTooManyClickError, EmulatorNotRunningError) as exc:
+            logger.error(f'[战役-选船] {label}更换未完成：{exc or "无法确认舰队状态"}')
+            logger.warning('已停用当前任务，请检查连接、舰队和装备后手动启用，避免自动重试未完成的换船。')
+            self.config.Scheduler_Enable = False
+            self.config.task_stop()
+        finally:
+            self.last_code = None
 
     def get_common_rarity_cv(self, lv=31, emotion=16):
         """
         根据 config.GemsFarming_CommonCV 获取普通稀有度航母。
-        如果 config.GemsFarming_CommonCV == 'any'，返回等级 1~33 的普通航母。
+        如果 config.GemsFarming_CommonCV == 'any'，默认返回等级 1~31 的普通航母。
 
         调用后需要调用 _dock_reset()。
 
@@ -365,12 +356,13 @@ class FleetSelectionMixin:
             candidates = self.find_candidates(template, scanner)
 
             if candidates:
-                logger.info(f'[战役-选船] 找到通用驱逐舰 {name}')
+                logger.info(f'[战役-选船] 找到通用 {ship_type} {name}')
                 return candidates
             elif common_ship_candidates[name]:
-                logger.info(f'[战役-选船] 找到通用驱逐舰 {name}')
-                self.dock_sort_method_dsc_set(sort_dsc_first, wait_loading=False)
-                return common_ship_candidates[name]
+                logger.info(f'[战役-选船] 找到通用 {ship_type} {name}')
+                self.dock_sort_method_dsc_set(sort_dsc_first)
+                # 排序恢复后重新识别，旧候选的坐标不能用于尚未加载完成的新画面。
+                return self.find_candidates(template, scanner)
 
         return []
 
@@ -418,18 +410,18 @@ class FleetSelectionMixin:
             button (Button): 要点击的按钮。
 
         Returns:
-            bool: True 表示成功进入，False 表示遇到游戏提示未进入。
+            bool: True 表示已确认船坞页面，False 表示等待超时。
         """
-        for _ in self.loop():
+        for _ in self.loop(timeout=30):
             if self.appear(DOCK_CHECK, offset=(20, 20)):
-                break
+                return True
             if self.appear(self.page_fleet_check_button, offset=(30, 30), interval=5):
                 self.device.click(button)
                 continue
             # 2025.05.29 进入船坞时游戏会弹出皮肤功能提示
             if self.handle_game_tips():
-                return False
-        return True
+                continue
+        return False
 
     def triggered_stop_condition(self, oil_check=True):
         """检查钻石 farming 的停止条件。

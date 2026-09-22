@@ -43,6 +43,9 @@ CHANNEL_FLOAT_MAX_ATTEMPTS = 4
 CHANNEL_FLOAT_DIALOG_WHITE_RATIO = 0.04
 # 「隐藏」绿字连通域的最小像素数（实测两分辨率下每字约 300px）
 CHANNEL_FLOAT_HIDE_GREEN_THRESHOLD = 50
+# 「隐藏」绿字连通域的最大像素数（720p 归一）：按钮行绿字约 300px，
+# 对话框中部的选项绿框/插图绿块实测 2700+，由此分离
+CHANNEL_FLOAT_HIDE_AREA_LIMIT = 1500
 
 
 def _scale_area(area, width, height):
@@ -129,36 +132,64 @@ def channel_float_position(image):
     return ball
 
 
+def _find_dialog_white(image):
+    """定位「隐藏悬浮球」对话框的白色主体，返回 (x, y, w, h) 或 None。
+
+    对话框为屏幕居中的白色大块，但主界面同样存在大面积白色 UI
+    （右侧舰队卡片栏、底部面板等），拖拽刚结束、对话框尚未弹出时
+    （实测松手后约 1~1.5 秒才弹出）画面仍是主界面，仅凭「白色
+    大块」会把主界面误判为对话框。因此附加居中约束：白区中心 x
+    距屏幕中心 <15%，且不紧贴屏幕四边（>=30px）。
+
+    Args:
+        image: 当前截图。
+
+    Returns:
+        tuple: 白区 (x, y, w, h)；未找到时 None。
+    """
+    height, width = image.shape[:2]
+    gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+    white = gray > 220
+    n, _, stats, _ = cv2.connectedComponentsWithStats(white.astype(np.uint8), 8)
+    if n <= 1:
+        return None
+    best = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
+    if stats[best, cv2.CC_STAT_AREA] < CHANNEL_FLOAT_DIALOG_WHITE_RATIO * width * height:
+        return None
+    wx, wy, ww, wh = stats[best, :4]
+    if abs(wx + ww / 2 - width / 2) > 0.15 * width:
+        return None
+    if wx < 30 or wy < 30 or wx + ww > width - 30 or wy + wh > height - 30:
+        return None
+    return (wx, wy, ww, wh)
+
+
 def hide_button(image):
     """定位「隐藏悬浮球」对话框中的「隐藏」按钮，返回动态构造的 Button。
 
     对话框白色主体位置随分辨率/排版变化（1280x720 标定的固定按钮区
-    在 1600x900 下完全落空，且对话框非等比缩放），因此改为两步动态定位：
-    1. 全屏找白色大块（亮度>220 的最大连通域，面积>=屏幕4%）即对话框；
-    2. 质心落在白区范围内的绿色文字块为对话框内元素，「隐藏」按钮是
-       其中最靠下的一块（实测 1280x720 与 1600x900 布局一致：上部两块
-       绿字+中部绿图形+底部「隐藏」二字），与其 y 范围重叠的绿块合并
-       取质心。绿字底色并非纯白，不能按像素落在白区 mask 上判定，
-       按质心归属；主界面右下「出击」绿字在白区范围外，天然排除。
+    在 1600x900 下完全落空，且对话框非等比缩放），因此改为动态定位：
+    1. 居中白色大块即对话框（见 _find_dialog_white）；
+    2. 质心落在白区范围内的绿色文字块为对话框内元素；
+    3. 「隐藏」按钮位于对话框底部按钮行：仅取白区高度底部 25% 区域
+       内、且面积不超过约 1500px（按 720p 归一缩放）的绿块——新版
+       对话框中部的选项绿框/插图绿块（实测相对 y≈0.5~0.71、面积
+       2700+）与按钮行绿字（相对 y≈0.92、面积 ~300）由此分离；
+    4. 最靠下的绿块为主块，与其 y 范围重叠>=50% 的相邻块合并
+       （「隐藏」两字）取质心。
+
     Args:
         image: 当前截图。
 
     Returns:
         Button: 「隐藏」按钮（点击热区为绿字质心附近）；未找到时 None。
     """
+    box = _find_dialog_white(image)
+    if box is None:
+        return None
+    wx, wy, ww, wh = box
     height, width = image.shape[:2]
-    gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-    white = gray > 220
-    n, labels, stats, _ = cv2.connectedComponentsWithStats(white.astype(np.uint8), 8)
-    if n <= 1:
-        logger.info('[渠道悬浮球] 未检测到白色对话框')
-        return None
-    best = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
-    if stats[best, cv2.CC_STAT_AREA] < CHANNEL_FLOAT_DIALOG_WHITE_RATIO * width * height:
-        logger.info('[渠道悬浮球] 白色区域过小，非「隐藏悬浮球」对话框')
-        return None
-    wx, wy, ww, wh = (stats[best, 0], stats[best, 1],
-                      stats[best, 2], stats[best, 3])
+    area_limit = int(CHANNEL_FLOAT_HIDE_AREA_LIMIT * width * height / (1280 * 720))
 
     r = image[:, :, 0].astype(np.int16)
     g = image[:, :, 1].astype(np.int16)
@@ -172,10 +203,14 @@ def hide_button(image):
         if a < CHANNEL_FLOAT_HIDE_GREEN_THRESHOLD:
             continue
         cx0, cy0 = centroids2[i]
-        if wx <= cx0 <= wx + ww and wy <= cy0 <= wy + wh:
-            blocks.append((y + h2 / 2, x, y, w2, h2, centroids2[i]))
+        if not (wx <= cx0 <= wx + ww and wy <= cy0 <= wy + wh):
+            continue
+        if (cy0 - wy) / wh < 0.75:
+            continue
+        if a > area_limit:
+            continue
+        blocks.append((y + h2 / 2, x, y, w2, h2, centroids2[i]))
     if not blocks:
-        logger.info('[渠道悬浮球] 对话框内未找到「隐藏」绿字')
         return None
     # 最靠下的绿字块为主块，合并与其 y 范围重叠>=50% 的相邻块（「隐藏」两字）
     blocks.sort(key=lambda t: t[0], reverse=True)
@@ -222,7 +257,14 @@ class ChannelFloatHandler(ModuleBase):
         return False
 
     def handle_channel_float(self, ball_pos) -> bool:
-        """拖拽悬浮球到屏幕中下，并在「隐藏」对话框弹出后点击「隐藏」。
+        """拖拽悬浮球到屏幕中下，等待「隐藏」对话框弹出后点击「隐藏」并验证关闭。
+
+        对话框在松手后约 1~1.5 秒才弹出，期间画面仍是主界面——不能
+        拖完立即找按钮，否则主界面白色 UI 与中下部绿色元素会被误判
+        为对话框按钮，点击落在主界面上，随后弹出的对话框无人处理，
+        模态阻塞后续所有点击。因此按钮定位要求连续两帧位置一致
+        （±15px），点击后验证对话框已关闭；未关闭时重试一次，仍
+        失败则点击「取消」强制关闭兜底，保证任务不会被模态框卡死。
 
         Args:
             ball_pos: 悬浮球中心坐标 (x, y)，由 channel_float_position 动态定位。
@@ -242,19 +284,100 @@ class ChannelFloatHandler(ModuleBase):
             point_random=(0, 0, 0, 0), hold_duration=CHANNEL_FLOAT_HOLD_DURATION,
             name='CHANNEL_FLOAT_DRAG')
         logger.info(f'[渠道悬浮球] 拖拽完成，耗时 {time.monotonic() - start:.2f}s')
-        # 等待「隐藏」按钮出现（截图循环，最多等 4 秒）
-        dialog_timer = Timer(4).start()
+        # 等待对话框弹出且按钮位置稳定（连续两帧一致）
+        button = self._wait_hide_button(timeout=4)
+        if button is None:
+            logger.info('[渠道悬浮球] 未见「隐藏」按钮，跳过点击')
+            return True
+        logger.info('[渠道悬浮球] 检测到「隐藏」按钮（位置稳定），点击')
+        self.device.click(button)
+        if self._wait_dialog_close(timeout=2):
+            logger.info('[渠道悬浮球] 对话框已关闭，悬浮球隐藏完成')
+            return True
+        logger.warning('[渠道悬浮球] 点击「隐藏」后对话框未关闭，重试一次')
+        self.device.screenshot()
+        retry = hide_button(self.device.image)
+        if retry is not None:
+            self.device.click(retry)
+            if self._wait_dialog_close(timeout=2):
+                logger.info('[渠道悬浮球] 对话框已关闭，悬浮球隐藏完成')
+                return True
+        self._click_cancel()
+        return True
+
+    def _wait_hide_button(self, timeout):
+        """等待「隐藏」按钮出现且位置稳定（连续两帧一致）。
+
+        Args:
+            timeout: 等待超时（秒）。
+
+        Returns:
+            Button: 「隐藏」按钮；超时未稳定出现时 None。
+        """
+        timer = Timer(timeout).start()
+        stable = None
         while 1:
             self.device.screenshot()
             button = hide_button(self.device.image)
             if button is not None:
-                logger.info('[渠道悬浮球] 检测到「隐藏」按钮，点击')
-                self.device.click(button)
-                break
-            if dialog_timer.reached():
-                logger.info('[渠道悬浮球] 未见「隐藏」按钮，跳过点击')
-                break
-        return True
+                pos = ((button.area[0] + button.area[2]) // 2,
+                       (button.area[1] + button.area[3]) // 2)
+                if (stable is not None
+                        and abs(pos[0] - stable[0]) <= 15
+                        and abs(pos[1] - stable[1]) <= 15):
+                    return button
+                stable = pos
+            else:
+                stable = None
+            if timer.reached():
+                return None
+
+    def _wait_dialog_close(self, timeout):
+        """等待「隐藏悬浮球」对话框关闭。
+
+        Args:
+            timeout: 等待超时（秒）。
+
+        Returns:
+            bool: True 表示对话框已消失；False 表示超时仍在。
+        """
+        timer = Timer(timeout).start()
+        while 1:
+            self.device.screenshot()
+            if _find_dialog_white(self.device.image) is None:
+                return True
+            if timer.reached():
+                return False
+
+    def _click_cancel(self):
+        """点击「取消」关闭对话框（「隐藏」重试失败时的兜底）。
+
+        「取消」与「隐藏」同在对话框底部按钮行、左右对称，按白区
+        中心镜像「隐藏」按钮位置得到；无法定位「隐藏」时退回白区
+        左下区域（宽 30%、高 92% 处）。
+        """
+        self.device.screenshot()
+        box = _find_dialog_white(self.device.image)
+        if box is None:
+            logger.info('[渠道悬浮球] 对话框已不在，无需兜底')
+            return
+        wx, wy, ww, wh = box
+        button = hide_button(self.device.image)
+        if button is not None:
+            bx = (button.area[0] + button.area[2]) // 2
+            by = (button.area[1] + button.area[3]) // 2
+            pos = (int(2 * (wx + ww / 2) - bx), by)
+        else:
+            pos = (int(wx + ww * 0.3), int(wy + wh * 0.92))
+        pad = int(12 * self.device.image.shape[0] / 720)
+        cancel = Button(
+            area=(pos[0] - pad, pos[1] - pad, pos[0] + pad, pos[1] + pad),
+            color=(),
+            button=(pos[0] - pad, pos[1] - pad, pos[0] + pad, pos[1] + pad),
+            name='CHANNEL_FLOAT_CANCEL_DYNAMIC',
+        )
+        logger.warning(f'[渠道悬浮球] 点击「取消」({pos[0]}, {pos[1]}) 关闭对话框兜底')
+        self.device.click(cancel)
 
     def run(self) -> bool:
         """任务前的悬浮球检查入口（每个会话仅调用一次）。

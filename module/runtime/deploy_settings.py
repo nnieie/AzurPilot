@@ -129,8 +129,8 @@ DEPLOY_FIELDS = {
 
 def deploy_settings_schema(translate) -> dict[str, Any]:
     """返回部署设置表单结构和值。"""
-    State.deploy_config.read()
-    values = State.deploy_config.config
+    with State.deploy_config.transaction() as values:
+        values = values.copy()
     groups = []
     for group, fields in DEPLOY_GROUPS:
         groups.append(
@@ -167,7 +167,6 @@ def save_deploy_settings(data: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(values, dict):
         raise ValueError("values 必须是对象")
 
-    State.deploy_config.read()
     updates = {}
     for key, value in values.items():
         if key == "Run":
@@ -177,23 +176,20 @@ def save_deploy_settings(data: dict[str, Any]) -> dict[str, Any]:
             raise ValueError(f"未知部署配置项: {key}")
         updates[key] = _parse_value(field, value)
 
-    for key, value in updates.items():
-        State.deploy_config.config[key] = value
-
-    State.deploy_config.write()
-    State.deploy_config.read()
+    State.deploy_config.update_config(updates)
     return {"updated": sorted(updates)}
 
 
 def get_startup_run(instance: str) -> dict[str, Any]:
     instance = _validate_instance_name(instance, require_exists=False)
-    State.deploy_config.read()
-    runs = parse_run_config(State.deploy_config.config.get("Run"))
+    with State.deploy_config.transaction() as values:
+        raw = values.get("Run")
+    runs = parse_run_config(raw)
     return {
         "instance": instance,
         "enabled": instance in runs,
         "run": runs,
-        "raw": State.deploy_config.config.get("Run"),
+        "raw": raw,
     }
 
 
@@ -204,20 +200,16 @@ def set_startup_run(instance: str, enabled: bool) -> dict[str, Any]:
         raise ValueError("enabled 必须是布尔值")
 
     instance = _validate_instance_name(instance, require_exists=True)
-    State.deploy_config.read()
-    runs = parse_run_config(State.deploy_config.config.get("Run"))
-
-    if enabled:
-        if instance not in runs:
-            runs.append(instance)
-    else:
-        runs = [item for item in runs if item != instance]
-
-    State.deploy_config.config["Run"] = format_run_config(runs)
-    State.deploy_config.write()
-    State.deploy_config.read()
-
-    return get_startup_run(instance)
+    with State.deploy_config.transaction() as values:
+        runs = parse_run_config(values.get("Run"))
+        if enabled:
+            if instance not in runs:
+                runs.append(instance)
+        else:
+            runs = [item for item in runs if item != instance]
+        raw = format_run_config(runs)
+        values["Run"] = raw
+    return {"instance": instance, "enabled": instance in runs, "run": runs, "raw": raw}
 
 
 def parse_run_config(value: Any) -> list[str]:

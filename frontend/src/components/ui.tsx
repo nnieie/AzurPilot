@@ -24,13 +24,22 @@ export function ErrorBox({message, retry}: {message: string; retry?: () => void}
   const {ui} = useApp()
   return <div role="alert" className="error-box"><AlertCircle size={18}/><span>{message}</span>{retry && <button onClick={retry}>{ui('common.retry')}</button>}</div>
 }
-export function Modal({title, children, onClose, className = '', cancelGuard, onKeyDown}: {title: string; children: ReactNode; onClose: () => void; className?: string; cancelGuard?: () => boolean; onKeyDown?: (event: KeyboardEvent<HTMLDialogElement>) => void}) {
+export function Modal({title, children, onClose, className = ''}: {title: string; children: ReactNode; onClose: () => void; className?: string}) {
   const ref = useRef<HTMLDialogElement>(null)
   const {ui} = useApp()
   useEffect(() => { ref.current?.showModal(); return () => ref.current?.close() }, [])
-  /* cancelGuard 可以在这一次 cancel 不该关弹窗时把它吃下来；keydown 挂在 dialog 上，
-     焦点落在标题栏关闭按钮时也收得到。 */
-  return <dialog ref={ref} onKeyDown={onKeyDown} onCancel={event => {if (cancelGuard?.()) event.preventDefault(); else onClose()}} className={`modal ${className}`.trim()}>
+  /* 弹窗里的文件输入被点击后，原生窗口即将打开：它送来的那一次 cancel 只关它自己，
+     不关弹窗。原生窗口是另一个真窗口，页面收不到它的关闭事件，「刚点过文件输入」
+     是唯一可用的信号。 */
+  const picking = useRef(false)
+  /* 只保留 Esc：其他按键说明人已回到页面上。 */
+  function keepPicking(event: KeyboardEvent<HTMLDialogElement>) {
+    picking.current = picking.current && event.key === 'Escape'
+  }
+  return <dialog ref={ref} onKeyDown={keepPicking} onCancel={event => {
+    if (picking.current) { picking.current = false; event.preventDefault(); return }
+    onClose()
+  }} onClickCapture={event => { if ((event.target as HTMLElement).closest?.('input[type=file]')) picking.current = true }} className={`modal ${className}`.trim()}>
     <div className="panel-heading"><h2>{title}</h2><button className="icon-button" aria-label={ui('common.close')} onClick={onClose}><X size={20}/></button></div>
     {children}
   </dialog>

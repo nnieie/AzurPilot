@@ -85,6 +85,24 @@ test('切换主题卸载旧材质，返回简约后不再发起装饰资源请�
   expect(requests.some(url => /ClassicGlass|Wallpaper|\/classic-|\/theme\.css|api\.yppp/.test(url))).toBe(false)
 })
 
+test('玻璃主题长页面滚动时两侧栏保持贴合视口', async ({page}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('azurpilot.theme', 'dark')
+    localStorage.setItem('azurpilot.dev-mode', '1')
+  })
+  await page.goto('/#/i/testpilot/task/Alas')
+  await expect(page.locator('.right-rail')).toBeVisible()
+
+  await page.evaluate(() => scrollTo(0, 500))
+  await expect.poll(() => page.evaluate(() => scrollY)).toBe(500)
+
+  const sidebar = (await page.locator('.sidebar').boundingBox())!
+  const rail = (await page.locator('.right-rail').boundingBox())!
+  expect(Math.round(sidebar.y)).toBe(0)
+  expect(Math.round(sidebar.height)).toBe(1100)
+  expect(Math.round(rail.y + rail.height)).toBe(1100)
+})
+
 test('简约总览、弹窗、控件和移动端导航均使用实色', async ({page}, testInfo) => {
   await page.addInitScript(() => {
     localStorage.setItem('azurpilot.theme', 'minimal')
@@ -348,4 +366,87 @@ test('紧凑主题收窄骨架与留白，且不叠加到其它主题', async ({
   expect(Math.round((await sidebar.boundingBox())!.width)).toBe(232)
   // 经典主题的 main 左右内边距是 32px，与简约的 28px 不同
   expect(await content.evaluate(node => getComputedStyle(node).paddingLeft)).toBe('32px')
+})
+
+test('紧凑主题可把调度与计划栏换到内容区左侧，切回其它主题即复位', async ({page}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('azurpilot.theme', 'extreme')
+    localStorage.setItem('azurpilot.dev-mode', '1')
+  })
+  await page.route('https://api.yppp.net/**', route => route.abort())
+  const order = () => page.locator('.app-shell').evaluate(node => [...node.children].map(child => child.className.split(' ')[0]))
+  const rail = page.locator('.right-rail')
+  const main = page.locator('main').first()
+
+  await page.goto('/#/i/testpilot/overview')
+  await expect(rail).toBeVisible()
+  expect(await order()).toEqual(['skip-link', 'sidebar', 'main-shell', 'right-rail'])
+  const defaultRailX = (await rail.boundingBox())!.x
+  expect(defaultRailX).toBeGreaterThan((await main.boundingBox())!.x)
+
+  // 换位在界面设置里切换；列序走 DOM，Tab 顺序才会跟着视觉走
+  await page.goto('/#/interface')
+  await page.getByText('计划栏在左').click()
+  await page.goto('/#/i/testpilot/overview')
+  await expect(rail).toBeVisible()
+  expect(await order()).toEqual(['skip-link', 'sidebar', 'right-rail', 'main-shell'])
+  expect((await rail.boundingBox())!.x).toBeLessThan((await main.boundingBox())!.x)
+  // 顶栏改为向左跨过右栏，仍不产生横向滚动
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  expect(await rail.evaluate(node => getComputedStyle(node).borderRightWidth)).toBe('1px')
+
+  // 宽度档位写进内联变量，切换主题时必须清掉，否则简约会跟着用紧凑的栏宽
+  await page.goto('/#/interface')
+  await page.getByRole('combobox', {name: '计划栏宽度'}).click()
+  await page.getByRole('option', {name: '更宽（360px）'}).click()
+  await page.goto('/#/i/testpilot/overview')
+  expect(Math.round((await rail.boundingBox())!.width)).toBe(360)
+
+  await page.goto('/#/interface')
+  await selectTheme(page, '简约')
+  await page.goto('/#/i/testpilot/overview')
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'minimal')
+  expect(await order()).toEqual(['skip-link', 'sidebar', 'main-shell', 'right-rail'])
+  expect(await page.locator('html').evaluate(node => node.style.getPropertyValue('--right-rail-width'))).toBe('')
+})
+
+test('紧凑主题改用浮层滚动条：原生条不再占位，移进去才显形，切走主题即还原', async ({page}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('azurpilot.theme', 'extreme')
+    localStorage.setItem('azurpilot.dev-mode', '1')
+  })
+  await page.route('https://api.yppp.net/**', route => route.abort())
+  await page.goto('/#/i/testpilot/overview')
+  await expect(page.locator('.rail-task-list')).toBeVisible()
+
+  // 浮层轨道已挂上但默认不显示
+  const rail = page.locator('.overlay-scrollbar')
+  await expect(rail).toHaveCount(1)
+  await expect(rail).not.toHaveAttribute('data-visible', 'on')
+
+  // 内容长到溢出后，运行时扫描要把容器标记出来、把原生条压成 0 宽（等于不占内容宽度）；
+  // 这一步不依赖鼠标移入 —— 否则异步加载完的列表会先画出常驻原生条
+  await page.locator('.log-content').evaluate(element => {
+    for (let index = 0; index < 200; index += 1) element.appendChild(document.createElement('div')).textContent = `填充日志 ${index}`
+  })
+  await expect.poll(() => page.locator('.log-content').evaluate(node => getComputedStyle(node).scrollbarWidth)).toBe('none')
+
+  // 把鼠标移进去才显形，且是直角
+  await page.locator('.log-content').hover()
+  await expect(rail).toHaveAttribute('data-visible', 'on')
+  expect(await page.locator('.overlay-scrollbar-thumb').evaluate(node => getComputedStyle(node).borderRadius)).toBe('0px')
+  // 轨道右缘贴住滚动容器的右边界，不侵占内容
+  const edges = await page.evaluate(() => ({
+    rail: document.querySelector('.overlay-scrollbar')!.getBoundingClientRect(),
+    box: document.querySelector('.log-content')!.getBoundingClientRect(),
+  }))
+  expect(Math.round(edges.rail.right)).toBe(Math.round(edges.box.right))
+
+  // 切回简约：轨道移除，原生滚动条声明还原
+  await page.goto('/#/interface')
+  await selectTheme(page, '简约')
+  await page.goto('/#/i/testpilot/overview')
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'minimal')
+  await expect(page.locator('.overlay-scrollbar')).toHaveCount(0)
+  expect(await page.locator('.log-content').evaluate(node => getComputedStyle(node).scrollbarWidth)).not.toBe('none')
 })

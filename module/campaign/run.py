@@ -313,7 +313,7 @@ class CampaignRun(CampaignEvent, ShopStatus):
     def can_use_auto_search_continue(self):
         """检查是否可以继续使用自动搜索。
 
-        当已在自动搜索菜单中、已完成至少一次运行、且未设置地图成就条件时，
+        当已在自动搜索菜单中、已完成至少一次运行、且无需检查地图成就或活动 PT 时，
         可以跳过 ensure_campaign_ui 直接继续自动搜索。
 
         Returns:
@@ -322,6 +322,11 @@ class CampaignRun(CampaignEvent, ShopStatus):
         # 自动搜索菜单中无法更新地图信息
         # 如果设置了地图成就则关闭
         if self.config.StopCondition_MapAchievement != 'non_stop':
+            return False
+
+        # 自律菜单无法读取活动 PT，设置上限时回到选图页复用原有停止检查。
+        if self.campaign.get_event_pt_limit() > 0:
+            logger.info('[战役-运行] 活动 PT 上限已启用，返回选图页检查')
             return False
 
         return self.run_count > 0 and self.campaign.map_is_auto_search

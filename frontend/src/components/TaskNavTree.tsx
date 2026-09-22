@@ -23,9 +23,17 @@ export function TaskNavTree({ defaultOpenKey }: { defaultOpenKey?: string } = {}
   const [search, setSearch] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
   const [openKeys, setOpenKeys] = useState<string[]>(() => (defaultOpenKey ? [defaultOpenKey] : []))
+  // 手动收起的大类，记录收起时所在的页面路径。
+  const [collapsed, setCollapsed] = useState<{key: string; from: string}>()
 
   function toggle(key: string) {
     setOpenKeys(keys => (keys.includes(key) ? keys.filter(item => item !== key) : [...keys, key]))
+  }
+
+  /** 收起当前所在的大类：收起状态与 openKeys 同时清掉该组。 */
+  function collapseActive(key: string, isCollapsedHere: boolean) {
+    setCollapsed(isCollapsedHere ? undefined : {key, from: location.pathname})
+    setOpenKeys(keys => keys.filter(item => item !== key))
   }
 
   const keyword = search.trim().toLowerCase()
@@ -55,7 +63,8 @@ export function TaskNavTree({ defaultOpenKey }: { defaultOpenKey?: string } = {}
             const isGroupActive = group.tasks.some(task =>
               location.pathname.endsWith(`/task/${task}`)
             )
-            const isExpanded = Boolean(keyword) || isGroupActive || openKeys.includes(key)
+            const collapsedHere = collapsed?.key === key && collapsed.from === location.pathname
+            const isExpanded = Boolean(keyword) || (isGroupActive ? !collapsedHere : openKeys.includes(key))
             const GroupIcon = groupIcons[key] ?? Anchor
 
             return (
@@ -69,7 +78,7 @@ export function TaskNavTree({ defaultOpenKey }: { defaultOpenKey?: string } = {}
                   ]
                     .filter(Boolean)
                     .join(' ')}
-                  onClick={() => toggle(key)}
+                  onClick={() => (isGroupActive ? collapseActive(key, collapsedHere) : toggle(key))}
                   aria-expanded={isExpanded}
                   aria-controls={`task-group-${key}`}
                 >
@@ -77,20 +86,22 @@ export function TaskNavTree({ defaultOpenKey }: { defaultOpenKey?: string } = {}
                   <span className="task-group-title">{t(`Menu.${key}.name`)}</span>
                   <ChevronDown size={13} className="task-group-arrow" />
                 </button>
-                {isExpanded && <div className="task-submenu-list" id={`task-group-${key}`}>
-                  {tasks.map(task => (
-                    <NavLink
-                      key={task}
-                      to={`${base}/task/${task}`}
-                      className={({ isActive }) =>
-                        ['task-submenu-item', isActive && 'active'].filter(Boolean).join(' ')
-                      }
-                    >
-                      <span className="task-submenu-dot" />
-                      <span className="task-submenu-item-text">{t(`Task.${task}.name`)}</span>
-                    </NavLink>
-                  ))}
-                </div>}
+                <div className={'task-submenu-list' + (isExpanded ? ' expanded' : '')} id={`task-group-${key}`}>
+                  <div className="task-submenu-inner">
+                    {tasks.map(task => (
+                      <NavLink
+                        key={task}
+                        to={`${base}/task/${task}`}
+                        className={({ isActive }) =>
+                          ['task-submenu-item', isActive && 'active'].filter(Boolean).join(' ')
+                        }
+                      >
+                        <span className="task-submenu-dot" />
+                        <span className="task-submenu-item-text">{t(`Task.${task}.name`)}</span>
+                      </NavLink>
+                    ))}
+                  </div>
+                </div>
               </div>
             )
           })}

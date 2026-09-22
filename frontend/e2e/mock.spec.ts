@@ -396,7 +396,7 @@ test('存储空间为空时隐藏，有状态时显示完整 JSON 并可清除',
 })
 
 test('侧栏任务计划随界面语言切换', async ({page}) => {
-  await page.goto('/#/i/demo-main/settings')
+  await page.goto('/#/interface')
   await page.locator('#ui-language').click()
   await page.getByRole('option', {name: 'English', exact: true}).click()
   await page.goto('/#/i/demo-main/overview')
@@ -444,7 +444,7 @@ test('移动端放大布局无横向溢出，单栏导航可以收起', async ({
   await page.getByRole('button', {name: '打开导航'}).click()
   await page.getByRole('link', {name: 'AzurPilot 主页'}).click()
   await page.getByRole('button', {name: '打开导航'}).click()
-  await page.locator('.primary-nav').getByRole('link', {name: '系统设置'}).click()
+  await page.locator('.primary-nav').getByRole('link', {name: '界面设置'}).click()
   await expect(page.getByLabel('界面主题')).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
   await page.screenshot({path: 'test-results/mock-mobile.png', fullPage: true, animations: 'disabled'})
@@ -511,7 +511,10 @@ test('主页实例状态、任务搜索收起与导航固定', async ({page}) =>
   await page.goto('/#/i/demo-main/task/Alas')
   await expect(page.locator('[id="Alas.Emulator.Serial"]')).toBeVisible()
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
-  expect((await page.locator('.topbar').boundingBox())!.y).toBe(12)
+  // 顶栏吸顶：滚到底后仍贴住视口顶部且可见。
+  const topbar = (await page.locator('.topbar').boundingBox())!
+  expect(topbar.y).toBeLessThan(1)
+  expect(topbar.y + topbar.height).toBeGreaterThan(0)
   await page.locator('.breadcrumb').getByRole('button', {name: '切换实例'}).click()
   await page.keyboard.press('Escape')
   await expect(page.getByRole('button', {name: '切换实例'})).toBeFocused()
@@ -539,8 +542,9 @@ test('空实例主页仍可访问全局设置，系统设置不请求实例数�
   await page.goto('/')
   await expect(page.getByRole('button', {name: '创建第一个实例'})).toBeVisible()
   await page.locator('.primary-nav').getByRole('link', {name: '系统设置'}).click()
-  await expect(page.getByLabel('界面主题')).toBeVisible()
   await expect(page.getByText('删除当前实例')).toHaveCount(0)
+  await page.locator('.primary-nav').getByRole('link', {name: '界面设置'}).click()
+  await expect(page.getByLabel('界面主题')).toBeVisible()
   expect(methods).not.toContain('startup.get')
   expect(methods).not.toContain('config.get')
   await page.setViewportSize({width: 390, height: 844})

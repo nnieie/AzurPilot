@@ -43,6 +43,7 @@
 :root[data-theme='extreme'] .task-state,
 :root[data-theme='extreme'] .count-badge,
 :root[data-theme='extreme'] .palette-option,
+:root[data-theme='extreme'] .layout-option,
 :root[data-theme='extreme'] .palette-add,
 :root[data-theme='extreme'] .yaml-editor,
 :root[data-theme='extreme'] .storage-field pre,
@@ -70,6 +71,45 @@
 :root[data-theme='extreme'] .resource-picker-card,
 :root[data-theme='extreme'] .resource-picker-empty,
 :root[data-theme='extreme'] .resource-picker-option {border-radius: 0}
+
+/* 浮层与控件补充：这些不在上面的骨架 / 卡片清单里，是圆角审计逐页扫出来的漏网项
+   （下拉浮层、指标芯片、复选框、开关、标签、logo 等）。新增控件后可用同样的扫描方式复查。 */
+:root[data-theme='extreme'] .select-menu,
+:root[data-theme='extreme'] .select-option,
+:root[data-theme='extreme'] .stat-chip,
+:root[data-theme='extreme'] .checkbox-control,
+:root[data-theme='extreme'] .checkbox-mark input[type='checkbox'],
+:root[data-theme='extreme'] .error-box,
+:root[data-theme='extreme'] .commit-ref,
+:root[data-theme='extreme'] .home-instance-icon,
+:root[data-theme='extreme'] .palette-swatch i,
+:root[data-theme='extreme'] .skip-link,
+:root[data-theme='extreme'] .instance-menu button,
+:root[data-theme='extreme'] .instance-create,
+:root[data-theme='extreme'] .brand-logo,
+:root[data-theme='extreme'] .toggle,
+:root[data-theme='extreme'] .toggle > span,
+:root[data-theme='extreme'] .dev-surface-sample,
+:root[data-theme='extreme'] .dev-shadow-sample,
+:root[data-theme='extreme'] .dev-state-box,
+:root[data-theme='extreme'] .dev-nav-preview,
+:root[data-theme='extreme'] .dev-submenu-list,
+:root[data-theme='extreme'] .live-label,
+:root[data-theme='extreme'] .nav-pill {border-radius: 0}
+
+/* 常驻滚动条：全局规则是 5px 宽、8px 圆角，既占内容宽度又难拖，也不符合直角风格。
+   Chromium 的原生滚动条只有「占位」和「彻底消失」两种状态，所以这里把 CompactScrollbars
+   运行时扫出来的滚动容器压成 0 宽（不占位也不显示），改由它挂一条浮层轨道：hover 才显形、
+   直角、命中区 12px。标记是扫描得到的，新增滚动容器不必回来改这里。 */
+:root[data-theme='extreme'] {scrollbar-width: none}
+:root[data-theme='extreme']::-webkit-scrollbar {width: 0; height: 0}
+:root[data-theme='extreme'] [data-overlay-scroll='on'] {scrollbar-width: none}
+:root[data-theme='extreme'] [data-overlay-scroll='on']::-webkit-scrollbar {width: 0; height: 0}
+
+.overlay-scrollbar {position: fixed; width: 12px; z-index: 120; opacity: 0; pointer-events: none; transition: opacity .12s ease}
+.overlay-scrollbar[data-visible='on'] {opacity: 1; pointer-events: auto}
+.overlay-scrollbar-thumb {position: absolute; top: 0; left: 1px; right: 1px; border-radius: 0; background: var(--theme-scrollbar-thumb)}
+.overlay-scrollbar-thumb:hover {background: var(--muted)}
 
 /* 经典主题给 h1 铺了玻璃字效渐变，深色下 text-fill-color 未随之透明会显成灰底 */
 :root[data-theme='extreme'] .page-title h1 {
@@ -223,6 +263,22 @@
   :root[data-theme='extreme'] .rail-queue-heading {padding: 6px 8px}
   :root[data-theme='extreme'] .rail-queue-body {padding: 2px}
   :root[data-theme='extreme'] .rail-queue-empty {padding: 8px}
+
+  /* 列序互换：调度与任务计划栏换到内容区左侧。仅桌面参与 —— 窄屏下右栏是 fixed 抽屉，
+     不占网格列。DOM 顺序由 App 按同一偏好调换，这里只改列宽与跨栏方向：
+     顶栏挂在 main-shell 里，原本向右跨过右栏，换位后内容区到了最右，改成向左跨，
+     否则 100% + 右栏宽会顶出横向滚动条。分隔线跟着换边，朝向内容区。 */
+  :root[data-theme='extreme'][data-compact-rail='left'] .app-shell.with-rail {
+    grid-template-columns: var(--sidebar-width) var(--right-rail-width) minmax(0, 1fr);
+  }
+  :root[data-theme='extreme'][data-compact-rail='left'] .app-shell.with-rail .right-rail {
+    border-left: 0;
+    border-right: 1px solid var(--border);
+  }
+  :root[data-theme='extreme'][data-compact-rail='left'] .app-shell.with-rail .topbar {
+    width: calc(100% + var(--right-rail-width));
+    margin-left: calc(-1 * var(--right-rail-width));
+  }
 
   /* 内容区 */
   :root[data-theme='extreme'] .page-title {margin-bottom: 8px; gap: 12px}

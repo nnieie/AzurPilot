@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from 'react'
 import { Plus } from 'lucide-react'
 import { useApp } from '../app/context'
-import { isHexColor, paletteColors, palettes, type CustomPalette } from '../app/palettes'
+import { isHexColor, paletteColors, palettes, fixedColorModes, type CustomPalette } from '../app/palettes'
 import { Select } from './FormControls'
 import { Modal } from './ui'
 
@@ -56,9 +56,14 @@ export function ThemePreferences() {
         <option value="auto">{ui('settings.modeAuto')}</option>
         <option value="light">{ui('settings.themeLight')}</option>
         <option value="dark">{ui('settings.themeDark')}</option>
+        <option value="terminal">{ui('settings.modeTerminal')}</option>
+        <option value="retro-gray">{ui('settings.modeRetroGray')}</option>
+        <option value="retro-blue">{ui('settings.modeRetroBlue')}</option>
+        <option value="retro-red">{ui('settings.modeRetroRed')}</option>
       </Select></div>
     </div>
-    <div className="field-row palette-field">
+    {/* 自带整套色值的模式（程序员 / 复古灰 / 复古蓝 / 复古红）会忽略配色方案，先收起来免得选了却看不出变化。 */}
+    {!fixedColorModes[colorMode] && <div className="field-row palette-field">
       <div className="field-label"><label>{ui('settings.palette')}</label><p>{ui('settings.paletteHelp')}</p></div>
       <div className="field-control palette-control">
         <fieldset className="palette-options">
@@ -86,7 +91,7 @@ export function ThemePreferences() {
           <button type="button" className="text-button" onClick={() => deleteCustomPalette(selected.id)}>{ui('settings.deletePalette')}</button>
         </div>}
       </div>
-    </div>
+    </div>}
     {editing && <CustomPaletteEditor initial={editing} onClose={() => setEditing(undefined)}/>}
   </>
 }

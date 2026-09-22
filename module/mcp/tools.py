@@ -1,5 +1,4 @@
 """将 MCP 的 18 个工具适配到配置、运行与更新服务。"""
-import datetime
 import json
 import re
 import threading
@@ -87,10 +86,8 @@ class Tools:
 
     def log_path(self, instance):
         self.configs.path(instance)
-        date = datetime.date.today().strftime('%Y-%m-%d')
-        path = self.configs.root / 'log' / f'{date}_{instance}.txt'
-        fallback = self.configs.root / 'log' / f'{date}_alas.txt'
-        return fallback if not path.exists() and fallback.exists() else path
+        from module.logger import get_log_file_path
+        return get_log_file_path(instance, root=self.configs.root)
 
     def dispatch(self, name, arguments):
         self.initialize()

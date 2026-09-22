@@ -9,7 +9,14 @@ export interface Edit {
   status: 'queued' | 'saving' | 'saved' | 'error'
   error?: string
   retryable?: boolean
+  /** 服务端确认这次提交的时刻。 */
+  readyAt?: number
 }
+
+/** 提交成功到显示「已保存」之间的静默期：敲键本身有间隔，太快显示会在打字过程中反复闪。 */
+const SAVED_QUIET_MS = 700
+/** 「已保存」显示后的最短停留。 */
+const SAVED_VISIBLE_MS = 800
 export interface EditSnapshot { edits: Record<string, Edit>; storageError: string }
 interface Transport {
   ready: () => boolean
@@ -23,6 +30,7 @@ export class EditQueue {
   private sequence = 0
   private running?: Promise<void>
   private retryTimer?: ReturnType<typeof setTimeout>
+  private settleTimer?: ReturnType<typeof setTimeout>
   private retryDelay = 1000
 
   constructor(private key: string, private transport: Transport, private storage?: Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>) {
@@ -51,16 +59,56 @@ export class EditQueue {
       .filter(([, edit]) => edit.status === 'saved').map(([path, edit]) => [path, edit.sequence]))
   }
 
-  /** 只清理由读取前已确认的覆盖值，读取期间的新输入和回执仍由队列保护。 */
+  /** 提交刚成功、静默期未满：此刻不呈现保存结果。 */
+  private idle(edit: Edit) {
+    return edit.status === 'saved' && Date.now() - (edit.readyAt ?? 0) < SAVED_QUIET_MS
+  }
+
+  /** 当前状态是否可以呈现给用户。静默期只作用于已保存。 */
+  savedVisible(edit: Edit) {
+    return !this.idle(edit) || edit.status !== 'saved'
+  }
+
+
+  /** 只清理由读取前已确认的覆盖值，读取期间的新输入和回执仍由队列保护。
+      未过静默期、仍在最短停留内的条目留到下一次。 */
   reconcile(confirmed: Record<string, number>) {
     const edits = {...this.state.edits}
     for (const [path, sequence] of Object.entries(confirmed)) {
-      if (edits[path]?.status === 'saved' && edits[path].sequence === sequence) delete edits[path]
+      const edit = edits[path]
+      if (edit?.status !== 'saved' || edit.sequence !== sequence) continue
+      if (this.idle(edit)) continue
+      delete edits[path]
     }
     this.state = {...this.state, edits}
     this.publish()
+    this.schedule()
   }
 
+  /** 按当前条目算出最近一个到期时刻：静默期满或显示够久，到点后重新结算。 */
+  private schedule() {
+    if (this.settleTimer) return
+    const now = Date.now()
+    let due = Infinity
+    for (const edit of Object.values(this.state.edits)) {
+      if (edit.status !== 'saved') continue
+      const readyAt = edit.readyAt ?? now
+      due = Math.min(due, readyAt + (now - readyAt < SAVED_QUIET_MS ? SAVED_QUIET_MS : SAVED_VISIBLE_MS))
+    }
+    if (due === Infinity) return
+    const wait = Math.max(0, due - Date.now())
+    this.settleTimer = setTimeout(() => {
+      this.settleTimer = undefined
+      const edits = {...this.state.edits}
+      for (const [path, edit] of Object.entries(edits)) {
+        if (edit.status !== 'saved' || this.idle(edit)) continue
+        if (Date.now() - (edit.readyAt ?? 0) >= SAVED_QUIET_MS + SAVED_VISIBLE_MS) delete edits[path]
+      }
+      this.state = {...this.state, edits}
+      this.publish()
+      this.schedule()
+    }, wait)
+  }
   private publish() {
     // 仅持久化未确认的输入；每个标签页独立，避免其他页面覆盖本页草稿。
     try {
@@ -77,6 +125,9 @@ export class EditQueue {
     this.state = {...this.state, edits: {...this.state.edits, [path]: edit}}
     this.publish()
   }
+
+  /** 字段提交成功后收到的服务端配置。 */
+  onSaved?: (data: unknown) => void
 
   change(path: string, value: Value, payload: Value = value, error?: string) {
     this.replace(path, {value, payload, sequence: ++this.sequence, status: error ? 'error' : 'queued', error})
@@ -115,9 +166,13 @@ export class EditQueue {
       const [path, edit] = next
       this.replace(path, {...edit, status: 'saving'})
       try {
-        await this.transport.send(path, edit.payload)
+        const response = await this.transport.send(path, edit.payload)
         this.retryDelay = 1000
-        if (this.state.edits[path]?.sequence === edit.sequence) this.replace(path, {...edit, status: 'saved'})
+        if (this.state.edits[path]?.sequence === edit.sequence) {
+          this.onSaved?.(response)
+          this.replace(path, {...edit, status: 'saved', readyAt: Date.now()})
+          this.schedule()
+        }
       } catch (error) {
         const permanent = error instanceof ApiError && ['INVALID_PARAMS', 'READ_ONLY', 'NOT_FOUND', 'CONFIG_INVALID'].includes(error.code)
         if (this.state.edits[path]?.sequence === edit.sequence) {

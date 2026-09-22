@@ -45,6 +45,10 @@ function createMockContext(): AppContextValue {
     customPalettes: [],
     saveCustomPalette: () => {},
     deleteCustomPalette: () => {},
+    compactRailSide: 'right',
+    setCompactRailSide: () => {},
+    compactRailWidth: 244,
+    setCompactRailWidth: () => {},
     language: 'zh-CN',
     setLanguage: () => {},
   }

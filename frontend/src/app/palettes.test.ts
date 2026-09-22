@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { contrastRatio, paletteColors, paletteTokens, palettes, presetColors, readCustomPalettes, type CustomPalette } from './palettes'
+import { contrastRatio, fixedColorModes, paletteColors, paletteTokens, palettes, presetColors, readCustomPalettes, type CustomPalette } from './palettes'
 
 const custom: CustomPalette = {id: 'custom:test', primary: '#ffffff', secondary: '#ffff00'}
 
@@ -15,6 +15,19 @@ describe('简约配色生成与校验', () => {
         expect(contrastRatio(tokens['--theme-on-accent'], tokens['--accent'])).toBeGreaterThanOrEqual(4.5)
       }
     }
+  })
+  it('自带色值的模式：对比度达标，程序员那一档保持纯灰阶', () => {
+    for (const [id, fixed] of Object.entries(fixedColorModes)) {
+      const tokens = fixed!.tokens
+      expect(Object.values(tokens).every(value => /^#[\da-f]{6}$/i.test(value)), id).toBe(true)
+      for (const background of ['--surface', '--surface-muted', '--accent-soft']) {
+        expect(contrastRatio(tokens['--accent'], tokens[background]), `${id} 的 accent 落在 ${background} 上`).toBeGreaterThanOrEqual(4.5)
+      }
+      expect(contrastRatio(tokens['--theme-on-accent'], tokens['--accent']), `${id} 的按钮文字`).toBeGreaterThanOrEqual(4.5)
+      expect(contrastRatio(tokens['--text'], tokens['--surface']), `${id} 的正文`).toBeGreaterThanOrEqual(7)
+    }
+    const isGray = (value: string) => value.slice(1, 3) === value.slice(3, 5) && value.slice(3, 5) === value.slice(5, 7)
+    for (const value of Object.values(fixedColorModes.terminal!.tokens)) expect(isGray(value), value).toBe(true)
   })
   it('极端自定义颜色也能生成清晰的实色界面，浅色深色通用', () => {
     for (const mode of ['light', 'dark'] as const) {

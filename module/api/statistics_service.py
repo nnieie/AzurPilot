@@ -3,10 +3,54 @@ import math
 import threading
 from datetime import datetime, timedelta
 
+import os
 from module.api.protocol import ApiError
 
 
 _loot_lock = threading.Lock()
+
+
+def get_statistics_fingerprint(instance: str) -> str:
+    """获取当前实例统计数据的轻量级指纹。
+
+    检测 SQLite 本地快照库、CL1 记录库、舰船统计文件以及配置文件修改时间，
+    用于 WebSocket 会话高效判断后端统计数据是否有更新。
+    """
+    parts = []
+    # 1. 资源快照数据库 (azurstats_local.db)
+    res_db = './config/azurstats_local.db'
+    try:
+        stat = os.stat(res_db)
+        parts.append(f"res:{stat.st_mtime_ns}:{stat.st_size}")
+    except OSError:
+        parts.append("res:none")
+
+    # 2. 实例配置文件 (config/<instance>.json)
+    cfg_file = f'./config/{instance}.json'
+    try:
+        stat = os.stat(cfg_file)
+        parts.append(f"cfg:{stat.st_mtime_ns}")
+    except OSError:
+        parts.append("cfg:none")
+
+    # 3. 大世界与委托记录库 (cl1_record.db)
+    cl1_db = './config/cl1_record.db'
+    try:
+        stat = os.stat(cl1_db)
+        parts.append(f"cl1:{stat.st_mtime_ns}")
+    except OSError:
+        parts.append("cl1:none")
+
+    # 4. 舰船经验统计文件 (log/ship_exp_stats.json)
+    ship_file = './log/ship_exp_stats.json'
+    try:
+        stat = os.stat(ship_file)
+        parts.append(f"ship:{stat.st_mtime_ns}")
+    except OSError:
+        parts.append("ship:none")
+
+    return ';'.join(parts)
+
 
 
 def refresh_loot(configs, instance):
@@ -14,7 +58,7 @@ def refresh_loot(configs, instance):
     configs.path(instance)
     from module.statistics.azurstats import AzurStats
     with _loot_lock:
-        AzurStats.get_meowofficer_farming()
+        AzurStats.get_meowofficer_farming(instance=instance)
     return {'refreshed': True}
 
 
@@ -172,9 +216,10 @@ def report(configs, instance, category, month, days, period):
         from module.statistics.azurstats import AzurStats
         rows = []
         with _loot_lock:
-            cached = AzurStats.load_meowofficer_farming()
+            cached = AzurStats.load_meowofficer_farming(instance=instance)
         for row in cached:
             if row[2] > 0:
                 rows.append([int(row[0]), datetime.fromtimestamp(row[1]).isoformat(sep=' '), float(row[2]), *[round(float(value), 4) for value in row[3:]]])
         result['tables'].append(table('短猫掉落收益', AzurStats.meowofficer_farming_labels, rows))
+        result['notes'].append('仅统计当前实例的掉落；旧记录缺少实例信息，作为历史共享数据保留，不计入当前实例。')
     return result
