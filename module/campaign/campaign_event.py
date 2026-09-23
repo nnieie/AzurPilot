@@ -19,6 +19,7 @@
 
 import os
 import re
+from datetime import datetime
 
 from module.campaign.campaign_status import CampaignStatus
 from module.config.config_updater import COALITIONS, EVENTS, GEMS_FARMINGS, HOSPITAL, MARITIME_ESCORTS, RAIDS
@@ -32,6 +33,7 @@ from module.war_archives.assets import WAR_ARCHIVES_CAMPAIGN_CHECK
 
 
 EVENT_PT_TASKS = EVENTS + RAIDS + COALITIONS + GEMS_FARMINGS + HOSPITAL
+LEGACY_EVENT_TIME_LIMIT = datetime(2020, 1, 1, 0, 0)
 
 
 class CampaignEvent(CampaignStatus):
@@ -164,7 +166,9 @@ class CampaignEvent(CampaignStatus):
         limit = self.config.EventGeneral_TimeLimit
         tasks = EVENTS + RAIDS + COALITIONS + GEMS_FARMINGS + MARITIME_ESCORTS + HOSPITAL
         command = self.config.Scheduler_Command
-        if command not in tasks or limit == DEFAULT_TIME:
+        # 2020-01-01 曾是配置界面生成的“不限制”默认值；全局默认时间改为
+        # 2023-01-01 后，存量配置仍需按不限制处理，避免启动活动任务即被停用。
+        if command not in tasks or limit in (DEFAULT_TIME, LEGACY_EVENT_TIME_LIMIT):
             return False
         if command in GEMS_FARMINGS and self.stage_is_main(self.config.Campaign_Name):
             return False

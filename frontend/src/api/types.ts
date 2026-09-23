@@ -99,6 +99,6 @@ export interface Results {
   'meowfficer.clearReport': {cleared: boolean; removed: string[]}
   'settings.get': Settings
   'settings.patch': {updated: string[]}
-  'startup.get': {enabled: boolean}
-  'startup.set': {enabled: boolean}
+  'startup.get': {enabled: boolean; remember: boolean}
+  'startup.set': {enabled: boolean; remember: boolean}
 }

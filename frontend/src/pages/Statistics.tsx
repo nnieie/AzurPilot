@@ -197,16 +197,16 @@ export function Statistics() {
     {category === 'ships' && <span>{ui('stats.shipHint')}</span>}
     {category === 'loot' && <span>{ui('stats.lootHint')}</span>}
   </>
-  const dataView = error ? <ErrorBox message={error} retry={() => setRevision(value => value + 1)}/> : !data ? <Loading/> : <div className="statistics-sections">{!!data.metrics.length && <div className="stat-metrics summary-metrics">{data.metrics.map(item => {
+  const dataView = error ? <ErrorBox message={error} retry={() => setRevision(value => value + 1)}/> : !data ? <Loading/> : <div className="statistics-sections">{!!data.metrics.length && <section className="panel summary-metrics-panel"><div className="stat-metrics summary-metrics">{data.metrics.map(item => {
     const Icon = getMetricIcon(item.label)
-    return <section key={item.label} className="summary-metric-card">
+    return <div key={item.label} className="summary-metric-card">
       <div className="summary-metric-head">
         <span className="summary-metric-label">{item.label}</span>
-        {Icon && <span className="summary-metric-icon" aria-hidden="true"><Icon size={24} strokeWidth={2}/></span>}
+        {Icon && <span className="summary-metric-icon" aria-hidden="true"><Icon size={18} strokeWidth={1.8}/></span>}
       </div>
       <strong>{item.value == null ? '—' : item.value.toLocaleString(undefined, {maximumFractionDigits: 2})}<small>{item.unit}</small></strong>
-    </section>
-  })}</div>}{!!data.series.length && <Suspense fallback={<Loading/>}><StatisticsChart key={category} series={data.series} tables={condensed ? data.tables : []} heading={!condensed} expanded={expanded} onToggleExpanded={toggleExpanded} title={ui(categories[category])}/></Suspense>}{!condensed && data.tables.map(table => <section className="panel" key={table.title}><StatisticsTable data={table}/></section>)}</div>
+    </div>
+  })}</div></section>}{!!data.series.length && <Suspense fallback={<Loading/>}><StatisticsChart key={category} series={data.series} tables={condensed ? data.tables : []} heading={!condensed} expanded={expanded} onToggleExpanded={toggleExpanded} title={ui(categories[category])}/></Suspense>}{!condensed && data.tables.map(table => <section className="panel" key={table.title}><StatisticsTable data={table}/></section>)}</div>
 
   const content = <>
     {condensed

@@ -9,6 +9,7 @@
 @import './dev.css';
 @import './theme-system.css';
 @import './forms.css';
+@import './motion.css';
 
 :root[data-theme='dark'] {
   --syntax-key: #7ec9ee; --syntax-string: #a6d99e; --syntax-value: #dab0f5;

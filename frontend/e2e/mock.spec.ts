@@ -34,15 +34,27 @@ test('总览三态、资源搭配记忆、日志与被动截图切换', async ({
   await page.goto('/#/i/demo-main/overview')
   await expect(page.getByLabel('搜索日志')).toHaveCount(0)
   await expect(page.locator('.primary-nav').getByRole('link', {name: '运行日志'})).toHaveCount(0)
-  await page.getByRole('button', {name: '实例设置', exact: true}).click()
+  await page.getByRole('button', {name: '仪表盘设置', exact: true}).click()
   const settings = page.getByRole('dialog')
   await settings.getByRole('button', {name: '添加卡片', exact: true}).click()
   await settings.getByRole('button', {name: '行动力', exact: true}).click()
+  const editorCards = settings.locator('.resource-editor-card:not(.resource-editor-add)')
+  const source = await editorCards.last().boundingBox()
+  const target = await editorCards.first().boundingBox()
+  expect(source).not.toBeNull()
+  expect(target).not.toBeNull()
+  await page.mouse.move(source!.x + source!.width / 2, source!.y + source!.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(target!.x + target!.width / 2, target!.y + target!.height / 2, {steps: 5})
+  await page.mouse.up()
+  await expect(editorCards.first()).toContainText('行动力')
   await settings.getByRole('button', {name: '关闭', exact: true}).click()
   await expect(page.locator('.resource-card')).toHaveCount(5)
+  await expect(page.locator('.resource-card').first()).toContainText('行动力')
   const actionPoint = page.locator('.resource-card').filter({hasText: '行动力'})
-  await expect(actionPoint).toContainText('101')
-  await expect(actionPoint).toContainText('总行动力 1,301')
+  await expect(actionPoint.locator('.resource-heading')).toHaveText('行动力')
+  await expect(actionPoint.locator('.resource-value')).toHaveText('101/ 1,301')
+  await expect(actionPoint.locator('.resource-value small')).toHaveText('/ 1,301')
   await page.reload()
   await expect(page.locator('.resource-card')).toHaveCount(5)
   await page.getByRole('button', {name: '启动调度器', exact: true}).click()
@@ -69,6 +81,109 @@ test('总览三态、资源搭配记忆、日志与被动截图切换', async ({
   await expect(page.locator('[id="Main.Emotion.Fleet1Record"]')).toHaveValue('2026-09-12 23:45:12.123456')
   await expect(page.locator('[id="Main.Emotion.Fleet1Record"]')).toHaveAttribute('readonly', '')
 })
+
+test('资源数值按可用宽度缩放并保持当前值与上限在同一行', async ({page}) => {
+  const errors: string[] = []
+  page.on('pageerror', error => errors.push(error.message))
+  await page.addInitScript(() => {
+    localStorage.setItem('azurpilot.resources.demo-main', JSON.stringify(['Oil', 'Coin', 'Gem', 'Cube', 'Pt', 'ActionPoint', 'YellowCoin', 'PurpleCoin', 'Core', 'Medal', 'Merit', 'GuildCoin']))
+    if (!localStorage.getItem('azurpilot.theme')) localStorage.setItem('azurpilot.theme', 'legacy-light')
+  })
+  await page.setViewportSize({width: 1996, height: 900})
+  await page.goto('/#/i/demo-main/overview')
+  const values = page.locator('.resource-value')
+  await expect(values).toHaveCount(12)
+  const coin = page.locator('.resource-card').filter({hasText: '物资'}).locator('.resource-value-content')
+  await expect(coin).toHaveText('186,420/ 600,000')
+  const assertFits = async () => {
+    await expect.poll(() => values.evaluateAll(elements => elements.every(element => {
+      const content = element.querySelector('.resource-value-content')!
+      const primary = content.querySelector('span')!
+      const suffix = content.querySelector('small')
+      const box = content.getBoundingClientRect()
+      return box.width <= element.clientWidth + .5
+        && (!suffix || (suffix.getClientRects().length === 1
+          && suffix.getBoundingClientRect().top < primary.getBoundingClientRect().bottom
+          && parseFloat(getComputedStyle(suffix).fontSize) < parseFloat(getComputedStyle(primary).fontSize)))
+    }))).toBe(true)
+  }
+  await assertFits()
+  await expect.poll(() => coin.evaluate(element => parseFloat(getComputedStyle(element).fontSize) < parseFloat(getComputedStyle(element.parentElement!).fontSize))).toBe(true)
+  await page.locator('.resource-grid').screenshot({path: 'test-results/resource-values-desktop.png'})
+  await page.setViewportSize({width: 390, height: 844})
+  await page.evaluate(() => localStorage.setItem('azurpilot.theme', 'light'))
+  await page.reload()
+  await expect(values).toHaveCount(12)
+  await assertFits()
+  await page.locator('.resource-grid').screenshot({path: 'test-results/resource-values-mobile.png'})
+  // 宽度恢复后应还原主题字号，避免只缩小不放大。
+  await page.setViewportSize({width: 3000, height: 1000})
+  await assertFits()
+  await expect.poll(() => coin.evaluate(element => getComputedStyle(element).fontSize === getComputedStyle(element.parentElement!).fontSize)).toBe(true)
+  expect(errors).toEqual([])
+})
+
+for (const theme of ['minimal', 'legacy-light', 'legacy-dark', 'extreme'] as const) {
+  test(`${theme} 窄屏总览与统计内容完整可访问`, async ({page}) => {
+    test.setTimeout(60000)
+    await page.addInitScript(value => localStorage.setItem('azurpilot.theme', value), theme)
+    await page.setViewportSize({width: 550, height: 1000})
+    await page.goto('/#/i/demo-main/overview')
+    await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
+    const legacy = theme.startsWith('legacy-')
+    await expect(page.locator('.resource-card')).toHaveCount(4)
+    await expect.poll(() => page.locator('main').evaluate(element => element.clientHeight)).toBeGreaterThan(500)
+    if (!legacy) await page.getByRole('button', {name: '打开调度与任务', exact: true}).click()
+    await page.getByRole('button', {name: '启动调度器', exact: true}).click()
+    if (!legacy) await page.locator('.right-rail').getByRole('button', {name: '关闭调度与任务', exact: true}).click()
+    try {
+      await page.getByRole('tab', {name: '截图', exact: true}).click()
+      const preview = page.getByAltText('任务最近一次截图')
+      await expect(preview).toBeVisible({timeout: 10000})
+      for (const width of [900, 550, 390]) {
+        await page.setViewportSize({width, height: 1000})
+        await preview.scrollIntoViewIfNeeded()
+        await expect(preview).toBeInViewport({ratio: .95})
+        expect((await preview.boundingBox())!.height).toBeGreaterThan(100)
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+      }
+      await page.screenshot({path: `test-results/narrow-${theme}-overview.png`, fullPage: true})
+    } finally {
+      if (!legacy) await page.getByRole('button', {name: '打开调度与任务', exact: true}).click()
+      await page.getByRole('button', {name: '停止运行', exact: true}).click()
+      if (!legacy) await page.locator('.right-rail').getByRole('button', {name: '关闭调度与任务', exact: true}).click()
+    }
+
+    await page.goto('/#/i/demo-main/statistics')
+    for (const width of [900, 550, 390]) {
+      await page.setViewportSize({width, height: 1000})
+      await page.getByRole('button', {name: '打开导航', exact: true}).click()
+      await expect(page.locator('.sidebar')).toBeInViewport({ratio: .95})
+      await page.getByRole('button', {name: '关闭导航', exact: true}).click()
+      if (!legacy) {
+        await page.getByRole('button', {name: '打开调度与任务', exact: true}).click()
+        await expect(page.locator('.right-rail')).toBeInViewport({ratio: .95})
+        await page.locator('.right-rail').getByRole('button', {name: '关闭调度与任务', exact: true}).click()
+      }
+      for (const category of ['资源趋势', '大世界趋势', '短猫掉落']) {
+        const picker = page.getByRole('combobox', {name: '统计分类', exact: true})
+        if (await picker.isVisible()) {
+          await picker.click()
+          await page.getByRole('option', {name: category, exact: true}).click()
+        } else {
+          await page.getByRole('tab', {name: category, exact: true}).click()
+        }
+        const content = page.locator(category === '短猫掉落' ? '.statistics-table' : '.chart-canvas').first()
+        await expect(content).toBeVisible()
+        await content.scrollIntoViewIfNeeded()
+        await expect(content).toBeInViewport({ratio: .95})
+        await expect.poll(() => page.locator('.statistics-sections').evaluate(element => element.clientHeight)).toBeGreaterThan(200)
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+      }
+    }
+    await page.screenshot({path: `test-results/narrow-${theme}-statistics.png`, fullPage: true})
+  })
+}
 
 test('任务二级菜单通过顶层浮层覆盖资源卡片', async ({page}) => {
   await page.setViewportSize({width: 1134, height: 669})
@@ -568,20 +683,34 @@ test('实例列表读取失败不阻塞全局设置', async ({page}) => {
   await expect(page.getByLabel('监听端口')).toBeVisible()
 })
 
-test('实例设置保留自动运行和删除，删除后返回主页', async ({page}) => {
+test('启动开关在系统设置页保存，点名称不切换且保存后不回弹', async ({page}) => {
+  await page.goto('/#/i/demo-main/task/Alas')
+  const autoRun = page.getByLabel('启动时自动运行', {exact: true})
+  const remember = page.getByLabel('启动时记忆运行', {exact: true})
+  const before = await remember.getAttribute('aria-checked')
+  await page.locator('.config-groups .field-name').nth(1).click()
+  await expect(remember).toHaveAttribute('aria-checked', before!)
+  await remember.check()
+  await expect(page.locator('#instance-remember-status')).toHaveText('已保存')
+  // 状态标记消失即队列已丢弃该条目，此后开关仍须显示服务端的值。
+  await expect(page.locator('#instance-remember-status')).toHaveCount(0)
+  await expect(remember).toHaveAttribute('aria-checked', 'true')
+  await autoRun.check()
+  await expect(page.locator('#instance-startup-status')).toHaveText('已保存')
+})
+
+test('仪表盘设置只含仪表盘项：无启动开关、无删除实例', async ({page}) => {
   await page.goto('/')
   await page.getByRole('button', {name: '新建实例'}).click()
   const name = `home_${Date.now()}`
   await page.getByLabel('实例名称').fill(name)
   await page.getByRole('dialog').getByRole('button', {name: '创建实例', exact: true}).click()
   await page.locator('.primary-nav').getByRole('link', {name: '运行总览', exact: true}).click()
-  await page.getByRole('button', {name: '实例设置'}).click()
-  await page.getByLabel('启动时自动运行', {exact: true}).check()
-  await expect(page.locator('#instance-startup-status')).toHaveText('已保存')
-  await page.getByRole('button', {name: '删除实例', exact: true}).click()
-  await page.getByRole('button', {name: '确认删除'}).click()
-  await expect(page.getByRole('heading', {name: /好，指挥官/})).toBeVisible()
-  await expect(page.locator('.instance-card').filter({hasText: name})).toHaveCount(0)
+  await page.getByRole('button', {name: '仪表盘设置'}).click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog.getByRole('switch', {name: '卡片适应'})).toBeVisible()
+  await expect(dialog.getByLabel('启动时自动运行', {exact: true})).toHaveCount(0)
+  await expect(dialog.getByRole('button', {name: '删除实例', exact: true})).toHaveCount(0)
 })
 
 test('Logo 旁更新提示、完整提交分页、获取和应用更新', async ({page}) => {

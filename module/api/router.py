@@ -128,11 +128,19 @@ class Router:
 
     def get_startup(self, params):
         from module.runtime.deploy_settings import get_startup_run
+        from module.runtime.startup_memory import get_startup_remember
         self.configs.path(params.instance)
-        return get_startup_run(params.instance)
+        return {**get_startup_run(params.instance),
+                'remember': get_startup_remember(params.instance)}
 
     def set_startup(self, params):
-        from module.runtime.deploy_settings import set_startup_run
+        from module.runtime.deploy_settings import get_startup_run, set_startup_run
+        from module.runtime.startup_memory import get_startup_remember, set_startup_remember
         self.configs.path(params.instance)
         with self.configs.lock:
-            return set_startup_run(params.instance, params.enabled)
+            if params.enabled is not None:
+                set_startup_run(params.instance, params.enabled)
+            if params.remember is not None:
+                set_startup_remember(params.instance, params.remember)
+            return {**get_startup_run(params.instance),
+                    'remember': get_startup_remember(params.instance)}

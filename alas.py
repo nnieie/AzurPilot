@@ -1062,23 +1062,66 @@ class AzurLaneAutoScript:
         finally:
             set_task(None)
 
-    def keep_last_errlog(self, folder_path, n: int = 30):
+    def cleanup_error_logs(self, folder_path):
         """
-        清理旧的错误日志文件夹，只保留最近的 n 个。
+        按过期天数清理错误现场目录。
+
+        过期条目按「错误日志 - 过期错误日志处理方式」归置：直接删除、
+        拷贝备份（``bak/<时间戳>/``）或压缩备份
+        （``bak/<日期范围>_<实例名>.<压缩后缀>``，格式由「压缩格式」决定）。
+        ``bak`` 目录不参与扫描，不会被重复处理。清理是尽力而为的：
+        单个条目失败只记警告，不让清理本身的异常盖掉正在处理的错误。
 
         Args:
-            folder_path (str): 错误日志根目录路径。
-            n (int): 保留的文件夹数量，<=0 时不清理。
+            folder_path (str): 错误日志根目录，即 ``./log/error/<实例名>``。
+
+        Returns:
+            int: 处理的现场目录数量。
         """
-        if n <= 0:
-            return
-        folders = [
-            os.path.join(folder_path, f)
-            for f in os.listdir(folder_path)
-            if os.path.isdir(os.path.join(folder_path, f))
-        ]
-        for folder in folders[:-n]:
-            shutil.rmtree(folder)
+        from module.base import archive
+
+        days = archive.read_days(
+            self.config, 'Error_SaveErrorRetentionDays', default=0)
+        if days <= 0 or not os.path.isdir(folder_path):
+            return 0
+
+        now = time.time()
+        deadline = days * 86400
+        expired = []
+        try:
+            names = os.listdir(folder_path)
+        except OSError as e:
+            logger.warning(f'[Alas] 读取错误日志目录失败 {folder_path}: {e}，本次跳过清理')
+            return 0
+        for name in names:
+            if name == 'bak':
+                continue
+            folder = os.path.join(folder_path, name)
+            if not os.path.isdir(folder):
+                continue
+            try:
+                older = now - os.path.getmtime(folder) >= deadline
+            except OSError:
+                continue
+            if older:
+                expired.append(folder)
+
+        if not expired:
+            return 0
+
+        method = archive.read_method(
+            self.config, 'Error_SaveErrorBackUpMethod', default='zip')
+        zip_method = archive.read_zip_method(
+            self.config, 'Error_SaveErrorZipMethod', default='zip')
+        handled = archive.expire(
+            expired, os.path.join(folder_path, 'bak'), method, zip_method,
+            self.config_name)
+
+        if handled:
+            logger.info(
+                f'[Alas] 已处理 {handled} 个超过 {days} 天的错误日志'
+                f'（{method}），备份目录 log/error/{self.config_name}/bak')
+        return handled
 
     def save_error_log(self):
         """
@@ -1139,7 +1182,7 @@ class AzurLaneAutoScript:
             except Exception as e:
                 logger.error(f"[Alas] 保存错误日志失败: {e}")
                 
-            self.keep_last_errlog(config_folder, getattr(self.config, 'Error_SaveErrorCount', 0))
+            self.cleanup_error_logs(config_folder)
 
     def restart(self):
         from module.handler.login import LoginHandler

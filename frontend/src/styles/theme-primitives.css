@@ -13,7 +13,7 @@ input, select, textarea {
 input:focus, select:focus, textarea:focus {border-color: var(--theme-focus); box-shadow: 0 0 0 3px var(--theme-focus-ring)}
 button:focus-visible, a:focus-visible, summary:focus-visible {outline-color: var(--theme-focus)}
 
-.sidebar, .right-rail, .panel, .resource-card, .summary-metrics section {
+.sidebar, .right-rail, .panel, .resource-card {
   background: var(--theme-glass);
   border-color: var(--theme-glass-edge);
   box-shadow: var(--theme-shadow-panel);
@@ -22,7 +22,14 @@ button:focus-visible, a:focus-visible, summary:focus-visible {outline-color: var
 }
 .sidebar {background: var(--theme-sidebar); border-radius: 0 var(--theme-radius-panel) var(--theme-radius-panel) 0}
 .right-rail {border-radius: 0 0 0 var(--theme-radius-panel); box-shadow: var(--theme-shadow-floating), var(--theme-shadow-panel)}
-.panel, .resource-card, .summary-metrics section {border-radius: var(--theme-radius-panel)}
+.panel, .resource-card {border-radius: var(--theme-radius-panel)}
+.summary-metrics-panel .summary-metric-card,
+.summary-metrics-panel .summary-metrics section {
+  border-radius: var(--theme-radius-control, 12px);
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
 .instance-card {border-radius: var(--theme-radius-card)}
 
 .glass-material {background: var(--theme-glass); -webkit-backdrop-filter: var(--theme-chrome-filter, none); backdrop-filter: var(--theme-chrome-filter, none)}

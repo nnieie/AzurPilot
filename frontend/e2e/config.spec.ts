@@ -1,7 +1,6 @@
 import { expect, test } from '@playwright/test'
 
 const serialSelector = '[id="Alas.Emulator.Serial"]'
-const serialStatus = '[id="Alas.Emulator.Serial-status"]'
 
 test('两个页面的旧快照均能保存，字段更新互不覆盖', async ({page, context}) => {
   const second = await context.newPage()
@@ -11,12 +10,19 @@ test('两个页面的旧快照均能保存，字段更新互不覆盖', async ({
   const threshold = second.locator('[id="Alas.Error.GameStuckThreshold"]')
   await expect(threshold).toBeVisible()
   await page.locator(serialSelector).fill('parallel-page-edit')
-  await expect(page.locator(serialStatus)).toHaveText('已保存')
+  // “已保存”提示会延迟出现并自动消失，不能把瞬时 UI 当作提交屏障；
+  // 从另一页面重新读取服务端快照，才能真正证明旧快照的字段已经合并保存。
+  await expect.poll(async () => {
+    await second.reload()
+    return second.locator(serialSelector).inputValue()
+  }).toBe('parallel-page-edit')
   await threshold.fill('7')
-  await expect(second.locator('[id="Alas.Error.GameStuckThreshold-status"]')).toHaveText('已保存')
-  await second.reload()
+  await expect.poll(async () => {
+    await page.reload()
+    return page.locator('[id="Alas.Error.GameStuckThreshold"]').inputValue()
+  }).toBe('7')
   await expect(second.locator(serialSelector)).toHaveValue('parallel-page-edit')
-  await expect(threshold).toHaveValue('7')
+  await expect(page.locator('[id="Alas.Error.GameStuckThreshold"]')).toHaveValue('7')
 })
 
 test('旧响应延迟期间连续输入并切页，最终值继续保存', async ({page}) => {

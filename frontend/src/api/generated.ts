@@ -24,7 +24,7 @@ export interface Parameters {
   "settings.get": Record<string, never>
   "settings.patch": { values: Record<string, unknown> }
   "startup.get": { instance: string }
-  "startup.set": { instance: string; enabled: boolean }
+  "startup.set": { instance: string; enabled?: boolean | null; remember?: boolean | null }
   "updater.status": Record<string, never>
   "updater.commits": { offset?: number; limit?: number }
   "updater.fetch": Record<string, never>

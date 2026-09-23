@@ -1088,28 +1088,34 @@ class RewardCommission(UI, InfoHandler):
         return paths
 
     @staticmethod
-    def _prune_commission_reward_screenshots(instance, max_keep=None):
+    def _prune_commission_reward_screenshots(instance, max_keep=None, base=None):
         """清理实例目录下超量的委托收益截图，仅保留最近 max_keep 张。
 
         截图保留张数与统计页「最近委托记录」的 50 条上限对应：
         超过保留数量的旧截图按修改时间排序删除，并移除清空后的
         空月份目录。清理在每次保存截图后顺带执行。
+        ``bak/`` 下的备份不计入张数上限，也不会被删除。
 
         Args:
             instance: 配置实例名称。
             max_keep: 保留的截图张数上限，默认使用模块级常量
                 COMMISSION_REWARD_SCREENSHOT_KEEP。
+            base: 实例截图目录，默认按实例名推导；测试可注入临时目录。
         """
         import os
+
+        from module.statistics.drop_cleanup import BAK_FOLDER
 
         if max_keep is None:
             max_keep = COMMISSION_REWARD_SCREENSHOT_KEEP
 
-        base = os.path.join('.', 'log', 'commission_rewards', instance)
+        if base is None:
+            base = os.path.join('.', 'log', 'commission_rewards', instance)
         if not os.path.isdir(base):
             return
         files = []
-        for folder, _, names in os.walk(base):
+        for folder, dirs, names in os.walk(base):
+            dirs[:] = [d for d in dirs if d != BAK_FOLDER]
             for name in names:
                 if not name.endswith('.png'):
                     continue
@@ -1125,6 +1131,8 @@ class RewardCommission(UI, InfoHandler):
             except OSError:
                 continue
         for folder, _, _ in os.walk(base, topdown=False):
+            if os.path.basename(os.path.normpath(folder)) == BAK_FOLDER:
+                continue
             try:
                 os.rmdir(folder)
             except OSError:

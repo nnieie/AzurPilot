@@ -204,7 +204,7 @@ stateDiagram-v2
 
 关联配置：
 
-- `DropRecord_CommissionRecord`（do_not/save/upload/save_and_upload）控制委托掉落图的保存与上传；`DropRecord_CommissionIncomeScreenshot` 控制收益截图落盘；`DropRecord_RetentionDays` 大于 0 时截图按天数由掉落清理模块统一清理，否则保留最近 50 张（与统计页记录上限对应）。
+- `DropRecord_CommissionRecord`（do_not/save/upload/save_and_upload）控制委托掉落图的保存与上传；`DropRecord_CommissionIncomeScreenshot` 控制收益截图落盘；`DropRecord_RetentionDays` 大于 0 时截图按天数由掉落清理模块统一处理（按 `DropRecord_BackUpMethod` 删除 / 拷贝备份 / 压缩备份到 `bak/`），否则保留最近 50 张（与统计页记录上限对应，`bak/` 内的备份不计入这 50 张）。
 - `<task>.GemsFarming.CommissionLimit`、`HighValueCommissionFilterCount`（默认 32）、`HighValueCommissionReserve`（默认 2）：GemsFarming 与 ThreeOilLowCost 任务共用 GemsFarming 配置组。run() 末尾用过滤器前 N 条规则统计 pending 的高价值委托，数量达到保留量时说明「抢委托的时机未到」，把这两个任务延迟到最近的委托完成时刻（无运行中委托则延迟 120 分钟）。
 
 ## 11. 异常与错误处理

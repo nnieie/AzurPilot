@@ -14,6 +14,7 @@
 .sidebar-update-notice span {position: relative; z-index: 1}
 .nav-instance-name {min-width: 0; overflow: hidden; text-overflow: ellipsis}
 .topbar {position: sticky; top: 0; z-index: 30; gap: 16px}
+.home-active .topbar {border-bottom: none !important}
 /* 承载控件的那一行由控件自身撑起，不另外定高：定高会在分页与原模式之间差出 1px。 */
 .breadcrumb {min-width: 0; min-height: var(--instance-tab-height); align-items: center}
 .breadcrumb-current {overflow: hidden; text-overflow: ellipsis; white-space: nowrap}
@@ -160,11 +161,11 @@
 .home-deck-link:hover {border-color: var(--accent); color: var(--accent)}
 .home-active .wallpaper::after {content: ''; position: absolute; inset: 0; background: linear-gradient(168deg, rgb(0 0 0 / .30), rgb(0 0 0 / .48) 55%, rgb(0 0 0 / .62)); pointer-events: none}.instance-device {display: flex; flex-wrap: wrap; gap: 4px 10px; color: var(--muted); font-size: 11px; overflow-wrap: anywhere}
 .instance-device > span:first-child {text-transform: uppercase; flex-shrink: 0}
-.home-main {min-width: 0; padding: clamp(26px, 3.2vw, 52px) clamp(26px, 3.6vw, 56px); background: var(--bg); color: var(--text)}
+.home-main {min-width: 0; padding: clamp(26px, 3.2vw, 52px) clamp(26px, 3.6vw, 56px); background: var(--bg); color: var(--text); border-bottom-left-radius: var(--theme-radius-panel, 26px)}
 .home-main-heading {display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; padding-bottom: 22px; border-bottom: 1px solid var(--border); margin-bottom: 24px}
 .home-main-heading h2 {margin: 0; font-size: clamp(22px, 2.2vw, 30px); letter-spacing: -.6px}
 .home-instance-grid {display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 20px; align-content: start}
-.home-instance-grid .instance-card {display: flex; flex-direction: column; min-width: 0; padding: 24px; color: var(--text); text-decoration: none}
+.home-instance-grid .instance-card {display: flex; flex-direction: column; min-width: 0; padding: 24px; color: var(--text); text-decoration: none; border-radius: var(--theme-radius-card, 24px); border-bottom-left-radius: var(--theme-radius-card, 24px)}
 .home-instance-grid .instance-card-heading {display: flex; align-items: center; justify-content: space-between; gap: 12px}
 .home-instance-grid .home-instance-icon {width: 44px; height: 44px; display: grid; place-items: center; border-radius: 14px}
 .home-instance-grid .instance-card h3 {margin: 22px 0 10px; font-size: 20px; letter-spacing: -.3px; overflow-wrap: anywhere}
@@ -184,9 +185,12 @@
 [data-theme='minimal'] .main-shell > main:has(> .home-editorial), [data-theme='extreme'] .main-shell > main:has(> .home-editorial) {min-height: calc(var(--viewport-height) - var(--topbar-height))}
 .head-grid {display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-bottom: 24px}
 .head-card {padding: 22px; display: grid; gap: 15px}
-.head-card > span {display: flex; align-items: center; gap: 8px; color: var(--muted)}
-.head-card code {font-size: 13px; overflow-wrap: anywhere; user-select: all}
-.update-summary {display: flex; align-items: center; flex-wrap: wrap; gap: 20px; margin-bottom: 24px; color: var(--muted)}
+.head-card-header {display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap}
+.head-card-header > span, .head-card > span {display: flex; align-items: center; gap: 8px; color: var(--muted)}
+.head-card code {font-family: var(--theme-font-mono, "JetBrains Mono", "JetBrains Mono NL", "Cascadia Code", "Consolas", "Microsoft YaHei", monospace); font-size: 13px; overflow-wrap: anywhere; user-select: all}
+.branch-summary {display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px}
+.commit-panel .panel-heading {flex-wrap: wrap; gap: 12px}
+.update-summary {display: flex; align-items: center; flex-wrap: wrap; gap: 12px; color: var(--muted); font-size: 12px}
 .update-summary > span {display: flex; align-items: center; gap: 6px}
 .update-summary .update-available {color: var(--accent)}
 .commit-row {display: flex; gap: 16px; padding: 19px 24px; border-top: 1px solid var(--border)}
@@ -196,7 +200,7 @@
 .commit-ref {display: inline-block; font-size: 10px; padding: 0 7px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: 5px; margin-left: 9px; white-space: nowrap}
 .commit-ref.upstream {background: var(--accent-soft); color: var(--accent)}
 .commit-meta {display: flex; align-items: center; flex-wrap: wrap; gap: 12px; font-size: 11px; color: var(--muted); margin-top: 8px}
-.commit-meta code {user-select: all}
+.commit-meta code {font-family: var(--theme-font-mono, "JetBrains Mono", "JetBrains Mono NL", "Cascadia Code", "Consolas", "Microsoft YaHei", monospace); user-select: all}
 .commit-detail details {margin-top: 6px; color: var(--muted); font-size: 12px}
 .commit-detail summary {cursor: pointer}
 .commit-detail pre {white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; line-height: 1.8; color: var(--text)}

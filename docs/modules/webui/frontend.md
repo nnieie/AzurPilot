@@ -20,6 +20,7 @@ frontend/README.md 与 frontend/API.md 已经是本前端的详细文档：前�
 - 任务优先级字段的拖动排序与解析：`src/app/taskPriority.ts`（纯函数：解析/合并/移动）+ `src/components/TaskPriorityField.tsx`（拖拽交互），写入 `Scheduler_Scheduler_Tasks`，提交值用 `
 > ` 分隔（注释行与全角箭头已兼容归一）
 - 主题、语言、背景等浏览器侧偏好的保存与应用（localStorage / IndexedDB）
+- 日志面板在数据进入 React state 前只保留最近 1000 条，作为后端环形缓冲之外的独立防线，避免异常历史 payload 在 WebView2 中生成超大 DOM
 - 独立 mock 服务（`mock/`），无需 Python、ADB 或模拟器即可开发验证前端交互
 
 ### 不负责

@@ -93,14 +93,49 @@ test('玻璃主题长页面滚动时两侧栏保持贴合视口', async ({page})
   await page.goto('/#/i/testpilot/task/Alas')
   await expect(page.locator('.right-rail')).toBeVisible()
 
-  await page.evaluate(() => scrollTo(0, 500))
-  await expect.poll(() => page.evaluate(() => scrollY)).toBe(500)
+  await expect.poll(() => page.evaluate(() => { scrollTo(0, 500); return scrollY }), {timeout: 15000}).toBe(500)
 
   const sidebar = (await page.locator('.sidebar').boundingBox())!
   const rail = (await page.locator('.right-rail').boundingBox())!
   expect(Math.round(sidebar.y)).toBe(0)
   expect(Math.round(sidebar.height)).toBe(1100)
   expect(Math.round(rail.y + rail.height)).toBe(1100)
+})
+
+test('所有桌面主题的日志只在固定面板内部滚动', async ({page}) => {
+  await page.route('https://api.yppp.net/**', route => route.abort())
+  await page.setViewportSize({width: 1440, height: 900})
+  await page.goto('/#/i/testpilot/overview')
+
+  for (const theme of ['light', 'dark', 'minimal', 'extreme', 'legacy-light', 'legacy-dark']) {
+    await page.evaluate(value => localStorage.setItem('azurpilot.theme', value), theme)
+    await page.reload()
+    await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
+    const log = page.locator('.log-content')
+    await expect(log).toBeVisible()
+    await log.evaluate(element => {
+      for (let index = 0; index < 300; index += 1) {
+        const line = document.createElement('div')
+        line.textContent = `日志高度回归 ${index}`
+        element.appendChild(line)
+      }
+    })
+
+    const layout = await page.evaluate(() => {
+      const log = document.querySelector<HTMLElement>('.log-content')!
+      const panel = document.querySelector<HTMLElement>('.monitor-panel')!
+      return {
+        pageHeight: document.documentElement.scrollHeight,
+        viewportHeight: innerHeight,
+        logClientHeight: log.clientHeight,
+        logScrollHeight: log.scrollHeight,
+        panelBottom: panel.getBoundingClientRect().bottom,
+      }
+    })
+    expect(layout.pageHeight, theme).toBeLessThanOrEqual(layout.viewportHeight + 1)
+    expect(layout.logScrollHeight, theme).toBeGreaterThan(layout.logClientHeight)
+    expect(layout.panelBottom, theme).toBeLessThanOrEqual(layout.viewportHeight + 1)
+  }
 })
 
 test('简约总览、弹窗、控件和移动端导航均使用实色', async ({page}, testInfo) => {
@@ -118,7 +153,7 @@ test('简约总览、弹窗、控件和移动端导航均使用实色', async ({
   expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(true)
   await page.setViewportSize({width: 1440, height: 1100})
   await page.screenshot({path: testInfo.outputPath('minimal-overview.png'), fullPage: true})
-  await page.getByRole('button', {name: '实例设置', exact: true}).click()
+  await page.getByRole('button', {name: '仪表盘设置', exact: true}).click()
   await expect(page.getByRole('dialog')).toBeVisible()
   await expectFlat(page)
   await page.getByRole('button', {name: '关闭', exact: true}).click()

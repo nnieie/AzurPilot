@@ -15,7 +15,7 @@
   --syntax-key: var(--accent); --syntax-string: var(--secondary); --syntax-value: #7b5ea7;
   --syntax-comment: var(--muted); --syntax-punctuation: var(--text);
   --theme-font-sans: 'MiSans', "Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
-  --theme-font-mono: 'JetBrains Mono NL', Consolas, "Cascadia Code", "Microsoft YaHei", monospace;
+  --theme-font-mono: 'JetBrains Mono', 'JetBrains Mono NL', Consolas, "Cascadia Code", "Microsoft YaHei", monospace;
 
   /* 契约层 —— 颜色 */
   --theme-bg: var(--bg); --theme-surface: var(--surface); --theme-surface-muted: var(--surface-muted);

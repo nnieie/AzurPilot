@@ -1,10 +1,12 @@
-import { useState, type ReactNode } from 'react'
+import { useState, useSyncExternalStore, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, Bell, ChevronRight, CircleAlert, CirclePlay, Code2, Database, Image, Layers3, RefreshCw, Search, Server, Settings2, Sparkles, Terminal, Trash2, Wrench, X } from 'lucide-react'
+import { ArrowRight, Bell, ChevronRight, CircleAlert, CirclePlay, Code2, Database, Gauge, Image, Layers3, RefreshCw, Search, Server, Settings2, Sparkles, Terminal, Trash2, Wrench, X } from 'lucide-react'
 import type { Value } from '../api/types'
 import { useApp } from '../app/context'
 import { usesMaterial } from '../app/theme'
 import { previewUpdate, simulateStatus, useDevOverride } from '../app/devOverride'
+import { readMotionPrefs, resetMotionPrefs, setMotionReduced, setMotionSpeed, setMotionStrength, subscribeMotionPrefs } from '../app/motionPrefs'
+import { replayLastPageTransition } from '../app/pageMotion'
 import { FieldInput } from '../components/FieldInput'
 import { SegmentedControl } from '../components/SegmentedControl'
 import { GlassMaterial } from '../components/GlassMaterial'
@@ -48,6 +50,8 @@ export function DevControls() {
   const [demoTab, setDemoTab] = useState('resources')
   const [throwing, setThrowing] = useState(false)
   const override = useDevOverride()
+  const motionPrefs = useSyncExternalStore(subscribeMotionPrefs, readMotionPrefs)
+  const motionAvailable = theme !== 'minimal' && theme !== 'extreme'
   const statusLabel = override.status ? ui(STATUS_LABELS[override.status]) : ''
 
   function disableDevMode() {
@@ -118,6 +122,32 @@ export function DevControls() {
         {[0, 6, 12, 18, 24, 32].map(value => <div key={value} className="dev-blur-preset-wrap"><div className="dev-blur-preset-bg"><div style={{backdropFilter: `blur(${value}px)`, WebkitBackdropFilter: `blur(${value}px)`}}>{ui('developer.blur')} {value}px</div></div><span>{value === 0 ? ui('developer.blurNone') : value <= 12 ? ui('developer.blurLight') : value <= 24 ? ui('developer.blurMedium') : ui('developer.blurHeavy')}</span></div>)}
       </div>
     </section>}
+
+    <section className="panel config-group">
+      <div className="panel-heading"><div><Gauge size={18}/><h2 aria-label={ui('developer.motionLab')} data-text={ui('developer.motionLab')}>{ui('developer.motionLab')}</h2></div><span className="small-label">{ui('developer.liveTuning')}</span></div>
+      <div className="dev-control-block">
+        <div className="dev-control-label"><strong>{ui('developer.motionSpeed')}</strong><span>{ui('developer.motionSpeedHint')}</span></div>
+        <div className="dev-button-row">
+          {([[1, '1×'], [2, '0.5×'], [4, '0.25×']] as const).map(([value, label]) => <button key={value} type="button" className="button secondary" disabled={!motionAvailable} aria-pressed={motionPrefs.speed === value} onClick={() => setMotionSpeed(value)}>{label}</button>)}
+        </div>
+      </div>
+      <div className="dev-control-block">
+        <div className="dev-control-label"><strong>{ui('developer.motionStrength')}</strong></div>
+        <div className="dev-button-row">
+          <button type="button" className="button secondary" disabled={!motionAvailable} aria-pressed={motionPrefs.strength === 'standard'} onClick={() => setMotionStrength('standard')}>{ui('developer.motionStandard')}</button>
+          <button type="button" className="button secondary" disabled={!motionAvailable} aria-pressed={motionPrefs.strength === 'strong'} onClick={() => setMotionStrength('strong')}>{ui('developer.motionStrong')}</button>
+        </div>
+      </div>
+      <div className="dev-control-block">
+        <div className="dev-control-label"><strong>{ui('developer.motionReduced')}</strong></div>
+        <div className="dev-button-row">
+          <button type="button" className="button secondary" aria-pressed={motionPrefs.reduced} onClick={() => setMotionReduced(!motionPrefs.reduced)}>{ui('developer.motionReducedToggle')}</button>
+          <button type="button" className="button secondary" disabled={!motionAvailable} onClick={() => replayLastPageTransition()}>{ui('developer.motionReplay')}</button>
+          <button type="button" className="button secondary" onClick={() => resetMotionPrefs()}>{ui('developer.motionReset')}</button>
+        </div>
+      </div>
+      <p className="dev-hint">{ui(motionAvailable ? 'developer.motionHint' : 'developer.motionUnavailable')}</p>
+    </section>
 
     <section className="panel config-group">
       <div className="panel-heading"><div><Layers3 size={18}/><h2 aria-label={ui('developer.layers')} data-text={ui('developer.layers')}>{ui('developer.layers')}</h2></div></div>

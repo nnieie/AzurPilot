@@ -56,7 +56,7 @@ export function Overview() {
 
   // 紧凑主题省略与面包屑重复的标题行，设置按钮改挂日志面板工具栏。
   const condensed = theme === 'extreme'
-  const actions = <InstanceActions instance={instance} current={instance} status={data.status} resources={data.resources} selectedResources={selectedResources} onResourcesChange={updateResourceSelection} showLabel={condensed}/>
+  const actions = <InstanceActions resources={data.resources} selectedResources={selectedResources} onResourcesChange={updateResourceSelection} showLabel={condensed}/>
 
   // 旧版版式：左列调度器与任务计划，右列资源卡与日志；右栏在旧版主题下不渲染。
   if (usesLegacyLayout(theme)) return <div className="instance-page-grid">

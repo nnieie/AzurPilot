@@ -68,8 +68,8 @@
 | `statistics.refreshLoot` | instance | 重新聚合本设备已有本地短猫掉落记录，不访问游戏 |
 | `settings.get` | 无 | 部署设置定义及值，密码只写不读 |
 | `settings.patch` | values | 校验并保存部署设置，重启生效 |
-| `startup.get` | instance | 当前实例是否启动时自动运行 |
-| `startup.set` | instance、enabled | 修改启动时自动运行 |
+| `startup.get` | instance | 当前实例是否启动时自动运行、是否启动时记忆运行 |
+| `startup.set` | instance、enabled?、remember? | 修改启动时自动运行 / 启动时记忆运行 |
 | `updater.status` | 无 | 全局更新状态、localHead、upstreamHead、branch、ahead/behind、available、busy、canApply、canCancel、error |
 | `updater.commits` | offset（默认 0）、limit（默认 50，上限 100） | 本地与上游完整可达历史，含完整 SHA、作者、时间、提交正文、total、hasMore 与两端 HEAD |
 | `updater.fetch` | 无 | 后台获取远程更新，返回 accepted；不修改本地 HEAD |

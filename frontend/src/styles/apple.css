@@ -20,8 +20,15 @@
 }
 body {background: var(--bg); background-attachment: fixed}
 #root {isolation: isolate}
-.wallpaper {position: fixed; inset: 0; z-index: -1; pointer-events: none; background: none}
-.wallpaper img, .wallpaper video {width: 100%; height: 100%; object-fit: cover; opacity: 1}
+.wallpaper {position: fixed; inset: 0; z-index: -1; pointer-events: none; background: none; overflow: hidden}
+.wallpaper img, .wallpaper video {position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover}
+.wallpaper-media {opacity: 1; backface-visibility: hidden; transform: translateZ(0)}
+.wallpaper-media.wallpaper-hidden {opacity: 0}
+.wallpaper-fade-in {animation: wallpaper-fade-in var(--dur-5, .36s) cubic-bezier(.16, 1, .3, 1) both}
+@keyframes wallpaper-fade-in {
+  from {opacity: 0}
+  to {opacity: 1}
+}
 .lucide {stroke-width: 1.75}
 
 /* 兼容前缀必须先于标准属性，避免生产压缩后只保留 WebKit 的模糊声明。 */
@@ -163,13 +170,28 @@ main:focus {outline: none}
 .button:active:not(:disabled) {filter: brightness(.94)}
 .icon-button {width: 36px; height: 36px; border-radius: 50%; color: var(--muted)}
 .text-button {font-size: 12px; min-height: 36px; padding: 6px 8px}
-.panel, .resource-card, .summary-metrics section {
+.panel, .resource-card {
   background: var(--glass-tint);
   -webkit-backdrop-filter: blur(24px) saturate(130%);
   backdrop-filter: blur(24px) saturate(130%);
   border: 1px solid var(--glass-edge);
   border-radius: 26px;
   box-shadow: var(--glass-shadow);
+}
+.summary-metrics-panel .summary-metric-card,
+.summary-metrics-panel .summary-metrics section {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+.summary-metrics-panel .summary-metric-card:hover,
+.summary-metrics-panel .summary-metrics section:hover {
+  background: color-mix(in srgb, var(--surface) 35%, transparent);
+  border-color: color-mix(in srgb, var(--glass-edge) 60%, transparent);
+  transform: none;
 }
 
 .panel-heading {min-height: 62px; padding: 18px 22px}
@@ -258,10 +280,57 @@ input, select, textarea {border-radius: 10px; min-height: 40px; background: var(
 .home-summary > div {display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px}
 .home-summary svg {color: var(--accent)}
 .home-summary strong {font-size: 20px; font-variant-numeric: tabular-nums; color: var(--text)}
-.home-section-heading h2 {font-size: 19px; letter-spacing: -.4px}
+html.home-active .topbar,
+.main-shell:has(> main > .home-editorial) .topbar {
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+.home-main {
+  position: relative;
+  background: var(--glass-tint);
+  -webkit-backdrop-filter: blur(24px) saturate(130%);
+  backdrop-filter: blur(24px) saturate(130%);
+  border: none;
+  border-bottom-left-radius: 26px;
+  box-shadow: none;
+}
+.home-main::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 100%;
+  width: 26px;
+  height: 26px;
+  background: var(--glass-tint);
+  -webkit-backdrop-filter: blur(24px) saturate(130%);
+  backdrop-filter: blur(24px) saturate(130%);
+  -webkit-mask-image: radial-gradient(circle at 0 100%, transparent 26px, black 26.5px);
+  mask-image: radial-gradient(circle at 0 100%, transparent 26px, black 26.5px);
+  pointer-events: none;
+  border: none;
+  box-shadow: none;
+  z-index: 2;
+}
+@media (max-width: 900px) {
+  .home-main::before {display: none}
+}
+.home-main-heading {border-bottom: 1px solid color-mix(in srgb, var(--border) 45%, transparent)}
 .instance-grid {gap: 20px}
 .instance-card {padding: 26px; border-radius: 24px; transition: box-shadow .2s, border-color .2s}
+.home-instance-grid .instance-card {
+  border-radius: 24px;
+  border-bottom-left-radius: 24px;
+  background: color-mix(in srgb, var(--surface) 65%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(120%);
+  backdrop-filter: blur(16px) saturate(120%);
+  border: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
+}
 .instance-card:hover {border-color: color-mix(in srgb, var(--accent) 35%, var(--border)); box-shadow: 0 12px 36px #0071e310}
+.home-instance-grid .instance-card:hover {
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--glass-edge));
+  box-shadow: 0 12px 36px #0071e318;
+}
 .home-instance-icon {width: 48px; height: 48px; border-radius: 15px; background: linear-gradient(145deg, #51a9ff, #0071e3); color: white; box-shadow: inset 0 1px 0 #ffffff66, 0 4px 12px #0071e322}
 .instance-card h3 {font-size: 23px; letter-spacing: -.5px; margin-top: 26px}
 .instance-card-footer {font-size: 13px; margin-top: 28px}
@@ -350,7 +419,7 @@ input, select, textarea {border-radius: 10px; min-height: 40px; background: var(
 }
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more), (forced-colors: active) {
   .wallpaper {display: none}
-  .glass-material, .sidebar, .instance-menu, .task-submenu-flyout {background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none}
+  .glass-material, .sidebar, .home-main, .home-main::before, .instance-menu, .task-submenu-flyout {background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none}
   .glass-material-lens {display: none}
   .page-title h1 {color:var(--text); background:none; -webkit-text-fill-color:var(--text); -webkit-text-stroke:0; text-shadow:none; filter:none}
   .page-title h1::before, .page-title h1::after {content:none}

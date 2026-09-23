@@ -12,7 +12,7 @@
   --syntax-key: var(--accent); --syntax-string: var(--secondary); --syntax-value: #854fa0;
   --syntax-comment: var(--muted); --syntax-punctuation: var(--text);
   --theme-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-  --theme-font-mono: "Cascadia Code", "Consolas", "Microsoft YaHei", monospace;
+  --theme-font-mono: "JetBrains Mono", "JetBrains Mono NL", "Cascadia Code", "Consolas", "Microsoft YaHei", monospace;
   --theme-bg: var(--bg); --theme-surface: var(--surface); --theme-surface-muted: var(--surface-muted);
   --theme-text: var(--text); --theme-muted: var(--muted); --theme-border: var(--border);
   --theme-accent: var(--accent); --theme-accent-hover: var(--accent-hover); --theme-accent-soft: var(--accent-soft);

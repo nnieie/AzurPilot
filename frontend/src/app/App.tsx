@@ -14,6 +14,8 @@ import { TaskNav } from '../components/TaskNav'
 import { isDesktopDevice } from '../components/TaskNavFlyout'
 import { TaskSwitcher } from '../components/TaskSwitcher'
 import { useUpdater } from './updater'
+import { usePageMotion } from './pageMotion'
+import { useGlassPointerLight } from './pointerLight'
 import { recordDevLogoClick } from './devMode'
 import { useDevOverride } from './devOverride'
 import { usesLegacyLayout, usesLegacyShell, showsRightRail } from './theme'
@@ -126,6 +128,8 @@ export function App() {
      刷新时地址栏已经是用户要停留的页面，写进去就不再改。 */
   const freshOpen = useRef((performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined)?.type === 'navigate')
   const update = useUpdater()
+  usePageMotion()
+  useGlassPointerLight()
   const current = instances.find(item => item.name === instance)
   const base = instance ? `/i/${instance}` : ''
   const taskMatch = location.pathname.match(/\/task\/([^/]+)/)

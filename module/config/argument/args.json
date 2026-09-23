@@ -527,9 +527,32 @@
         "type": "checkbox",
         "value": false
       },
-      "SaveErrorCount": {
+      "SaveErrorRetentionDays": {
         "type": "input",
-        "value": 30
+        "value": 30,
+        "validate": [
+          0,
+          3650
+        ]
+      },
+      "SaveErrorBackUpMethod": {
+        "type": "select",
+        "value": "zip",
+        "option": [
+          "delete",
+          "zip",
+          "copy"
+        ]
+      },
+      "SaveErrorZipMethod": {
+        "type": "select",
+        "value": "zip",
+        "option": [
+          "bz2",
+          "gzip",
+          "xz",
+          "zip"
+        ]
       },
       "OnePushConfig": {
         "type": "textarea",
@@ -598,7 +621,7 @@
       },
       "LlmAnalysis": {
         "type": "checkbox",
-        "value": true
+        "value": false
       },
       "LlmApiKey": {
         "type": "textarea",
@@ -726,7 +749,7 @@
       },
       "CloseEmulatorDuringLongWait": {
         "type": "checkbox",
-        "value": true,
+        "value": false,
         "option": [
           true,
           false
@@ -779,6 +802,25 @@
         "validate": [
           0,
           3650
+        ]
+      },
+      "BackUpMethod": {
+        "type": "select",
+        "value": "zip",
+        "option": [
+          "delete",
+          "zip",
+          "copy"
+        ]
+      },
+      "ZipMethod": {
+        "type": "select",
+        "value": "zip",
+        "option": [
+          "bz2",
+          "gzip",
+          "xz",
+          "zip"
         ]
       },
       "AzurStatsID": {
@@ -4152,7 +4194,7 @@
       },
       "TimeLimit": {
         "type": "datetime",
-        "value": "2020-01-01 00:00:00",
+        "value": "2023-01-01 00:00:00",
         "validate": "datetime"
       }
     },
@@ -14975,7 +15017,8 @@
       },
       "TargetZone": {
         "type": "input",
-        "value": 0
+        "value": "0",
+        "mode": "text"
       },
       "StayInZone": {
         "type": "checkbox",

@@ -23,7 +23,6 @@
 :root[data-theme='extreme'] .topbar,
 :root[data-theme='extreme'] .panel,
 :root[data-theme='extreme'] .resource-card,
-:root[data-theme='extreme'] .summary-metrics section,
 :root[data-theme='extreme'] .instance-card {border-radius: 0}
 :root[data-theme='extreme'] .scheduler-widget,
 :root[data-theme='extreme'] .scheduler-stats > div,
@@ -143,9 +142,15 @@
 :root[data-theme='extreme'] .log-panel {flex: 1; min-height: 0}
 :root[data-theme='extreme'] .log-content {height: auto; flex: 1; min-height: 150px; padding: 7px 11px; line-height: 1.45}
 
-/* 右栏顶部的「实例工作区 / 实例名」与面包屑重复，整块隐去省一行。
-   窄屏抽屉不依赖它的关闭按钮 —— 顶栏的日历图标同样能开关右栏。 */
-:root[data-theme='extreme'] .right-rail-header {display: none}
+/* 桌面可省略重复标题，窄屏需保留抽屉内的关闭入口。 */
+@media (min-width: 951px) {
+  :root[data-theme='extreme'] .right-rail-header {display: none}
+}
+@media (max-width: 950px) {
+  /* 窄屏由文档滚动承载总览，监控面板使用共享层的高度，避免零基准伸缩压扁截图。 */
+  :root[data-theme='extreme'] .overview-page {height: auto}
+  :root[data-theme='extreme'] .overview-main > .panel {flex: none}
+}
 
 /* 内容留白：窄屏断点用 !important 写死的面板内边距一并压掉 */
 :root[data-theme='extreme'] main {min-height: 0; padding: 4px}
@@ -177,6 +182,10 @@
 :root[data-theme='extreme'] .welcome {padding: 48px 16px}
 :root[data-theme='extreme'] .empty {padding: 20px 14px; min-height: 120px}
 :root[data-theme='extreme'] .chart-metrics {padding: 14px 16px 8px; gap: 34px}
+:root[data-theme='extreme'] .summary-metrics-panel {padding: 10px 14px}
+:root[data-theme='extreme'] .summary-metrics-panel .summary-metrics {gap: 8px 12px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr))}
+:root[data-theme='extreme'] .summary-metrics-panel .summary-metric-card {padding: 6px 8px; border-radius: 0; min-height: auto; background: transparent; border: none}
+:root[data-theme='extreme'] .summary-metrics-panel .summary-metric-card strong {font-size: 16px}
 :root[data-theme='extreme'] .home-intro {padding: 2px 0 12px}
 :root[data-theme='extreme'] .home-intro .page-title {margin-bottom: 8px}
 :root[data-theme='extreme'] .home-summary {gap: 12px; padding: 8px 0 12px; margin-bottom: 12px}

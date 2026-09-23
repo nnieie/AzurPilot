@@ -33,7 +33,8 @@ export function FieldInput({id, value, onChange, type, options, disabled, label,
     </Select>
   }
   if (type === 'textarea' || type === 'task_priority') return <AutoTextarea id={id} value={String(value ?? '')} disabled={disabled} label={label} invalid={invalid} onChange={onChange}/>
-  const isNumber = typeof value === 'number' || ['int', 'number', 'float'].includes(type ?? '')
+  // mode=text 用于语义上允许数字或文本的字段；即使旧配置当前存的是数字也必须显示文本框。
+  const isNumber = mode !== 'text' && (typeof value === 'number' || ['int', 'number', 'float'].includes(type ?? ''))
   const Input = type === 'password' ? PasswordInput : 'input'
   return <Input {...accessibility} id={id} disabled={disabled}
     inputMode={isNumber ? 'decimal' : undefined}

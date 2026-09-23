@@ -110,6 +110,22 @@ class FarmingEventStopTests(unittest.TestCase):
             self.assertTrue(campaign.event_time_limit_triggered())
         self.assert_farming_stopped_without_stage_change(campaign)
 
+    def test_default_and_legacy_time_limits_are_disabled(self):
+        args = read_file('module/config/argument/args.json')
+        self.assertEqual(
+            datetime.fromisoformat(args['EventGeneral']['EventGeneral']['TimeLimit']['value']),
+            DEFAULT_TIME,
+        )
+
+        campaign = self.make_campaign()
+        now = datetime(2026, 9, 22, 12)
+        for limit in (DEFAULT_TIME, datetime(2020, 1, 1)):
+            with self.subTest(limit=limit):
+                campaign.config.override(EventGeneral_TimeLimit=limit)
+                with patch('module.campaign.campaign_event.current_time', return_value=now):
+                    self.assertFalse(campaign.event_time_limit_triggered())
+        self.assertEqual(campaign.config.modified, {})
+
     def test_missing_event_entrance_stops_without_rewriting_stage(self):
         campaign = self.make_campaign()
         campaign.appear = Mock(return_value=True)

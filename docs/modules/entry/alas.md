@@ -331,7 +331,7 @@ stateDiagram-v2
 | `_warmup_measured_cold_seconds` / `_warmup_measured_game_only_seconds` | 实例属性 | 每次预热成功后覆盖，用于动态计算提前量 |
 | `_i18n_task_names` | 模块级缓存 | 进程内一次加载，供推送通知使用本地化任务名 |
 | `_daily_summary_settings` | 实例属性 + 文件 mtime 比对 | 配置文件变更后重读 |
-| 错误现场 | `./log/error/<config>/<时间戳>/` | 截图与日志均经敏感信息遮罩后落盘，按 `Error_SaveErrorCount` 清理旧目录 |
+| 错误现场 | `./log/error/<config>/<时间戳>/` | 截图与日志均经敏感信息遮罩后落盘，按 `Error_SaveErrorRetentionDays` 过期后删除或备份到 `bak/` |
 
 缓存失效是本模块的「配置热重载」机制：**不做增量合并，直接丢弃整个 `config` 缓存让下轮任务重新加载**。这保证每次任务绑定参数时拿到的是磁盘最新值，代价是任务之间才生效、任务执行中途不切换（任务中途的配置感知由配置系统的 `check_task_switch` 负责，见 [配置系统](../config.md)）。注意：`module/config/deep.py` 中的 `deep_iter_diff` 目前没有调用方，热重载并不基于字典差异比较，而是基于 mtime 检查 + 整体重建。
 
@@ -405,7 +405,7 @@ get_next() 选中 MyFeature（Enable=true，NextRun 已过期）
 ## 19. 调试方法
 
 - **日志文件**：`loop()` 启动即按实例名设置文件日志；任务边界用 `logger.hr(task)` 分隔，全文检索 `[Alas]` 可看到调度决策链（等待、注入 Restart、重启模拟器、看门狗触发）。
-- **错误现场**：`./log/error/<config_name>/<时间戳>/` 内含最近截图与裁剪后的 `log.txt`，已做敏感信息遮罩；保留数量由 `Error_SaveErrorCount` 控制。
+- **错误现场**：`./log/error/<config_name>/<时间戳>/` 内含最近截图与裁剪后的 `log.txt`，已做敏感信息遮罩；保留天数由 `Error_SaveErrorRetentionDays` 控制（0 = 不清理），过期现场按 `Error_SaveErrorBackUpMethod` 删除、拷贝备份或压缩备份到 `log/error/<实例名>/bak/`。
 - **常见问题排查顺序**：模拟器反复离线先看 `连续次数 X/阈值` 与 `_try_restart_emulator` 的退避日志；任务反复失败看 `failure_record` 相关的「连续失败 N 次」日志；任务卡住但日志还在动，怀疑逻辑死循环，开 `Error.WatchdogEnable` + `WatchdogTaskEnable` 验证；服务器相关看 `[服务器检查]` 前缀日志。
 - **WebUI 侧**：worker 通过日志队列与 `set_task()` 向父进程发布实时日志与当前任务名，前端「日志」页即来源于此。
 - **本地调试服务**：环境变量 `ALAS_DEBUG_SERVER=1` 时启动仅监听本机的调试服务，用于向统计库注入测试数据，默认关闭。

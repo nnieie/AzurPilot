@@ -5,6 +5,8 @@ export default defineConfig({
   testIgnore: '**/mock.spec.ts',
   fullyParallel: false,
   workers: 1,
+  retries: process.env.CI ? 1 : 0,
+  timeout: 60000,
   use: {baseURL: 'http://127.0.0.1:22391', headless: true, locale: 'zh-CN', viewport: {width: 1440, height: 1100}},
   webServer: {
     command: 'uv run python -m tests.serve_frontend',

@@ -106,7 +106,9 @@
       "HandleError": true,
       "SaveError": true,
       "StrictRestart": false,
-      "SaveErrorCount": 30,
+      "SaveErrorRetentionDays": 30,
+      "SaveErrorBackUpMethod": "zip",
+      "SaveErrorZipMethod": "zip",
       "OnePushConfig": "provider: null",
       "ScreenshotLength": 1,
       "GameStuckRestart": false,
@@ -119,7 +121,7 @@
       "WatchdogTaskTimeout": 120,
       "RestartOperationTimeoutEnable": false,
       "RestartOperationTimeout": 120,
-      "LlmAnalysis": true,
+      "LlmAnalysis": false,
       "LlmApiKey": null,
       "LlmApiBase": "https://api.xiaomimimo.com/v1",
       "LlmModel": "mimo-v2.5-pro"
@@ -141,7 +143,7 @@
       "ScreenshotInterval": 0.3,
       "CombatScreenshotInterval": 1.0,
       "TaskHoardingDuration": 0,
-      "CloseEmulatorDuringLongWait": true,
+      "CloseEmulatorDuringLongWait": false,
       "WhenTaskQueueEmpty": "goto_main",
       "WhenSchedulerStopped": "stay_there",
       "WarmupEnable": true,
@@ -150,6 +152,8 @@
     "DropRecord": {
       "SaveFolder": "./screenshots",
       "RetentionDays": 0,
+      "BackUpMethod": "zip",
+      "ZipMethod": "zip",
       "AzurStatsID": null,
       "API": "default",
       "ResearchRecord": "do_not",
@@ -785,7 +789,7 @@
   "EventGeneral": {
     "EventGeneral": {
       "PtLimit": 0,
-      "TimeLimit": "2020-01-01 00:00:00"
+      "TimeLimit": "2023-01-01 00:00:00"
     },
     "TaskBalancer": {
       "Enable": false,

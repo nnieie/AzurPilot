@@ -42,10 +42,24 @@ export function Updater() {
     <PageTitle title={ui('nav.updater')} actions={<><button className="button" disabled={disabled} onClick={() => void act('updater.fetch')}><RefreshCw size={16} className={data?.state === 'fetch' || data?.state === 'checking' ? 'spin' : ''}/>{ui('updater.fetch')}</button><button className="button primary" disabled={disabled || !data?.canApply} onClick={() => void act('updater.apply')}><Download size={16}/>{ui('updater.update')}</button>{data?.canCancel && <button className="button" disabled={busy || connection !== 'ready'} onClick={() => void act('updater.cancel')}><X size={16}/>{ui('updater.cancel')}</button>}</>}/>
     {(error || statusError || data?.error) && <ErrorBox message={error || statusError || data?.error || ''} retry={() => {refresh(); setRetry(value => value + 1)}}/>}
     {!data ? <Loading/> : <>
-      <div className="update-summary"><span><GitBranch size={16}/>{data.branch}</span><span className={data.available ? 'update-available' : ''}>{data.busy ? <RefreshCw size={15} className="spin"/> : data.state === 'failed' || !upstream ? <CircleAlert size={15}/> : <Check size={15}/>} {statusLabel}</span>{data.ahead > 0 && <span title={ui('updater.localAhead')}><ArrowUp size={14}/>{data.ahead}</span>}{data.behind > 0 && <span title={ui('updater.localBehind')}><ArrowDown size={14}/>{data.behind}</span>}</div>
-      <div className="head-grid">{[[ui('updater.localHead'), local], [ui('updater.upstreamHead'), upstream]].map(([label, sha]) => <div className="panel head-card" key={label}><span><GitCommitHorizontal size={18}/>{label}</span><code title={sha ?? ''}>{sha ?? ui('common.notFetched')}</code></div>)}</div>
+      <div className="head-grid">{[
+        {label: ui('updater.localHead'), sha: local, isLocal: true},
+        {label: ui('updater.upstreamHead'), sha: upstream, isLocal: false},
+      ].map(({label, sha, isLocal}) => <div className="panel head-card" key={label}>
+        <div className="head-card-header">
+          <span><GitCommitHorizontal size={18}/>{label}</span>
+          {isLocal && <div className="update-summary">
+            <span className={data.available ? 'update-available' : ''}>{data.busy ? <RefreshCw size={15} className="spin"/> : data.state === 'failed' || !upstream ? <CircleAlert size={15}/> : <Check size={15}/>} {statusLabel}</span>
+            {data.ahead > 0 && <span title={ui('updater.localAhead')}><ArrowUp size={14}/>{data.ahead}</span>}
+            {data.behind > 0 && <span title={ui('updater.localBehind')}><ArrowDown size={14}/>{data.behind}</span>}
+          </div>}
+        </div>
+        <code title={sha ?? ''}>{sha ?? ui('common.notFetched')}</code>
+      </div>)}</div>
       {data.ahead > 0 && <p className="muted">{ui('updater.aheadCommits', {count: data.ahead})}</p>}
-      <section className="panel commit-panel"><div className="panel-heading"><div><GitCommitHorizontal size={18}/><h2>{ui('updater.commits')}</h2><span className="count-badge">{history?.total ?? '—'}</span></div></div>
+      <section className="panel commit-panel"><div className="panel-heading"><div><GitCommitHorizontal size={18}/><h2>{ui('updater.commits')}</h2><span className="count-badge">{history?.total ?? '—'}</span></div>
+        <div className="branch-summary"><GitBranch size={16}/><span>{data.branch}</span></div>
+      </div>
         {loading ? <Loading/> : history?.entries.length ? <div className="commit-list">{history.entries.map(commit => <article className="commit-row" key={commit.sha}>
           <GitCommitHorizontal className="commit-node" size={18}/><div className="commit-detail"><div className="commit-subject">{commit.message.split('\n')[0]}{commit.sha === local && <span className="commit-ref">{ui('updater.localHead')}</span>}{commit.sha === upstream && <span className="commit-ref upstream">{ui('updater.upstreamHead')}</span>}</div>
           {commit.message.includes('\n') && <details><summary>{ui('updater.expandDetails')}</summary><pre>{commit.message.slice(commit.message.indexOf('\n')).trim()}</pre></details>}

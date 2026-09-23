@@ -208,7 +208,15 @@ Error:
   HandleError: true
   SaveError: true
   StrictRestart: false
-  SaveErrorCount: 30
+  SaveErrorRetentionDays:
+    value: 30
+    validate: [0, 3650]
+  SaveErrorBackUpMethod:
+    value: zip
+    option: [ delete, zip, copy ]
+  SaveErrorZipMethod:
+    value: zip
+    option: [ bz2, gzip, xz, zip ]
   OnePushConfig:
     type: textarea
     mode: yaml
@@ -232,7 +240,7 @@ Error:
   RestartOperationTimeout:
     value: 120
     validate: [10, 600]
-  LlmAnalysis: true
+  LlmAnalysis: false
   LlmApiKey:
     type: textarea
     value: ""
@@ -282,7 +290,7 @@ Optimization:
   TaskHoardingDuration: 0
   CloseEmulatorDuringLongWait:
     type: checkbox
-    value: true
+    value: false
     option: [true, false]
   WhenTaskQueueEmpty:
     value: goto_main
@@ -302,6 +310,12 @@ DropRecord:
   RetentionDays:
     value: 0
     validate: [0, 3650]
+  BackUpMethod:
+    value: zip
+    option: [ delete, zip, copy ]
+  ZipMethod:
+    value: zip
+    option: [ bz2, gzip, xz, zip ]
   AzurStatsID: null
   API:
     value: default
@@ -711,7 +725,7 @@ GemsFarming:
 
 EventGeneral:
   PtLimit: 0
-  TimeLimit: 2020-01-01 00:00:00
+  TimeLimit: 2023-01-01 00:00:00
 TaskBalancer:
   Enable: false
   CoinLimit: 10000
@@ -1315,7 +1329,9 @@ OpsiMeowfficerFarming:
     value: 5
     option: [ 2, 3, 4, 5, 6, 10 ]
   TargetZone:
-    value: 0
+    # 显式文本模式兼容旧配置中的数字值，否则 WebUI 会渲染 number 输入框并拒绝逗号列表。
+    mode: text
+    value: '0'
   StayInZone: false
   APPreserveUntilReset: false
   SirenDetectorSearch_Enable: false

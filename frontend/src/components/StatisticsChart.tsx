@@ -58,13 +58,15 @@ export function StatisticsChart({series, tables = [], heading = true, expanded =
 
   const element = useRef<HTMLDivElement>(null)
 
-  /* 图表高度 = 面板可视高度 − 它上方的内容（指标芯片、数值摘要）。
-     若沿用 height:100%，canvas 会比可视区高出一整块上方内容，x 轴与缩放条被推到
-     滚动区外，看上去就是「主区域下方没填满」。这里直接算出来，图表既铺满又不被裁。 */
+  /* 全屏放大模式下根据固定视口计算高度；常规贯穿模式下沿用样式表定义的舒适高度。 */
   useLayoutEffect(() => {
     const canvas = element.current
     const panel = canvas?.closest<HTMLElement>('.statistics-chart')
     if (!canvas || !panel) return
+    if (!expanded) {
+      canvas.style.height = ''
+      return
+    }
     const resize = () => {
       let above = 0
       for (const child of panel.children) {
@@ -85,7 +87,7 @@ export function StatisticsChart({series, tables = [], heading = true, expanded =
     observer.observe(panel)
     for (const child of panel.children) if (child !== canvas) observer.observe(child)
     return () => observer.disconnect()
-  }, [series, language])
+  }, [series, language, expanded])
 
   function toggleKey(key: string) {
     setSelectedKeys(prev => (prev.includes(key) ? (prev.length <= 1 ? prev : prev.filter(k => k !== key)) : [...prev, key]))

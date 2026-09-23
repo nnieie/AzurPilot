@@ -9,6 +9,7 @@
 @import './theme-primitives.css';
 @import './forms.css';
 @import './compact.css';
+@import './motion.css';
 
 :root {--form-shadow: none}
 /* 关闭共享组件里的装饰效果，不创建额外的滤镜或动画合成层。 */
@@ -57,7 +58,7 @@ main:focus {outline: none}
 .title-actions {gap: 8px}
 .panel-heading h2 {font-size: 15px}
 .panel-heading > div > svg, .eyebrow, .home-summary svg {color: var(--secondary)}
-.panel, .resource-card, .summary-metrics section, .instance-card {border-radius: var(--radius)}
+.panel, .resource-card, .instance-card {border-radius: var(--radius)}
 .button {font-size: 13px; font-weight: 600}
 .button.primary:hover:not(:disabled) {transform: none}
 /* 本主题全局关掉了动画与过渡，所以按下反馈不能用位移或缩放，改成底色与字色互换。 */

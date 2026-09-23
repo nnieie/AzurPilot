@@ -97,7 +97,8 @@ function SchedulerToggle({name, status}: {name: string; status: Status}) {
     >{running ? <Square size={13} aria-hidden="true"/> : <Play size={13} aria-hidden="true"/>}</span>
 }
 
-/** 删除实例的二次确认：确认键连点三次才真删，每点一次换一档颜色。 */
+/** 删除实例的三次确认：连点三次才真删，每次换一档提示文案与抖动幅度，末档转强调红。 */
+const PROMPT_KEYS = ['instance.deletePrompt', 'instance.deletePrompt2', 'instance.deletePrompt3'] as const
 function DeleteInstance({name, onClose}: {name: string; onClose: () => void}) {
     const [step, setStep] = useState(0)
     const [busy, setBusy] = useState(false)
@@ -130,7 +131,7 @@ function DeleteInstance({name, onClose}: {name: string; onClose: () => void}) {
     /* 三次点击对应三档：警戒 → 危险 → 执行；前两下只推进档位。 */
     const phase = ['armed', 'danger', 'execute'][step]
     return <Modal title={ui('instance.delete')} onClose={onClose}><div className="form-stack">
-        <p>{ui('instance.deletePrompt', {name})}</p>
+        <p>{ui(PROMPT_KEYS[step] ?? PROMPT_KEYS[0], {name})}</p>
         {error && <ErrorBox message={error}/>}
         <button
             className={`button tab-delete-confirm ${phase}`}

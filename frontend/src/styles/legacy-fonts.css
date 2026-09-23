@@ -13,5 +13,5 @@
   font-display: swap;
 }
 
-/* components.css 把日志字体写死成 Cascadia Code，这里改回旧版用的等宽字体。 */
+/* 日志区域统一继承等宽字体变量。 */
 .log-content {font-family: var(--theme-font-mono)}

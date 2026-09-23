@@ -805,9 +805,24 @@
       "name": "Prohibit restarting when errors occur in sensitive tasks",
       "help": "When an error occurs, directly terminate AzurPilot without restarting the game. Use for debugging, commission tasks, research tasks, Obscured Zones, Abyssal Zones, and other critical timing tasks"
     },
-    "SaveErrorCount": {
-      "name": "Keep up to X error logs",
-      "help": "Error logs exceeding the upper limit will be deleted. If it is 0 or a negative value, there is no limit."
+    "SaveErrorRetentionDays": {
+      "name": "Error log expiration (days)",
+      "help": "Error scenes older than this are handled by the method below\n0 = keep everything"
+    },
+    "SaveErrorBackUpMethod": {
+      "name": "Expired error log processing method",
+      "help": "The backup directory is ./log/error/<instance>/bak",
+      "delete": "Delete",
+      "zip": "Compress backup",
+      "copy": "Copy backup"
+    },
+    "SaveErrorZipMethod": {
+      "name": "Compression format",
+      "help": "",
+      "bz2": "bz2",
+      "gzip": "gzip",
+      "xz": "xz",
+      "zip": "zip"
     },
     "OnePushConfig": {
       "name": "Error push settings",
@@ -1018,7 +1033,22 @@
     },
     "RetentionDays": {
       "name": "Screenshot retention (days)",
-      "help": "Drop record screenshots older than this many days are deleted automatically\n0 = no day-based cleanup (commission reward screenshots still keep the latest 50 only)"
+      "help": "Drop record screenshots older than this many days are handled by the method below\n0 = no day-based cleanup (commission reward screenshots still keep the latest 50 only)"
+    },
+    "BackUpMethod": {
+      "name": "Expired screenshot processing method",
+      "help": "The backup directory is the bak folder under the save directory (for commission rewards, under each instance folder)",
+      "delete": "Delete",
+      "zip": "Compress backup",
+      "copy": "Copy backup"
+    },
+    "ZipMethod": {
+      "name": "Compression format",
+      "help": "",
+      "bz2": "bz2",
+      "gzip": "gzip",
+      "xz": "xz",
+      "zip": "zip"
     },
     "AzurStatsID": {
       "name": "AzurStat ID",

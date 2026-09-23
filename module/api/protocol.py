@@ -117,7 +117,8 @@ class CommitsParams(Params):
 
 
 class StartupParams(InstanceParams):
-    enabled: StrictBool
+    enabled: StrictBool | None = None
+    remember: StrictBool | None = None
 
 
 def response(request_id, result):

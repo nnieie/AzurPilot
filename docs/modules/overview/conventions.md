@@ -150,7 +150,7 @@ while True:
 ### 5.2 处理哲学
 
 - **异常只在顶层捕获。** 中间层只负责 `raise`，不 `try`。这样任何错误都带着完整调用栈到达统一处理点，避免「每层都处理一点、每层都吞一点」的模糊状态。业务代码唯一的例外是**可预期的流程异常**（见下节）。
-- **捕获后归档错误现场。** `save_error_log()` 把最近截图（由 `Error_ScreenshotLength` 控制的截图队列）与日志写入 `./log/error/<配置名>/<时间戳>/`，并按 `Error_SaveErrorCount` 清理旧目录。
+- **捕获后归档错误现场。** `save_error_log()` 把最近截图（由 `Error_ScreenshotLength` 控制的截图队列）与日志写入 `./log/error/<配置名>/<时间戳>/`，并按 `Error_SaveErrorRetentionDays` 过期后删除或备份到 `bak/`。
 - **归档前清洗用户信息。** 错误日志默认会被用户分享到社区，因此截图遮罩指挥官昵称与 UID（`assets/mask/` 遮罩模板），日志中的本机路径替换为 `C:\fakepath\AzurLaneAutoScript`。新增可能截到个人信息的识别功能时应检查是否需要补遮罩。
 - **重启是万能恢复手段。** 调度器对几乎所有异常的最终答案都是「重启游戏 / 重启模拟器 / 注入 Restart 任务」，只有 `ScriptError` 连续 3 次（代码 bug，重试无意义）才退出。整体策略是调度器永不主动退出。
 

@@ -21,6 +21,7 @@ from module.logger import logger
 from module.runtime.config import DeployConfig
 from module.runtime.process_manager import ProcessManager
 from module.runtime.setting import State, mark_dependency_sync_pending
+from module.runtime.startup_memory import mark_update_restart
 from module.runtime.task_handler import TaskHandler, get_next_time
 
 
@@ -437,6 +438,7 @@ class Updater(DeployConfig, GitManager):
                 )
             try:
                 # 只有清理结束后父进程才能终止当前 WebUI，避免中途强杀。
+                mark_update_restart()
                 self._trigger_reload()
             except Exception as exc:
                 State._restart_requested = False

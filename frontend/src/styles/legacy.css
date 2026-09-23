@@ -11,6 +11,7 @@
 @import './theme-primitives.css';
 @import './forms.css';
 @import './legacy-fonts.css';
+@import './motion.css';
 
 /* MD3 输入框：底部强调指示线与浅色容器背景，聚焦时底线加粗变主色 */
 :root {--form-shadow: none}
@@ -148,7 +149,7 @@ main:focus {outline: none}
 .home-summary strong {color: var(--text); font-size: 20px; font-variant-numeric: tabular-nums}
 .title-actions {position: relative; gap: 8px; padding: 4px}
 .panel-heading h2 {font-size: 15px}
-.panel, .resource-card, .summary-metrics section, .instance-card {border-radius: var(--theme-radius-panel)}
+.panel, .resource-card, .instance-card {border-radius: var(--theme-radius-panel)}
 
 /* MD3 按钮规范：高度 40px，全胶囊圆角 20px，文字 14px Medium，标准状态层 */
 .button {
@@ -399,18 +400,18 @@ button:disabled, input:disabled, textarea:disabled, select:disabled, .select-tri
 :root[data-theme='legacy-dark'] .toggle:active {transform: scale(.96)}
 :root[data-theme='legacy-light'] .monitor-segmented button:active,
 :root[data-theme='legacy-dark'] .monitor-segmented button:active {background: var(--accent-soft)}
-/* 旧版外壳下换页：页面内容淡入并轻微上移，动画挂在页面根元素与内容列上。 */
+/* 旧版外壳下换页：页面内容淡入，动画挂在页面根元素与内容列上。 */
 .app-shell.legacy-shell .instance-page-grid,
 .app-shell.legacy-shell .statistics-legacy,
 .app-shell.legacy-shell .task-config-settings-inner,
 .app-shell.legacy-shell .task-config-rail-slot .task-rail-directory {animation: legacy-page-in .22s cubic-bezier(.22, .61, .36, 1)}
-@keyframes legacy-page-in {from {opacity: 0; transform: translateY(6px)} to {opacity: 1; transform: none}}
-/* 总览页在两个视图间切换：面板用自己的动画，按切换方向从上方或下方滑入。 */
+@keyframes legacy-page-in {from {opacity: 0} to {opacity: 1}}
+/* 总览页在两个视图间切换：面板用自己的动画，按切换方向淡入。 */
 .app-shell.legacy-shell .instance-page-panel {animation: none}
 .app-shell.legacy-shell .instance-page-panel.panel-drop {animation: panel-drop .24s cubic-bezier(.22, .61, .36, 1)}
 .app-shell.legacy-shell .instance-page-panel.panel-rise {animation: panel-rise .24s cubic-bezier(.22, .61, .36, 1)}
-@keyframes panel-drop {from {opacity: 0; transform: translateY(-6px)} to {opacity: 1; transform: none}}
-@keyframes panel-rise {from {opacity: 0; transform: translateY(6px)} to {opacity: 1; transform: none}}
+@keyframes panel-drop {from {opacity: 0} to {opacity: 1}}
+@keyframes panel-rise {from {opacity: 0} to {opacity: 1}}
 @media (prefers-reduced-motion: reduce) {.app-shell.legacy-shell .instance-page-grid, .app-shell.legacy-shell .statistics-legacy, .app-shell.legacy-shell .task-config-settings-inner, .app-shell.legacy-shell .instance-page-panel, .app-shell.legacy-shell .instance-page-panel.panel-drop, .app-shell.legacy-shell .instance-page-panel.panel-rise, .app-shell.legacy-shell .task-config-rail-slot .task-rail-directory {animation: none}}
 .app-shell.legacy-shell > .main-shell > main > .instance-page-grid,
 .app-shell.legacy-shell > .main-shell > main > .task-config-legacy {flex-shrink: 1; min-height: 0}
@@ -826,6 +827,10 @@ button:disabled, input:disabled, textarea:disabled, select:disabled, .select-tri
   /* 窄屏没有页内滚动区（下面的定高规则都在 ≥951px 里），
      外壳再钉死视口加 overflow:hidden 就会把后面的内容整段裁掉、页面还滚不动。 */
   .app-shell.legacy-shell, .app-shell.legacy-shell > .main-shell {height: auto; overflow: visible}
+  /* 桌面 main 的零基准伸缩和裁剪也必须复位，否则子页仍被压成零高。 */
+  .app-shell.legacy-shell > .main-shell > main,
+  .app-shell.legacy-shell > .main-shell > main:has(.instance-page-grid),
+  .app-shell.legacy-shell > .main-shell > main:has(.task-config-legacy) {flex: none; overflow: visible}
   .instance-page-grid {display: flex; flex-direction: column; gap: 12px; height: auto}
   .instance-page-rail, .instance-page-main {overflow: visible}
   .task-config-legacy {display: block}
@@ -852,3 +857,15 @@ button:disabled, input:disabled, textarea:disabled, select:disabled, .select-tri
 
 @keyframes rail-view-in-right {from {opacity: 0; transform: translateX(7px)} to {opacity: 1; transform: none}}
 @keyframes rail-view-in-left {from {opacity: 0; transform: translateX(-7px)} to {opacity: 1; transform: none}}
+
+/* 任务设置列表与右侧栏不显示滚动条。 */
+.app-shell.legacy-shell .task-nav,
+.app-shell.legacy-shell .group-nav {scrollbar-width: none}
+.app-shell.legacy-shell .task-nav::-webkit-scrollbar,
+.app-shell.legacy-shell .group-nav::-webkit-scrollbar {width: 0}
+
+/* 调度栏视图下的容器与其中的任务列表不显示滚动条。 */
+.app-shell.legacy-shell .task-rail-scheduler,
+.app-shell.legacy-shell .rail-task-list {scrollbar-width: none}
+.app-shell.legacy-shell .task-rail-scheduler::-webkit-scrollbar,
+.app-shell.legacy-shell .rail-task-list::-webkit-scrollbar {width: 0}

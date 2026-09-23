@@ -129,7 +129,9 @@ class GeneratedConfig:
     Error_HandleError = True
     Error_SaveError = True
     Error_StrictRestart = False
-    Error_SaveErrorCount = 30
+    Error_SaveErrorRetentionDays = 30
+    Error_SaveErrorBackUpMethod = 'zip'  # delete, zip, copy
+    Error_SaveErrorZipMethod = 'zip'  # bz2, gzip, xz, zip
     Error_OnePushConfig = 'provider: null'
     Error_ScreenshotLength = 1
     Error_GameStuckRestart = False
@@ -142,7 +144,7 @@ class GeneratedConfig:
     Error_WatchdogTaskTimeout = 120
     Error_RestartOperationTimeoutEnable = False
     Error_RestartOperationTimeout = 120
-    Error_LlmAnalysis = True
+    Error_LlmAnalysis = False
     Error_LlmApiKey = None
     Error_LlmApiBase = 'https://api.xiaomimimo.com/v1'
     Error_LlmModel = 'mimo-v2.5-pro'
@@ -164,7 +166,7 @@ class GeneratedConfig:
     Optimization_ScreenshotInterval = 0.3
     Optimization_CombatScreenshotInterval = 1.0
     Optimization_TaskHoardingDuration = 0
-    Optimization_CloseEmulatorDuringLongWait = True  # True, False
+    Optimization_CloseEmulatorDuringLongWait = False  # True, False
     Optimization_WhenTaskQueueEmpty = 'goto_main'  # stay_there, goto_main, close_game
     Optimization_WhenSchedulerStopped = 'stay_there'  # stay_there, goto_main, close_game, close_emulator
     Optimization_WarmupEnable = True  # True, False
@@ -173,6 +175,8 @@ class GeneratedConfig:
     # 配置组 `DropRecord`
     DropRecord_SaveFolder = './screenshots'
     DropRecord_RetentionDays = 0
+    DropRecord_BackUpMethod = 'zip'  # delete, zip, copy
+    DropRecord_ZipMethod = 'zip'  # bz2, gzip, xz, zip
     DropRecord_AzurStatsID = None
     DropRecord_API = 'default'  # default, cn_gz_reverse_proxy
     DropRecord_ResearchRecord = 'do_not'  # do_not, save, upload, save_and_upload
@@ -353,7 +357,7 @@ class GeneratedConfig:
 
     # 配置组 `EventGeneral`
     EventGeneral_PtLimit = 0
-    EventGeneral_TimeLimit = datetime.datetime(2020, 1, 1, 0, 0)
+    EventGeneral_TimeLimit = datetime.datetime(2023, 1, 1, 0, 0)
 
     # 配置组 `TaskBalancer`
     TaskBalancer_Enable = False

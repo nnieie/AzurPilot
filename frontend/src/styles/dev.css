@@ -102,3 +102,6 @@
 }
 /* 快捷工具下方的状态说明。 */
 .dev-hint {margin: 10px 0 0; color: var(--muted); font-size: 12px; line-height: 1.7}
+
+/* 动效控制台与快捷工具：按钮组选中态需要可见反馈（aria-pressed 是语义源，也是样式源） */
+.dev-button-row .button.secondary[aria-pressed='true'] {border-color: var(--accent); color: var(--accent); background: var(--accent-soft)}

@@ -157,6 +157,39 @@ worker 是 spawn 的全新解释器：初始化文件日志（`log/{配置名}.t
 
 `state` 整轮持有 lifecycle lock，避免把旧句柄的退出码用于新轮事件：先看测试覆盖（`_state_override`），再 `alive` → 1（运行中）；退出后按 `exit_result` 与 `exitcode` 合成——`MANUAL_STOP` → 2、非零退出码 → 3、`UPDATE` → 4、`FINISHED` → 2；从未启动的实例默认 2；**有 run_id 但缺失最终结果的退出一律 3（异常）**。前端看到的 `running/stopped/error/updating` 四态即此映射（`runtime_service.STATES`）。
 
+#### 后端退出状态与合成决策表
+
+| 判定优先级 | 判定条件 | `exit_result` | 句柄 `exitcode` | 内部 `state` | API 状态 (`status`) | 前端含义 / UI 表现 |
+| :---: | :--- | :--- | :--- | :---: | :---: | :--- |
+| **1** (最高) | `_state_override is not None` | 任意 | 任意 | 1 / 2 / 3 / 4 | 对应映射 | 开发调试覆盖（仅供状态徽章图标测试，默认 10 秒超时） |
+| **2** | `alive == True` (句柄存活或已登记 PID 存活) | 任意 | - | `1` | `'running'` | **运行中**（绿标，展示当前任务 `currentTask`） |
+| **3** | `exit_result == WorkerResult.MANUAL_STOP` | `manual_stop` | 任意 (通常为负值/信号终止) | `2` | `'stopped'` | **已停止**（用户点击停止，触发收尾动作） |
+| **4** | `isinstance(exitcode, int) and exitcode != 0` | 任意 (除 manual_stop 外) | 非 0 (如 1, -9 等) | `3` | `'error'` | **异常**（红标，子进程非零退出码，如代码崩溃或被 OOM 强杀） |
+| **5** | `exit_result == WorkerResult.UPDATE` | `update` | 0 或 None | `4` | `'updating'` | **更新中**（蓝标/旋转动画，等待代码拉取与重启） |
+| **6** | `exit_result == WorkerResult.FINISHED` | `finished` | 0 或 None | `2` | `'stopped'` | **已停止**（单次任务正常完成或调度循环正常退出） |
+| **7** | 未启动 (`run_id is None and exit_result is None and not _worker_observed`) | `None` | `None` | `2` | `'stopped'` | **未运行**（初始待机状态，尚未启动任何任务） |
+| **8** (兜底) | 缺失最终结果或显式异常 (`run_id` 存在但缺失结果，或结果为 `error`) | `error` 或 `None` | 0 或 None | `3` | `'error'` | **异常**（红标，丢失 ExitEvent 或执行中抛出未捕获异常） |
+
+#### Worker 退出事件与最终结果协议（WorkerResult）
+
+| 枚举值 (`WorkerResult`) | 字符值 | 触发场景 | 子进程退出码 | 最终流转与处理 |
+| :--- | :--- | :--- | :---: | :--- |
+| `FINISHED` | `"finished"` | 单任务 (`run()`) 成功完成；无更新事件正常退出；演示模式结束 | 0 | 实例状态合成为 `stopped` (2) |
+| `MANUAL_STOP` | `"manual_stop"` | 用户点击 WebUI「停止」按钮触发 `stop_by_user()` | 信号杀灭 (负值或 15) | 实例状态合成为 `stopped` (2)，启动独立收尾进程（回主界面/关游戏/关模拟器） |
+| `UPDATE` | `"update"` | 更新器置位 `updater.event`，worker 在任务边界安全退出 (`exit(0)`) | 0 | 实例状态合成为 `updating` (4)，更新器等待实例全停后执行 git 更新与依赖同步 |
+| `ERROR` | `"error"` | 任务返回 `False`/`"recoverable"`；模块加载失败；抛出未捕获异常；子进程异常退出导致缺失 ExitEvent | 非 0 或异常 | 实例状态合成为 `error` (3)，前端标红提示人工检查日志 |
+
+#### 后端各层进程退出码汇总表
+
+| 进程层级 | 退出码 | 常量/触发源 | 场景说明 |
+| :--- | :---: | :--- | :--- |
+| **WebUI 监督父进程** (`gui.py`) | `0` | 正常退出 | 用户按下 Ctrl+C (`KeyboardInterrupt`) 或非重载模式下正常退出 |
+| **WebUI 监督父进程** (`gui.py`) | `70` | `EXIT_STARTUP_FAILURE` | 启动或热重载恢复致命失败（残留 worker 无法回收、依赖同步失败、前端构建失败、子进程连续启动/监听失败、反复意外崩溃超过 3 次等） |
+| **Worker / 调度器** (`alas.py`) | `0` | 正常更新退出 | 调度器检测到 `stop_event.is_set()`，跳出主循环安全退出 |
+| **Worker / 调度器** (`alas.py`) | `1` | 致命异常退出 | 缺少配置文件 (`is_oobe_needed`)、敏感任务失败 (`_check_sensitive_exit`)、连续代码错误超限 (`ScriptError`) |
+| **Worker / 调度器** (`alas.py`) | *(不退出)* | 容错自愈循环 | 游戏卡死 (`GameStuckError`)、客户端崩溃 (`GameBugError`)、网络断开等，通过重启模拟器 + 注入 `Restart` + 指数退避 (20s~300s) 持续自愈 |
+| **停止收尾进程** (`process_manager.py`) | `0` / 非0 | `Optimization_WhenSchedulerStopped` | 执行 `stay_there` / `goto_main` / `close_game` / `close_emulator`，限时 30 秒超时强杀 |
+
 ### 手动停止与收尾（stop_by_user）
 
 该入口仅供 WebUI 停止按钮使用；更新、WebUI 清理与 MCP 调用 `stop()`，**不会**触发收尾。停止流程在 lifecycle lock 内验证登记身份（未验证的 PID 拒绝发信号）、按进程树终止 worker、注销登记、标记 `MANUAL_STOP`，然后按用户配置 `Optimization_WhenSchedulerStopped` 在**独立收尾进程**中执行动作（重新读取配置，最长 30 秒）：`stay_there` 不做任何事；`goto_main` 连接已有设备后导航回主页面；`close_game` 调用 `app_stop`；`close_emulator` 用 `Platform.emulator_stop`。独立进程的设计让 WebUI 父进程不必加载设备依赖，也让收尾超时可被强杀而不拖累 WebUI。

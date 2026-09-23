@@ -1,11 +1,11 @@
 .table-toolbar {display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; color:var(--muted); font-size:12px}
-.resource-grid {display:flex;flex-wrap:wrap}.resource-grid .resource-card {flex:1 1 150px}
-.resource-card {min-width:0}.resource-value {overflow-wrap:anywhere}
+.resource-grid {display:flex;flex-wrap:wrap;--resource-card-min:150px}.resource-grid .resource-card {flex:1 1 var(--resource-card-min)}
+.resource-card {min-width:0}.resource-value {white-space:nowrap}
 .resource-settings {margin-top:8px;padding-top:18px;border-top:1px solid var(--border)}
 .resource-settings-heading {display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px}.resource-settings-heading>div {display:flex;flex-direction:column;gap:4px}.resource-settings-heading strong {font-size:15px;letter-spacing:-.2px}.resource-settings-heading span {color:var(--muted);font-size:11px;line-height:1.5}
 .resource-card-editor {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.resource-editor-card {min-width:0;min-height:58px;display:flex;align-items:center;gap:9px;padding:10px 11px;border:1px solid color-mix(in srgb,var(--border) 82%,transparent);border-radius:16px;background:color-mix(in srgb,var(--surface) 92%,transparent);box-shadow:0 4px 14px #00000008,inset 0 1px 0 #ffffff66;transition:transform .18s,border-color .18s,box-shadow .18s,background .18s;user-select:none}
-.resource-editor-card:not(.resource-editor-add) {cursor:grab}.resource-editor-card:not(.resource-editor-add):active {cursor:grabbing}.resource-editor-card:hover {border-color:color-mix(in srgb,var(--accent) 34%,var(--border));box-shadow:0 7px 18px #0000000d,inset 0 1px 0 #ffffff80}.resource-editor-card.dragging {opacity:.52;transform:scale(.975);border-color:var(--accent)}
+.resource-editor-card, .resource-editor-card.resource-picker-card {min-width:0;min-height:58px;display:flex;align-items:center;gap:9px;padding:10px 11px;border:1px solid color-mix(in srgb,var(--border) 82%,transparent);border-radius:16px;background:color-mix(in srgb,var(--surface) 92%,transparent);box-shadow:0 4px 14px #00000008,inset 0 1px 0 #ffffff66;transition:transform .18s,translate .18s,border-color .18s,box-shadow .18s,background .18s;user-select:none}
+.resource-editor-card:not(.resource-editor-add) {cursor:grab;touch-action:none}.resource-editor-card:not(.resource-editor-add):active {cursor:grabbing}.resource-editor-card:hover {border-color:color-mix(in srgb,var(--accent) 34%,var(--border));box-shadow:0 7px 18px #0000000d,inset 0 1px 0 #ffffff80}.resource-editor-card.dragging {z-index:2;transform:scale(1.04);border-color:var(--accent);box-shadow:0 12px 26px #00000026,inset 0 1px 0 #ffffff80}
 .resource-editor-grip {width:16px;display:grid;place-items:center;color:color-mix(in srgb,var(--muted) 72%,transparent);flex:0 0 auto}.resource-editor-icon {width:32px;height:32px;display:grid;place-items:center;flex:0 0 auto;border-radius:10px;background:var(--accent-soft);color:var(--accent)}.resource-editor-icon-image {background:transparent;overflow:visible}.resource-editor-icon-image .resource-icon-image {width:30px;height:30px}.resource-editor-label {min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:600}
 .resource-editor-remove {width:28px;height:28px;display:grid;place-items:center;flex:0 0 auto;padding:0;border:0;border-radius:9px;background:transparent;color:var(--muted);cursor:pointer;transition:background .15s,color .15s}.resource-editor-remove:hover {background:color-mix(in srgb,var(--red) 11%,transparent);color:var(--red)}
 .resource-editor-add {justify-content:center;cursor:pointer;border-style:dashed;color:var(--accent);background:color-mix(in srgb,var(--accent-soft) 42%,var(--surface));font:inherit;font-size:13px;font-weight:600}.resource-editor-add:hover,.resource-editor-add.open {border-color:color-mix(in srgb,var(--accent) 62%,var(--border));background:color-mix(in srgb,var(--accent-soft) 72%,var(--surface))}.resource-editor-add-icon {width:30px;height:30px;display:grid;place-items:center;border-radius:10px;background:color-mix(in srgb,var(--accent) 12%,transparent)}
@@ -23,8 +23,10 @@
   .app-shell:has(.overview-page) .main-shell {min-height: 0}
   /* 高度取父级 100%：外壳没给确定高度时它会退化成 auto。flex-basis 会盖过 height，所以不参与伸缩。 */
   .overview-page {display:flex;flex-direction:column;flex:0 0 auto;height:100%;min-height:0;width:100%}
-  /* 停在自己的内容高上、让页面去滚：压到内容高以下会被 overflow 截掉，且没有可滚高度够回去。 */
-  .monitor-panel {flex:1 0 auto;height:auto;min-height:0}
+  /* 总览日志必须按父容器的剩余高度收缩，溢出交给 .log-content 内部滚动。
+     basis:auto 会把日志内容纳入面板基准高度，日志越多面板就越长；旧版总览也会被这条全局规则误伤。 */
+  .overview-page .monitor-panel,
+  .instance-page-panel > .monitor-panel {flex:1 1 0;height:auto;min-height:0}
   .overview-main {margin-bottom:-10px}
 }
 .schedule-panel .panel-heading,.schedule-panel .schedule-summary {flex-shrink:0}
@@ -43,7 +45,7 @@
 .monitor-panel .log-filters {flex-shrink:0;flex-wrap:wrap;gap:8px;border-bottom:1px solid var(--border)}.monitor-panel .log-filters input {min-width:0}
 .monitor-panel .log-content {flex:1;min-height:0;height:auto;font-size:11px;overflow:auto}
 .monitor-panel .log-line {overflow-wrap:anywhere}
-.monitor-panel .preview-log {flex:0 0 auto;margin:16px 16px 0;padding:8px 13px;border:1px solid var(--border);border-radius:7px;background:var(--surface-muted);overflow:hidden;font-family:"Cascadia Code","JetBrains Mono","Consolas","Courier New",monospace;font-size:11px;line-height:1.6;color:var(--text)}
+.monitor-panel .preview-log {flex:0 0 auto;margin:16px 16px 0;padding:8px 13px;border:1px solid var(--border);border-radius:7px;background:var(--surface-muted);overflow:hidden;font-family:var(--theme-font-mono, "JetBrains Mono", "JetBrains Mono NL", "Cascadia Code", "Consolas", "Courier New", monospace);font-size:11px;line-height:1.6;color:var(--text)}
 .monitor-panel .preview-log-line {display:flex;gap:8px;align-items:baseline;white-space:nowrap;overflow:hidden}
 .monitor-panel .preview-log-ts {color:#06b6d4;flex-shrink:0}
 .monitor-panel .preview-log-msg {flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
@@ -97,24 +99,19 @@
 :root[data-theme='extreme'] .stat-metric-body strong {font-size:14px}
 .sr-title {position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .date-input-wrap {position:relative;display:inline-flex;align-items:center;width:100%;max-width:200px}.date-input-wrap input {width:100%}.date-empty {color:transparent}.date-empty::-webkit-datetime-edit {color:transparent}.date-empty::-webkit-calendar-picker-indicator {opacity:1}.date-input-placeholder {position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;font-size:11px;user-select:none;font-variant-numeric:tabular-nums;letter-spacing:0.5px}
-/* main 是 flex 列，页面才能用 flex 把空白填满；block 父级下的 flex 属性一律无效。 */
-main {display:flex;flex-direction:column;min-height:0}
-/* 统计区吃掉剩余高度；收缩下限是内容高，否则被压到容器高时，面板的 overflow: hidden 会切掉图表与控件行。 */
-/* 统计区定高、内部伸缩，最后一行分到剩余空间，图表高度即由它决定。 */
-/* gap 会让「没有指标卡片」的分类在底部空出 20px：sections 里只剩图表面板一个子元素时，
-   grid 仍为不存在的第二行保留间距。改成把间距挂到指标卡片的下外边距上 ——
-   只有真有上下两块时才出现，单块时铺满到底。 */
-/* 末行 minmax(0,1fr) 只在有第二块时才分到高度。basis 取 0 让容器高度确定：
-   面板高度若由内容决定，图表高度的计算会自指。 */
-.statistics-sections {display:grid;grid-template-rows:auto minmax(0,1fr);gap:0;flex:1 1 0;min-height:0}
-.statistics-sections > .stat-metrics {margin-bottom:20px}.statistics-note {padding:13px 17px;background:var(--surface);border-left:3px solid #159b88;border-radius:5px;font-size:12px;line-height:1.8;color:var(--muted);margin:0}
-.stat-metrics {display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:16px;padding:20px 22px}.stat-metrics span {display:block;color:var(--muted);font-size:11px;margin-bottom:10px}.stat-metrics strong {display:block;font-size:23px;font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.stat-metrics small {font-size:11px;font-weight:400;margin-left:6px;color:var(--muted)}.summary-metrics {padding:0;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}.summary-metrics section {padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:12px}
-.summary-metric-card {transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
-.summary-metric-card:hover {border-color:color-mix(in srgb,var(--accent) 35%,var(--border));box-shadow:0 4px 16px #0000000a}
+/* 统计区与配置页一致采用自然贯穿流式布局，内容随页面自然向下延伸并在全局滚动。 */
+.statistics-sections {display:flex;flex-direction:column;gap:20px}
+.statistics-sections > * {flex:0 0 auto}
+.statistics-sections > .statistics-chart:not(.chart-expanded) {height:auto;min-height:0}
+.statistics-note {padding:13px 17px;background:var(--surface);border-left:3px solid #159b88;border-radius:5px;font-size:12px;line-height:1.8;color:var(--muted);margin:0}
+.stat-metrics {display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:16px;padding:20px 22px}.stat-metrics span {display:block;color:var(--muted);font-size:11px;margin-bottom:10px}.stat-metrics strong {display:block;font-size:23px;font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.stat-metrics small {font-size:11px;font-weight:400;margin-left:6px;color:var(--muted)}.summary-metrics-panel {padding:22px 26px}.summary-metrics-panel .summary-metrics {padding:0;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:16px 20px}.summary-metrics {padding:0;grid-template-columns:repeat(auto-fill,minmax(165px,1fr))}.summary-metric-card, .summary-metrics section {padding:12px 14px;background:transparent;border:1px solid transparent;border-radius:12px;display:flex;flex-direction:column;justify-content:space-between;min-height:72px;transition:background .15s ease,border-color .15s ease,transform .15s ease}
+.summary-metric-card:hover, .summary-metrics section:hover {background:var(--surface-muted);border-color:var(--border)}
 .summary-metric-head {display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
-.summary-metrics .summary-metric-label {display:block;margin-bottom:0;color:var(--muted);font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.summary-metric-icon {display:inline-flex;align-items:center;justify-content:center;color:var(--accent);opacity:.85;flex-shrink:0;transition:transform .18s ease,opacity .18s ease}
-.summary-metric-card:hover .summary-metric-icon {opacity:1;transform:scale(1.1)}
+.summary-metrics .summary-metric-label {display:block;margin-bottom:0;color:var(--muted);font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.summary-metric-icon {display:inline-flex;align-items:center;justify-content:center;color:var(--accent);opacity:.75;flex-shrink:0;transition:transform .18s ease,opacity .18s ease}
+.summary-metric-card:hover .summary-metric-icon {opacity:1;transform:scale(1.08)}
+.summary-metric-card strong {display:block;font-size:24px;font-weight:650;font-variant-numeric:tabular-nums;line-height:1.15;letter-spacing:-0.5px}
+.summary-metric-card small {font-size:12px;font-weight:400;margin-left:6px;color:var(--muted);letter-spacing:normal}
 .statistics-metrics-container {display:flex;flex-direction:column;gap:8px;padding:14px 22px 0}
 .statistics-metrics-label {font-size:11px;color:var(--muted);font-weight:500}
 .statistics-metrics-chips {display:flex;flex-wrap:wrap;align-items:center;gap:8px}
@@ -137,15 +134,45 @@ main {display:flex;flex-direction:column;min-height:0}
 .stat-metric-body strong.positive {color:#10b981}
 .stat-metric-body strong.negative {color:#ef4444}
 .stat-metric-body strong.neutral {color:var(--text)}
-/* 图表占满面板剩余高度；高度由组件实算（面板可视高度 − 上方内容），所以这里不参与伸缩。 */
-.statistics-chart {display: flex; flex-direction: column; min-height: 0; overflow-y: auto}
-.statistics-chart > .chart-canvas {flex: 0 0 auto; min-height: 240px; width: 100%}
-/* 表格与图表同处一列时，只有图表参与伸缩。 */
-.statistics-chart > .panel-heading, .statistics-chart > .statistics-metrics-container, .statistics-chart > .statistics-controls, .statistics-chart > .panel-note, .statistics-chart > .statistics-table {flex-shrink: 0}
+/* 统计图表面板：自然垂直流式布局，不设内部纵向滚动；图表保持适宜高度，下方内容自然排列。 */
+.statistics-chart {display: flex; flex-direction: column}
+.statistics-chart:not(.chart-expanded) > .chart-canvas {height: 380px; min-height: 320px; width: 100%; flex: 0 0 auto}
 .chart-expanded {position:fixed;inset:20px;z-index:100;overflow:auto;background:var(--surface);box-shadow:0 0 0 50px #0008}.chart-expanded .chart-canvas {flex: none; height:55vh}
 /* 放大视图铺满窗口后，右上角是 Electron 的窗口控制按钮，会压住「收起图表」；
    同时面板自身可滚动，滚动后标题行会滚出视口。右侧让开按钮宽度并让它吸顶。
    这里必须带 !important：紧凑主题用 padding 简写加 !important 压过面板内边距。 */
 .panel.chart-expanded .panel-heading {position:sticky;top:0;z-index:2;padding-right:160px !important;background:var(--surface)}
-.statistics-table {min-width:0}.statistics-table h3 {margin:0;font-size:14px}.table-toolbar {padding:10px 22px;margin:0;flex-wrap:wrap}.table-toolbar input {max-width:240px}.table-scroll {overflow:auto;max-height:480px}.statistics-table table {border-collapse:collapse;width:100%;font-size:12px;white-space:nowrap}.statistics-table td,.statistics-table th {padding:13px 20px;text-align:left;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums}.statistics-table th {position:sticky;top:0;background:var(--surface-muted);z-index:1}.statistics-table th button {border:0;background:none;color:var(--text);cursor:pointer;font:inherit}.statistics-table tbody tr:hover {background:var(--surface-muted)}
-@media(max-width:950px) {.resource-grid {grid-template-columns:repeat(auto-fit,minmax(140px,1fr)) !important}.resource-card-editor,.resource-picker-grid {grid-template-columns:1fr}.resource-settings-heading {gap:10px}.task-row {grid-template-columns:minmax(0,1fr) 48px 74px 10px !important}.stat-metrics {grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.statistics-controls {padding:15px;gap:10px}.statistics-controls label {max-width:100%}.statistics-controls input {max-width:100%}.schedule-panel, .monitor-panel {height:500px}.chart-expanded {inset:5px}.statistics-note {font-size:11px}}
+.statistics-table {min-width:0}.statistics-table h3 {margin:0;font-size:14px}.table-toolbar {padding:10px 22px;margin:0;flex-wrap:wrap}.table-toolbar input {max-width:240px}.table-scroll {overflow-x:auto;overflow-y:visible;max-height:none}.statistics-table table {border-collapse:collapse;width:100%;font-size:12px;white-space:nowrap}.statistics-table td,.statistics-table th {padding:13px 20px;text-align:left;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums}.statistics-table th {position:sticky;top:0;background:var(--surface-muted);z-index:1}.statistics-table th button {border:0;background:none;color:var(--text);cursor:pointer;font:inherit}.statistics-table tbody tr:hover {background:var(--surface-muted)}
+/* 卡片适应：列数由脚本按容器宽度写入，末排因此不会各自撑满整行。 */
+.resource-grid.resource-fit {display:grid}
+/* 卡片适应把网格切成多列，合并卡片仍占满整行。 */
+.resource-grid.resource-fit .resource-merged {grid-column:1/-1}
+/* 紧凑视图：只收紧间距与内边距；旧版主题有更具体的规则，仍按主题的紧凑度走。 */
+.resource-grid.resource-dense {gap:4px;margin-bottom:6px}
+.resource-grid.resource-dense .resource-card {padding:4px 11px 3px}
+/* 字体适应：窄卡片按容器宽度重排字号层级——数值统一收小并各卡一致（覆盖上游窄视口下的固定字号）；
+   标题、图标与记录时间上调，总量后缀随数值放大；权重高于各主题的同名规则，避免紧凑主题按自己的尺寸覆盖。 */
+:root .resource-grid.resource-fit-text .resource-card,
+:root .resource-grid.resource-fit-text .resource-merged-item {container-type:inline-size}
+:root .resource-grid.resource-fit-text .resource-heading {font-size:clamp(14px,6.6cqw,17px)}
+:root .resource-grid.resource-fit-text .resource-heading > div {width:clamp(28px,15cqw,32px);height:clamp(28px,15cqw,32px)}
+:root .resource-grid.resource-fit-text .resource-icon-image {width:clamp(28px,15cqw,32px);height:clamp(28px,15cqw,32px)}
+:root .resource-grid.resource-fit-text .resource-value {font-size:20px !important}
+:root .resource-grid.resource-fit-text .resource-value-content small {font-size:.8em}
+:root .resource-grid.resource-fit-text .resource-foot {font-size:clamp(12px,5.6cqw,14px)}
+/* 通用卡片：内部条目沿用资源卡自身的排版，仅由外层容器统一描边。 */
+.resource-grid .resource-merged {flex:1 1 100%;display:flex;flex-wrap:wrap;gap:8px;box-shadow:var(--shadow)}
+.resource-merged .resource-merged-item {flex:1 1 var(--resource-card-min);min-width:0;border:0;background:transparent;box-shadow:none}
+/* 仪表盘设置弹窗内的开关行：弹窗比设置页窄，用紧凑排法。 */
+.dashboard-options {display:flex;flex-direction:column}
+.dashboard-option {display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:11px 0;border-bottom:1px solid color-mix(in srgb,var(--border) 70%,transparent)}
+.dashboard-option:last-child {border-bottom:0}
+.dashboard-option-label {min-width:0;display:flex;flex-direction:column;gap:3px}
+.dashboard-option-label strong {font-size:13px;font-weight:600}
+.dashboard-option-label span {color:var(--muted);font-size:11px;line-height:1.6}
+.dashboard-option .toggle {flex:0 0 auto;margin-top:2px}
+
+@media(max-width:950px) {.resource-grid:not(.resource-fit) {grid-template-columns:repeat(auto-fit,minmax(140px,1fr)) !important}.resource-card-editor,.resource-picker-grid {grid-template-columns:1fr}.resource-settings-heading {gap:10px}.task-row {grid-template-columns:minmax(0,1fr) 48px 74px 10px !important}.stat-metrics {grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.statistics-controls {padding:15px;gap:10px}.statistics-controls label {max-width:100%}.statistics-controls input {max-width:100%}.statistics-sections {flex:none;grid-template-rows:auto auto}.schedule-panel, .monitor-panel {height:500px}.chart-expanded {inset:5px}.statistics-note {font-size:11px}}
+
+/* 未展示资源的卡片外观复用编辑卡，点击即添加。 */
+.resource-editor-card.resource-picker-card {cursor: pointer; font-size: inherit; color: inherit}

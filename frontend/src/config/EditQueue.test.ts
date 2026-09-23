@@ -196,6 +196,9 @@ describe('保留数值输入原文', () => {
     expect(prepareValue('1.50', {type: 'input', value: 1})).toEqual({payload: 1.5})
     expect(prepareValue('9007199254740993', {type: 'input', value: 1}).error).toBeTruthy()
   })
+  it('文本默认值允许提交逗号分隔的海域列表', () => {
+    expect(prepareValue('12, 13, 71, 73', {type: 'input', value: '0'})).toEqual({payload: '12, 13, 71, 73'})
+  })
 })
 
 describe('清空时回落到参数默认值', () => {

@@ -158,7 +158,7 @@ module/
 | `Alas.Error.LlmApiKey` | 文本 | 空 | OpenAI 兼容 API Key，缺失时仅告警不分析 |
 | `Alas.Error.LlmApiBase` | 文本 | `https://api.xiaomimimo.com/v1` | API 基地址，可指向任意 OpenAI 兼容服务 |
 | `Alas.Error.LlmModel` | 字符串 | `mimo-v2.5-pro` | 模型名 |
-| `Alas.Error.SaveError` / `SaveErrorCount` | checkbox / 数值 | true / 30 | 错误现场保存；LLM 分析在保存流程最前执行 |
+| `Alas.Error.SaveError` / `SaveErrorRetentionDays` / `SaveErrorBackUpMethod` / `SaveErrorZipMethod` | checkbox / 数值 / 选项 | true / 30 / zip / zip | 错误现场保存；过期天数（0 = 不清理）、过期处理方式（delete/copy/zip）与压缩格式，备份落 `log/error/<实例>/bak/`；LLM 分析在保存流程最前执行 |
 | `Alas.Emulator.ServerName` | 选项 | `disabled` | 服务器检查目标；disabled 跳过检查 |
 | `Secretary.Secretary.Notify` / `OnePushConfig` | checkbox / YAML | true / `provider: null` | 秘书舰推送，专用配置留空回退全局 OnePushConfig |
 | `OpsiGeneral.OpsiGeneral.LauncherPush` / `NotifyOpsiMail` / `IndependentPush` / `OpsiOnePushConfig` | — | true / true / false / `provider: null` | 大世界智能调度+的启动器/OnePush 双通道与独立渠道 |

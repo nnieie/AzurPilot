@@ -13,6 +13,16 @@ describe('WebUI i18n', () => {
     expect(translateUi('en-US', 'instance.deletePrompt', {name: 'alas-main'})).toBe('Delete alas-main? Its configuration will remain in backup.')
   })
 
+  it('offers a different delete-instance warning at each of the three confirmations', () => {
+    const prompts = ['instance.deletePrompt', 'instance.deletePrompt2', 'instance.deletePrompt3'] as const
+    for (const language of ['zh-CN', 'zh-TW', 'en-US', 'ja-JP', 'zh-MIAO'] as const) {
+      const texts = prompts.map(key => translateUi(language, key, {name: 'alas-main'}))
+      expect(new Set(texts).size).toBe(prompts.length)
+      /* 键不存在时 translateUi 会把键名原样返回，那样三条也「互不相同」，所以这里必须排除。 */
+      expect(texts.some(text => text.includes('instance.deletePrompt'))).toBe(false)
+    }
+  })
+
   it('keeps the Miao locale complete through its Simplified Chinese base', () => {
     expect(translateUi('zh-MIAO', 'nav.statistics')).toBe('资源统计')
   })

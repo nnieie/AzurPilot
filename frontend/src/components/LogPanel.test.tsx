@@ -1,8 +1,38 @@
 import { describe, expect, it } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { LogLine, LOG_LINE_RE, RULE_RE, PURE_RULE_RE, CENTER_TITLE_RE } from './LogPanel'
+import { LogLine, LOG_LINE_RE, RULE_RE, PURE_RULE_RE, CENTER_TITLE_RE, LOG_ENTRY_LIMIT, mergeLogEntries } from './LogPanel'
 
 describe('LogPanel 日志解析与渲染', () => {
+  it('超大历史日志在进入 React state 前截断到客户端上限', () => {
+    const entries = Array.from({length: 42_000}, (_, index) => ({
+      id: index + 1,
+      level: 'INFO',
+      text: `INFO 2026-09-22 00:00:00 │ 日志 ${index + 1}`,
+    }))
+
+    const retained = mergeLogEntries([], entries, true)
+    expect(retained).toHaveLength(LOG_ENTRY_LIMIT)
+    expect(retained[0].id).toBe(42_000 - LOG_ENTRY_LIMIT + 1)
+    expect(retained.at(-1)?.id).toBe(42_000)
+  })
+
+  it('增量合并去重、排序且始终保持渲染上限', () => {
+    const previous = Array.from({length: LOG_ENTRY_LIMIT}, (_, index) => ({
+      id: index + 1, level: 'INFO', text: `旧日志 ${index + 1}`,
+    }))
+    const incoming = [
+      {id: LOG_ENTRY_LIMIT, level: 'WARNING', text: '重复条目以新值为准'},
+      {id: LOG_ENTRY_LIMIT + 2, level: 'INFO', text: '后到但编号更大'},
+      {id: LOG_ENTRY_LIMIT + 1, level: 'INFO', text: '新日志'},
+    ]
+
+    const retained = mergeLogEntries(previous, incoming)
+    expect(retained).toHaveLength(LOG_ENTRY_LIMIT)
+    expect(retained[0].id).toBe(3)
+    expect(retained.at(-1)?.id).toBe(LOG_ENTRY_LIMIT + 2)
+    expect(retained.find(entry => entry.id === LOG_ENTRY_LIMIT)?.level).toBe('WARNING')
+  })
+
   it('正确识别 level=0 居中标题与纯双分割线', () => {
     const doubleRule = '═'.repeat(60)
     expect(PURE_RULE_RE.test(doubleRule)).toBe(true)

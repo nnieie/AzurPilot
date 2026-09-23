@@ -121,6 +121,8 @@ def some_function(self, skip_first_screenshot=True):
 
 提交前查看全部 staged、unstaged 和 untracked 修改，区分本次变更与已有工作，按功能目的组织提交。独立的格式、依赖或工程调整应分开；实现、必要配置、生成产物和回归测试可在同一功能提交中。排除缓存、构建产物和调试残留。提交信息采用中文 Conventional Commits，例如 `fix(config): 避免热重载覆盖并发配置更新`，说明为什么修改。
 
+AI 自行创建 PR 或执行任何涉及提 PR 的操作时，必须按 [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md) 模板填写：如实勾选变更类型与代码质量确认项（未执行的检查不勾选），并在描述中说明变更原因、验证结果与相关 Issue。
+
 ## 维护这些指令
 
 共享规范只在本文件维护，`CLAUDE.md` 仅负责导入。新增规则应针对实际工作流或已证实的陷阱；条件性细节放在相关文档并注明何时查阅。不要重新堆积完整 API 清单、易过期的数量或版本副本，也不要将单次任务的偏好扩展为所有任务的固定流程。

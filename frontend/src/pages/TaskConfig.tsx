@@ -6,6 +6,7 @@ import type { Config } from '../api/types'
 import { useApp, useConnection } from '../app/context'
 import { usesLegacyLayout } from '../app/theme'
 import { readRailView, setRailView, subscribeRailView } from '../app/railPrefs'
+import { smoothScrollToElement } from '../app/scroll'
 import { Empty, ErrorBox, Loading, Modal, PageTitle } from '../components/ui'
 import { LogPanel } from '../components/LogPanel'
 import { MeowfficerScorePanel } from '../components/MeowfficerScorePanel'
@@ -36,6 +37,10 @@ export function TaskConfig() {
 
   const queue = editor(`config:${instance}`)
   const {edits, storageError} = useSyncExternalStore(queue.subscribe, queue.getSnapshot)
+  const startupQueue = editor(`startup:${instance}`)
+  const startupEdits = useSyncExternalStore(startupQueue.subscribe, startupQueue.getSnapshot)
+  const [startupEnabled, setStartupEnabled] = useState<boolean>()
+  const [startupRemember, setStartupRemember] = useState<boolean>()
   const legacy = usesLegacyLayout(theme)
   const reload = useCallback(async () => {
     try {
@@ -54,6 +59,16 @@ export function TaskConfig() {
     return () => { queue.onSaved = undefined }
   }, [queue])
 
+  // 启动开关保存成功后用服务端回传的状态替换本地值，队列丢弃已保存条目后开关不回弹。
+  useEffect(() => {
+    startupQueue.onSaved = data => {
+      const value = data as {enabled: boolean; remember: boolean}
+      setStartupEnabled(value.enabled)
+      setStartupRemember(value.remember)
+    }
+    return () => { startupQueue.onSaved = undefined }
+  }, [startupQueue])
+
   useEffect(() => {
     if (connection !== 'ready') return
     let active = true
@@ -63,6 +78,16 @@ export function TaskConfig() {
     }).catch(error => { if (active) setError(error.message) })
     return () => { active = false }
   }, [connection, instance, task, queue])
+  /* 开关状态取自部署层的运行列表，不在任务配置里。 */
+  useEffect(() => {
+    if (connection !== 'ready' || task !== 'Alas') return
+    let active = true
+    const confirmed = startupQueue.confirmed()
+    void api.request('startup.get', {instance}).then(value => {
+      if (active) { setStartupEnabled(value.enabled); setStartupRemember(value.remember); startupQueue.reconcile(confirmed) }
+    }).catch(error => { if (active) setError(error.message) })
+    return () => { active = false }
+  }, [connection, instance, task, startupQueue])
   useEffect(() => { setShopModeError('') }, [instance, task])
 
   async function run() {
@@ -207,7 +232,37 @@ export function TaskConfig() {
   const hasGroups = task !== 'FleetInfo' && Boolean(groups) && visibleGroups.length > 0
   // 只有紧凑主题把搜索框并进左列（跳转栏下方），其余主题保持标题下方的原样。
   const condensed = theme === 'extreme'
-  const groupCardsBlock = <div className="config-groups">{groupCards}</div>
+  // 启动开关挂在系统设置（Alas）任务页顶部；搜索时只显示匹配项。
+  const startupPanel = task === 'Alas' && !search && <section className="panel config-group">
+    <div className="panel-heading">
+      <div>
+        <span className="group-indicator"/>
+        <h2>{ui('instance.startup')}</h2>
+      </div>
+    </div>
+    <div className="field-row">
+      <div className="field-label">
+        <span className="field-name">{ui('instance.autoRun')}</span>
+        <p>{ui('instance.autoRunHelp')}</p>
+      </div>
+      <div className="field-control">
+        <FieldInput id="instance-startup" label={ui('instance.autoRun')} value={startupEdits.edits.enabled?.value ?? startupEnabled ?? false} disabled={startupEnabled === undefined} onChange={value => startupQueue.change('enabled', value)}/>
+        <EditStatus id="instance-startup" edit={startupEdits.edits.enabled} retry={startupQueue.retry} queue={startupQueue}/>
+      </div>
+    </div>
+    <div className="field-row">
+      <div className="field-label">
+        <span className="field-name">{ui('instance.rememberRun')}</span>
+        <p>{ui('instance.rememberRunHelp')}</p>
+      </div>
+      <div className="field-control">
+        <FieldInput id="instance-remember" label={ui('instance.rememberRun')} value={startupEdits.edits.remember?.value ?? startupRemember ?? false} disabled={startupRemember === undefined} onChange={value => startupQueue.change('remember', value)}/>
+        <EditStatus id="instance-remember" edit={startupEdits.edits.remember} retry={startupQueue.retry} queue={startupQueue}/>
+      </div>
+    </div>
+  </section>
+
+  const groupCardsBlock = <div className="config-groups">{startupPanel}{groupCards}</div>
   const groupNav = <nav className="group-nav">
     {visibleGroups.map(({group}) => (
       <a
@@ -215,7 +270,8 @@ export function TaskConfig() {
         href={`#group-${group}`}
         onClick={event => {
           event.preventDefault()
-          document.getElementById(`group-${group}`)?.scrollIntoView({behavior: 'smooth', block: 'start'})
+          const target = document.getElementById(`group-${group}`)
+          if (target) smoothScrollToElement(target)
         }}
       >
         {t(`${group}._info.name`)}

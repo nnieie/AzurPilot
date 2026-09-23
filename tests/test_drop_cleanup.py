@@ -10,6 +10,7 @@ import shutil
 import tempfile
 import time
 import unittest
+import zipfile
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
@@ -38,11 +39,18 @@ class DropCleanupTestCase(unittest.TestCase):
         drop_cleanup._LAST_CLEANUP = self._saved_cleanup
         shutil.rmtree(self.root, ignore_errors=True)
 
-    def config(self, days=0, instance='alas', folder=None):
-        """构造只带掉落记录相关字段的配置对象。"""
+    def config(self, days=0, instance='alas', folder=None,
+               method='delete', zip_method='zip'):
+        """构造只带掉落记录相关字段的配置对象。
+
+        method 默认 delete，让不关心处理方式的用例保持「过期即删除」的旧断言；
+        生产默认值是配置里的 zip，由 TestBackupMethods 覆盖。
+        """
         return SimpleNamespace(
             DropRecord_SaveFolder=self.save_folder if folder is None else folder,
             DropRecord_RetentionDays=days,
+            DropRecord_BackUpMethod=method,
+            DropRecord_ZipMethod=zip_method,
             config_name=instance,
         )
 
@@ -159,6 +167,75 @@ class TestCleanupDropScreenshots(DropCleanupTestCase):
         self.assertEqual(drop_cleanup.cleanup_drop_screenshots(config, 7), 0)
 
 
+class TestBackupMethods(DropCleanupTestCase):
+    """过期截图的处理方式：删除 / 拷贝备份 / 压缩备份。"""
+
+    def bak_files(self, folder=None):
+        bak = os.path.join(self.save_folder if folder is None else folder, 'bak')
+        return sorted(os.listdir(bak)) if os.path.isdir(bak) else []
+
+    def test_delete_removes_expired_screenshots(self):
+        old = self.drop_image('1704067200000.png', 8 * 86400)
+        config = self.config(7, method='delete')
+
+        self.assertEqual(drop_cleanup.cleanup_drop_screenshots(config, 7), 1)
+        self.assertFalse(os.path.exists(old))
+        self.assertEqual(self.bak_files(), [])
+
+    def test_copy_keeps_backup(self):
+        old = self.drop_image('1704067200000.png', 8 * 86400)
+        config = self.config(7, method='copy')
+
+        self.assertEqual(drop_cleanup.cleanup_drop_screenshots(config, 7), 1)
+        self.assertFalse(os.path.exists(old))
+        self.assertEqual(self.bak_files(), ['1704067200000.png'])
+
+    def test_zip_keeps_archive(self):
+        old = self.drop_image('1704067200000.png', 8 * 86400)
+        config = self.config(7, method='zip')
+
+        self.assertEqual(drop_cleanup.cleanup_drop_screenshots(config, 7), 1)
+        self.assertFalse(os.path.exists(old))
+        names = self.bak_files()
+        self.assertEqual(len(names), 1)
+        self.assertTrue(names[0].endswith('_commission.zip'), names[0])
+        with zipfile.ZipFile(
+                os.path.join(self.save_folder, 'bak', names[0])) as z:
+            self.assertEqual(z.namelist(), ['1704067200000.png'])
+
+    def test_invalid_config_values_fall_back_to_zip_backup(self):
+        """处理方式/压缩格式非法时按默认的压缩备份处理。"""
+        old = self.drop_image('1704067200000.png', 8 * 86400)
+        config = self.config(7, method='shred', zip_method='rar')
+
+        self.assertEqual(drop_cleanup.cleanup_drop_screenshots(config, 7), 1)
+        self.assertFalse(os.path.exists(old))
+        names = self.bak_files()
+        self.assertEqual(len(names), 1)
+        self.assertTrue(names[0].endswith('.zip'), names[0])
+
+    def test_backup_folder_is_never_cleaned(self):
+        """bak 里的备份不能被当成过期内容重复处理。"""
+        bak = os.path.join(self.save_folder, 'bak')
+        os.makedirs(bak)
+        backup = self.make_file(
+            os.path.join(bak, '1704067200000.png'), 400 * 86400)
+
+        config = self.config(1, method='delete')
+        self.assertEqual(drop_cleanup.cleanup_drop_screenshots(config, 1), 0)
+        self.assertTrue(os.path.exists(backup))
+
+    def test_commission_rewards_go_to_instance_bak(self):
+        reward = self.reward_image('20200101_000000_000000_0.png', 8 * 86400)
+        config = self.config(7, method='zip')
+
+        self.assertEqual(drop_cleanup.cleanup_drop_screenshots(config, 7), 1)
+        self.assertFalse(os.path.exists(reward))
+        names = self.bak_files(os.path.join(self.commission_folder, 'alas'))
+        self.assertEqual(len(names), 1)
+        self.assertTrue(names[0].endswith('_alas_2020-01.zip'), names[0])
+
+
 class TestCleanupIfDue(DropCleanupTestCase):
     def setUp(self):
         super().setUp()
@@ -253,6 +330,113 @@ class TestCommissionScreenshotSwitch(unittest.TestCase):
         self.save(fake)
 
         fake._prune_commission_reward_screenshots.assert_called_once_with('alas')
+
+
+class TestCommissionCountCapSkipsBackup(unittest.TestCase):
+    """张数兜底（未填保留天数时）不能把 bak 里的备份算进去或删掉。"""
+
+    def make_base(self):
+        root = tempfile.mkdtemp(prefix='commission_prune_')
+        self.addCleanup(shutil.rmtree, root, ignore_errors=True)
+        return os.path.join(root, 'alas')
+
+    def prune(self, base, max_keep):
+        from module.commission.commission import RewardCommission
+
+        RewardCommission._prune_commission_reward_screenshots(
+            'alas', max_keep=max_keep, base=base)
+
+    def test_backup_folder_is_ignored(self):
+        base = self.make_base()
+        bak = os.path.join(base, 'bak')
+        os.makedirs(bak)
+        backup = os.path.join(bak, '20200101_000000_000000_0.png')
+        with open(backup, 'wb') as f:
+            f.write(b'x')
+
+        # max_keep=0 时若不跳过 bak，备份会被算作超量并删掉
+        self.prune(base, max_keep=0)
+
+        self.assertTrue(os.path.isfile(backup))
+        self.assertTrue(os.path.isdir(bak))
+
+    def test_normal_screenshots_still_pruned(self):
+        base = self.make_base()
+        month = os.path.join(base, '2020-01')
+        os.makedirs(month)
+        for name in ('20200101_000000_000000_0.png', '20200102_000000_000000_0.png'):
+            with open(os.path.join(month, name), 'wb') as f:
+                f.write(b'x')
+
+        self.prune(base, max_keep=1)
+
+        self.assertEqual(len(os.listdir(month)), 1)
+        self.assertTrue(os.path.isdir(base))
+
+
+class TestConfigWiring(unittest.TestCase):
+    """用真实配置对象校验键名与取值口径。
+
+    上面的用例都用 SimpleNamespace 假配置，键名写错也会静默回落默认值；
+    这一组走真实的 config_update + bind，确保配置项真的叫这些名字。
+    """
+
+    def make_config(self, **groups):
+        """按 tests/test_backup.py 的既有手法在内存里构造配置。"""
+        from module.config.config import AzurLaneConfig
+
+        config = AzurLaneConfig('template')
+        config.auto_update = False
+        config.data = config.config_update({'Alas': groups})
+        config.bind('Alas')
+        return config
+
+    def test_defaults_match_argument_definition(self):
+        config = self.make_config()
+
+        self.assertEqual(config.DropRecord_RetentionDays, 0)
+        self.assertEqual(config.DropRecord_BackUpMethod, 'zip')
+        self.assertEqual(config.DropRecord_ZipMethod, 'zip')
+        self.assertEqual(config.Error_SaveErrorRetentionDays, 30)
+        self.assertEqual(config.Error_SaveErrorBackUpMethod, 'zip')
+        self.assertEqual(config.Error_SaveErrorZipMethod, 'zip')
+
+    def test_old_config_is_filled_with_new_defaults(self):
+        """存量配置没有这几项时应补成默认值，而不是读不到。"""
+        config = self.make_config(DropRecord={'SaveFolder': './screenshots'})
+
+        self.assertEqual(config.DropRecord_BackUpMethod, 'zip')
+        self.assertEqual(config.Error_SaveErrorRetentionDays, 30)
+
+    def test_cleanup_reads_values_from_real_config(self):
+        root = tempfile.mkdtemp(prefix='drop_wiring_')
+        self.addCleanup(shutil.rmtree, root, ignore_errors=True)
+        folder = os.path.join(root, 'screenshots')
+        genre = os.path.join(folder, 'commission')
+        os.makedirs(genre)
+        old = os.path.join(genre, '1704067200000.png')
+        with open(old, 'wb') as f:
+            f.write(b'x')
+        stale = time.time() - 8 * 86400
+        os.utime(old, (stale, stale))
+
+        config = self.make_config(DropRecord={
+            'SaveFolder': folder,
+            'RetentionDays': 7,
+            'BackUpMethod': 'zip',
+            'ZipMethod': 'zip',
+        })
+
+        with patch.object(
+                drop_cleanup, 'COMMISSION_REWARD_FOLDER',
+                os.path.join(root, 'commission_rewards')):
+            self.assertEqual(
+                drop_cleanup.cleanup_drop_screenshots(config, 7), 1)
+
+        self.assertFalse(os.path.exists(old))
+        names = os.listdir(os.path.join(folder, 'bak'))
+        self.assertEqual(len(names), 1)
+        self.assertTrue(names[0].endswith('_commission.zip'), names[0])
 
 
 if __name__ == '__main__':
