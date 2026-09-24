@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 const serialSelector = '[id="Alas.Emulator.Serial"]'
+const serialStatus = '[id="Alas.Emulator.Serial-status"]'
 
 test('两个页面的旧快照均能保存，字段更新互不覆盖', async ({page, context}) => {
   const second = await context.newPage()

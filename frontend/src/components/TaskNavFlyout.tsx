@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { MarqueeText } from './MarqueeText'
 import { createPortal } from 'react-dom'
 import { NavLink, useLocation, useParams } from 'react-router-dom'
 import { Anchor, CalendarDays, ChevronRight, Compass, Gift, Palmtree, Search, Settings2, Ship, Sparkles, Swords, Wrench, type LucideIcon } from 'lucide-react'
@@ -242,7 +243,7 @@ export function TaskNavFlyout({ defaultOpenKey }: { defaultOpenKey?: string } = 
                 aria-expanded={isExpanded}
               >
                 <GroupIcon size={18} className="task-group-icon" />
-                <span className="task-group-title">{t(`Menu.${key}.name`)}</span>
+                <MarqueeText className="task-group-title" text={t(`Menu.${key}.name`)}/>
                 <ChevronRight size={13} className="task-group-arrow" />
               </button>
             )
@@ -275,7 +276,7 @@ export function TaskNavFlyout({ defaultOpenKey }: { defaultOpenKey?: string } = 
                 role="menuitem"
               >
                 <span className="task-submenu-dot" />
-                <span className="task-submenu-item-text">{t(`Task.${task}.name`)}</span>
+                <MarqueeText className="task-submenu-item-text" text={t(`Task.${task}.name`)}/>
               </NavLink>
             ))}
           </div>

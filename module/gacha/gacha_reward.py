@@ -237,8 +237,8 @@ class RewardGacha(GachaUI, Retirement, CampaignStatus):
                 confirm_timer.reset()
                 continue
 
-            if self.appear(GET_SHIP, interval=1):
-                self.device.click(STORY_SKIP)  # 多个订单时快进
+            if self.appear(GET_SHIP, offset=(20, 20), interval=1):
+                self.device.click(STORY_SKIP)  # Fast forward for multiple orders
                 confirm_timer.reset()
                 continue
             if self.handle_get_items_ship():

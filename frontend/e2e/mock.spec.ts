@@ -1,5 +1,19 @@
 import { expect, test } from '@playwright/test'
 
+test('任务分组目录重复点击保持在同一栏目', async ({page}) => {
+  await page.emulateMedia({reducedMotion: 'reduce'})
+  await page.addInitScript(() => localStorage.setItem('azurpilot.theme', 'light'))
+  await page.setViewportSize({width: 1440, height: 600})
+  await page.goto('/#/i/demo-main/task/Main')
+  const links = page.locator('.config-layout .group-nav a')
+  await expect(links.nth(1)).toBeVisible()
+  await links.nth(1).click()
+  await expect.poll(() => page.evaluate(() => document.scrollingElement!.scrollTop)).toBeGreaterThan(0)
+  const firstPosition = await page.evaluate(() => document.scrollingElement!.scrollTop)
+  await links.nth(1).click()
+  await expect.poll(() => page.evaluate(() => document.scrollingElement!.scrollTop)).toBeCloseTo(firstPosition, 0)
+})
+
 test('玻璃装饰不阻挡导航，背景失败降级并尊重减少动态效果', async ({page}) => {
   let backgrounds = 0
   await page.route('https://api.yppp.net/api.php', async route => {
@@ -53,8 +67,9 @@ test('总览三态、资源搭配记忆、日志与被动截图切换', async ({
   await expect(page.locator('.resource-card').first()).toContainText('行动力')
   const actionPoint = page.locator('.resource-card').filter({hasText: '行动力'})
   await expect(actionPoint.locator('.resource-heading')).toHaveText('行动力')
-  await expect(actionPoint.locator('.resource-value')).toHaveText('101/ 1,301')
-  await expect(actionPoint.locator('.resource-value small')).toHaveText('/ 1,301')
+  await expect(actionPoint.locator('.resource-value')).toHaveText('101/ 5,301')
+  await expect(actionPoint.locator('.resource-value small')).toHaveText('/ 5,301')
+  await expect(actionPoint.locator('.resource-icon-image')).toHaveAttribute('src', /dog\.webp/)
   await page.reload()
   await expect(page.locator('.resource-card')).toHaveCount(5)
   await page.getByRole('button', {name: '启动调度器', exact: true}).click()

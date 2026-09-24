@@ -34,6 +34,32 @@ ITEM_AMOUNT_MAX = {
 DEFAULT_AMOUNT_MAX = 2147483645
 
 
+def resolve_amount_max(item_name, amount_max=None, amount_default_max=None):
+    """取本次识别使用的数量上限。
+
+    上限只用于触发重识别：读数超过上限几乎必然是 OCR 错（例如数量框切到图标
+    高光，把 72 读成 172）。不同场景的单次掉落规律差很多——大世界的心智单元
+    上限是 50，科研一次能给 100 多——所以允许调用方按场景覆盖。
+
+    Args:
+        item_name (str): 物品名，即模板文件名。
+        amount_max (dict): 物品名 -> 上限，优先于内置表。
+        amount_default_max (int): 未命中时的默认上限。None 表示回落到内置表。
+
+    Returns:
+        int: 数量上限。
+    """
+    if amount_max and item_name in amount_max:
+        return amount_max[item_name]
+    if amount_default_max is not None:
+        # 允许传 callable：某些场景的规律是按物品名分类的（科研的图纸 ≤10 而
+        # 装备不受此限），用一张静态表表示不了。
+        if callable(amount_default_max):
+            return amount_default_max(item_name)
+        return amount_default_max
+    return ITEM_AMOUNT_MAX.get(item_name, DEFAULT_AMOUNT_MAX)
+
+
 def remove_small_fragments(image, min_height=6, min_area=10, keep_margin=3,
                            fill_background=False, max_digit_gap=None):
     """移除远离数字主体的孤立连通域（图标碎块），保留字形部件。
@@ -172,7 +198,8 @@ class AmountOcr(Digit):
             )
         return image.astype(np.uint8)
 
-    def ocr_with_validation(self, image, item_name=None, direct_ocr=False, trim=True):
+    def ocr_with_validation(self, image, item_name=None, direct_ocr=False, trim=True,
+                            amount_max=None, amount_default_max=None):
         """带验证的 OCR 识别，超过最大值时重试最多 3 次，仍无效则截断末位数字。
 
         首轮读数超过上限时，若启用了碎片过滤（remove_fragments），
@@ -187,11 +214,13 @@ class AmountOcr(Digit):
             trim: 是否调用 crop_to_text 裁剪空白边框。委托收入场景关闭：
                 图标碎片过滤后数字右对齐在原图中，裁剪会改变文字位置，
                 导致 OCR 结果变差（例如 71 被读成 2）。
+            amount_max (dict): 按场景覆盖的数量上限表。
+            amount_default_max (int): 未命中时的默认上限，见 resolve_amount_max。
 
         Returns:
             int: 验证后的数量。
         """
-        max_val = ITEM_AMOUNT_MAX.get(item_name, DEFAULT_AMOUNT_MAX)
+        max_val = resolve_amount_max(item_name, amount_max, amount_default_max)
 
         if direct_ocr:
             pre_image = self.pre_process(image)
@@ -251,13 +280,16 @@ class AmountOcr(Digit):
 
         return amount
 
-    def ocr_batch_with_validation(self, image_list, item_names=None, direct_ocr=True, trim=True):
+    def ocr_batch_with_validation(self, image_list, item_names=None, direct_ocr=True, trim=True,
+                                  amount_max=None, amount_default_max=None):
         """批量带验证的 OCR 识别，逐个物品进行校验。
 
         Args:
             item_names: 物品名称列表，与图像列表一一对应。
             direct_ocr: 为 True 时跳过裁剪。
             trim: 是否调用 crop_to_text 裁剪空白边框。
+            amount_max (dict): 按场景覆盖的数量上限表。
+            amount_default_max (int): 未命中时的默认上限。
 
         Returns:
             list[int]: 验证后的数量列表。
@@ -267,7 +299,9 @@ class AmountOcr(Digit):
 
         results = []
         for image, item_name in zip(image_list, item_names):
-            amount = self.ocr_with_validation(image, item_name=item_name, direct_ocr=direct_ocr, trim=trim)
+            amount = self.ocr_with_validation(image, item_name=item_name, direct_ocr=direct_ocr,
+                                              trim=trim, amount_max=amount_max,
+                                              amount_default_max=amount_default_max)
             results.append(amount)
         return results
 
@@ -427,6 +461,11 @@ class ItemGrid:
         self.cost_templates = {}
         self.cost_templates_hit = {}
         self.next_cost_template_index = len(self.cost_templates.keys())
+
+        # 数量上限（按场景覆盖）。科研的单次掉落规律与大世界不同，靠这两个字段
+        # 在识别时传入，而不是去改动全局的 ITEM_AMOUNT_MAX。
+        self.amount_max = {}
+        self.amount_default_max = None
 
         self.items = []
 
@@ -641,7 +680,8 @@ class ItemGrid:
             amount_images = [item.crop(self.amount_area) for item in self.items]
             item_names = [item.name for item in self.items]
             amount_list = self.amount_ocr.ocr_batch_with_validation(
-                amount_images, item_names=item_names, direct_ocr=True, trim=amount_trim
+                amount_images, item_names=item_names, direct_ocr=True, trim=amount_trim,
+                amount_max=self.amount_max, amount_default_max=self.amount_default_max
             )
             for item, a in zip(self.items, amount_list):
                 item.amount = a

@@ -351,6 +351,8 @@ class Cl1Database:
             'meow_battle_times': [],  # 短猫单场战斗时间
             # 委托收益数据
             "commission_income_entries": [],
+            # 科研掉落数据（按月份归档，一条 = 一次领奖）
+            "research_drop_entries": [],
             # 钻石委托历史记录（按月份归档）
             "gem_commission_entries": [],
             # 当前运行中的钻石委托（不按月归档，持久化用）
@@ -1350,6 +1352,100 @@ class Cl1Database:
         month_key = f"{year:04d}-{month:02d}"
         data = self.get_stats(instance, month_key)
         return data.get("commission_income_entries", [])
+
+    # ========== 科研掉落统计 ==========
+
+    def add_research_drop(
+        self,
+        instance: str,
+        project: str,
+        series: int,
+        items: Dict[str, int],
+        *,
+        imgid: str = '',
+        completed_at: Optional[datetime] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """记录一次科研领奖的掉落。
+
+        项目代号与期数来自队列页识别，可能为空（识别失败时只留掉落物，
+        仍然有统计价值）。imgid 用于防止同一条掉落记录被重复提交。
+
+        Args:
+            instance (str): ALAS 实例名，统计按实例隔离。
+            project (str): 项目代号，如 'D-737-MI'；未识别时传空串。
+            series (int): 科研期数；未识别时传 0。
+            items (Dict[str, int]): {物品模板名: 数量}。
+            imgid (str): 掉落记录文件名，用于去重。
+            completed_at (Optional[datetime]): 领奖时间，缺省取当前时间。
+
+        Returns:
+            Optional[Dict[str, Any]]: 写入的条目；重复或空掉落返回 None。
+        """
+        items = {k: self._coerce_int(v) for k, v in (items or {}).items() if v > 0}
+        if not items:
+            return None
+
+        now = datetime.now()
+        month = f"{now.year:04d}-{now.month:02d}"
+        entry = {
+            "ts": now.isoformat(),
+            "completed_at": (completed_at or now).isoformat(),
+            "imgid": str(imgid or ''),
+            "project": str(project or ''),
+            "series": self._coerce_int(series or 0),
+            # 未识别的物品在解析阶段已被丢弃，这里只留模板名可查的掉落
+            "items": items,
+        }
+        with self._stats_transaction() as conn:
+            data = self._get_stats_in_connection(conn, instance, month)
+            entries = data.get("research_drop_entries", [])
+            if entry["imgid"] and any(
+                existing.get("imgid") == entry["imgid"] for existing in entries[-50:]
+            ):
+                return None
+            entries.append(entry)
+            # 与委托收益保持一致：按月保留最近 5000 条
+            data["research_drop_entries"] = entries[-5000:]
+            self._save_stats_in_connection(conn, instance, month, data)
+        return entry
+
+    def get_research_drop(
+        self, instance: str, year: int = None, month: int = None
+    ) -> List[Dict[str, Any]]:
+        """获取指定月份的科研掉落条目列表。
+
+        Args:
+            instance (str): ALAS 实例名。
+            year (int): 年份，默认当前年。
+            month (int): 月份，默认当前月。
+
+        Returns:
+            List[Dict[str, Any]]: 条目列表，每条含 ts/project/series/items。
+        """
+        if year is None or month is None:
+            now = datetime.now()
+            year = year or now.year
+            month = month or now.month
+
+        month_key = f"{year:04d}-{month:02d}"
+        data = self.get_stats(instance, month_key)
+        return data.get("research_drop_entries", [])
+
+    def async_add_research_drop(
+        self, instance: str, project: str, series: int, items: Dict[str, int], imgid: str = ''
+    ):
+        """异步写入科研掉落，避免解析结果落库时阻塞主循环。"""
+        from module.base.async_executor import async_executor
+
+        return async_executor.submit(
+            self.add_research_drop, instance, project, series, items, imgid=imgid
+        )
+
+    def async_get_research_drop(self, instance: str, year: int = None, month: int = None):
+        """异步读取科研掉落条目。"""
+        from module.base.async_executor import async_executor
+
+        return async_executor.submit(self.get_research_drop, instance, year, month)
 
     # ========== 钻石委托奖励统计 ==========
 

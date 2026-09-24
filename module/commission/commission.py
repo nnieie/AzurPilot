@@ -1250,7 +1250,7 @@ class RewardCommission(UI, InfoHandler):
                     # 可在配置中关闭，避免识别错误；其他场景的舰船检测不受影响
                     if self.config.Commission_DetectShipDrop:
                         for button in [GET_SHIP]:
-                            if click_timer.reached() and self.appear(button, interval=1):
+                            if click_timer.reached() and self.appear(button, offset=(20, 20), interval=1):
                                 self.ensure_no_info_bar(timeout=1)
                                 drop.add(self.device.image)
 

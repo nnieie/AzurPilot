@@ -92,7 +92,8 @@ export function smoothScrollToElement(target: HTMLElement, duration = 280) {
   const scroller = (document.scrollingElement as HTMLElement | null) ?? document.documentElement
   const to = scrollTargetTop(
     scroller.scrollTop,
-    scroller.getBoundingClientRect().top,
+    // 文档滚动的参照系是视口；documentElement 的矩形顶部会随滚动变成负数。
+    0,
     target.getBoundingClientRect().top,
     readScrollMarginTop(target),
     scroller.scrollHeight - scroller.clientHeight,

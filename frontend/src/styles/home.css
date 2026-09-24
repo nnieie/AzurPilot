@@ -13,8 +13,7 @@
 .sidebar-brand-left {display: flex; align-items: center; gap: 8px; min-width: 0}
 .sidebar-update-notice span {position: relative; z-index: 1}
 .nav-instance-name {min-width: 0; overflow: hidden; text-overflow: ellipsis}
-.topbar {position: sticky; top: 0; z-index: 30; gap: 16px}
-.home-active .topbar {border-bottom: none !important}
+.topbar {position: sticky; top: 0; z-index: 30; gap: 16px; border-bottom: none !important}
 /* 承载控件的那一行由控件自身撑起，不另外定高：定高会在分页与原模式之间差出 1px。 */
 .breadcrumb {min-width: 0; min-height: var(--instance-tab-height); align-items: center}
 .breadcrumb-current {overflow: hidden; text-overflow: ellipsis; white-space: nowrap}

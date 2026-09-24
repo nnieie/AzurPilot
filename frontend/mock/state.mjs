@@ -207,7 +207,7 @@ export function createMockState({empty = false} = {}) {
         Gem: {Value: 2468 - index * 10},
         Cube: {Value: 384 - index * 5},
         Pt: {Value: 42500 - index * 200},
-        ActionPoint: {Value: 101 - index * 2, Total: 1301 - index * 2},
+        ActionPoint: {Value: 101 - index * 2, Total: 5301 - index * 2},
         YellowCoin: {Value: 1520 - index * 20},
         PurpleCoin: {Value: 340 - index * 10},
         Core: {Value: 1280 - index * 15},
@@ -346,7 +346,7 @@ export function createMockState({empty = false} = {}) {
           if (name === 'demo-alt') return []
           const baseMap = {
             oil: 14200, coin: 186420, gem: 2468, cube: 384, pt: 42500, core: 1280, medal: 650, merit: 18400, guild_coin: 7600,
-            ap: 101, asset: 1301, distance: 4520, yellow_coins: 1520, purple_coins: 340,
+            ap: 101, asset: 5301, distance: 4520, yellow_coins: 1520, purple_coins: 340,
             Chip: 240, total_exp_gained: 152000, battle_count: 36, total_run_time: 2490,
           }
           const resKeyMap = {

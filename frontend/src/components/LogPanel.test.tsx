@@ -92,6 +92,15 @@ describe('LogPanel 日志解析与渲染', () => {
     expect(html).toContain('hl-title')
   })
 
+  it('中文方括号标签与英文标签同样按属性着色', () => {
+    const line = 'INFO     2026-09-13 23:24:47.008 │ [配置] 已保存 ./config\ap.json'
+    const html = renderToStaticMarkup(
+      <LogLine entry={{ id: 4, level: 'INFO', text: line }} search="" />
+    )
+    expect(html).toContain('hl-attr')
+    expect(html).toContain('hl-path')
+  })
+
   it('普通代码缩进或 Traceback 不会误判为居中标题', () => {
     const indentedCode = '    def some_function():'
     expect(CENTER_TITLE_RE.test(indentedCode)).toBe(false)

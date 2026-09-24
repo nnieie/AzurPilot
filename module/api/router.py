@@ -72,7 +72,8 @@ class Router:
 
     def statistics_report(self, params):
         from module.api.statistics_service import report
-        return report(self.configs, params.instance, params.category, params.month, params.days, params.period)
+        return report(self.configs, params.instance, params.category, params.month,
+                      params.days, params.period, research_series=params.series)
 
     def meowfficer_score_report(self, params):
         from module.api.meowfficer_service import report

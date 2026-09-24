@@ -52,7 +52,7 @@ class DropImage:
         # 退出 with 块时自动提交截图
     """
 
-    def __init__(self, stat, genre, save, local, info=''):
+    def __init__(self, stat, genre, save, local, info='', analyze=False):
         """
         Args:
             stat (AzurStats): 关联的 AzurStats 实例。
@@ -60,11 +60,14 @@ class DropImage:
             save (bool): 是否保存截图到本地文件系统。
             local (bool): 是否解析截图并存入本地数据库。
             info (str): 附加信息，追加到文件名。
+            analyze (bool): 是否在提交时走分类自己的解析链路（目前用于科研掉落）。
+                与 local 的区别是它写的是 cl1_record.db，且不要求保存截图。
         """
         self.stat = stat
         self.genre = str(genre)
         self.save = bool(save)
         self.local = bool(local)
+        self.analyze = bool(analyze)
         self.info = info
         self.images = []
         self.combat_count = 0
@@ -107,15 +110,16 @@ class DropImage:
         return len(self.images)
 
     def __bool__(self):
-        return self.save or self.local
+        return self.save or self.local or self.analyze
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self:
-            self.stat.commit(images=self.images, genre=self.genre,
-                             save=self.save, local=self.local, info=self.info, combat_count=self.combat_count)
+            self.stat.commit(images=self.images, genre=self.genre, save=self.save,
+                             local=self.local, info=self.info, combat_count=self.combat_count,
+                             analyze=self.analyze)
 
 
 class AzurStats:
@@ -594,7 +598,8 @@ class AzurStats:
 
         return False
 
-    def commit(self, images, genre, save=False, local=False, info='', combat_count=0):
+    def commit(self, images, genre, save=False, local=False, info='', combat_count=0,
+               analyze=False):
         """
         Args:
             images (list): List of images in numpy array.
@@ -602,6 +607,7 @@ class AzurStats:
             save (bool): If save image to local file system.
             local (bool): If parse image into local AzurStats storage.
             info (str): Extra info append to filename.
+            analyze (bool): 是否交给分类自己的解析链路入库（目前是科研掉落）。
 
         Returns:
             bool: If commit.
@@ -629,6 +635,15 @@ class AzurStats:
             logger.info(f'本地碧蓝统计解析开始，类型={genre}')
             with self._record_lock:
                 self._record_local(image, genre, filename, combat_count)
+
+        if analyze and genre == 'research':
+            # 同步解析：一次约 1 秒，发生在领奖之后，不打断任何状态循环。
+            # 解析失败只记日志，绝不影响领奖流程本身。
+            try:
+                from module.statistics.research_drop import record_research_drop
+                record_research_drop(images, instance=self.config.config_name, imgid=filename)
+            except Exception as e:
+                logger.warning(f'[科研统计] 掉落解析失败，跳过本次记录: {e}')
 
         return True
 
@@ -660,4 +675,7 @@ class AzurStats:
                 local = genre in self.LOCAL_GENRES
             else:
                 local = 'upload' in method_value and genre in self.LOCAL_GENRES
-        return DropImage(stat=self, genre=genre, save=save, local=local, info=info)
+        # 科研掉落走独立解析链路（写 cl1_record.db）：只要用户没有显式关掉记录，
+        # 存图与否都统计——save 档事后要能核对，upload 档就是不落盘只要数据。
+        analyze = genre == 'research' and method_value != 'do_not'
+        return DropImage(stat=self, genre=genre, save=save, local=local, info=info, analyze=analyze)

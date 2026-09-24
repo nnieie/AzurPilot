@@ -21,7 +21,7 @@ export interface AppContextValue {
   notify: (message: string, error?: boolean) => void
   previewEnabled: boolean; setPreviewEnabled: (enabled: boolean) => void
   devMode: boolean; setDevMode: (enabled: boolean) => void
-  theme: Theme; setTheme: (theme: Theme) => void
+  theme: Theme; setTheme: (theme: Theme, colorMode?: ColorMode) => void
   palette: Palette; setPalette: (palette: Palette) => void
   colorMode: ColorMode; resolvedMode: ResolvedMode; setColorMode: (mode: ColorMode) => void
   customPalettes: CustomPalette[]; saveCustomPalette: (palette: CustomPalette) => void; deleteCustomPalette: (id: CustomPalette['id']) => void
@@ -52,7 +52,7 @@ export function AppProvider({children}: {children: ReactNode}) {
   const {theme, palette, colorMode, resolvedMode, customPalettes, compactRailSide, compactRailWidth} = useSyncExternalStore(subscribeTheme, getThemePreference)
   const [language, setLanguage] = useState<Language>(initialLanguage)
   const [toast, setToast] = useState<{message: string; error: boolean}>()
-  const setTheme = (theme: Theme) => { void applyTheme({...getThemePreference(), theme}).catch(() => setToast({message: '主题加载失败，请重试。', error: true})) }
+  const setTheme = (theme: Theme, colorMode?: ColorMode) => { void applyTheme({...getThemePreference(), theme, ...(colorMode && {colorMode})}).catch(() => setToast({message: '主题加载失败，请重试。', error: true})) }
   const setPalette = (palette: Palette) => { void applyTheme({...getThemePreference(), palette}).catch(() => setToast({message: '配色加载失败，请重试。', error: true})) }
   const setColorMode = (colorMode: ColorMode) => { void applyTheme({...getThemePreference(), colorMode}).catch(() => setToast({message: '模式切换失败，请重试。', error: true})) }
   const setCompactRailSide = (compactRailSide: CompactRailSide) => { void applyTheme({...getThemePreference(), compactRailSide}).catch(() => setToast({message: '布局切换失败，请重试。', error: true})) }

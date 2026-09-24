@@ -432,7 +432,7 @@ class ShopBase(UI):
 
     def shop_purchase_result_handle(self):
         """关闭已获得物品界面，并报告本次购买已得到明确确认。"""
-        if self.appear(GET_SHIP, interval=1):
+        if self.appear(GET_SHIP, offset=(20, 20), interval=1):
             logger.info(f'商店遮挡: {GET_SHIP} -> {SHOP_CLICK_SAFE_AREA}')
             self.device.click(SHOP_CLICK_SAFE_AREA)
             return True

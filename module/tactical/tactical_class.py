@@ -762,7 +762,8 @@ class RewardTacticalClass(Dock):
             return False
 
         # 选择舰船
-        self.dock_select_one(should_select_button, skip_first_screenshot=True)
+        # dock_select_one 已由上游改为内部循环，不再接受 skip_first_screenshot
+        self.dock_select_one(should_select_button)
         # 确认选中的舰船
         # 如果刚刚从 META 技能中退出，清除间隔计时器
         self.interval_clear(SHIP_CONFIRM)

@@ -136,7 +136,8 @@ class OSStatus(UI):
             if self.appear_then_click(GET_ITEMS_2, offset=True, interval=1):
                 timeout.reset()
                 continue
-            if self.appear_then_click(GET_SHIP, interval=1):
+            # GET_SHIP 素材已随上游更新，需补 offset 容差，否则弹窗可能关不掉
+            if self.appear_then_click(GET_SHIP, offset=(20, 20), interval=1):
                 timeout.reset()
                 continue
 

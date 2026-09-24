@@ -25,6 +25,34 @@ function getSeriesColor(key: string, index: number, fallback?: string): string {
   return RESOURCE_PALETTE[key] ?? (index === 0 && fallback ? fallback : DEFAULT_PALETTE[index % DEFAULT_PALETTE.length])
 }
 
+const iconBase = import.meta.env.BASE_URL
+const chartResourceIcons: Record<string, string> = {
+  '石油': `${iconBase}oil.webp`,
+  '物资': `${iconBase}gold.webp`,
+  '钻石': `${iconBase}diamond.webp`,
+  '心智魔方': `${iconBase}cube.webp`,
+  '魔方': `${iconBase}cube.webp`,
+  '活动 PT': `${iconBase}pt.webp`,
+  '核心数据': `${iconBase}core_data.webp`,
+  '荣誉勋章': `${iconBase}honor_medal.webp`,
+  '功勋': `${iconBase}merit.webp`,
+  '舰队币': `${iconBase}stamina.webp`,
+  '心智单元': `${iconBase}core_data.webp`,
+  '行动力': `${iconBase}guild_coin.webp`,
+  '行动力资产': `${iconBase}guild_coin.webp`,
+  '作战补给凭证': `${iconBase}supply_token.webp`,
+  '特别兑换凭证': `${iconBase}special_token.webp`,
+  '完成委托': `${iconBase}honor_medal.webp`,
+}
+
+function getChartIcon(label: string): string | undefined {
+  if (chartResourceIcons[label]) return chartResourceIcons[label]
+  for (const [key, icon] of Object.entries(chartResourceIcons)) {
+    if (label.includes(key) || key.includes(label)) return icon
+  }
+  return undefined
+}
+
 /** 图表主体。紧凑主题把标题行与「放大查看」上提到页面工具栏（`heading=false`），
     并把报表附带的表格并进同一面板，避免同一页出现两个顶层区域。 */
 export function StatisticsChart({series, tables = [], heading = true, expanded = false, onToggleExpanded, title, initialMode = 'line'}: {
@@ -352,7 +380,11 @@ export function StatisticsChart({series, tables = [], heading = true, expanded =
                 title={empty ? ui('stats.noSeriesRecord') : `${item.label} (${active ? '已启用' : '未启用'}，双击仅看此项)`}
                 disabled={empty}
               >
-                <span className="stat-chip-dot" style={{backgroundColor: active ? color : undefined}}/>
+                {getChartIcon(item.label) ? (
+                  <img className="stat-chip-icon" src={getChartIcon(item.label)} alt="" width={20} height={20} draggable={false}/>
+                ) : (
+                  <span className="stat-chip-dot" style={{backgroundColor: active ? color : undefined}}/>
+                )}
                 <span>{item.label}</span>
                 {isCandlePrimary && <span className="stat-chip-badge primary">{ui('stats.primaryCandle')}</span>}
                 {isOverlayLine && (
@@ -387,7 +419,11 @@ export function StatisticsChart({series, tables = [], heading = true, expanded =
                 return (
                   <div key={item.series.key} className="stat-metric-card">
                     <div className="stat-metric-header">
-                      <span className="stat-chip-dot" style={{backgroundColor: item.color}}/>
+                      {getChartIcon(item.series.label) ? (
+                        <img className="stat-chip-icon" src={getChartIcon(item.series.label)} alt="" width={20} height={20} draggable={false}/>
+                      ) : (
+                        <span className="stat-chip-dot" style={{backgroundColor: item.color}}/>
+                      )}
                       <strong>{item.series.label}{isCandle && <span className="stat-chip-badge primary">{ui('stats.primaryCandle')}</span>}</strong>
                     </div>
                     <div className="stat-metric-body">

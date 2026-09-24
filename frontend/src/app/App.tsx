@@ -11,6 +11,8 @@ import { InstanceTabs } from '../components/InstanceTabs'
 import { RightRail } from '../components/RightRail'
 import { CompactScrollbars } from '../components/CompactScrollbars'
 import { TaskNav } from '../components/TaskNav'
+import { SidebarTransition } from '../components/SidebarTransition'
+import { ThemeQuickSwitch } from '../components/ThemeQuickSwitch'
 import { isDesktopDevice } from '../components/TaskNavFlyout'
 import { TaskSwitcher } from '../components/TaskSwitcher'
 import { useUpdater } from './updater'
@@ -229,16 +231,19 @@ export function App() {
   </header>
   // 旧版顶栏只留招牌与居中的页面名，「主页 / 实例 / 任务」这一行落到内容区顶部。
   const pageNav = <div className="legacy-page-nav"><div className={`breadcrumb${tabsShown ? ' with-tabs' : ''}`}>{topbarActions}{tabsShown ? tabStrip : <><span>/</span><InstanceSwitcher onCreate={() => setCreating(true)}/></>}{currentTask && <><span>/</span><TaskSwitcher/></>}</div></div>
-  return <div className={`app-shell ${showRail ? 'with-rail' : ''} ${legacyShell ? 'legacy-shell' : ''} ${legacyHomeShell ? 'legacy-shell legacy-home-shell' : ''} ${mobileOpen ? 'mobile-open' : ''} ${railOpen ? 'rail-open' : ''}`}>
+  return <div className={`app-shell ${showRail ? 'with-rail' : ''} ${currentTask ? 'task-config-shell' : ''} ${legacyShell ? 'legacy-shell' : ''} ${legacyHomeShell ? 'legacy-shell legacy-home-shell' : ''} ${mobileOpen ? 'mobile-open' : ''} ${railOpen ? 'rail-open' : ''}`}>
     <a className="skip-link" href="#main-content" onClick={event => {event.preventDefault(); document.getElementById('main-content')?.focus()}}>{ui('nav.skipContent')}</a>
     {(legacyShell || legacyHomeShell) && topbar}
     <aside className="sidebar">
       {/* 旧版把招牌放进顶栏，桌面端这一行隐藏；窄屏侧栏是抽屉，招牌回抽屉里。 */}
       <div className={`sidebar-brand ${legacyShell || legacyHomeShell ? 'legacy-sidebar-actions' : ''}`.trim()}><div className="sidebar-brand-left">{brand}</div><button className="mobile-close icon-button" aria-label={ui('nav.close')} onClick={() => setMobileOpen(false)}><X size={18}/></button></div>
-      <nav className="primary-nav" aria-label={ui('nav.primary')}>
-        {instance ? <><NavLink to={`${base}/overview`} onClick={closeDrawer}><LayoutDashboard size={17}/>{ui('nav.overview')}</NavLink><NavLink to={`${base}/statistics`} onClick={closeDrawer}><ChartNoAxesCombined size={17}/>{ui('nav.statistics')}</NavLink></> : <><NavLink to="/" end onClick={closeDrawer}><House size={17}/>{ui('nav.home')}</NavLink><NavLink to="/updater" onClick={closeDrawer}><Download size={17}/>{ui('nav.updater')}{updateAvailable && <span className="tiny-dot teal"/>}</NavLink><NavLink to="/interface" onClick={closeDrawer}><Palette size={17}/>{ui('nav.interface')}</NavLink><NavLink to="/remote" onClick={closeDrawer}><Globe size={17}/>{ui('nav.remote')}</NavLink><NavLink to="/configs" onClick={closeDrawer}><FileJson size={17}/>{ui('nav.configs')}</NavLink><NavLink to="/settings" onClick={closeDrawer}><Settings2 size={17}/>{ui('nav.settings')}</NavLink><NavLink to="/dev" onClick={closeDrawer}><Code2 size={17}/>{ui('nav.developer')}</NavLink><a className="nav-open-source" href="https://github.com/wess09/AzurPilot" target="_blank" rel="noreferrer" onClick={closeDrawer}><ExternalLink size={17}/>{ui('nav.openSource')}</a></>}
-      </nav>
-      {instance && <TaskNav/>}
+      <SidebarTransition viewKey={instance ? `instance:${instance}` : 'global'}>
+        <nav className="primary-nav" aria-label={ui('nav.primary')}>
+          {instance ? <><NavLink to={`${base}/overview`} onClick={closeDrawer}><LayoutDashboard size={17}/>{ui('nav.overview')}</NavLink><NavLink to={`${base}/statistics`} onClick={closeDrawer}><ChartNoAxesCombined size={17}/>{ui('nav.statistics')}</NavLink></> : <><NavLink to="/" end onClick={closeDrawer}><House size={17}/>{ui('nav.home')}</NavLink><NavLink to="/updater" onClick={closeDrawer}><Download size={17}/>{ui('nav.updater')}{updateAvailable && <span className="tiny-dot teal"/>}</NavLink><NavLink to="/interface" onClick={closeDrawer}><Palette size={17}/>{ui('nav.interface')}</NavLink><NavLink to="/remote" onClick={closeDrawer}><Globe size={17}/>{ui('nav.remote')}</NavLink><NavLink to="/configs" onClick={closeDrawer}><FileJson size={17}/>{ui('nav.configs')}</NavLink><NavLink to="/settings" onClick={closeDrawer}><Settings2 size={17}/>{ui('nav.settings')}</NavLink><NavLink to="/dev" onClick={closeDrawer}><Code2 size={17}/>{ui('nav.developer')}</NavLink><a className="nav-open-source" href="https://github.com/wess09/AzurPilot" target="_blank" rel="noreferrer" onClick={closeDrawer}><ExternalLink size={17}/>{ui('nav.openSource')}</a></>}
+          <ThemeQuickSwitch/>
+        </nav>
+        {instance && <TaskNav/>}
+      </SidebarTransition>
     </aside>
     {railFirst && instance && showRail && <RightRail instance={instance} onMobileClose={() => setRailOpen(false)}/>}
     <div className="main-shell">{!legacyShell && !legacyHomeShell && topbar}

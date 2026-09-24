@@ -138,8 +138,8 @@ class Navbar:
         if self.name not in ['SHOP_BOTTOM_NAVBAR', 'GUILD_SIDE_NAVBAR']:
             return False
 
-        # 处理商店遮挡物
-        if main.appear(GET_SHIP, interval=1):
+        # Handle shop obstructions
+        if main.appear(GET_SHIP, offset=(20, 20), interval=1):
             main.device.click(SHOP_CLICK_SAFE_AREA)
             return True
         if main.appear(GET_ITEMS_1, offset=(30, 30), interval=1):

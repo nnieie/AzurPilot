@@ -66,6 +66,24 @@ const metricIcons: Record<string, LucideIcon> = {
   '今日运行': Timer,
 }
 
+const iconBase = import.meta.env.BASE_URL
+const metricWebpIcons: Record<string, string> = {
+  '完成委托': `${iconBase}honor_medal.webp`,
+  '钻石': `${iconBase}diamond.webp`,
+  '心智魔方': `${iconBase}cube.webp`,
+  '心智单元': `${iconBase}core_data.webp`,
+  '石油': `${iconBase}oil.webp`,
+  '物资': `${iconBase}gold.webp`,
+}
+
+function getMetricWebp(label: string): string | undefined {
+  if (metricWebpIcons[label]) return metricWebpIcons[label]
+  for (const [key, src] of Object.entries(metricWebpIcons)) {
+    if (label.includes(key) || key.includes(label)) return src
+  }
+  return undefined
+}
+
 function getMetricIcon(label: string): LucideIcon | undefined {
   if (metricIcons[label]) return metricIcons[label]
   for (const [key, icon] of Object.entries(metricIcons)) {
@@ -75,7 +93,7 @@ function getMetricIcon(label: string): LucideIcon | undefined {
 }
 
 const StatisticsChart = lazy(() => import('../components/StatisticsChart').then(module => ({default: module.StatisticsChart})))
-const categories: Record<Category, UiKey> = {resources: 'stats.category.resources', action: 'stats.category.action', opsi: 'stats.category.opsi', commission: 'stats.category.commission', ships: 'stats.category.ships', loot: 'stats.category.loot'}
+const categories: Record<Category, UiKey> = {resources: 'stats.category.resources', action: 'stats.category.action', opsi: 'stats.category.opsi', commission: 'stats.category.commission', ships: 'stats.category.ships', loot: 'stats.category.loot', research: 'stats.category.research'}
 type Category = NonNullable<Parameters['statistics.report']['category']>
 
 export function Statistics() {
@@ -86,6 +104,8 @@ export function Statistics() {
   const [days, setDays] = useState(7)
   const [month, setMonth] = useState(() => {const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`})
   const [period, setPeriod] = useState<'day' | 'week' | 'month'>('month')
+  // 科研期数：0 表示最新有记录的一期，与后端约定一致
+  const [researchSeries, setResearchSeries] = useState(0)
   const [revision, setRevision] = useState(0)
   const [data, setData] = useState<StatisticsReport>()
   const [error, setError] = useState('')
@@ -104,21 +124,21 @@ export function Statistics() {
     if (connection !== 'ready') return
     let active = true
     setData(undefined); setError('')
-    void api.request('statistics.report', {instance, category, days, month, period}).then(value => {if (active) setData(value)}).catch(error => {if (active) setError(error.message)})
+    void api.request('statistics.report', {instance, category, days, month, period, series: researchSeries}).then(value => {if (active) setData(value)}).catch(error => {if (active) setError(error.message)})
     return () => {active = false}
-  }, [instance, category, days, month, period, connection, revision])
+  }, [instance, category, days, month, period, researchSeries, connection, revision])
 
   // 静默更新：后端数据更新推送到前端时平滑更新图表与指标，避免 Loading 闪烁
   const silentRefresh = useCallback(() => {
     if (connection !== 'ready') return
-    void api.request('statistics.report', {instance, category, days, month, period})
+    void api.request('statistics.report', {instance, category, days, month, period, series: researchSeries})
       .then(value => {
         setData(value)
       })
       .catch(() => {
         // 静默更新失败时不影响当前已展示视图
       })
-  }, [connection, instance, category, days, month, period])
+  }, [connection, instance, category, days, month, period, researchSeries])
 
   useEffect(() => {
     if (connection !== 'ready') return
@@ -191,6 +211,7 @@ export function Statistics() {
     {category === 'resources' && <label className="statistics-inline-control" data-tip={ui('stats.range')}><span className="statistics-inline-label">{ui('stats.range')}</span><Select aria-label={ui('stats.days')} value={days} onChange={event => setDays(Number(event.target.value))}>{[1, 7, 30, 90, 365].map(value => <option value={value} key={value}>{ui('stats.recentDays', {days: value})}</option>)}</Select></label>}
     {/* 月份输入框本身就显示「2026年09月」，标签只在提示里出现 */}
     {['action', 'opsi', 'commission'].includes(category!) && <label className="statistics-inline-control" data-tip={ui('stats.month')}><input aria-label={ui('stats.month')} type="month" min="2020-01" max="9998-12" value={month} disabled={category === 'commission' && period !== 'month'} onChange={event => {if (event.target.value) setMonth(event.target.value)}}/></label>}
+    {category === 'research' && <label className="statistics-inline-control" data-tip={ui('stats.researchSeries')}><span className="statistics-inline-label">{ui('stats.researchSeries')}</span><Select aria-label={ui('stats.researchSeries')} value={researchSeries} onChange={event => setResearchSeries(Number(event.target.value))}><option value={0}>{ui('stats.latestSeries')}</option>{[1, 2, 3, 4, 5, 6, 7, 8, 9].map(value => <option value={value} key={value}>{ui('stats.seriesN', {n: value})}</option>)}</Select></label>}
     {category === 'commission' && <label className="statistics-inline-control" data-tip={ui('stats.period')}><span className="statistics-inline-label">{ui('stats.period')}</span><Select aria-label={ui('stats.commissionPeriod')} value={period} onChange={event => setPeriod(event.target.value as typeof period)}><option value="day">{ui('stats.today')}</option><option value="week">{ui('stats.thisWeek')}</option><option value="month">{ui('stats.selectedMonth')}</option></Select></label>}
   </>
   const hints = <>
@@ -198,11 +219,20 @@ export function Statistics() {
     {category === 'loot' && <span>{ui('stats.lootHint')}</span>}
   </>
   const dataView = error ? <ErrorBox message={error} retry={() => setRevision(value => value + 1)}/> : !data ? <Loading/> : <div className="statistics-sections">{!!data.metrics.length && <section className="panel summary-metrics-panel"><div className="stat-metrics summary-metrics">{data.metrics.map(item => {
-    const Icon = getMetricIcon(item.label)
+    const webp = getMetricWebp(item.label)
+    const Icon = !webp ? getMetricIcon(item.label) : undefined
     return <div key={item.label} className="summary-metric-card">
       <div className="summary-metric-head">
         <span className="summary-metric-label">{item.label}</span>
-        {Icon && <span className="summary-metric-icon" aria-hidden="true"><Icon size={18} strokeWidth={1.8}/></span>}
+        {webp ? (
+          <span className="summary-metric-icon summary-metric-icon-webp" aria-hidden="true">
+            <img src={webp} alt="" width={48} height={48} draggable={false}/>
+          </span>
+        ) : Icon ? (
+          <span className="summary-metric-icon" aria-hidden="true">
+            <Icon size={18} strokeWidth={1.8}/>
+          </span>
+        ) : null}
       </div>
       <strong>{item.value == null ? '—' : item.value.toLocaleString(undefined, {maximumFractionDigits: 2})}<small>{item.unit}</small></strong>
     </div>
