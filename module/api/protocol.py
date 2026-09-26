@@ -30,6 +30,11 @@ class AuthParams(Params):
     password: StrictStr = Field(default='', max_length=256)
 
 
+class AnnouncementParams(Params):
+    """公告查询参数。"""
+    force: StrictBool = False
+
+
 class SchemaParams(Params):
     language: Literal['zh-CN', 'zh-MIAO', 'en-US', 'ja-JP', 'zh-TW'] = 'zh-CN'
 
@@ -95,8 +100,13 @@ class StatisticsReportParams(InstanceParams):
     month: StrictStr | None = Field(default=None, pattern=r'^\d{4}-(0[1-9]|1[0-2])$')
     days: StrictInt = Field(default=7, ge=1, le=365)
     period: Literal['day', 'week', 'month'] = 'month'
-    # 科研统计专用：只看某一期，0 表示最新有记录的一期
+    # 科研统计专用：只看某一期（1~9），0 表示最新有记录的一期（界面不再提供该项）
     series: StrictInt = Field(default=0, ge=0, le=20)
+    # 科研统计专用：视图口径。series = 按期；consumable = 心智/物资（不分期）。
+    # 不分期的口径忽略 series——只有彩装备与舰船图纸绑定期数，心智与物资各期混着出。
+    scope: Literal['series', 'consumable'] = 'series'
+    # 大世界掉落专用：只看某个大世界任务（任务名转下划线，如 opsi_abyssal）；空表示全部
+    task: StrictStr | None = Field(default=None, pattern=r'^[a-z][a-z0-9_]{0,40}$')
 
 
 class MeowfficerScoreReportParams(InstanceParams):

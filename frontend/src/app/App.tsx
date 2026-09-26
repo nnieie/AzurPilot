@@ -1,9 +1,12 @@
 import { PasswordInput, Select } from '../components/FormControls'
 import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent, type MouseEvent, type ChangeEvent } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { ArrowRight, CalendarClock, ChartNoAxesCombined, Code2, Compass, FileJson, GalleryHorizontal, LayoutDashboard, Globe, House, Download, ExternalLink, Maximize2, Menu, Minimize2, Palette, PanelTop, Settings2, WifiOff, X } from 'lucide-react'
+import { ArrowRight, CalendarClock, ChartNoAxesCombined, Code2, Compass, FileJson, GalleryHorizontal, LayoutDashboard, Globe, House, Download, ExternalLink, Maximize2, Megaphone, Menu, Minimize2, Palette, PanelTop, Settings2, WifiOff, X, CirclePause, CirclePlay, LoaderCircle} from 'lucide-react'
 import { api } from '../api/client'
+import { editor } from '../config/editors'
+import {bulkAction, bulkTargets} from './instanceBulk'
 import { useApp, useConnection } from './context'
+import { useAnnouncement } from './announcement'
 import { ErrorBox, Loading, Modal } from '../components/ui'
 import { GlassMaterial } from '../components/GlassMaterial'
 import { InstanceSwitcher } from '../components/InstanceSwitcher'
@@ -12,8 +15,8 @@ import { RightRail } from '../components/RightRail'
 import { CompactScrollbars } from '../components/CompactScrollbars'
 import { TaskNav } from '../components/TaskNav'
 import { SidebarTransition } from '../components/SidebarTransition'
-import { ThemeQuickSwitch } from '../components/ThemeQuickSwitch'
-import { isDesktopDevice } from '../components/TaskNavFlyout'
+
+import { useIsDesktop } from '../components/TaskNav'
 import { TaskSwitcher } from '../components/TaskSwitcher'
 import { useUpdater } from './updater'
 import { usePageMotion } from './pageMotion'
@@ -25,7 +28,7 @@ import { cycleTabSize, readLastPath, readTabSize, readTopbarMode, setTopbarMode,
 import { INSTANCE_NAME_PATTERN } from './instanceName'
 
 /* 旧版外壳下也要显示居中页名的顶层路由。 */
-const PRIMARY_NAV_PATHS = ['/updater', '/interface', '/remote', '/configs', '/settings', '/dev']
+const PRIMARY_NAV_PATHS = ['/announcement', '/updater', '/interface', '/remote', '/configs', '/settings', '/dev']
 
 export function CreateInstance({onClose, startWithImport = false}: {onClose: () => void; startWithImport?: boolean}) {
   const [name, setName] = useState('')
@@ -130,13 +133,14 @@ export function App() {
      刷新时地址栏已经是用户要停留的页面，写进去就不再改。 */
   const freshOpen = useRef((performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined)?.type === 'navigate')
   const update = useUpdater()
+  const announcement = useAnnouncement()
   usePageMotion()
   useGlassPointerLight()
   const current = instances.find(item => item.name === instance)
   const base = instance ? `/i/${instance}` : ''
   const taskMatch = location.pathname.match(/\/task\/([^/]+)/)
   const currentTask = taskMatch ? taskMatch[1] : null
-  const activeSection = location.pathname.includes('/task/') ? ui('nav.taskConfig') : location.pathname.endsWith('/statistics') ? ui('nav.statistics') : location.pathname.endsWith('/settings') ? ui('nav.settings') : location.pathname.endsWith('/interface') ? ui('nav.interface') : location.pathname.endsWith('/remote') ? ui('nav.remote') : location.pathname.endsWith('/updater') ? ui('nav.updater') : location.pathname.endsWith('/configs') ? ui('nav.configs') : location.pathname.endsWith('/dev') ? ui('nav.developer') : instance ? instance : ui('nav.home')
+  const activeSection = location.pathname.includes('/task/') ? ui('nav.taskConfig') : location.pathname.endsWith('/statistics') ? ui('nav.statistics') : location.pathname.endsWith('/announcement') ? ui('nav.announcement') : location.pathname.endsWith('/settings') ? ui('nav.settings') : location.pathname.endsWith('/interface') ? ui('nav.interface') : location.pathname.endsWith('/remote') ? ui('nav.remote') : location.pathname.endsWith('/updater') ? ui('nav.updater') : location.pathname.endsWith('/configs') ? ui('nav.configs') : location.pathname.endsWith('/dev') ? ui('nav.developer') : instance ? instance : ui('nav.home')
   function handleBrandLogoClick(event: MouseEvent<HTMLImageElement>) {
     if (devMode || !recordDevLogoClick()) return
     event.preventDefault()
@@ -201,8 +205,10 @@ export function App() {
   /* 分页模式把所有实例铺在顶栏一行；原模式仍把实例收在下拉里。两种模式共用这一个开关。 */
   const tabsMode = topbarMode === 'tabs' && instances.length > 0
   /* 窄屏下 home.css 会把标签条藏起来，此时展示切换器。 */
-  const tabsShown = tabsMode && isDesktopDevice()
-  const modeToggle = instances.length === 0 ? null : <button
+  const isDesktop = useIsDesktop()
+  const tabsShown = tabsMode && isDesktop
+  const allowTopbarControls = usesLegacyLayout(theme) && isDesktop
+  const modeToggle = instances.length === 0 || !allowTopbarControls ? null : <button
     type="button"
     className="topbar-mode-toggle icon-button"
     aria-label={tabsMode ? ui('nav.listMode') : ui('nav.tabsMode')}
@@ -211,15 +217,44 @@ export function App() {
     onClick={() => setTopbarMode(tabsMode ? 'dropdown' : 'tabs')}
   >{tabsMode ? <PanelTop size={17}/> : <GalleryHorizontal size={17}/>}</button>
   /* 缩放只作用在标签页自身（顶栏高度由各主题定死）：中 → 大 → 小 循环。 */
-  const sizeToggle = instances.length === 0 ? null : <button
+  const sizeToggle = instances.length === 0 || !allowTopbarControls ? null : <button
     type="button"
     className="topbar-tab-size icon-button"
     aria-label={ui('nav.tabSize')}
     title={`${ui('nav.tabSize')} · ${tabSize}`}
     onClick={() => cycleTabSize(tabSize)}
   >{tabSize === 'lg' ? <Minimize2 size={17}/> : <Maximize2 size={17}/>}</button>
-  /* 两枚开关与「主页」打包在一起：顶栏与旧版的页内栏共用同一份标记，两处都要一起出现。 */
-  const topbarActions = <span className="topbar-actions"><span className="topbar-actions-hover"/><span className="topbar-actions-buttons">{modeToggle}{sizeToggle}</span><Link to="/">{ui('nav.home')}</Link></span>
+  const [bulkBusy, setBulkBusy] = useState(false)
+  const bulk = bulkAction(instances)
+  /* 一键启停：逐个实例串行处理，启动前先等该实例的配置落盘。 */
+  const toggleAll = async () => {
+    const targets = bulkTargets(instances, bulk)
+    if (targets.length === 0) return
+    setBulkBusy(true)
+    let failed = 0
+    for (const name of targets) {
+      try {
+        if (bulk === 'start') await editor(`config:${name}`).settled()
+        await api.request(bulk === 'start' ? 'scheduler.start' : 'scheduler.stop', {instance: name})
+      } catch (error) {
+        failed += 1
+        notify((error as Error).message, true)
+      }
+    }
+    if (failed === 0) notify(ui(bulk === 'start' ? 'scheduler.started' : 'scheduler.stoppedNotice'))
+    setBulkBusy(false)
+  }
+  const bulkToggle = instances.length === 0 || !allowTopbarControls ? null : <button
+    type="button"
+    className="topbar-bulk-toggle icon-button"
+    aria-label={ui(bulk === 'start' ? 'nav.startAll' : 'nav.stopAll')}
+    title={ui(bulk === 'start' ? 'nav.startAll' : 'nav.stopAll')}
+    disabled={bulkBusy}
+    aria-busy={bulkBusy}
+    onClick={toggleAll}
+  >{bulkBusy ? <LoaderCircle size={17}/> : bulk === 'start' ? <CirclePlay size={17}/> : <CirclePause size={17}/>}</button>
+  /* 三枚开关与「主页」打包在一起：顶栏与旧版的页内栏共用同一份标记，两处都要一起出现。 */
+  const topbarActions = allowTopbarControls ? <span className="topbar-actions"><span className="topbar-actions-hover"/><span className="topbar-actions-buttons">{modeToggle}{sizeToggle}{bulkToggle}</span><Link to="/">{ui('nav.home')}</Link></span> : <span className="topbar-actions"><Link to="/">{ui('nav.home')}</Link></span>
   const tabStrip = <InstanceTabs onCreate={() => setCreating(true)}/>
   const breadcrumbInner = <>{topbarActions}{instance ? (tabsShown ? null : <><span>/</span><InstanceSwitcher onCreate={() => setCreating(true)}/></>) : activeSection !== ui('nav.home') && <><span>/</span><strong>{activeSection}</strong></>}{tabsShown && tabStrip}{instance && (currentTask ? <><span>/</span><Link to={`${base}/task/Alas`}>{ui('nav.taskConfig')}</Link><span>/</span><Link className="breadcrumb-current" to={`${base}/task/${currentTask}`}><strong>{t(`Task.${currentTask}.name`)}</strong></Link></> : location.pathname.endsWith('/statistics') && !tabsMode && <><span>/</span><strong>{ui('nav.statistics')}</strong></>)}</>
   const topbar = <header className="topbar">
@@ -239,10 +274,10 @@ export function App() {
       <div className={`sidebar-brand ${legacyShell || legacyHomeShell ? 'legacy-sidebar-actions' : ''}`.trim()}><div className="sidebar-brand-left">{brand}</div><button className="mobile-close icon-button" aria-label={ui('nav.close')} onClick={() => setMobileOpen(false)}><X size={18}/></button></div>
       <SidebarTransition viewKey={instance ? `instance:${instance}` : 'global'}>
         <nav className="primary-nav" aria-label={ui('nav.primary')}>
-          {instance ? <><NavLink to={`${base}/overview`} onClick={closeDrawer}><LayoutDashboard size={17}/>{ui('nav.overview')}</NavLink><NavLink to={`${base}/statistics`} onClick={closeDrawer}><ChartNoAxesCombined size={17}/>{ui('nav.statistics')}</NavLink></> : <><NavLink to="/" end onClick={closeDrawer}><House size={17}/>{ui('nav.home')}</NavLink><NavLink to="/updater" onClick={closeDrawer}><Download size={17}/>{ui('nav.updater')}{updateAvailable && <span className="tiny-dot teal"/>}</NavLink><NavLink to="/interface" onClick={closeDrawer}><Palette size={17}/>{ui('nav.interface')}</NavLink><NavLink to="/remote" onClick={closeDrawer}><Globe size={17}/>{ui('nav.remote')}</NavLink><NavLink to="/configs" onClick={closeDrawer}><FileJson size={17}/>{ui('nav.configs')}</NavLink><NavLink to="/settings" onClick={closeDrawer}><Settings2 size={17}/>{ui('nav.settings')}</NavLink><NavLink to="/dev" onClick={closeDrawer}><Code2 size={17}/>{ui('nav.developer')}</NavLink><a className="nav-open-source" href="https://github.com/wess09/AzurPilot" target="_blank" rel="noreferrer" onClick={closeDrawer}><ExternalLink size={17}/>{ui('nav.openSource')}</a></>}
-          <ThemeQuickSwitch/>
+          {instance ? <><NavLink to={`${base}/overview`} onClick={closeDrawer}><LayoutDashboard size={17}/>{ui('nav.overview')}</NavLink><NavLink to={`${base}/statistics`} onClick={closeDrawer}><ChartNoAxesCombined size={17}/>{ui('nav.statistics')}</NavLink></> : <><NavLink to="/" end onClick={closeDrawer}><House size={17}/>{ui('nav.home')}</NavLink><NavLink to="/announcement" onClick={closeDrawer}><Megaphone size={17}/>{ui('nav.announcement')}{announcement.unread && <span className="tiny-dot red"/>}</NavLink><NavLink to="/updater" onClick={closeDrawer}><Download size={17}/>{ui('nav.updater')}{updateAvailable && <span className="tiny-dot teal"/>}</NavLink><NavLink to="/interface" onClick={closeDrawer}><Palette size={17}/>{ui('nav.interface')}</NavLink><NavLink to="/remote" onClick={closeDrawer}><Globe size={17}/>{ui('nav.remote')}</NavLink><NavLink to="/configs" onClick={closeDrawer}><FileJson size={17}/>{ui('nav.configs')}</NavLink><NavLink to="/settings" onClick={closeDrawer}><Settings2 size={17}/>{ui('nav.settings')}</NavLink><NavLink to="/dev" onClick={closeDrawer}><Code2 size={17}/>{ui('nav.developer')}</NavLink><a className="nav-open-source" href="https://github.com/wess09/AzurPilot" target="_blank" rel="noreferrer" onClick={closeDrawer}><ExternalLink size={17}/>{ui('nav.openSource')}</a></>}
+
         </nav>
-        {instance && <TaskNav/>}
+        {instance && <TaskNav onNavigate={closeDrawer}/>}
       </SidebarTransition>
     </aside>
     {railFirst && instance && showRail && <RightRail instance={instance} onMobileClose={() => setRailOpen(false)}/>}

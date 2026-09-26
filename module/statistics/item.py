@@ -30,6 +30,17 @@ ITEM_AMOUNT_MAX = {
     # 民用电子元件单次掉落 1~10，超上限读数（如 3 被读成 73）
     # 会触发抹灰版兜底重试修正
     'Consumer_Grade_Electronic_Components': 50,
+    # 装备设计图（白纸类，T4 金 / T5 彩）单次掉落 1~10，与军械测试报告同样的
+    # 误读规律：纸面白色纹理被拼进数量框，实测「舰载机研发图纸UR型 1 张」
+    # 首轮读成 51，加上限后重试修正回 1。
+    'GearDesignPlanGunT4': 50,
+    'GearDesignPlanGunT5': 50,
+    'GearDesignPlanTorpedoT4': 50,
+    'GearDesignPlanTorpedoT5': 50,
+    'GearDesignPlanAntiAirT4': 50,
+    'GearDesignPlanAntiAirT5': 50,
+    'GearDesignPlanPlaneT4': 50,
+    'GearDesignPlanPlaneT5': 50,
 }
 DEFAULT_AMOUNT_MAX = 2147483645
 
@@ -178,6 +189,9 @@ class AmountOcr(Digit):
     # 右侧数字簇的最大水平间隙（None 关闭）。奖励页图标中的竖笔画
     # 会被误读成数字（如 2 变 12），按间隙阈值把它排除在数字簇外。
     fragment_max_digit_gap = None
+    # 超限兜底时丢首位还是截断末位。图标残影在数字左侧的场景（科研掉落）
+    # 应丢首位：实测「真值 3 被读成 73」时截断末位留下 7（错），丢首位得 3（对）。
+    drop_leading_on_overflow = False
 
     def pre_process(self, image):
         """预处理图像，提取白色文字。
@@ -273,9 +287,18 @@ class AmountOcr(Digit):
                 return amount
 
         if amount > max_val and amount >= 10:
-            truncated = int(str(amount)[:-1])
-            logger.warning(f'{item_name} amount {amount} still 超过最大值 after {self.MAX_RETRY} retries, '
-                          f'truncating to {truncated}')
+            if self.drop_leading_on_overflow:
+                # 残影在数字左侧，多出来的正是首位；可能不止一位，丢到不超限为止
+                digits = str(amount)
+                while len(digits) > 1 and int(digits) > max_val:
+                    digits = digits[1:]
+                truncated = int(digits)
+                logger.warning(f'{item_name} amount {amount} still 超过最大值 after {self.MAX_RETRY} retries, '
+                              f'dropping leading digit to {truncated}')
+            else:
+                truncated = int(str(amount)[:-1])
+                logger.warning(f'{item_name} amount {amount} still 超过最大值 after {self.MAX_RETRY} retries, '
+                              f'truncating to {truncated}')
             return truncated
 
         return amount
@@ -467,6 +490,11 @@ class ItemGrid:
         self.amount_max = {}
         self.amount_default_max = None
 
+        # 数量区覆盖（按物品名前缀，按顺序取第一个命中的）。数量数字右对齐，
+        # 位数多的物品会超出默认区被切掉首位；白纸类的数字又压在图标装饰上。
+        # 一个通用区解决不了，只能按物品换区。
+        self.amount_area_rules = []
+
         self.items = []
 
     def _load_image(self, image):
@@ -655,6 +683,20 @@ class ItemGrid:
         else:
             return None
 
+    def amount_area_for(self, name):
+        """取该物品的数量区：按 amount_area_rules 匹配前缀，未命中用默认区。
+
+        Args:
+            name (str): 物品名称，如 'OperationCoin'、'GearDesignPlanGunT4'。
+
+        Returns:
+            tuple: (x1, y1, x2, y2) 数量区坐标。
+        """
+        for prefix, area in self.amount_area_rules:
+            if name.startswith(prefix):
+                return area
+        return self.amount_area
+
     def predict(self, image, name=True, amount=True, cost=False, price=False, tag=False, amount_trim=True):
         """预测截图中所有物品的属性。
 
@@ -677,7 +719,7 @@ class ItemGrid:
             for item, n in zip(self.items, name_list):
                 item.name = n
         if amount:
-            amount_images = [item.crop(self.amount_area) for item in self.items]
+            amount_images = [item.crop(self.amount_area_for(item.name)) for item in self.items]
             item_names = [item.name for item in self.items]
             amount_list = self.amount_ocr.ocr_batch_with_validation(
                 amount_images, item_names=item_names, direct_ocr=True, trim=amount_trim,

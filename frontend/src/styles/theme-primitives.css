@@ -90,6 +90,7 @@ button:focus-visible, a:focus-visible, summary:focus-visible {outline-color: var
 .monitor-segmented {background: var(--theme-segment-bg); border-color: var(--theme-segment-border)}
 .monitor-segmented .segmented-indicator {background: var(--theme-segment-indicator)}
 .monitor-segmented button {color: var(--theme-muted)}
+.statistics-edit-actions button[aria-pressed='true'] {background: var(--theme-segment-indicator); color: var(--theme-text)}
 .monitor-segmented button:hover, .monitor-segmented button[aria-selected='true'], [data-theme='dark'] .monitor-segmented button[aria-selected='true'] {color: var(--theme-text)}
 
 .page-title h1 {

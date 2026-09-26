@@ -643,7 +643,8 @@
       "minitouch": "minitouch喵",
       "Hermit": "Hermit喵",
       "MaaTouch": "MaaTouch喵",
-      "nemu_ipc": "nemu_ipc"
+      "nemu_ipc": "nemu_ipc",
+      "azurpilot_android": "AzurPilot Android 虚拟屏"
     },
     "GameSettings": {
       "name": "自动应用推荐游戏设置",
@@ -827,6 +828,12 @@
     "OnePushConfig": {
       "name": "错误推送通知喵",
       "help": "发生无法处理异常时通过Onepush推送消息喵。配置见文档~ (´・ω・`)"
+    },
+    "LowPushMode": {
+      "name": "低推送量模式",
+      "help": "只推送需要人管的错误喵。游戏没开、模拟器掉了、游戏卡住这种自己能好的错误只记日志，不推送啦喵~ (´・ω・`)",
+      "True": "已启用",
+      "False": "关闭"
     },
     "ScreenshotLength": {
       "name": "出错时保留最后 X 张截图 σ",
@@ -1088,9 +1095,65 @@
       "do_not": "无视喵",
       "save": "保存喵"
     },
-    "OpsiRecord": {
-      "name": "大世界掉落截图",
-      "help": "",
+    "OpsiHazard1Leveling": {
+      "name": "侵蚀一掉落截图喵",
+      "help": "侵蚀1不进「大世界掉落」统计喵（收益看「大世界总结」页）；「保存」只存截图，「上传」对它没用喵",
+      "do_not": "无视喵",
+      "save": "保存喵",
+      "upload": "上传喵",
+      "save_and_upload": "保存并上传喵"
+    },
+    "OpsiMeowfficerFarming": {
+      "name": "短猫掉落截图喵",
+      "help": "「保存」和「上传」都会把掉落记进统计页「大世界掉落」喵，区别只在要不要把截图存下来喵~",
+      "do_not": "无视喵",
+      "save": "保存喵",
+      "upload": "上传喵",
+      "save_and_upload": "保存并上传喵"
+    },
+    "OpsiDaily": {
+      "name": "大世界每日掉落截图喵",
+      "help": "「保存」和「上传」都会把掉落记进统计页「大世界掉落」喵，区别只在要不要把截图存下来喵~\n跨月每日也读这个开关喵",
+      "do_not": "无视喵",
+      "save": "保存喵",
+      "upload": "上传喵",
+      "save_and_upload": "保存并上传喵"
+    },
+    "OpsiObscure": {
+      "name": "隐秘海域掉落截图喵",
+      "help": "「保存」和「上传」都会把掉落记进统计页「大世界掉落」喵，区别只在要不要把截图存下来喵~\n档案坐标也读这个开关喵",
+      "do_not": "无视喵",
+      "save": "保存喵",
+      "upload": "上传喵",
+      "save_and_upload": "保存并上传喵"
+    },
+    "OpsiAbyssal": {
+      "name": "深渊海域掉落截图喵",
+      "help": "「保存」和「上传」都会把掉落记进统计页「大世界掉落」喵，区别只在要不要把截图存下来喵~\n月度Boss也读这个开关喵",
+      "do_not": "无视喵",
+      "save": "保存喵",
+      "upload": "上传喵",
+      "save_and_upload": "保存并上传喵"
+    },
+    "OpsiStronghold": {
+      "name": "塞壬要塞掉落截图喵",
+      "help": "「保存」和「上传」都会把掉落记进统计页「大世界掉落」喵，区别只在要不要把截图存下来喵~",
+      "do_not": "无视喵",
+      "save": "保存喵",
+      "upload": "上传喵",
+      "save_and_upload": "保存并上传喵"
+    },
+    "OpsiExplore": {
+      "name": "每月开荒掉落截图喵",
+      "help": "每月开荒Plus 自己一个开关喵，不跟别人挤\n「保存」和「上传」都会把掉落记进统计页「大世界掉落」喵，区别只在要不要把截图存下来喵~",
+      "do_not": "无视喵",
+      "save": "保存喵",
+      "upload": "上传喵",
+      "save_and_upload": "保存并上传喵"
+    },
+    "OpsiOther": {
+      "name": "其他大世界任务掉落截图喵",
+      "help": "没有单独开关的大世界任务都归它兜底喵\n「保存」和「上传」都会把掉落记进统计页「大世界掉落」喵，区别只在要不要把截图存下来喵~",
       "do_not": "无视喵",
       "save": "保存喵",
       "upload": "上传喵",

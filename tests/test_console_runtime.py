@@ -233,8 +233,10 @@ class StatisticsTests(unittest.TestCase):
                 patch('module.statistics.azurstats.AzurStats.get_meowofficer_farming') as refresh:
             configs = SimpleNamespace(path=lambda _: None)
             result = report(configs, 'pilot', 'loot', None, 7, 'month')
-            self.assertEqual(7, len(result['tables'][0]['columns']))
-            self.assertEqual(.25, result['tables'][0]['rows'][0][-1])
+            # 大世界掉落页里还多了收获明细与掉落记录两张表，按标题取短猫那张
+            meow = next(table for table in result['tables'] if table['title'] == '短猫掉落收益')
+            self.assertEqual(7, len(meow['columns']))
+            self.assertEqual(.25, meow['rows'][0][-1])
             self.assertTrue(refresh_loot(configs, 'pilot')['refreshed'])
             refresh.assert_called_once_with(instance='pilot')
 

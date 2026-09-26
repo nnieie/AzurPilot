@@ -134,6 +134,14 @@ class Connection(ConnectionAttr):
             config (AzurLaneConfig, str): ./config 目录下的用户配置名称。
         """
         super().__init__(config)
+        if self.serial == 'azurpilot_android':
+            self.package = self.config.Emulator_PackageName
+            if self.package == 'auto':
+                self.package = 'com.bilibili.azurlane'
+            set_server(self.package)
+            logger.attr('应用包名', self.package)
+            logger.attr('服务器', self.config.SERVER)
+            return
         if not self.is_over_http:
             self.detect_device()
 

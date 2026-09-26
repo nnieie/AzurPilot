@@ -13,6 +13,7 @@ from module.azur_stats.image.get_items import GetItems
 from module.azur_stats.image.opsi_reward import OpsiReward
 from module.azur_stats.image.opsi_zone import OpsiZone, DataOpsiZone
 from module.azur_stats.scene.base import SceneBase
+from module.logger import logger
 
 
 @dataclass
@@ -58,11 +59,20 @@ class SceneOperationSiren(SceneBase, OpsiReward, GetItems, OpsiZone):
         cleared = -1
         for index, image in enumerate(self.images):
             if self.is_opsi_zone(image):
-                zone = self.parse_opsi_zone(image)
+                try:
+                    zone = self.parse_opsi_zone(image)
+                except Exception as e:
+                    # 海域名读不出或不在 ZoneManager 里（新海域、活动图）时不再
+                    # 整条丢弃：按未知区域记下奖励，侵蚀等级留空。按任务维度的
+                    # 掉落统计照常工作，按侵蚀等级的短猫收益会自动跳过这些行。
+                    logger.warning(f'[统计-大世界] 海域识别失败，按未知区域解析: {e}')
                 cleared = index
                 break
         if zone is None:
-            return
+            # 整包都没有海域页（例如只在战斗结算里抓到的掉落）也照样解析奖励帧。
+            logger.info('[统计-大世界] 掉落记录里没有海域页，按未知区域解析')
+            zone = DataOpsiZone(zone='', zone_type='UNKNOWN', zone_id=0, hazard_level=0)
+            cleared = -1
 
         for index, image in enumerate(self.images):
             if index == cleared:

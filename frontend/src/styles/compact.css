@@ -17,6 +17,7 @@
   --theme-radius-control: 0px;
   --theme-radius-button: 0px;
   --theme-radius-popover: 0px;
+  --instance-tab-radius: 0px;
 }
 :root[data-theme='extreme'] .sidebar,
 :root[data-theme='extreme'] .right-rail,
@@ -56,6 +57,10 @@
 :root[data-theme='extreme'] .monitor-segmented,
 :root[data-theme='extreme'] .monitor-segmented .segmented-indicator,
 :root[data-theme='extreme'] .monitor-segmented button {border-radius: 0}
+/* 标签页的新建按钮与启停/关闭悬浮钮：其它主题是 999px 与 50%，且不读变量。 */
+:root[data-theme='extreme'] .instance-tab-create,
+:root[data-theme='extreme'] .instance-tab-power,
+:root[data-theme='extreme'] .instance-tab-remove:hover {border-radius: 0}
 :root[data-theme='extreme'] .resource-heading > div,
 :root[data-theme='extreme'] .resource-image-wrap,
 :root[data-theme='extreme'] .instance-caption,
@@ -71,8 +76,9 @@
 :root[data-theme='extreme'] .resource-picker-empty,
 :root[data-theme='extreme'] .resource-picker-option {border-radius: 0}
 
+/* 开关（.toggle）保持其它主题的圆形药丸与圆形滑块：直角化只针对容器与按钮。 */
 /* 浮层与控件补充：这些不在上面的骨架 / 卡片清单里，是圆角审计逐页扫出来的漏网项
-   （下拉浮层、指标芯片、复选框、开关、标签、logo 等）。新增控件后可用同样的扫描方式复查。 */
+   （下拉浮层、指标芯片、复选框、标签、logo 等）。新增控件后可用同样的扫描方式复查。 */
 :root[data-theme='extreme'] .select-menu,
 :root[data-theme='extreme'] .select-option,
 :root[data-theme='extreme'] .stat-chip,
@@ -86,8 +92,6 @@
 :root[data-theme='extreme'] .instance-menu button,
 :root[data-theme='extreme'] .instance-create,
 :root[data-theme='extreme'] .brand-logo,
-:root[data-theme='extreme'] .toggle,
-:root[data-theme='extreme'] .toggle > span,
 :root[data-theme='extreme'] .dev-surface-sample,
 :root[data-theme='extreme'] .dev-shadow-sample,
 :root[data-theme='extreme'] .dev-state-box,
@@ -155,6 +159,9 @@
 /* 内容留白：窄屏断点用 !important 写死的面板内边距一并压掉 */
 :root[data-theme='extreme'] main {min-height: 0; padding: 4px}
 :root[data-theme='extreme'] .panel-heading {min-height: 0; padding: 8px 12px !important}
+:root[data-theme='extreme'] .statistics-chart-plot .stat-card-fold.is-corner {left: 12px}
+/* 编辑模式的排序控件占住卡片左上角，标题行要让位；紧凑主题的标题内边距带 !important。 */
+:root[data-theme='extreme'] .statistics-sections.is-editing .stat-card .panel-heading {padding-left: 34px !important}
 /* 图表放大视图铺满窗口（inset: 0），右上角正是 Electron 的窗口控制按钮，
    会把「收起图表」压住、只能按 Esc 退出。这里让标题行右侧留出按钮宽度。 */
 :root[data-theme='extreme'] .panel.chart-expanded .panel-heading {padding-right: 160px !important}
@@ -182,7 +189,8 @@
 :root[data-theme='extreme'] .welcome {padding: 48px 16px}
 :root[data-theme='extreme'] .empty {padding: 20px 14px; min-height: 120px}
 :root[data-theme='extreme'] .chart-metrics {padding: 14px 16px 8px; gap: 34px}
-:root[data-theme='extreme'] .summary-metrics-panel {padding: 10px 14px}
+:root[data-theme='extreme'] .summary-metrics-panel {padding: 0}
+:root[data-theme='extreme'] .summary-metrics-panel .summary-metrics {padding: 18px 26px}
 :root[data-theme='extreme'] .summary-metrics-panel .summary-metrics {gap: 8px 12px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr))}
 :root[data-theme='extreme'] .summary-metrics-panel .summary-metric-card {padding: 6px 8px; border-radius: 0; min-height: auto; background: transparent; border: none}
 :root[data-theme='extreme'] .summary-metrics-panel .summary-metric-card strong {font-size: 16px}

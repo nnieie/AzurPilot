@@ -47,7 +47,17 @@ export function InstanceSwitcher({onCreate}: {onCreate: () => void}) {
         setOpen(false); trigger.current?.focus()
         if (item.name !== instance) navigate(`/i/${item.name}/${location.pathname.split('/').slice(3).join('/') || 'overview'}`)
       }}><Ship size={16}/><span>{item.name}</span>{item.name === instance && <Check size={16}/>}</button>)}</div>
-      <button className="instance-create" role="menuitem" aria-label={ui('instance.create')} title={ui('instance.create')} disabled={connection !== 'ready'} onClick={() => {setOpen(false); onCreate()}}><Plus size={20}/></button>
+      <button
+        className="instance-create"
+        role="menuitem"
+        aria-label={ui('instance.create')}
+        title={ui('instance.create')}
+        disabled={connection !== 'ready'}
+        onClick={() => {setOpen(false); onCreate()}}
+      >
+        <Plus size={16}/>
+        <span>{ui('home.newInstance')}</span>
+      </button>
     </div>}
   </div>
 }

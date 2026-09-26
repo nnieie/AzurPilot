@@ -11,7 +11,11 @@ from pathlib import Path
 from typing import Iterator
 
 from deploy.atomic import atomic_remove, atomic_replace, atomic_write
-from module.runtime.process_control import pid_exists as _pid_exists, process_matches
+from module.runtime.process_control import (
+    pid_exists as _pid_exists,
+    process_created_at,
+    process_matches,
+)
 
 
 WORKER_REGISTRY_FILE = Path("./cache/webui-workers.json")
@@ -251,9 +255,7 @@ def _write_registry(registry: dict, registry_file: Path) -> None:
 
 def _process_created_at(pid: int) -> float:
     try:
-        import psutil
-
-        return psutil.Process(pid).create_time()
+        return process_created_at(pid)
     except Exception as exc:
         raise RuntimeError(f"无法读取 worker PID {pid} 的创建时间: {exc}") from exc
 

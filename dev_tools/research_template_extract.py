@@ -98,11 +98,131 @@ ITEM_SIZE = 96
 LIBRARY_MATCH_SURE = 0.68
 LIBRARY_MATCH_MAYBE = 0.58
 
-# 少数舰船的中文名在 Lua 里是 {namecode:XXX} 占位符（国服未公布译名），
-# 需要手工映射。命名以 assets/research_blueprint/ 的既有文件名为准。
+# 采集口径的最低稀有度：4 = 金，5 = 彩
+SCOPE_MIN_RARITY = 4
+# 名字推导不出模板名的特例（没有 T 品阶后缀，规则覆盖不到）
+SPECIAL_TEMPLATE_NAMES = {
+    '心智单元': 'CognitiveChips',
+}
+# 少数物品在 Lua 的英文名里缺 'T0 Design' 后缀（如试作舰载型550mm鱼雷改），
+# 由英文名推模板名的规则就失效了，中文名也进不了名称表——运行时只好显示模板名。
+# 这几个按仓库命名约定手工补，写名称表时一并收录。
+NAME_TABLE_OVERRIDES = {
+    # 八期 DR 彩图纸「蓝图：金狮」：它的图纸不在 technology_data_template 的
+    # drop_client 里（DR 船与彩装一样走通用发放），名字与期数都推不出来。
+    # 期数取自 Lua `ship_data_blueprint[119901].blueprint_version = 8`。
+    'BlueprintGoudenLeeuw': {
+        'zh': '蓝图：金狮',
+        'en': 'Blueprint - Gouden Leeuw',
+        'rarity': 5,
+        'series': 8,
+    },
+    'Prototype_Triple_550mm_Improved_Ammo_Mod_Torpedo_Mount_T0': {
+        'zh': '试作型三联装550mm鱼雷改（弹药调整）T0设计图',
+        'en': 'Prototype Triple 550mm Improved (Ammo Mod) Torpedo Mount T0 Design',
+        'rarity': 4,
+    },
+    # 库内名与 Lua 名差了实词（Standard 对 Performance），词元归一按规矩不能放这么松
+    # （那样会把 40mm Bofors Type 5 认成 Hazemeyer）。游戏里 T0 火控雷达只此一件、
+    # 库里也只有这一个 T0 火控雷达模板，所以手工补录。
+    'High_Standard_Fire_Control_Radar_T0': {
+        'zh': '高性能火控雷达T0设计图',
+        'en': 'High Performance Fire Control Radar T0 Design',
+        'rarity': 4,
+    },
+    # 心智单元与物资也没有 T 品阶后缀；它们是「心智/物资」口径里的两件物品，
+    # 名称表里必须有中文名（稀有度取自 Lua：心智单元 4、物资 1）。
+    'CognitiveChips': {
+        'zh': '心智单元', 'en': 'Cognitive Chips', 'rarity': 4,
+    },
+    'Coins': {
+        'zh': '物资', 'en': 'Coins', 'rarity': 1,
+    },
+}
+
+
+def in_stats_scope(zh_name: str, rarity: Optional[int]) -> bool:
+    """判断物品是否属于「金/彩图纸 + 心智单元」这一采集口径。
+
+    统计只关心金/彩的装备图纸与舰船图纸，外加心智单元；紫蓝图纸、改造图纸、
+    定向蓝图、物资等一律不补模板。模板库保持精简，识别结果也不会被杂项干扰。
+
+    Args:
+        zh_name (str): Lua 里的中文名，如 '试作型四联装533毫米鱼雷Si 270T0设计图'。
+        rarity (int): Lua 里的稀有度；未知时传 None。
+
+    Returns:
+        bool: 是否属于该口径。
+    """
+    if not zh_name:
+        return False
+    if zh_name in SPECIAL_TEMPLATE_NAMES:
+        return True
+    if rarity is None or rarity < SCOPE_MIN_RARITY:
+        return False
+    # 装备图纸 = '...T0设计图'，舰船图纸 = '蓝图：XXX'。
+    # 用 startswith 而不是 in，是为了把 '定向蓝图・七期'、'高级定向蓝图・二期'
+    # 这类兑换券挡在外面——它们名字里也有「蓝图」，但不是掉落图纸。
+    return zh_name.endswith('设计图') or zh_name.startswith('蓝图')
+
+
+# 每期的彩装设计图（2~9 期各一件）。这份名单来自用户；Lua 里只有八期那件出现在
+# 项目的 drop_client 中（其余彩装用通用占位符发放），所以只能手工登记。
+RAINBOW_DESIGN_SERIES = {
+    13012: 2, 13019: 3, 13030: 4, 13031: 5, 13038: 6, 13043: 7, 13049: 8, 13061: 9,
+}
+
+
+def load_item_series(folder: str) -> Dict[int, int]:
+    """物品 id -> 科研期数，供名称表记录「这件物品属于哪一期」。
+
+    只收**绑期数**的两类：船图纸（`蓝图：XXX`）与彩装图纸（2~9 期各一件）。
+    金装备图纸虽然也在各期的 drop_client 里，但实际掉落是各期混着出的，
+    登记期数只会让人误以为它属于某一期，所以不收。
+
+    船图纸与 1~8 期大部分装备图纸的来源是 `sharecfg/technology_data_template.lua`
+    各期项目的 `drop_client`（项目的 `blueprint_version` 就是期数）；
+    彩装图纸不在里面（用通用占位符发放），期数取自 RAINBOW_DESIGN_SERIES。
+
+    Args:
+        folder (str): Lua 数据源目录。
+
+    Returns:
+        dict: {物品 id: 期数}；只在能唯一确定期数时收录。
+    """
+    try:
+        tech = LuaLoader(folder, server='zh-CN').load('sharecfg/technology_data_template.lua')
+        items = LuaLoader(folder, server='zh-CN').load('sharecfgdata/item_data_statistics.lua')
+    except Exception as e:
+        logger.warning(f'[科研模板] 读取科研项目表失败，名称表将不带期数: {e}')
+        return {}
+    found: Dict[int, set] = {}
+    for key, value in tech.items():
+        if key == 'all':
+            continue
+        series = int(value.get('blueprint_version', 0) or 0)
+        for entry in value.get('drop_client', {}).values():
+            iid = list(entry.values())[1]
+            if iid == 1:
+                iid = 59001  # 物资在项目表里记作 1，物品表里是 59001
+            if not (items.get(iid, {}).get('name') or '').startswith('蓝图'):
+                continue
+            found.setdefault(iid, set()).add(series)
+    series_by_id = {}
+    for iid, series in found.items():
+        # 一条船图纸会出现在多期的 drop_client 里——科研项目会「额外赠送」别期的图纸
+        # （用户确认过这个机制，有上限）。赠礼只会指向更早的期，所以取最小期数即它本尊的期。
+        series_by_id[iid] = min(series)
+    series_by_id.update(RAINBOW_DESIGN_SERIES)
+    return series_by_id
+
+
+# 少数舰船的中文名是 {namecode:XXX} 占位符（见 resolve_ship_placeholder），
+# 正常路径已能还原；这里的别名只在标签被截断得只剩两字时兜底。
+# 别名用 2 字前缀，因为标签常缺字成「马克其」「古图：马克」。
 BLUEPRINT_ZH_ALIASES = {
     '高梁': 'Takahashi',
-    '马克': 'Max Immelmann',  # 标签常缺字成 '马克其'，用 2 字前缀更稳
+    '马克': 'Max Immelmann',
 }
 
 
@@ -131,7 +251,7 @@ def fold_text(text: str) -> str:
     return re.sub(r'[^a-z0-9]', '', text.lower())
 
 
-def name_tokens(text: str) -> frozenset:
+def name_tokens(text: str, loose: bool = False) -> frozenset:
     """把名称拆成词集合，用于跨命名风格的匹配。
 
     仓库里的模板名和 Lua 英文名常常词序不同、多一个 Mount/Mark 之类的词，
@@ -139,13 +259,24 @@ def name_tokens(text: str) -> frozenset:
     按词集合比对比按字符串比对宽容得多。品阶标记（T0/T3）保留，
     否则 T2/T3 两个版本会撞在一起。
 
+    loose=True 再放松一档：忽略大小写、丢掉 Mount 这类通用词，并归一已知的拼写差异
+    （Reppuu/Reppu）。实测库里 144 个老模板名因此对不上 Lua 名，其中 36 个能这样唯一对回，
+    它们的稀有度也就进得了名称表（没有稀有度的物品在任何视图里都是隐形的）。
+    只放开到这一步：再松就会把 40mm Bofors Type 5 认成 Hazemeyer 这类近邻。
+
     Args:
         text (str): 名称文本。
+        loose (bool): 是否忽略通用词与大小写、拼写差异。
 
     Returns:
         frozenset: 词集合；无法解析时为空集。
     """
     text = re.sub(r'\bdesign\b', ' ', (text or '').lower())
+    if loose:
+        # 先把下划线换成空格：模板名是下划线分隔的，而 `_` 在正则里算词字符，
+        # 直接对 'gun_mount_t0' 跑 \bmount\b 是匹配不上的（踩过：36 个候选只对上 8 个）。
+        text = text.replace('_', ' ').replace('reppuu', 'reppu')
+        text = re.sub(r'\bmount\b', ' ', text)
     return frozenset(re.findall(r'[a-z0-9]+', text))
 
 
@@ -187,6 +318,60 @@ def to_template_name(en_name: str) -> str:
     return f'{body}_T{tier}' if body else ''
 
 
+def load_ship_names() -> Dict[str, str]:
+    """读舰船数据表的「归一化英文名 -> 中文名」对照。
+
+    少数舰船在 Lua 的 zh-CN 里是 {namecode:XXX} 占位符，舰船数据表里有完整的中英对照。
+
+    Returns:
+        dict: fold_text(英文名) -> 中文名。
+    """
+    path = './assets/ship/ship_data.json'
+    if not os.path.isfile(path):
+        return {}
+    try:
+        with open(path, encoding='utf-8') as f:
+            ships = json.load(f)
+    except (OSError, ValueError):
+        return {}
+    out = {}
+    variants = {}
+    for entry in ships.values():
+        names = entry.get('name') or {}
+        en_name = (names.get('en') or '').strip()
+        zh_name = (names.get('cn') or '').strip()
+        if not en_name or not zh_name:
+            continue
+        # 同一条船的 μ兵装/改 等变体与本体共用英文名，优先收本体
+        if '(' in zh_name or '（' in zh_name:
+            variants.setdefault(fold_text(en_name), zh_name)
+            continue
+        out.setdefault(fold_text(en_name), zh_name)
+    for key, zh_name in variants.items():
+        out.setdefault(key, zh_name)
+    return out
+
+
+def resolve_ship_placeholder(zh_name: str, en_name: str, ships: Dict[str, str]) -> str:
+    """把 {namecode:XXX} 占位符换成真实中文名。
+
+    Args:
+        zh_name (str): Lua 的中文名，可能含占位符。
+        en_name (str): Lua 的英文名，蓝图形如 'Blueprint - Max Immelmann'。
+        ships (dict): 舰船数据表的英文名 -> 中文名对照。
+
+    Returns:
+        str: 可展示的中文名；查不到时原样返回。
+    """
+    if not zh_name or 'namecode' not in zh_name:
+        return zh_name
+    ship = en_name.split(' - ', 1)[-1] if ' - ' in en_name else ''
+    hit = ships.get(fold_text(ship))
+    if not hit:
+        return zh_name
+    return f'蓝图：{hit}' if zh_name.startswith('蓝图') else hit
+
+
 def find_lua_folder(explicit: Optional[str] = None) -> str:
     """定位游戏 Lua 数据源目录。
 
@@ -219,6 +404,10 @@ class LuaItemNames:
         self.folder = folder
         zh = LuaLoader(folder, server='zh-CN').load('sharecfgdata/item_data_statistics.lua')
         en = LuaLoader(folder, server='en-US').load('sharecfgdata/item_data_statistics.lua')
+        # 索引前先把 {namecode:XXX} 还原成真实译名：截图标签上写的是译名（「蓝图：大山」），
+        # 而 Lua 里存的是占位符（「蓝图：{namecode:299}」）。不还原就一个候选都搜不到，
+        # 实测九期的高梁/马克斯、七期的大山、六期的兴登堡/菲利克斯·舒尔茨全是这种。
+        ships = load_ship_names()
         self.by_zh: Dict[str, Tuple[str, str]] = {}
         self.candidates: List[Tuple[str, str, str]] = []
         for item_id, data in zh.items():
@@ -226,18 +415,24 @@ class LuaItemNames:
             en_name = (en.get(item_id, {}).get('name') or '').strip()
             if not zh_name:
                 continue
+            zh_name = resolve_ship_placeholder(zh_name, en_name, ships)
             self.by_zh.setdefault(zh_name, (item_id, en_name))
             self.candidates.append((item_id, en_name, zh_name))
         # 模板名 -> (稀有度, 英文名, 中文名)。稀有度是分辨彩/金的唯一可靠依据：
         # 名字前缀靠不住（'试作型三联装203mmSKC主炮T0' 是金，加个「改」才是彩）。
         self.by_template: Dict[str, Tuple[int, str, str]] = {}
+        self.by_template_id: Dict[str, int] = {}
         for item_id, data in zh.items():
             en_name = (en.get(item_id, {}).get('name') or '').strip()
             template = to_template_name(en_name)
             if template:
                 self.by_template.setdefault(template, (
                     data.get('rarity'), en_name, (data.get('name') or '').strip()))
-        logger.info(f'[科研模板] 加载 Lua 物品名 {len(self.candidates)} 条')
+                self.by_template_id.setdefault(template, item_id)
+        # 物品 id -> 科研期数，写名称表时带上，供「每期收益」按固定清单展示
+        self.series_by_id = load_item_series(folder)
+        logger.info(f'[科研模板] 加载 Lua 物品名 {len(self.candidates)} 条，'
+                    f'带期数的 {len(self.series_by_id)} 件')
 
     @staticmethod
     def _rank(hits: List[Tuple[str, str, str]], text: str = '') -> List[Tuple[str, str]]:
@@ -292,11 +487,16 @@ class LuaItemNames:
 
         # 一级：片段整串命中。命中一族（'三联装' 能命中几十个）不算结论，
         # 必须靠数字/型号筛到唯一一个才敢给建议名。
+        # 同一个标签会切出多段（'蓝图：大山' -> ['蓝图', '大山']），要挑最有信息量的那段：
+        # '蓝图' 能命中好几百件，'大山' 只命中一件，拿前者排名等于瞎猜。
+        best: Optional[Tuple[str, List[Tuple[str, str, str]]]] = None
         for chunk in chunks:
             hits = [c for c in self.candidates if chunk in c[2]]
-            if hits:
-                ranked = self._rank(hits, text)
-                return ranked, (len(hits) == 1 or self._narrow_to_one(text, hits))
+            if hits and (best is None or len(hits) < len(best[1])):
+                best = (chunk, hits)
+        if best is not None:
+            ranked = self._rank(best[1], text)
+            return ranked, (len(best[1]) == 1 or self._narrow_to_one(text, best[1]))
 
         # 二级：逐步截短，容忍尾部噪声
         for chunk in chunks:
@@ -436,8 +636,9 @@ class LuaItemNames:
 
         hits, exact = self.search_by_zh(label_text)
         names = []
-        for en_name, _ in hits:
-            name = to_template_name(en_name)
+        for en_name, zh_name in hits:
+            # 心智单元没有 T 品阶后缀，命名规则推不出名字，走特例表
+            name = to_template_name(en_name) or SPECIAL_TEMPLATE_NAMES.get(zh_name, '')
             if name and name not in names:
                 names.append(name)
         if not names:
@@ -460,6 +661,7 @@ class MissingItem:
         label_text (str): 标签 OCR 结果，扫描结束后回填。
         suggestion (str): 推测的模板文件名，扫描结束后回填。
         alternatives (list): 其他候选文件名，供人工判断。
+        zh_name (str): 学名（Lua 里的中文名），用于判断采集口径。
     """
 
     key: str
@@ -472,6 +674,7 @@ class MissingItem:
     alternatives: List[str] = None
     needs_review: bool = True
     rarity: Optional[int] = None
+    zh_name: str = ''
     library_score: float = 0.0
 
 
@@ -646,6 +849,22 @@ class ResearchTemplateScanner:
                 hit = self.lua.by_template.get(entry.suggestion)
                 if hit is not None:
                     entry.rarity = hit[0]
+                    entry.zh_name = hit[2]
+
+    def keep_scope(self) -> List[str]:
+        """按采集口径裁剪缺口列表，原地删除不相关的条目。
+
+        Returns:
+            list[str]: 被丢弃的条目名，供日志说明。
+        """
+        dropped = []
+        for key in list(self.items):
+            entry = self.items[key]
+            if in_stats_scope(entry.zh_name, entry.rarity):
+                continue
+            dropped.append(entry.suggestion or f'unknown_{key}')
+            del self.items[key]
+        return dropped
 
     def _reserved_indices(self) -> Dict[str, int]:
         """统计库内已有名字占用的最大后缀。
@@ -751,12 +970,20 @@ class ResearchTemplateScanner:
         if self.lua is None:
             return
         ships = self._load_ship_names()
-        # 词集合索引，兜住词序不同/多一个词的命名差异
+        # 词集合索引，兜住词序不同/多一个词/大小写与拼写差异的命名风格。
+        # 同一组词对应多件物品时按有歧义丢弃——宁可留空显示模板名，也不要认错给错稀有度。
         by_tokens = {}
-        for _, en_name, zh_name in self.lua.candidates:
-            tokens = name_tokens(en_name)
-            if tokens:
-                by_tokens.setdefault(tokens, (en_name, zh_name))
+        ambiguous = set()
+        for template, (rarity, en_name, zh_name) in self.lua.by_template.items():
+            tokens = name_tokens(template, loose=True)
+            if not tokens:
+                continue
+            if tokens in by_tokens:
+                ambiguous.add(tokens)
+                continue
+            by_tokens[tokens] = (rarity, en_name, zh_name)
+        for tokens in ambiguous:
+            by_tokens.pop(tokens, None)
 
         stems = {os.path.splitext(name)[0] for name in os.listdir(self.template_folder)
                  if name.lower().endswith('.png')}
@@ -771,17 +998,31 @@ class ResearchTemplateScanner:
             hit = self.lua.by_template.get(key)
             if hit is not None:
                 rarity, en_name, zh_name = hit
+            elif key in NAME_TABLE_OVERRIDES:
+                # 英文名缺品阶后缀的少数物品，Lua 推不出来，走手工补录
+                table[stem] = dict(NAME_TABLE_OVERRIDES[key])
+                continue
             else:
-                tokens = name_tokens(key)
+                # 词集合归一后兜底：老模板名与 Lua 名只差词序/大小写/多一个 Mount 时靠这里对上，
+                # 稀有度一并取到——没有稀有度的物品在任何视图里都是隐形的。
+                tokens = name_tokens(key, loose=True)
                 fallback = by_tokens.get(tokens)
                 if fallback is None:
                     continue
-                en_name, zh_name = fallback
-                rarity = None
+                rarity, en_name, zh_name = fallback
 
             zh_name = self._resolve_namecode(zh_name, en_name, ships)
             if zh_name:
-                table[stem] = {'zh': zh_name, 'en': en_name, 'rarity': rarity}
+                entry = {'zh': zh_name, 'en': en_name, 'rarity': rarity}
+                # 期数只对「绑期数」的物品有意义（船图纸与彩装图纸），
+                # 金装备各期混着出，登记了反而会让人误以为它属于某一期。
+                # 用 Lua 那边的模板名查 id：走词元兜底时库内名字与 Lua 名不同（缺 Mount、
+                # 词序或大小写差异），拿库内名字查会把「蓝图：马可波罗」这类船图纸漏掉期数。
+                lua_template = to_template_name(en_name) or key
+                series = self.lua.series_by_id.get(self.lua.by_template_id.get(lua_template, 0))
+                if series:
+                    entry['series'] = series
+                table[stem] = entry
         path = NAME_TABLE_PATH
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, 'w', encoding='utf-8') as f:
@@ -790,34 +1031,16 @@ class ResearchTemplateScanner:
 
     @staticmethod
     def _load_ship_names() -> Dict[str, str]:
-        """读舰船数据表的「归一化英文名 -> 中文名」对照。
-
-        少数舰船在 Lua 的 zh-CN 里是 {namecode:XXX} 占位符（国服未公布译名），
-        舰船数据表里有完整的中英对照，用它兜底。
+        """读舰船数据表的「归一化英文名 -> 中文名」对照，实现见模块级 load_ship_names()。
 
         Returns:
             dict: fold_text(英文名) -> 中文名。
         """
-        path = './assets/ship/ship_data.json'
-        if not os.path.isfile(path):
-            return {}
-        try:
-            with open(path, encoding='utf-8') as f:
-                ships = json.load(f)
-        except (OSError, ValueError):
-            return {}
-        out = {}
-        for entry in ships.values():
-            names = entry.get('name') or {}
-            en_name = (names.get('en') or '').strip()
-            zh_name = (names.get('cn') or '').strip()
-            if en_name and zh_name:
-                out.setdefault(fold_text(en_name), zh_name)
-        return out
+        return load_ship_names()
 
     @staticmethod
     def _resolve_namecode(zh_name: str, en_name: str, ships: Dict[str, str]) -> str:
-        """把 {namecode:XXX} 占位符换成真实中文名。
+        """把 {namecode:XXX} 占位符换成真实中文名，实现见模块级 resolve_ship_placeholder()。
 
         Args:
             zh_name (str): Lua 的中文名，可能含占位符。
@@ -827,13 +1050,7 @@ class ResearchTemplateScanner:
         Returns:
             str: 可展示的中文名；查不到时原样返回。
         """
-        if not zh_name or 'namecode' not in zh_name:
-            return zh_name
-        ship = en_name.split(' - ', 1)[-1] if ' - ' in en_name else ''
-        hit = ships.get(fold_text(ship))
-        if not hit:
-            return zh_name
-        return f'蓝图：{hit}' if zh_name.startswith('蓝图') else hit
+        return resolve_ship_placeholder(zh_name, en_name, ships)
 
     def _save_contact_sheet(self, path: str, names: Dict[str, int]):
         """生成「图标 + 中文标签 + 建议名」对照图。
@@ -953,6 +1170,9 @@ def main():
                         help='游戏 Lua 数据源目录，缺省则自动探测')
     parser.add_argument('--server', default='cn', choices=['cn', 'en', 'jp', 'tw'],
                         help='游戏服务器，影响截图资源')
+    parser.add_argument('--scope', default='all', choices=['all', 'rare'],
+                        help='rare: 只收集金/彩装备图纸、金/彩舰船图纸与心智单元，'
+                             '紫蓝图纸、改造图纸、定向蓝图等一律跳过')
     parser.add_argument('--dry-run', action='store_true',
                         help='只扫描并打印报告，不写任何文件')
     args = parser.parse_args()
@@ -978,6 +1198,12 @@ def main():
             scanner.scan_file(file)
 
     scanner.resolve_names()
+
+    if args.scope == 'rare':
+        dropped = scanner.keep_scope()
+        logger.info(f'[科研模板] 按采集口径跳过 {len(dropped)} 种：'
+                    + '、'.join(dropped[:12])
+                    + ('…' if len(dropped) > 12 else ''))
 
     if not scanner.items:
         logger.info('[科研模板] 模板库已覆盖全部物品，无需补模板')

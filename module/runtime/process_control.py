@@ -4,6 +4,10 @@ import math
 import os
 import subprocess
 import time
+from pathlib import Path
+
+
+PROCFS_PATH = Path("/proc")
 
 
 def _warn(message):
@@ -11,6 +15,47 @@ def _warn(message):
     from module.logger import logger
 
     logger.warning(message)
+
+
+def _proc_start_ticks(pid: int) -> int:
+    """读取 Linux /proc/<pid>/stat 的启动时钟 tick。
+
+    Android 的应用沙箱可能允许读取同 UID 进程的 stat，却拒绝全局
+    /proc/stat。psutil.create_time() 依赖后者，所以用负的启动 tick 作为
+    同一次开机内的稳定身份；负值也不会与 Unix 时间戳混淆。
+    """
+    raw = (PROCFS_PATH / str(pid) / "stat").read_text(encoding="ascii")
+    # comm 字段位于括号中且自身可含空格或右括号，从最后一个右括号切分。
+    closing = raw.rfind(")")
+    if closing < 0:
+        raise ValueError("/proc stat 缺少进程名结束符")
+    fields = raw[closing + 1 :].split()
+    # fields[0] 是原始 stat 的第 3 字段 state；starttime 是第 22 字段。
+    if len(fields) <= 19:
+        raise ValueError("/proc stat 字段不足")
+    start_ticks = int(fields[19])
+    if start_ticks < 0:
+        raise ValueError("/proc stat 启动时间无效")
+    return start_ticks
+
+
+def process_created_at(pid: int, process=None) -> float:
+    """返回可持久化的进程身份，兼容 Android 对 /proc/stat 的限制。"""
+    try:
+        import psutil
+    except ImportError as exc:
+        raise RuntimeError("缺少 psutil，无法读取进程身份") from exc
+    try:
+        if process is None:
+            process = psutil.Process(pid)
+        return process.create_time()
+    except psutil.NoSuchProcess:
+        raise
+    except (psutil.AccessDenied, PermissionError):
+        try:
+            return -float(_proc_start_ticks(pid))
+        except (OSError, ValueError) as exc:
+            raise RuntimeError(f"无法读取进程 PID {pid} 的 Android /proc 身份: {exc}") from exc
 
 
 def process_matches(record: dict) -> bool | None:
@@ -32,7 +77,7 @@ def process_matches(record: dict) -> bool | None:
         raise RuntimeError("缺少 psutil，无法验证进程身份") from exc
     try:
         process = psutil.Process(pid)
-        if abs(process.create_time() - created_at) >= 0.01:
+        if abs(process_created_at(pid, process) - created_at) >= 0.01:
             return False
         if process.status() in (psutil.STATUS_ZOMBIE, psutil.STATUS_DEAD):
             return None
@@ -108,10 +153,16 @@ def _kill_record(record) -> bool:
         if not _may_signal(record):
             return True
         process = psutil.Process(record["pid"])
-        # psutil 的信号方法还会校验该对象的创建时间，缩小 PID 复用窗口。
-        if abs(process.create_time() - record["created_at"]) >= 0.01:
+        if abs(process_created_at(record["pid"], process) - record["created_at"]) >= 0.01:
             return False
-        process.kill()
+        # 负身份表示 Android /proc 启动 tick；此时 psutil.kill() 会再次调用
+        # 依赖 /proc/stat 的 create_time()，改为在已验证身份后直接发信号。
+        if record["created_at"] < 0 and os.name != "nt":
+            import signal
+
+            os.kill(record["pid"], signal.SIGKILL)
+        else:
+            process.kill()
         return True
     except ImportError:
         return False
@@ -182,7 +233,7 @@ def stop_process_tree(process=None, *, record=None, name="进程", timeout=5, ki
     try:
         if record is None:
             parent = psutil.Process(process.pid)
-            record = {"pid": parent.pid, "created_at": parent.create_time()}
+            record = {"pid": parent.pid, "created_at": process_created_at(parent.pid, parent)}
             if not is_process_alive(process):
                 return stop_process(process, timeout=0)
         else:
@@ -193,12 +244,12 @@ def stop_process_tree(process=None, *, record=None, name="进程", timeout=5, ki
                     return stop_process(process, timeout=0, record=record)
                 return True
             parent = psutil.Process(record["pid"])
-        if abs(parent.create_time() - record["created_at"]) >= 0.01:
+        if abs(process_created_at(parent.pid, parent) - record["created_at"]) >= 0.01:
             return False
         children = []
         for child in parent.children(recursive=True):
             try:
-                children.append({"pid": child.pid, "created_at": child.create_time()})
+                children.append({"pid": child.pid, "created_at": process_created_at(child.pid, child)})
             except psutil.NoSuchProcess:
                 continue
     except psutil.NoSuchProcess:

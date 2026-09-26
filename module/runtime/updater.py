@@ -6,6 +6,7 @@ Web界面更新管理器。
 """
 
 import datetime
+import os
 import subprocess
 import threading
 import time
@@ -248,6 +249,10 @@ class Updater(DeployConfig, GitManager):
             self._force_update_checking = False
 
     def check_update(self):
+        # Android 运行时没有 .git，源码、前端和兼容清单由宿主整包切换。
+        if os.environ.get('AZURPILOT_ANDROID') == '1':
+            self.state = 0
+            return
         if self.state in (0, "failed", "finish"):
             self.state = "checking"
             threading.Thread(

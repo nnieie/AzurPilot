@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, ExternalLink, History, Plus, Server } from 'lucide-react'
+import { ArrowRight, ExternalLink, History, Megaphone, Plus, Server } from 'lucide-react'
 import { useApp, useConnection } from '../app/context'
+import { useAnnouncement } from '../app/announcement'
 import type { Theme } from '../app/theme'
 import type { UiTranslator } from '../i18n'
 import { CreateInstance } from '../app/App'
 import { StatusBadge } from '../components/ui'
+import { MarkdownView } from '../components/MarkdownView'
 
 /** 「切换旧版界面」快捷按钮用：恢复目标限定在现代主题里，避免来回落到别的档位。 */
 const MODERN_THEMES: readonly string[] = ['light', 'dark', 'minimal']
@@ -20,6 +22,7 @@ function getGreeting(ui: UiTranslator): string {
 export function Home() {
   const {instances, t, ui, theme, setTheme, resolvedMode} = useApp()
   const connection = useConnection()
+  const announcement = useAnnouncement()
   const [creating, setCreating] = useState(false)
   useEffect(() => {
     document.documentElement.classList.add('home-active')
@@ -38,14 +41,50 @@ export function Home() {
     try { previous = localStorage.getItem('azurpilot.theme-before-legacy') } catch { /* 同上。 */ }
     setTheme(previous !== null && MODERN_THEMES.includes(previous) ? previous as Theme : resolvedMode === 'dark' ? 'dark' : 'light')
   }
+  const hasAnnouncement = Boolean(announcement.data && (announcement.data.title || announcement.data.content))
   return <>
     <div className="home-editorial">
-      <aside className="home-deck">
-        <div className="home-deck-copy">
-          <p className="home-deck-eyebrow">{ui('home.commandCenter')}</p>
-          <h1 className="home-deck-greeting">{getGreeting(ui)}</h1>
-          <p className="home-deck-subtitle">{ui('home.subtitle')}</p>
-        </div>
+      <aside className={`home-deck ${hasAnnouncement ? 'home-deck-with-announcement' : ''}`}>
+        {hasAnnouncement && announcement.data ? (
+          <div className="home-deck-announcement">
+            <header className="home-deck-announcement-header">
+              <div className="home-deck-badge-group">
+                <Megaphone size={15} />
+                <span>{ui('announcement.latest')}</span>
+                {announcement.unread && <span className="tiny-dot red" title={ui('nav.newBadge')} />}
+              </div>
+              <Link to="/announcement" className="home-deck-view-all" title={ui('announcement.viewAll')}>
+                <span>{ui('announcement.viewAll')}</span>
+                <ArrowRight size={13} />
+              </Link>
+            </header>
+            <h1 className="home-deck-announcement-title">
+              <Link to="/announcement">{announcement.data.title}</Link>
+            </h1>
+            <div className="home-deck-announcement-content">
+              <MarkdownView content={announcement.data.content} />
+            </div>
+            {announcement.data.url && (
+              <div className="home-deck-announcement-footer">
+                <a
+                  href={announcement.data.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="home-deck-link"
+                >
+                  <ExternalLink size={13} />
+                  <span>{ui('announcement.openExternal')}</span>
+                </a>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="home-deck-copy">
+            <p className="home-deck-eyebrow">{ui('home.commandCenter')}</p>
+            <h1 className="home-deck-greeting">{getGreeting(ui)}</h1>
+            <p className="home-deck-subtitle">{ui('home.subtitle')}</p>
+          </div>
+        )}
         <div className="home-deck-foot">
           <dl className="home-stats" aria-label={ui('home.summary')}>
             <div className="home-stat"><dt>{ui('home.allInstances')}</dt><dd>{instances.length}</dd></div>

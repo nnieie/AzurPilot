@@ -93,7 +93,12 @@ test('玻璃主题长页面滚动时两侧栏保持贴合视口', async ({page})
   await page.goto('/#/i/testpilot/task/Alas')
   await expect(page.locator('.right-rail')).toBeVisible()
 
-  await expect.poll(() => page.evaluate(() => { scrollTo(0, 500); return scrollY }), {timeout: 15000}).toBe(500)
+  // 主区域自己滚动：窗口高度等于视口高度，滚窗口不产生位移。
+  await expect.poll(() => page.evaluate(() => {
+    const main = document.querySelector('main')!
+    main.scrollTo(0, 500)
+    return main.scrollTop
+  }), {timeout: 15000}).toBe(500)
 
   const sidebar = (await page.locator('.sidebar').boundingBox())!
   const rail = (await page.locator('.right-rail').boundingBox())!

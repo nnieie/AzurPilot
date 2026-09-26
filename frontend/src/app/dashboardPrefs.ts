@@ -10,10 +10,11 @@ export interface DashboardPrefs {
   dense: boolean
   merged: boolean
   totalFirst: boolean
+  dogIcon: boolean
 }
 
 const PREFS_KEY = 'azurpilot.dashboard'
-const PREFS_DEFAULTS: DashboardPrefs = {fitCards: false, fitText: false, dense: false, merged: false, totalFirst: false}
+const PREFS_DEFAULTS: DashboardPrefs = {fitCards: false, fitText: false, dense: false, merged: false, totalFirst: false, dogIcon: true}
 const listeners = new Set<() => void>()
 
 function read(): DashboardPrefs {

@@ -26,6 +26,7 @@ from module.config.utils import (
     filepath_config,
     get_server_last_update,
     get_server_next_update,
+    parse_config_name,
     read_file,
 )
 from module.exception import *
@@ -687,6 +688,38 @@ class AzurLaneAutoScript:
             keys=f'{task_name}.Scheduler.Sensitive', default=False
         )
 
+    def _notify_recoverable(self, title, content, webui_title, webui_content):
+        """
+        推送可自动恢复的错误（OnePush 手机渠道 + 本地启动器双通道）。
+
+        游戏未运行、模拟器离线、卡死这类错误调度器会自行重启恢复，但每次
+        发生都推送会在无人值守时形成轰炸。低推送量模式下整体跳过，只在日志
+        中留痕；需要人工介入的错误不经过本方法，不受该模式影响。
+
+        Args:
+            title (str): OnePush 推送标题。
+            content (str): OnePush 推送正文。
+            webui_title (str): 本地启动器通知标题。
+            webui_content (str): 本地启动器通知正文。
+
+        Returns:
+            bool: True 表示已推送，False 表示被低推送量模式跳过。
+        """
+        if self.config.Error_LowPushMode:
+            logger.info(f'[Alas] 低推送量模式：跳过可恢复错误的推送 - {title}')
+            return False
+        handle_notify(
+            self.config.Error_OnePushConfig,
+            title=title,
+            content=content,
+        )
+        notify_webui(
+            self.config_name,
+            title=webui_title,
+            content=webui_content,
+        )
+        return True
+
     def _check_sensitive_exit(self, command, error):
         """
         严格重启模式下，敏感任务出错时直接退出。
@@ -742,7 +775,8 @@ class AzurLaneAutoScript:
         根据异常类型自动判断：重启游戏、重启模拟器、请求人工介入或直接终止。
         严格重启模式下，敏感任务出错时直接停止，不做任何重启。
 
-        任务执行前会进行一次截图（除非 skip_first_screenshot=True）。
+        普通任务执行前会进行一次截图（除非 skip_first_screenshot=True）。Restart 在启动游戏前不截图，
+        避免 Android 虚拟屏尚无首帧时因截图失败而阻断 app_restart()。
 
         Args:
             command (str): 任务方法名（驼峰转下划线后的形式）。
@@ -758,7 +792,10 @@ class AzurLaneAutoScript:
         command = inflection.underscore(command)
         set_task(inflection.camelize(command))
         try:
-            if not skip_first_screenshot:
+            # Restart 的职责就是把游戏从“未运行/未出首帧”恢复起来。
+            # Android 虚拟屏在没有实际内容提交前不会产生可读帧；若这里先截图，
+            # screencap 会 no-frame，导致永远执行不到 restart() -> app_restart()。
+            if not skip_first_screenshot and command != 'restart':
                 self.device.screenshot()
             # 游戏重启后悬浮球会再次显示，重置会话标志
             if command == 'restart':
@@ -784,15 +821,11 @@ class AzurLaneAutoScript:
                 with_traceback=False,
             )
             self._check_sensitive_exit(command, e)
-            handle_notify(
-                self.config.Error_OnePushConfig,
+            self._notify_recoverable(
                 title=f"AzurPilot <{self.config_name}> 警告",
                 content=f"<{self.config_name}> 游戏未运行 - 将自动重启游戏",
-            )
-            notify_webui(
-                self.config_name,
-                title=f" <{self.config_name}> 发出了警告喵！",
-                content=f"<{self.config_name}> 游戏未运行喵 将自动重启游戏喵~",
+                webui_title=f" <{self.config_name}> 发出了警告喵！",
+                webui_content=f"<{self.config_name}> 游戏未运行喵 将自动重启游戏喵~",
             )
             self.config.task_call('Restart')
             return 'recoverable'
@@ -831,15 +864,11 @@ class AzurLaneAutoScript:
 
             logger.warning(f'[Alas] 游戏卡住，{self.device.package} 将在10秒后重启')
             logger.warning('[Alas] 如果您正在手动操作，请停止 AzurPilot')
-            handle_notify(
-                self.config.Error_OnePushConfig,
+            self._notify_recoverable(
                 title=f"AzurPilot <{self.config_name}> 警告",
                 content=f"<{self.config_name}> 游戏卡住 - 将自动重启游戏",
-            )
-            notify_webui(
-                self.config_name,
-                title=f"<{self.config_name}> 发出了警告喵！",
-                content=f"<{self.config_name}> 游戏卡住 将自动重启游戏喵~",
+                webui_title=f"<{self.config_name}> 发出了警告喵！",
+                webui_content=f"<{self.config_name}> 游戏卡住 将自动重启游戏喵~",
             )
             self.config.task_call('Restart')
             self.device.sleep(10)
@@ -857,15 +886,11 @@ class AzurLaneAutoScript:
             self._check_sensitive_exit(command, e)
             logger.warning('[Alas] 碧蓝航线游戏客户端发生错误，AzurPilot 无法处理')
             logger.warning(f'[Alas] 正在重启 {self.device.package} 以修复问题')
-            handle_notify(
-                self.config.Error_OnePushConfig,
+            self._notify_recoverable(
                 title=f"AzurPilot <{self.config_name}> 警告",
                 content=f"<{self.config_name}> 游戏客户端错误 - 将自动重启游戏",
-            )
-            notify_webui(
-                self.config_name,
-                title=f"<{self.config_name}> 发出了警告喵！",
-                content=f"<{self.config_name}> 游戏客户端错误 将自动重启游戏喵~",
+                webui_title=f"<{self.config_name}> 发出了警告喵！",
+                webui_content=f"<{self.config_name}> 游戏客户端错误 将自动重启游戏喵~",
             )
             self.config.task_call('Restart')
             self.device.sleep(10)
@@ -885,15 +910,11 @@ class AzurLaneAutoScript:
                 self.save_error_log()
                 self._check_sensitive_exit(command, e)
                 logger.warning('[Alas] 无法识别游戏页面，尝试重启游戏恢复')
-                handle_notify(
-                    self.config.Error_OnePushConfig,
+                self._notify_recoverable(
                     title=f"AzurPilot <{self.config_name}> 警告",
                     content=f"<{self.config_name}> 无法识别页面 - 将自动重启游戏",
-                )
-                notify_webui(
-                    self.config_name,
-                    title=f"<{self.config_name}> 发出了警告喵！",
-                    content=f"<{self.config_name}> 无法识别页面 将自动重启游戏喵~",
+                    webui_title=f"<{self.config_name}> 发出了警告喵！",
+                    webui_content=f"<{self.config_name}> 无法识别页面 将自动重启游戏喵~",
                 )
                 self.config.task_call('Restart')
                 return 'recoverable'
@@ -933,15 +954,11 @@ class AzurLaneAutoScript:
                 exit(1)
 
             logger.warning(f'[Alas] ScriptError 第 {self.script_error_count}/3 次，尝试重启恢复')
-            handle_notify(
-                self.config.Error_OnePushConfig,
+            self._notify_recoverable(
                 title=f"AzurPilot <{self.config_name}> 警告",
                 content=f"<{self.config_name}> ScriptError - 将尝试重启恢复 ({self.script_error_count}/3)",
-            )
-            notify_webui(
-                self.config_name,
-                title=f"<{self.config_name}> 发出了警告喵！",
-                content=f"<{self.config_name}> ScriptError 将尝试重启恢复喵~",
+                webui_title=f"<{self.config_name}> 发出了警告喵！",
+                webui_content=f"<{self.config_name}> ScriptError 将尝试重启恢复喵~",
             )
             self.config.task_call('Restart')
             return 'recoverable'
@@ -959,15 +976,11 @@ class AzurLaneAutoScript:
             # 始终尝试重启模拟器，即使失败也不退出
             self._try_restart_emulator()
             self.config.task_call('Restart')
-            handle_notify(
-                self.config.Error_OnePushConfig,
+            self._notify_recoverable(
                 title=f"AzurPilot <{self.config_name}> 警告",
                 content=f"<{self.config_name}> 模拟器离线 - 正在尝试重启模拟器",
-            )
-            notify_webui(
-                self.config_name,
-                title=f"{self.config_name} 出了点小问题喵~",
-                content=f"模拟器离线喵 正在重启模拟器喵",
+                webui_title=f"{self.config_name} 出了点小问题喵~",
+                webui_content=f"模拟器离线喵 正在重启模拟器喵",
             )
             return 'recoverable'
         except RequestHumanTakeover as e:
@@ -985,15 +998,11 @@ class AzurLaneAutoScript:
             logger.warning('[Alas] RequestHumanTakeover: 尝试通过重启模拟器恢复')
             self._try_restart_emulator()
             self.config.task_call('Restart')
-            handle_notify(
-                self.config.Error_OnePushConfig,
+            self._notify_recoverable(
                 title=f"AzurPilot <{self.config_name}> 警告",
                 content=f"<{self.config_name}> 需要人工介入 - 正在尝试自动重启恢复",
-            )
-            notify_webui(
-                self.config_name,
-                title=f"{self.config_name} 出了点小问题喵~",
-                content=f"遇到需要人工介入的问题喵 正在尝试自动重启恢复喵",
+                webui_title=f"{self.config_name} 出了点小问题喵~",
+                webui_content=f"遇到需要人工介入的问题喵 正在尝试自动重启恢复喵",
             )
             return 'recoverable'
         except AutoSearchSetError as e:
@@ -1009,15 +1018,11 @@ class AzurLaneAutoScript:
             self._check_sensitive_exit(command, e)
             logger.warning('[Alas] 自动搜索设置失败，尝试重启游戏恢复')
             self.config.task_call('Restart')
-            handle_notify(
-                self.config.Error_OnePushConfig,
+            self._notify_recoverable(
                 title=f"AzurPilot <{self.config_name}> 警告",
                 content=f"<{self.config_name}> 自动搜索设置失败 - 将自动重启游戏",
-            )
-            notify_webui(
-                self.config_name,
-                title=f"<{self.config_name}> 发出了警告喵！",
-                content=f"<{self.config_name}> 自动搜索设置失败 将自动重启游戏喵~",
+                webui_title=f"<{self.config_name}> 发出了警告喵！",
+                webui_content=f"<{self.config_name}> 自动搜索设置失败 将自动重启游戏喵~",
             )
             return 'recoverable'
         except Exception as e:
@@ -1048,15 +1053,11 @@ class AzurLaneAutoScript:
                     f'先尝试重启游戏恢复'
                 )
             self.config.task_call('Restart')
-            handle_notify(
-                self.config.Error_OnePushConfig,
+            self._notify_recoverable(
                 title=f"AzurPilot <{self.config_name}> 警告",
                 content=f"<{self.config_name}> 发生异常 - 正在尝试自动重启恢复",
-            )
-            notify_webui(
-                self.config_name,
-                title=f"<{self.config_name}> 发出了警告喵！",
-                content=f"<{self.config_name}> 发生异常 正在尝试自动重启恢复喵~",
+                webui_title=f"<{self.config_name}> 发出了警告喵！",
+                webui_content=f"<{self.config_name}> 发生异常 正在尝试自动重启恢复喵~",
             )
             return 'recoverable'
         finally:
@@ -2269,5 +2270,14 @@ class AzurLaneAutoScript:
                 time.sleep(wait_seconds)
 
 if __name__ == '__main__':
-    alas = AzurLaneAutoScript()
+    try:
+        config_name = parse_config_name(sys.argv[1:])
+    except ValueError as error:
+        logger.error(f'[Alas] 无法启动调度器：{error}')
+        logger.info(
+            f'[Alas] 用法：python alas.py [实例名]，省略实例名时使用 {DEFAULT_CONFIG_NAME}'
+        )
+        exit(2)
+
+    alas = AzurLaneAutoScript(config_name=config_name)
     alas.loop()

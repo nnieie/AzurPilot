@@ -313,30 +313,38 @@ gui.py 读取的是**部署配置**（`config/deploy.yaml`，经 `deploy/config.
 
 | 进程实体 | 退出码 | 常量/触发源 | 场景说明 |
 | :--- | :---: | :--- | :--- |
-| **gui.py 父监督主进程** | `0` | 正常退出 | 用户触发 `KeyboardInterrupt` (Ctrl+C) 或直连模式服务正常结束 |
-| **gui.py 父监督主进程** | `70` | `EXIT_STARTUP_FAILURE` | 启动前清场、依赖同步、前端构建、子进程监听超时、热重载或崩溃超限等致命失败（触发 `FatalStartupError`） |
+| **gui.py 父监督主进程** | `0` | `EXIT_SUCCESS` | 用户触发 `KeyboardInterrupt` (Ctrl+C) 或服务正常退出 |
+| **gui.py 父监督主进程** | `70` | `EXIT_STARTUP_FAILURE` | 通用/未分类启动致命失败兜底 |
+| **gui.py 父监督主进程** | `71` | `EXIT_WORKER_CLEANUP_FAILURE` | 启动前或重启时残留 worker 无法回收 |
+| **gui.py 父监督主进程** | `72` | `EXIT_DEPENDENCY_SYNC_FAILURE` | 启动前依赖同步失败或服务未就绪 |
+| **gui.py 父监督主进程** | `73` | `EXIT_FRONTEND_BUILD_FAILURE` | React 前端构建失败（Node.js / npm 缺失或构建报错） |
+| **gui.py 父监督主进程** | `74` | `EXIT_SUBPROCESS_SPAWN_FAILURE` | WebUI 服务子进程连续拉起失败 |
+| **gui.py 父监督主进程** | `75` | `EXIT_PORT_LISTEN_TIMEOUT` | WebUI 子进程端口监听/就绪超时 |
+| **gui.py 父监督主进程** | `76` | `EXIT_WEBUI_RUNTIME_CRASH` | WebUI 启动就绪后反复意外崩溃退出 |
+| **gui.py 父监督主进程** | `77` | `EXIT_PROCESS_TERMINATE_FAILURE` | 终止旧 WebUI 子进程失败（进程僵死无法回收） |
+| **gui.py 父监督主进程** | `78` | `EXIT_IPC_FAILURE` | 进程间通信或重载状态读取异常 |
 | **WebUI 服务子进程 (`gui`)** | `0` | 正常关闭 | uvicorn 正常关闭退出（如 `server.should_exit`） |
 | **WebUI 服务子进程 (`gui`)** | 非 0 / 负值 | 异常崩溃 / 信号杀灭 | 端口绑定失败 (OSError)、未捕获致命异常、被父进程在超时/热重载时发送 terminate/kill 信号强制终止 |
 | **依赖同步守护进程 (`deploy/uv.py`)** | `0` | 正常下线 | 收到父进程队列 `"shutdown"` 命令后正常退出 |
 | **依赖同步守护进程 (`deploy/uv.py`)** | 强杀回收 | 超时 / 异常 | `_stop_dependency_sync_service` 退出时若 5 秒未退出则升级为 `stop_process_tree` 强杀 |
 
-#### 父监督器致命退出（退出码 70）场景详表
+#### 父监督器致命退出场景详表
 
-所有触发 `FatalStartupError` 并导致 `run_webui_supervisor()` 返回 `70`（`EXIT_STARTUP_FAILURE`）的分支如下：
+触发 `FatalStartupError` 时各分支返回的具体退出码如下：
 
-| 触发阶段 | 异常原因字符串 (`reason`) | 触发条件与根本原因 | 影响与恢复建议 |
-| :--- | :--- | :--- | :--- |
-| **启动前清场** | `残留 worker 未能回收，无法保证设备控制任务唯一` | `_recover_orphaned_workers()` 失败，检测到旧 WebUI 或其管理的 worker 仍在运行且无法回收 | 阻止启动以避免多个进程同时控制同一模拟器；需检查任务管理器结束残留 Python 进程 |
-| **启动前准备** | `依赖同步未就绪，WebUI 无法启动` | `_prepare_dependency_sync_before_webui_start` 返回失败，依赖同步服务无法启动或同步执行失败/超时 | 阻止启动以防以不匹配的 `.venv` 运行；检查网络、磁盘空间与 uv 状态 |
-| **前端校验** | `React 前端构建失败` | `ensure_frontend()` 抛出异常，Node.js 缺失或 npm 构建失败 | 静态资源不可用；检查 Node.js 环境与 `frontend/` 目录日志 |
-| **子进程启动** | `WebUI 子进程连续启动失败` | `Process.start()` 连续抛出异常达到上限（`WEBUI_START_RETRY_LIMIT=3`） | 权限受限或操作系统进程耗尽；检查进程配额与环境权限 |
-| **端口就绪** | `WebUI 子进程未就绪且无法停止` | 子进程在 120 秒内未就绪，且父进程执行 `_stop_webui_process_tree()` 后子进程依然存活 | 无法终止旧进程，继续启动会导致端口冲突；需手动杀掉卡死子进程 |
-| **端口就绪** | `连续 3 次未在 120 秒内完成监听` | 子进程正常被杀并重试，但连续 3 次未能在 `WEBUI_READY_TIMEOUT=120s` 内触发 `ready_event` | 端口冲突、模块加载死锁或严重系统卡顿；查看 `log/gui.txt` 排查 |
-| **热重载监听** | `WebUI 重启事件处理失败` | `event.wait(1)` 等待重启信号时抛出系统级意外异常 | 进程间通信（IPC）机制损坏；检查操作系统信号与内存状态 |
-| **热重载执行** | `重启时旧 WebUI 子进程未能停止` | 收到重启信号后，父进程向旧子进程发送 terminate/kill 仍未能确认其死亡 | 避免新旧 WebUI 争夺监听端口，停止后续重启循环 |
-| **依赖状态** | `无法读取依赖同步状态` | 尝试读取 `dependency_sync_event.is_set()` 时抛出 `OSError` | IPC 共享内存损坏；检查跨进程句柄权限 |
-| **运行监控** | `WebUI 反复意外退出` | 子进程启动就绪后未满 60 秒（`WEBUI_STABLE_RUNTIME`）即退出，且连续达到 3 次（`WEBUI_RUNTIME_RETRY_LIMIT`） | 避免无限崩溃重启循环；稳定运行超过 60 秒后计数会自动清零 |
-| **循环清理** | `WebUI 子进程清理失败，关联 worker 未能回收` | 退出或重启阶段执行 `_stop_webui_process_tree()` 确认残留 worker 失败 | 避免留下孤儿 worker 持续操作设备；需排查 psutil 终止权限 |
+| 退出码 | 常量 | 触发阶段 | 异常原因字符串 (`reason`) | 触发条件与根本原因 | 影响与恢复建议 |
+| :---: | :--- | :--- | :--- | :--- | :--- |
+| `71` | `EXIT_WORKER_CLEANUP_FAILURE` | **启动前清场** | `残留 worker 未能回收，无法保证设备控制任务唯一` | `_recover_orphaned_workers()` 失败，检测到旧 WebUI 或其管理的 worker 仍在运行且无法回收 | 阻止启动以避免多个进程同时控制同一模拟器；需检查任务管理器结束残留 Python 进程 |
+| `72` | `EXIT_DEPENDENCY_SYNC_FAILURE` | **启动前准备** | `依赖同步未就绪，WebUI 无法启动` | `_prepare_dependency_sync_before_webui_start` 返回失败，依赖同步服务无法启动或同步执行失败/超时 | 阻止启动以防以不匹配的 `.venv` 运行；检查网络、磁盘空间与 uv 状态 |
+| `73` | `EXIT_FRONTEND_BUILD_FAILURE` | **前端校验** | `React 前端构建失败` | `ensure_frontend()` 抛出异常，Node.js 缺失或 npm 构建失败 | 静态资源不可用；检查 Node.js 环境与 `frontend/` 目录日志 |
+| `74` | `EXIT_SUBPROCESS_SPAWN_FAILURE` | **子进程启动** | `WebUI 子进程连续启动失败` | `Process.start()` 连续抛出异常达到上限（`WEBUI_START_RETRY_LIMIT=3`） | 权限受限或操作系统进程耗尽；检查进程配额与环境权限 |
+| `77` | `EXIT_PROCESS_TERMINATE_FAILURE` | **端口就绪** | `WebUI 子进程未就绪且无法停止` | 子进程在 120 秒内未就绪，且父进程执行 `_stop_webui_process_tree()` 后子进程依然存活 | 无法终止旧进程，继续启动会导致端口冲突；需手动杀掉卡死子进程 |
+| `75` | `EXIT_PORT_LISTEN_TIMEOUT` | **端口就绪** | `连续 3 次未在 120 秒内完成监听` | 子进程正常被杀并重试，但连续 3 次未能在 `WEBUI_READY_TIMEOUT=120s` 内触发 `ready_event` | 端口冲突、模块加载死锁或严重系统卡顿；查看 `log/gui.txt` 排查 |
+| `78` | `EXIT_IPC_FAILURE` | **热重载监听** | `WebUI 重启事件处理失败` | `event.wait(1)` 等待重启信号时抛出系统级意外异常 | 进程间通信（IPC）机制损坏；检查操作系统信号与内存状态 |
+| `77` | `EXIT_PROCESS_TERMINATE_FAILURE` | **热重载执行** | `重启时旧 WebUI 子进程未能停止` | 收到重启信号后，父进程向旧子进程发送 terminate/kill 仍未能确认其死亡 | 避免新旧 WebUI 争夺监听端口，停止后续重启循环 |
+| `78` | `EXIT_IPC_FAILURE` | **依赖状态** | `无法读取依赖同步状态` | 尝试读取 `dependency_sync_event.is_set()` 时抛出 `OSError` | IPC 共享内存损坏；检查跨进程句柄权限 |
+| `76` | `EXIT_WEBUI_RUNTIME_CRASH` | **运行监控** | `WebUI 反复意外退出` | 子进程启动就绪后未满 60 秒（`WEBUI_STABLE_RUNTIME`）即退出，且连续达到 3 次（`WEBUI_RUNTIME_RETRY_LIMIT`） | 避免无限崩溃重启循环；稳定运行超过 60 秒后计数会自动清零 |
+| `71` | `EXIT_WORKER_CLEANUP_FAILURE` | **循环清理** | `WebUI 子进程清理失败，关联 worker 未能回收` | 退出或重启阶段执行 `_stop_webui_process_tree()` 确认残留 worker 失败 | 避免留下孤儿 worker 持续操作设备；需排查 psutil 终止权限 |
 
 ## 12. 并发与线程模型
 

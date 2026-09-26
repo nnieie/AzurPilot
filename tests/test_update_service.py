@@ -115,6 +115,20 @@ class UpdateServiceTest(unittest.TestCase):
                     Router(None, None).dispatch(method, {})
                 self.assertEqual(error.exception.code, 'READ_ONLY')
 
+    def test_android_runtime_uses_manifest_and_rejects_git_actions(self):
+        (self.root / 'BUILD_MANIFEST').write_text(
+            '{"azurpilot_commit": "android-commit"}', encoding='utf-8')
+        with patch.dict(os.environ, {'AZURPILOT_ANDROID': '1'}):
+            status = self.service.status()
+            self.assertTrue(status['managedByAndroid'])
+            self.assertEqual(status['state'], 'android')
+            self.assertEqual(status['localHead'], 'android-commit')
+            self.assertFalse(status['canApply'])
+            self.assertEqual(self.service.commits()['entries'], [])
+            with self.assertRaises(ApiError) as error:
+                self.service.start('fetch')
+            self.assertEqual(error.exception.code, 'UPDATE_MANAGED_BY_ANDROID')
+
 
 if __name__ == '__main__':
     unittest.main()

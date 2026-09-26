@@ -3,6 +3,7 @@
 管理战役关卡进入前的舰队准备界面操作，包括：
 - 舰队选择和切换（通过下拉菜单）
 - 舰队推荐按钮
+- 困难图整体推荐配队（Campaign.UseRecommendFleet）
 - 舰队清空操作
 - 困难模式限制条件检测
 - 自动搜索设置（舰队角色分配）
@@ -22,10 +23,12 @@ from module.base.utils import *
 from module.exception import HardNotSatisfied
 from module.handler.assets import AUTO_SEARCH_SET_MOB, AUTO_SEARCH_SET_BOSS, \
     AUTO_SEARCH_SET_ALL, AUTO_SEARCH_SET_STANDBY, \
-    AUTO_SEARCH_SET_SUB_AUTO, AUTO_SEARCH_SET_SUB_STANDBY
+    AUTO_SEARCH_SET_SUB_AUTO, AUTO_SEARCH_SET_SUB_STANDBY, \
+    POPUP_CONFIRM
 from module.handler.info_handler import InfoHandler
 from module.logger import logger
 from module.map.assets import *
+from module.ui_white.assets import POPUP_CONFIRM_WHITE
 
 
 class FleetOperator:
@@ -151,7 +154,8 @@ class FleetOperator:
         if self.is_hard_satisfied() is False:
             stage = self.main.config.Campaign_Name
             logger.critical(f'[Map] 关卡 "{stage}" 是困难模式，'
-                            f'请在运行 Alas 之前在游戏中准备好您的舰队 "{str(self)}"')
+                            f'请在运行 Alas 之前在游戏中准备好您的舰队 "{str(self)}"，'
+                            f'或在战斗设置中开启「自动配队」')
             raise HardNotSatisfied
 
     def clear(self, skip_first_screenshot=True):
@@ -338,6 +342,37 @@ class FleetPreparation(InfoHandler):
     map_fleet_checked = False
     map_is_hard_mode = False
 
+    def _handle_recommend_confirm(self, name=''):
+        """确认推荐配队后的补齐弹窗。
+
+        舰队槽位已有舰船时，点击推荐会弹出「是否采用推荐配置补齐空余位置」，
+        确定后才会填充剩余位置；舰队为空时点击推荐直接生效，没有弹窗。
+
+        Args:
+            name (str): 弹窗标记，用于区分点击记录中的确认按钮。
+
+        Returns:
+            bool: 是否确认了弹窗。
+        """
+        timeout = Timer(1, count=3).start()
+        while 1:
+            self.device.screenshot()
+            # interval=0：两支舰队的补齐弹窗间隔可能小于默认 2s 的点击间隔限制，
+            # 共用同一个按钮名的计时器会吞掉后续弹窗
+            if self.handle_popup_confirm(name, interval=0):
+                # 等待弹窗消失，填充动画期间弹窗仍在前台，会遮挡下一个推荐按钮
+                disappear = Timer(2, count=6).start()
+                while 1:
+                    self.device.screenshot()
+                    if not self.appear(POPUP_CONFIRM, offset=self._popup_offset) \
+                            and not self.appear(POPUP_CONFIRM_WHITE, offset=self._popup_offset):
+                        break
+                    if disappear.reached():
+                        break
+                return True
+            if timeout.reached():
+                return False
+
     def fleet_preparation(self, skip_first_screenshot=True):
         """更换舰队。
 
@@ -380,10 +415,57 @@ class FleetPreparation(InfoHandler):
             choose=SUBMARINE_CHOOSE, advice=SUBMARINE_ADVICE, bar=SUBMARINE_BAR, clear=SUBMARINE_CLEAR,
             in_use=SUBMARINE_IN_USE, hard_satisfied=SUBMARINE_HARD_SATIESFIED, main=self)
 
-        # Check if ship is prepared in hard mode
+        # Check if map is hard mode
         h1, h2, h3 = fleet_1.is_hard_satisfied(), fleet_2.is_hard_satisfied(), submarine.is_hard_satisfied()
-        logger.info(f'[地图-编队] 困难满足: 舰队1: {h1}, 舰队2: {h2}, 潜艇: {h3}')
         self.map_is_hard_mode = h1 is not None or h2 is not None or h3 is not None
+
+        # Submarine.
+        # cache submarine.allow() to avoid inconsistency after setting fleet_2
+        # because the expanded fleet_2 may cover submarine buttons
+        map_allow_submarine = submarine.allow()
+        logger.attr('允许潜艇', map_allow_submarine)
+
+        # 困难图自动配队：直接采用游戏内置的推荐阵容，用户不必事先在游戏里配好舰队
+        if self.map_is_hard_mode and self.config.Campaign_UseRecommendFleet:
+            logger.info('[地图-编队] 困难图使用推荐配队')
+            self.device.screenshot()
+
+            if fleet_1.allow():
+                logger.info('[地图-编队] 舰队1使用推荐配队')
+                if self.appear_then_click(RECOMMEND_A, interval=2):
+                    self._handle_recommend_confirm('RecommendFleet1')
+            if fleet_2.allow():
+                logger.info('[地图-编队] 舰队2使用推荐配队')
+                if self.appear_then_click(RECOMMEND_B, interval=2):
+                    self._handle_recommend_confirm('RecommendFleet2')
+            if map_allow_submarine:
+                if self.config.Submarine_Fleet:
+                    logger.info('[地图-编队] 潜艇使用推荐配队')
+                    if self.appear_then_click(RECOMMEND_C, interval=2):
+                        self._handle_recommend_confirm('RecommendSubmarine')
+                else:
+                    submarine.clear()
+            else:
+                self.config.SUBMARINE = 0
+
+            # 复查困难满足状态，等待填充动画结束：连续两次读数一致即认为完成
+            check_timer = Timer(2, count=6).start()
+            prev = None
+            while 1:
+                self.device.screenshot()
+                curr = (
+                    fleet_1.is_hard_satisfied(),
+                    fleet_2.is_hard_satisfied(),
+                    submarine.is_hard_satisfied(),
+                )
+                if curr == prev:
+                    break
+                prev = curr
+                if check_timer.reached():
+                    break
+            h1, h2, h3 = prev
+
+        logger.info(f'[地图-编队] 困难满足: 舰队1: {h1}, 舰队2: {h2}, 潜艇: {h3}')
         if self.config.SERVER in ['cn', 'en', 'jp']:
             # 困难关卡一次只有一支舰队实际出击，另一支在基地待命、不参与战斗，
             # 所以待命舰队不应被强制要求满足困难限制（否则会误报"必须准备两只舰队"）。
@@ -420,11 +502,6 @@ class FleetPreparation(InfoHandler):
                 self.config.SUBMARINE = 0
             return False
 
-        # Submarine.
-        # cache submarine.allow() to avoid inconsistency after setting fleet_2
-        # because the expanded fleet_2 may cover submarine buttons
-        map_allow_submarine = submarine.allow()
-        logger.attr('允许潜艇', map_allow_submarine)
         if map_allow_submarine:
             if self.config.Submarine_Fleet:
                 if fleet_2.allow():

@@ -643,7 +643,8 @@
       "minitouch": "minitouch",
       "Hermit": "Hermit",
       "MaaTouch": "MaaTouch",
-      "nemu_ipc": "nemu_ipc"
+      "nemu_ipc": "nemu_ipc",
+      "azurpilot_android": "AzurPilot Android 虚拟屏"
     },
     "GameSettings": {
       "name": "自动应用推荐游戏设置",
@@ -827,6 +828,12 @@
     "OnePushConfig": {
       "name": "错误推送设置",
       "help": "发生无法处理的异常后，使用 Onepush 推送一条错误信息。配置方法见文档：https://github.com/LmeSzinc/AzurLaneAutoScript/wiki/Onepush-configuration-%5BCN%5D"
+    },
+    "LowPushMode": {
+      "name": "低推送量模式",
+      "help": "只推送需要人工介入的错误。游戏未运行、模拟器离线、游戏卡住等能自动恢复的错误只记录日志，不再推送",
+      "True": "开启",
+      "False": "关闭"
     },
     "ScreenshotLength": {
       "name": "出错时，保留最后 X 张截图",
@@ -1088,9 +1095,65 @@
       "do_not": "无操作",
       "save": "保存"
     },
-    "OpsiRecord": {
-      "name": "大世界掉落截图",
-      "help": "",
+    "OpsiHazard1Leveling": {
+      "name": "侵蚀一掉落截图",
+      "help": "侵蚀1练级不进「大世界掉落」统计（收益看「大世界总结」页）；「保存」只落盘截图，「上传」对它不生效",
+      "do_not": "无操作",
+      "save": "保存",
+      "upload": "上传",
+      "save_and_upload": "保存并上传"
+    },
+    "OpsiMeowfficerFarming": {
+      "name": "短猫掉落截图",
+      "help": "「保存」与「上传」都会把掉落解析进统计页「大世界掉落」分类，区别只是要不要把截图落盘",
+      "do_not": "无操作",
+      "save": "保存",
+      "upload": "上传",
+      "save_and_upload": "保存并上传"
+    },
+    "OpsiDaily": {
+      "name": "大世界每日掉落截图",
+      "help": "「保存」与「上传」都会把掉落解析进统计页「大世界掉落」分类，区别只是要不要把截图落盘\n跨月每日共用此开关",
+      "do_not": "无操作",
+      "save": "保存",
+      "upload": "上传",
+      "save_and_upload": "保存并上传"
+    },
+    "OpsiObscure": {
+      "name": "隐秘海域掉落截图",
+      "help": "「保存」与「上传」都会把掉落解析进统计页「大世界掉落」分类，区别只是要不要把截图落盘\n档案坐标共用此开关",
+      "do_not": "无操作",
+      "save": "保存",
+      "upload": "上传",
+      "save_and_upload": "保存并上传"
+    },
+    "OpsiAbyssal": {
+      "name": "深渊海域掉落截图",
+      "help": "「保存」与「上传」都会把掉落解析进统计页「大世界掉落」分类，区别只是要不要把截图落盘\n月度Boss共用此开关",
+      "do_not": "无操作",
+      "save": "保存",
+      "upload": "上传",
+      "save_and_upload": "保存并上传"
+    },
+    "OpsiStronghold": {
+      "name": "塞壬要塞掉落截图",
+      "help": "「保存」与「上传」都会把掉落解析进统计页「大世界掉落」分类，区别只是要不要把截图落盘",
+      "do_not": "无操作",
+      "save": "保存",
+      "upload": "上传",
+      "save_and_upload": "保存并上传"
+    },
+    "OpsiExplore": {
+      "name": "每月开荒掉落截图",
+      "help": "每月开荒Plus 自己的掉落记录开关，不跟其它任务共用\n「保存」与「上传」都会把掉落解析进统计页「大世界掉落」分类，区别只是要不要把截图落盘",
+      "do_not": "无操作",
+      "save": "保存",
+      "upload": "上传",
+      "save_and_upload": "保存并上传"
+    },
+    "OpsiOther": {
+      "name": "其他大世界任务掉落截图",
+      "help": "兜底没有单独开关的大世界任务\n「保存」与「上传」都会把掉落解析进统计页「大世界掉落」分类，区别只是要不要把截图落盘",
       "do_not": "无操作",
       "save": "保存",
       "upload": "上传",

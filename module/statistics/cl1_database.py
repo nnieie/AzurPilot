@@ -1364,6 +1364,7 @@ class Cl1Database:
         *,
         imgid: str = '',
         completed_at: Optional[datetime] = None,
+        ts: Optional[datetime] = None,
     ) -> Optional[Dict[str, Any]]:
         """记录一次科研领奖的掉落。
 
@@ -1376,7 +1377,9 @@ class Cl1Database:
             series (int): 科研期数；未识别时传 0。
             items (Dict[str, int]): {物品模板名: 数量}。
             imgid (str): 掉落记录文件名，用于去重。
-            completed_at (Optional[datetime]): 领奖时间，缺省取当前时间。
+            completed_at (Optional[datetime]): 领奖时间，缺省取记录时间。
+            ts (Optional[datetime]): 记录时间，同时决定写进哪个月份分区；缺省取当前时间。
+                导入历史截图时传截图时间，否则「今日/本月」会落在导入那天。
 
         Returns:
             Optional[Dict[str, Any]]: 写入的条目；重复或空掉落返回 None。
@@ -1385,11 +1388,11 @@ class Cl1Database:
         if not items:
             return None
 
-        now = datetime.now()
-        month = f"{now.year:04d}-{now.month:02d}"
+        stamp = ts or datetime.now()
+        month = f"{stamp.year:04d}-{stamp.month:02d}"
         entry = {
-            "ts": now.isoformat(),
-            "completed_at": (completed_at or now).isoformat(),
+            "ts": stamp.isoformat(),
+            "completed_at": (completed_at or stamp).isoformat(),
             "imgid": str(imgid or ''),
             "project": str(project or ''),
             "series": self._coerce_int(series or 0),
@@ -1408,6 +1411,45 @@ class Cl1Database:
             data["research_drop_entries"] = entries[-5000:]
             self._save_stats_in_connection(conn, instance, month, data)
         return entry
+
+    def update_research_drop_items(
+        self, instance: str, imgid: str, items: Dict[str, int]
+    ) -> Optional[Dict[str, Any]]:
+        """按 imgid 就地改写一条科研掉落记录的掉落物。
+
+        只服务模板改名后的数据订正：库里存的是**模板文件名**，显示时再拿名称表翻译，
+        模板一改名，老记录就会照新表张冠李戴（实测把「四联装610mm鱼雷」显示成八期的
+        彩装主炮）。改名映射救不了这种错——旧名一条就同时盖住了两件不同的装备，
+        所以只能拿原截图重解析后覆盖。见 dev_tools/research_drop_repair.py。
+
+        只覆盖 items，不动期数与项目代号：期数来自卡片角标识别，和模板名无关，
+        重解析若读不出角标会得到 0，覆盖它反而会毁掉已有数据。
+
+        Args:
+            instance (str): ALAS 实例名。
+            imgid (str): 掉落记录文件名；一条掉落在库里按它唯一。
+            items (Dict[str, int]): 新的 {物品模板名: 数量}。
+
+        Returns:
+            Optional[Dict[str, Any]]: 更新后的条目；未找到或参数为空时返回 None。
+        """
+        items = {k: self._coerce_int(v) for k, v in (items or {}).items() if v > 0}
+        if not imgid or not items:
+            return None
+
+        # 月份分区先取好再开事务：事务里不能再开第二个连接去查列表
+        months = [month for _, month in self._list_stats_rows(instance)]
+        with self._stats_transaction() as conn:
+            for month in months:
+                data = self._get_stats_in_connection(conn, instance, month)
+                entries = data.get("research_drop_entries") or []
+                for entry in entries:
+                    if entry.get("imgid") != imgid:
+                        continue
+                    entry["items"] = items
+                    self._save_stats_in_connection(conn, instance, month, data)
+                    return dict(entry)
+        return None
 
     def get_research_drop(
         self, instance: str, year: int = None, month: int = None

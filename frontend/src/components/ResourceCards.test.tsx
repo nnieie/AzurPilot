@@ -4,7 +4,7 @@ import { AppContext, type AppContextValue } from '../app/context'
 import type { Resource } from '../api/types'
 import { translateUi } from '../i18n'
 import { setDashboardPref } from '../app/dashboardPrefs'
-import { isActionPointDog, moveResourceKey, ResourceCards } from './ResourceCards'
+import { actionPointDogIcon, moveResourceKey, ResourceCards } from './ResourceCards'
 
 function renderResources(resources: Resource[], selected = ['ActionPoint']) {
   return renderToStaticMarkup(
@@ -103,21 +103,58 @@ describe('资源卡片', () => {
     }
   })
 
-  it('总行动力不超过5000时使用默认图标，超过5000时自动替换为dog.webp', () => {
-    const normalHtml = renderResources([{name: 'ActionPoint', label: '行动力', value: 101, total: 5000, record: '2026-09-16 12:00:00'}])
-    expect(normalHtml).toContain('guild_coin.webp')
-    expect(normalHtml).not.toContain('dog.webp')
-
-    const dogHtml = renderResources([{name: 'ActionPoint', label: '行动力', value: 101, total: 5001, record: '2026-09-16 12:00:00'}])
-    expect(dogHtml).toContain('dog.webp')
-    expect(dogHtml).not.toContain('guild_coin.webp')
+  it('大狗图标关闭时，行动力再高也用默认图标', () => {
+    setDashboardPref('dogIcon', false)
+    try {
+      const html = renderResources([
+        {name: 'ActionPoint', label: '行动力', value: 101, total: 12000, record: '2026-09-16 12:00:00'},
+        {name: 'Oil', label: '石油', value: 1000, record: '2026-09-16 12:00:00'},
+      ], ['ActionPoint', 'Oil'])
+      expect(html).toContain('guild_coin.webp')
+      expect(html).toContain('oil.webp')
+      expect(html).not.toContain('dog_')
+    } finally {
+      setDashboardPref('dogIcon', true)
+    }
   })
 
-  it('验证isActionPointDog逻辑边界与回退', () => {
-    expect(isActionPointDog({name: 'ActionPoint', label: '行动力', value: 100, total: 5000})).toBe(false)
-    expect(isActionPointDog({name: 'ActionPoint', label: '行动力', value: 100, total: 5001})).toBe(true)
-    expect(isActionPointDog({name: 'ActionPoint', label: '行动力', value: 100, total: 6000, record: '2020-01-01 00:00:00'})).toBe(false)
-    expect(isActionPointDog({name: 'Oil', label: '石油', value: 100, total: 6000})).toBe(false)
-    expect(isActionPointDog(undefined)).toBe(false)
+  it('行动力图标按四档换图，其余资源始终用自带图标', () => {
+    setDashboardPref('dogIcon', true)
+    const render = (total: number) => renderResources([
+      {name: 'ActionPoint', label: '行动力', value: 101, total, record: '2026-09-16 12:00:00'},
+      {name: 'Oil', label: '石油', value: 1000, record: '2026-09-16 12:00:00'},
+    ], ['ActionPoint', 'Oil'])
+
+    const tiers: Array<[number, string]> = [
+      [6000, 'guild_coin.webp'],
+      [6001, 'dog_small.webp'],
+      [8000, 'dog_small.webp'],
+      [8001, 'dog_medium.webp'],
+      [10000, 'dog_medium.webp'],
+      [10001, 'dog_large.webp'],
+      [12000, 'dog_large.webp'],
+      [12001, 'dog_king.webp'],
+    ]
+    for (const [total, icon] of tiers) {
+      const html = render(total)
+      expect(html, `总行动力 ${total} 应使用 ${icon}`).toContain(icon)
+      expect(html, `总行动力 ${total} 时石油不该换图`).toContain('oil.webp')
+    }
+    expect(render(12001)).not.toContain('guild_coin.webp')
+  })
+
+  it('actionPointDogIcon 的档位边界与回退', () => {
+    const ap = (total: number, extra: Partial<Resource> = {}) => ({name: 'ActionPoint', label: '行动力', value: 100, total, ...extra})
+    expect(actionPointDogIcon(ap(6000))).toBeUndefined()
+    expect(actionPointDogIcon(ap(6001))).toContain('dog_small.webp')
+    expect(actionPointDogIcon(ap(8000))).toContain('dog_small.webp')
+    expect(actionPointDogIcon(ap(8001))).toContain('dog_medium.webp')
+    expect(actionPointDogIcon(ap(10001))).toContain('dog_large.webp')
+    expect(actionPointDogIcon(ap(12001))).toContain('dog_king.webp')
+    expect(actionPointDogIcon(ap(12001, {record: '2020-01-01 00:00:00'}))).toBeUndefined()
+    expect(actionPointDogIcon({name: 'Oil', label: '石油', value: 100, total: 12001})).toBeUndefined()
+    expect(actionPointDogIcon(undefined)).toBeUndefined()
+    /* total 小于 value 时退回 value：异常数据不该被当成低档。 */
+    expect(actionPointDogIcon({name: 'ActionPoint', label: '行动力', value: 9000, total: 1})).toContain('dog_medium.webp')
   })
 })

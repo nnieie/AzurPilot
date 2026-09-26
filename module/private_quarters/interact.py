@@ -15,6 +15,21 @@ from module.private_quarters.assets import *
 from module.ui.page import page_private_quarters
 from module.ui.ui import UI
 
+# 互动流程的等待与超时参数。
+# 云手机等慢设备上一帧截图要 2~4 秒：点击「互动」后画面要几秒才切过去，
+# 期间重复点击会点在切入过程中（还会白白消耗今日精力），因此
+# 重新点击必须同时满足秒数和帧数两个下限，所有等待都带超时。
+PQ_INTERACT_BUTTON_TIMEOUT = 24  # 秒
+PQ_INTERACT_BUTTON_FRAMES = 6  # 帧
+PQ_INTERACT_CLICK_WAIT = 8  # 秒
+PQ_INTERACT_CLICK_FRAMES = 2  # 帧
+PQ_INTERACT_START_TIMEOUT = 24  # 秒
+PQ_INTERACT_START_FRAMES = 6  # 帧
+PQ_INTERACT_END_TIMEOUT = 40  # 秒
+PQ_INTERACT_END_FRAMES = 10  # 帧
+PQ_INTERACT_EXIT_TIMEOUT = 24  # 秒
+PQ_INTERACT_EXIT_FRAMES = 6  # 帧
+
 
 class PQInteract(UI):
     # Key: str, target ship name
@@ -220,6 +235,14 @@ class PQInteract(UI):
         """
         Execute room exit routine
         """
+        # 互动画面还没结束时，返回键会被互动画面吃掉，先按住返回把互动结束掉
+        for _ in self.loop(timeout=Timer(PQ_INTERACT_EXIT_TIMEOUT,
+                                        count=PQ_INTERACT_EXIT_FRAMES)):
+            if self.appear(PRIVATE_QUARTERS_INTERACT_CHECK, offset=(20, 20), interval=2):
+                self.device.click(PRIVATE_QUARTERS_ROOM_BACK)
+                continue
+            break
+
         # Rare case in the middle of dialogue, so address
         # before initiating room exit
         if (not self.appear(PRIVATE_QUARTERS_ROOM_CHECK, offset=(20, 20)) and
@@ -244,58 +267,68 @@ class PQInteract(UI):
         Depending on intimacy level, the asset may shift
         Parameters identified as stable and server transparent
         """
+        # 云手机等慢设备上点一次要等几秒才有画面反应：点舰娘、点互动都按帧数等待，
+        # 等待期间不再重复点击；今日精力用完后游戏会退回待机房间
+        # （既没有互动按钮、也没有互动画面），这里按超时退出，
+        # 不再无限空转（旧逻辑会一直空转到设备卡死检测）
+
         # Click target ship girl for 1st stage sequence
         logger.hr(f'[私人休息室-互动] 互动开始', level=2)
         interact_offset = (-10, 0, 0, 65)
-        click_timer = Timer(1.5, count=3).start()
-        skip_first_screenshot = True
-        while 1:
-            if skip_first_screenshot:
-                skip_first_screenshot = False
-            else:
-                self.device.screenshot()
+        target_timer = Timer(2.5, count=1)
 
-            # End
+        # 点舰娘直到出现互动按钮；精力用完后按钮不会出现，必须有超时
+        for _ in self.loop(timeout=Timer(PQ_INTERACT_BUTTON_TIMEOUT,
+                                        count=PQ_INTERACT_BUTTON_FRAMES)):
             if self.appear(PRIVATE_QUARTERS_INTERACT, offset=interact_offset):
                 break
 
-            if click_timer.reached():
+            if target_timer.reached():
                 self.device.click(PRIVATE_QUARTERS_ROOM_TARGET_CLICK_AREA)
-                click_timer.reset()
+                target_timer.reset()
+        else:
+            logger.warning('[私人休息室-互动] 未能出现互动按钮，'
+                           '可能今日精力已用完，跳过互动')
+            self._pq_goto_room_exit()
+            return
 
         # Repeat 2nd and 3rd stage sequence 3 times
         for i in range(1, 4):
             logger.hr(f'[私人休息室-互动] 互动循环 {i}/3', level=3)
             self.interval_clear([PRIVATE_QUARTERS_INTERACT_CHECK,
                                  PRIVATE_QUARTERS_INTERACT])
-            skip_first_screenshot = True
-            while 1:
-                if skip_first_screenshot:
-                    skip_first_screenshot = False
-                else:
-                    self.device.screenshot()
 
+            # 点一次互动后等画面切到互动状态（慢设备上要几秒）。
+            # 按钮还在说明点击可能被吃掉，等够若干帧再补点一次；
+            # 按钮消失且没有互动画面，说明今日精力已用完。
+            click_timer = Timer(PQ_INTERACT_CLICK_WAIT, count=PQ_INTERACT_CLICK_FRAMES)
+            for _ in self.loop(timeout=Timer(PQ_INTERACT_START_TIMEOUT,
+                                            count=PQ_INTERACT_START_FRAMES)):
                 # End
                 if self.appear(PRIVATE_QUARTERS_INTERACT_CHECK, offset=(20, 20)):
                     break
 
-                if self.appear_then_click(PRIVATE_QUARTERS_INTERACT, offset=interact_offset, interval=1):
-                    continue
+                if self.appear(PRIVATE_QUARTERS_INTERACT, offset=interact_offset) \
+                        and click_timer.reached():
+                    self.device.click(PRIVATE_QUARTERS_INTERACT)
+                    click_timer.reset()
+            else:
+                logger.warning(f'[私人休息室-互动] 第 {i} 次互动没有进入互动画面，'
+                               '可能今日精力已用完，结束互动')
+                break
 
-            skip_first_screenshot = True
-            while 1:
-                if skip_first_screenshot:
-                    skip_first_screenshot = False
-                else:
-                    self.device.screenshot()
-
+            # 等互动结束：互动按钮重新出现；互动画面用返回结束
+            for _ in self.loop(timeout=Timer(PQ_INTERACT_END_TIMEOUT,
+                                            count=PQ_INTERACT_END_FRAMES)):
                 # End
                 if self.appear(PRIVATE_QUARTERS_INTERACT, offset=interact_offset):
                     break
 
-                if self.appear(PRIVATE_QUARTERS_INTERACT_CHECK, offset=(20, 20), interval=1):
+                if self.appear(PRIVATE_QUARTERS_INTERACT_CHECK, offset=(20, 20), interval=2):
                     self.device.click(PRIVATE_QUARTERS_ROOM_BACK)
-                    continue
+            else:
+                logger.warning(f'[私人休息室-互动] 第 {i} 次互动没有正常结束，结束互动')
+                break
 
         logger.hr(f'[私人休息室-互动] 互动结束', level=2)
         self._pq_goto_room_exit()

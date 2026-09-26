@@ -357,3 +357,470 @@
 .meow-advice-targets li::before {content: '→'; position: absolute; left: 0; color: var(--accent); opacity: .8}
 .meow-shot {font-family: var(--theme-font-mono, "JetBrains Mono", "JetBrains Mono NL", "Cascadia Code", "Consolas", "Microsoft YaHei", monospace); overflow-wrap: anywhere}
 @media (max-width: 700px) {.meow-cats {padding: 12px}.meow-axis-label {flex-basis: 100%}.meow-card-score {width: 100%; justify-content: flex-start}}
+
+/* 公告系统组件样式 */
+.announcement-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px 24px;
+  border-radius: var(--theme-radius-card, 16px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  transition: border-color .2s, box-shadow .2s;
+  overflow: hidden;
+}
+.announcement-card.is-unread {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.announcement-card.is-unread::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 40%, var(--surface)));
+}
+.announcement-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.announcement-badge-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.announcement-icon-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.announcement-category {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.announcement-new-tag {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--red);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 750;
+  line-height: 1.2;
+  letter-spacing: .04em;
+  animation: pulse-badge 2s infinite ease-in-out;
+}
+@keyframes pulse-badge {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.06); opacity: .88; }
+}
+.announcement-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.announcement-read-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.announcement-read-btn:hover {
+  color: var(--accent);
+}
+.announcement-view-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background-color .15s;
+}
+.announcement-view-more:hover {
+  background: var(--accent-soft);
+}
+.announcement-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.announcement-body {
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+/* Markdown 渲染容器与排版 */
+.markdown-view {
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.markdown-view .md-h1,
+.markdown-view .md-h2,
+.markdown-view .md-h3,
+.markdown-view .md-h4,
+.markdown-view .md-h5,
+.markdown-view .md-h6 {
+  margin: 16px 0 8px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.35;
+}
+.markdown-view .md-h1:first-child,
+.markdown-view .md-h2:first-child,
+.markdown-view .md-h3:first-child,
+.markdown-view .md-h4:first-child,
+.markdown-view .md-h5:first-child,
+.markdown-view .md-h6:first-child {
+  margin-top: 0;
+}
+.markdown-view .md-h1 { font-size: 20px; }
+.markdown-view .md-h2 { font-size: 17px; }
+.markdown-view .md-h3 { font-size: 15px; }
+.markdown-view .md-h4,
+.markdown-view .md-h5,
+.markdown-view .md-h6 { font-size: 13.5px; }
+
+.markdown-view .md-p {
+  margin: 0 0 10px;
+}
+.markdown-view .md-p:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-view .md-ul,
+.markdown-view .md-ol {
+  margin: 0 0 10px;
+  padding-left: 20px;
+}
+.markdown-view .md-li {
+  margin-bottom: 4px;
+}
+.markdown-view .md-li:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-view .md-blockquote {
+  margin: 12px 0;
+  padding: 8px 16px;
+  border-left: 3px solid var(--accent);
+  background: var(--surface-muted);
+  border-radius: 0 8px 8px 0;
+}
+.markdown-view .md-blockquote .md-p {
+  margin: 0;
+  color: var(--text);
+  opacity: .95;
+}
+
+.markdown-view .md-inline-code {
+  font-family: var(--theme-font-mono, monospace);
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+/* 代码块容器、语言头部与复制按钮 */
+.markdown-view .md-code-wrap {
+  margin: 14px 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #1e222b;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+.markdown-view .md-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 14px;
+  background: #181b22;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.markdown-view .md-code-lang {
+  color: #8b949e;
+  font-family: var(--theme-font-mono, monospace);
+  font-size: 11px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.markdown-view .md-code-copy {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  font-size: 11px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: #c9d1d9;
+  cursor: pointer;
+  transition: all .15s ease;
+  user-select: none;
+}
+.markdown-view .md-code-copy:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+.markdown-view .md-code-copy.copied {
+  background: var(--accent, #10b981);
+  color: #fff;
+  border-color: var(--accent, #10b981);
+}
+.markdown-view .md-pre {
+  margin: 0;
+  padding: 12px 16px;
+  background: transparent;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.markdown-view .md-pre code.hljs {
+  padding: 0;
+  background: transparent;
+  font-family: var(--theme-font-mono, "JetBrains Mono", "Cascadia Code", Consolas, monospace);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.markdown-view .md-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  margin: 12px 0;
+}
+.markdown-view .md-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.markdown-view .md-table th,
+.markdown-view .md-table td {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  text-align: left;
+}
+.markdown-view .md-table th {
+  background: var(--surface-muted);
+  font-weight: 600;
+}
+
+.markdown-view .md-hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 16px 0;
+}
+
+.markdown-view .md-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  word-break: break-all;
+  font-weight: 500;
+  transition: opacity .15s;
+}
+.markdown-view .md-link:hover {
+  opacity: .85;
+}
+
+/* KaTeX 数学公式渲染容器 */
+.markdown-view .md-math-block {
+  display: block;
+  margin: 14px 0;
+  padding: 12px 16px;
+  text-align: center;
+  overflow-x: auto;
+  background: var(--surface-muted);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.markdown-view .md-math-inline {
+  display: inline-block;
+  padding: 0 3px;
+  vertical-align: baseline;
+}
+.markdown-view .md-math-fallback {
+  font-family: var(--theme-font-mono, monospace);
+  font-size: 12px;
+  color: var(--accent);
+}
+
+/* GitHub 风格呼出提示块 (Admonition) */
+.markdown-view .md-alert {
+  margin: 14px 0;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: var(--surface-muted);
+  border-left: 4px solid var(--border);
+}
+.markdown-view .md-alert-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.markdown-view .md-alert-badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+.markdown-view .md-alert-body p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.markdown-view .md-alert-note {
+  border-left-color: #3b82f6;
+}
+.markdown-view .md-alert-note .md-alert-badge {
+  background: #3b82f620;
+  color: #3b82f6;
+}
+.markdown-view .md-alert-tip {
+  border-left-color: var(--accent, #10b981);
+}
+.markdown-view .md-alert-tip .md-alert-badge {
+  background: var(--accent-soft, #10b98120);
+  color: var(--accent, #10b981);
+}
+.markdown-view .md-alert-important {
+  border-left-color: #a855f7;
+}
+.markdown-view .md-alert-important .md-alert-badge {
+  background: #a855f720;
+  color: #a855f7;
+}
+.markdown-view .md-alert-warning {
+  border-left-color: #f59e0b;
+}
+.markdown-view .md-alert-warning .md-alert-badge {
+  background: #f59e0b20;
+  color: #f59e0b;
+}
+.markdown-view .md-alert-caution {
+  border-left-color: #ef4444;
+}
+.markdown-view .md-alert-caution .md-alert-badge {
+  background: #ef444420;
+  color: #ef4444;
+}
+
+/* HTML 折叠 details/summary */
+.markdown-view details {
+  margin: 12px 0;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-muted);
+}
+.markdown-view summary {
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  user-select: none;
+  color: var(--text);
+  outline: none;
+}
+.markdown-view details[open] summary {
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--border);
+}
+
+/* 常用 HTML 排版标签 (kbd, mark, sub, sup) */
+.markdown-view kbd {
+  font-family: var(--theme-font-mono, monospace);
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: 0 1px 1px #00000020;
+  color: var(--text);
+}
+.markdown-view mark {
+  background: #fef08a;
+  color: #1e293b;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+[data-theme='dark'] .markdown-view mark {
+  background: #854d0e;
+  color: #fef08a;
+}
+.markdown-view sub,
+.markdown-view sup {
+  font-size: 0.75em;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+.markdown-view sup { top: -0.5em; }
+.markdown-view sub { bottom: -0.25em; }
+
+/* 任务清单复选框 */
+.markdown-view input[type="checkbox"] {
+  margin: 0 8px 0 0;
+  accent-color: var(--accent);
+  vertical-align: middle;
+}
+.markdown-view li:has(input[type="checkbox"]) {
+  list-style-type: none;
+  margin-left: -18px;
+}
+.announcement-footer {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.announcement-external-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+
+/* 主页公告栏样式 */
+
+.home-announcement-wrap {
+  margin-bottom: 24px;
+}
+.tiny-dot.red {
+  background: var(--red, #e05252);
+  box-shadow: 0 0 6px var(--red, #e05252);
+}
+

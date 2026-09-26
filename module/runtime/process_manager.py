@@ -62,6 +62,7 @@ class ProcessManager:
         self._renderable_queue: queue.Queue[ConsoleRenderable | TaskEvent | ExitEvent] = State.manager.Queue()
         self._preview_queue = None
         self.current_task = None
+        self.started_func = None
         self.run_id = None
         self.exit_result: WorkerResult | None = None
         self._worker_observed = False
@@ -146,6 +147,7 @@ class ProcessManager:
                         return
                     if func is None:
                         func = get_config_mod(self.config_name)
+                    self.started_func = func
                     with self._runtime_lock:
                         self.current_task = None
                         self.run_id = uuid.uuid4().hex

@@ -474,6 +474,28 @@
             "minimum": 0,
             "title": "Series",
             "type": "integer"
+          },
+          "scope": {
+            "default": "series",
+            "enum": [
+              "series",
+              "consumable"
+            ],
+            "title": "Scope",
+            "type": "string"
+          },
+          "task": {
+            "anyOf": [
+              {
+                "pattern": "^[a-z][a-z0-9_]{0,40}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Task"
           }
         },
         "required": [
@@ -720,6 +742,22 @@
         "additionalProperties": false,
         "properties": {},
         "title": "Params",
+        "type": "object"
+      }
+    },
+    "announcement.get": {
+      "mutates": false,
+      "params": {
+        "additionalProperties": false,
+        "description": "公告查询参数。",
+        "properties": {
+          "force": {
+            "default": false,
+            "title": "Force",
+            "type": "boolean"
+          }
+        },
+        "title": "AnnouncementParams",
         "type": "object"
       }
     },

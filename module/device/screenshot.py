@@ -20,6 +20,7 @@ from module.base.timer import Timer
 from module.base.utils import get_color, image_size, limit_in, save_image, set_template_match_non_native_720p
 from module.config.time_source import now as current_time
 from module.device.method.adb import Adb
+from module.device.method.azurpilot_android import AzurPilotAndroid
 from module.device.method.ascreencap import AScreenCap
 from module.device.method.droidcast import DroidCast
 from module.device.method.ldopengl import LDOpenGL
@@ -71,6 +72,7 @@ class Screenshot(Adb, WSA, DroidCast, AScreenCap, Scrcpy, NemuIpc, LDOpenGL, Usb
                 值为对应的截图方法。
         """
         return {
+            'azurpilot_android': self.screenshot_azurpilot_android,
             'ADB': self.screenshot_adb,
             'ADB_nc': self.screenshot_adb_nc,
             'uiautomator2': self.screenshot_uiautomator2,

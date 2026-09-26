@@ -123,6 +123,11 @@ class ConnectionAttr:
 
         logger.attr('是否云手机', IS_ON_PHONE_CLOUD)
 
+        if self.config.Emulator_Serial == 'azurpilot_android':
+            self.serial = 'azurpilot_android'
+            self.config.DEVICE_OVER_HTTP = False
+            return
+
         # Init adb client
         logger.attr('ADB路径', self.adb_binary)
         # Monkey patch to custom adb

@@ -15,12 +15,34 @@
 .instance-caption small {font-size: 10px; color: var(--muted); display: block; margin-bottom: 3px}
 .instance-caption strong {display: block; font-size: 13px; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap}
 .instance-switcher > svg {color: var(--muted)}
-.instance-menu {position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 40; padding: 5px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); box-shadow: 0 8px 30px #132b4826}
+.instance-menu {position: absolute; top: calc(100% + 6px); left: 0; min-width: 220px; z-index: 40; padding: 6px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); box-shadow: 0 10px 36px #132b482a; -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px)}
 .instance-options {max-height: min(280px, 40dvh); overflow-y: auto}
-.instance-menu button {display: flex; align-items: center; gap: 9px; padding: 11px 8px; width: 100%; text-align: left; border-radius: 5px}
+.instance-menu button {display: flex; align-items: center; gap: 9px; padding: 10px 10px; width: 100%; text-align: left; border-radius: 7px; font-size: 13px; font-weight: 500; transition: all .15s ease}
 .instance-menu button span {flex: 1; overflow-wrap: anywhere; min-width: 0}
 .instance-menu button:hover, .instance-menu button:focus-visible, .instance-menu button[aria-checked='true'] {background: var(--accent-soft); color: var(--accent)}
-.instance-menu .instance-create {justify-content: center; color: var(--accent); border-top: 1px solid var(--border); margin-top: 4px; border-radius: 0 0 5px 5px}
+.instance-menu .instance-create {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px dashed color-mix(in srgb, var(--accent) 35%, transparent);
+  margin-top: 6px;
+  padding: 9px 12px;
+  border-radius: 8px;
+}
+.instance-menu .instance-create:hover:not(:disabled) {
+  background: var(--accent);
+  color: #fff;
+  border-style: solid;
+}
+.instance-menu .instance-create:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
 .sidebar-label {display: flex; align-items: center; justify-content: space-between; color: #97a4af; font-size: 10px; padding: 0 10px; letter-spacing: 1px; margin-bottom: 12px}
 .sidebar-label button {padding: 0; color: #82929e; display: grid; place-items: center}
 .sidebar-label > span {font: 10px "Segoe UI", sans-serif; letter-spacing: 0; background: var(--surface-muted); padding: 1px 5px; border-radius: 3px}
@@ -56,6 +78,18 @@
 }
 @keyframes submenu-flyout-in {from {opacity: 0; transform: translateX(-6px)} to {opacity: 1; transform: translateX(0)}}
 .task-submenu-list {display: flex; flex-direction: column; gap: 2px}
+/* 树状折叠菜单（用于经典主题及移动端窄屏抽屉手风琴导航） */
+.task-group {display: flex; flex-direction: column}
+.task-group .task-group-button:hover .task-group-arrow {transform: none}
+.task-group .task-group-button.expanded .task-group-arrow {color: var(--accent); transform: rotate(180deg)}
+.task-group .task-group-button.expanded:hover .task-group-arrow {transform: rotate(180deg)}
+.task-group .task-submenu-list {height: 0; overflow: hidden; transition: height .24s cubic-bezier(.22, .61, .36, 1)}
+.task-group .task-submenu-list.expanded {height: auto}
+.task-group .task-submenu-list:not(.expanded) .task-submenu-inner {visibility: hidden}
+.task-group .task-submenu-inner {margin: 2px 0 6px 12px; padding-left: 8px; border-left: 1px solid var(--border); display: flex; flex-direction: column; gap: 2px}
+@media (prefers-reduced-motion: reduce) {
+  .task-group .task-submenu-list {transition: none}
+}
 .task-submenu-item {display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 6px; font-size: 11px; color: #728290; line-height: 1.4; transition: all .12s ease}
 .task-submenu-item:hover {background: var(--surface-muted); color: var(--accent)}
 .task-submenu-item.active {background: var(--accent-soft); color: var(--accent); font-weight: 600}
@@ -67,57 +101,7 @@
 .marquee-track {display: contents}
 [data-marquee='on'] > .marquee-track {display: inline-flex; align-items: center; gap: var(--marquee-gap); animation: marquee-scroll var(--marquee-duration, 8s) linear infinite}
 @keyframes marquee-scroll {from {transform: translateX(0)} to {transform: translateX(calc(-1 * var(--marquee-shift, 0px)))}}
-/* 主题快捷切换：调色盘按钮的悬停判定区就是它本身的大小，悬停时向右展开主题浮窗。 */
-.theme-quick-slot {--theme-quick-size: 24px; position: absolute; top: 100%; left: 0; z-index: 2; width: var(--theme-quick-size); height: var(--theme-quick-size)}
-.theme-quick {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--surface);
-  color: var(--muted);
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity .15s ease;
-}
-.theme-quick-slot:hover .theme-quick, .theme-quick-slot:has(:focus-visible) .theme-quick, .theme-quick:focus-visible {opacity: 1}
-.theme-quick:hover {color: var(--accent); border-color: var(--accent)}
-/* 浮窗挂在 body 上：侧栏是 z-index: 20 的层叠上下文，子元素超不出它。 */
-.theme-quick-menu {
-  position: fixed;
-  z-index: 130;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 132px;
-  padding: 6px;
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  background: var(--surface);
-  box-shadow: 0 10px 30px #132b481f;
-  animation: theme-quick-in .15s ease;
-}
-@keyframes theme-quick-in {from {opacity: 0} to {opacity: 1}}
-.theme-quick-menu button {
-  display: block;
-  width: 100%;
-  padding: 6px 8px;
-  border: 0;
-  border-radius: 6px;
-  background: none;
-  color: var(--muted);
-  font-size: 11px;
-  text-align: left;
-  cursor: pointer;
-}
-.theme-quick-menu button:hover {background: var(--surface-muted); color: var(--accent)}
-.theme-quick-menu button.active {background: var(--accent-soft); color: var(--accent); font-weight: 600}
-/* 触屏没有悬停，按钮常显，点一下开合。 */
-@media (hover: none) {.theme-quick {opacity: 1}}
+
 .sidebar-footer {margin-top: auto; border-top: 1px solid var(--border); padding: 19px 9px; display: flex; align-items: center; gap: 10px; font-size: 10px}
 .connection-dot {background: #d2ab67; width: 6px; height: 6px; border-radius: 50%}
 .connection-dot.online {background: #40b594; box-shadow: 0 0 0 3px #40b59412}
@@ -149,7 +133,7 @@
 .instance-tab.error {color: var(--theme-danger)}
 .instance-tab-name {max-width: 9rem; overflow: hidden; text-overflow: ellipsis}
 .instance-tab-icon {flex-shrink: 0}
-.instance-tab.running .instance-tab-icon {animation: instance-tab-pulse 1.6s ease-in-out infinite}
+.instance-tab.running .instance-tab-icon {animation: instance-tab-spin 1.1s linear infinite}
 .instance-tab.updating .instance-tab-icon {animation: instance-tab-spin 1.1s linear infinite}
 .instance-tab-create {display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 22px; height: 22px; border-radius: 5px; background: transparent; color: var(--theme-muted); cursor: pointer}
 .instance-tab-create:hover {background: var(--theme-surface-muted); color: var(--theme-accent)}

@@ -19,7 +19,7 @@ export function isDesktopDevice(): boolean {
   return isWide && hasFinePointer
 }
 
-export function TaskNavFlyout({ defaultOpenKey }: { defaultOpenKey?: string } = {}) {
+export function TaskNavFlyout({ defaultOpenKey, onNavigate }: { defaultOpenKey?: string; onNavigate?: () => void } = {}) {
   const { schema, t, ui } = useApp()
   const { instance } = useParams()
   const location = useLocation()
@@ -272,6 +272,7 @@ export function TaskNavFlyout({ defaultOpenKey }: { defaultOpenKey?: string } = 
                 onClick={() => {
                   clearCloseTimer()
                   setOpenMenuKey(null)
+                  onNavigate?.()
                 }}
                 role="menuitem"
               >

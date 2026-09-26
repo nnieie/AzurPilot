@@ -1,4 +1,6 @@
 """全局更新接口：只读 Git 快照、分页历史与后台更新操作。"""
+import json
+import os
 import subprocess
 import threading
 from threading import Thread
@@ -22,6 +24,16 @@ class UpdateService:
             self._updater = updater
         return self._updater
 
+    @property
+    def android(self):
+        return os.environ.get('AZURPILOT_ANDROID') == '1'
+
+    def android_manifest(self):
+        try:
+            return json.loads((self.root / 'BUILD_MANIFEST').read_text(encoding='utf-8'))
+        except (OSError, ValueError):
+            return {}
+
     def git(self, *args, optional=False):
         """参数数组避免 shell 解释；错误只返回固定文案。"""
         try:
@@ -39,6 +51,13 @@ class UpdateService:
         return local, upstream
 
     def status(self):
+        if self.android:
+            manifest = self.android_manifest()
+            commit = manifest.get('azurpilot_commit')
+            return {'state': 'android', 'localHead': commit, 'upstreamHead': commit,
+                    'branch': 'dev', 'ahead': 0, 'behind': 0, 'available': False,
+                    'busy': False, 'error': '', 'canApply': False, 'canCancel': False,
+                    'managedByAndroid': True}
         local, upstream = self.heads()
         ahead = behind = 0
         if local and upstream:
@@ -55,10 +74,14 @@ class UpdateService:
                 'available': behind > 0 or state == 1, 'busy': busy, 'error': self.error,
                 'canApply': bool(local and upstream and behind and not ahead and not busy
                                  and State.restart_event is not None and State.dependency_sync_event is not None),
-                'canCancel': state in ('start', 'wait')}
+                'canCancel': state in ('start', 'wait'), 'managedByAndroid': False}
 
     def commits(self, offset=0, limit=50):
         """合并本地和上游可达历史，不截断总记录数，保留完整提交正文。"""
+        if self.android:
+            local = self.android_manifest().get('azurpilot_commit')
+            return {'entries': [], 'total': 0, 'hasMore': False,
+                    'localHead': local, 'upstreamHead': local}
         local, upstream = self.heads()
         refs = list(dict.fromkeys(ref for ref in (local, upstream) if ref))
         entries = []
@@ -75,6 +98,8 @@ class UpdateService:
 
     def start(self, operation):
         """先保留操作槽，再启动线程，避免重复点击与跨连接重复更新。"""
+        if self.android:
+            raise ApiError('UPDATE_MANAGED_BY_ANDROID', 'Android 版由宿主在启动时执行整包更新')
         with self.lock:
             status = self.status()
             if status['busy']:
@@ -117,6 +142,8 @@ class UpdateService:
                 self.operation = None
 
     def cancel(self):
+        if self.android:
+            raise ApiError('UPDATE_MANAGED_BY_ANDROID', 'Android 版由宿主在启动时执行整包更新')
         if self.updater.state not in ('start', 'wait'):
             raise ApiError('UPDATE_UNAVAILABLE', '当前更新阶段无法取消')
         self.updater.cancel()

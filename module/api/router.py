@@ -49,7 +49,13 @@ class Router:
             'updater.fetch': Method(p.Params, lambda _: self.updates.start('fetch'), True),
             'updater.apply': Method(p.Params, lambda _: self.updates.start('apply'), True),
             'updater.cancel': Method(p.Params, lambda _: self.updates.cancel(), True),
+            'announcement.get': Method(p.AnnouncementParams, lambda x: self.announcements.get(force=x.force)),
         }
+
+    @property
+    def announcements(self):
+        from module.api.announcement_service import announcement_service
+        return announcement_service
 
     @property
     def updates(self):
@@ -73,7 +79,8 @@ class Router:
     def statistics_report(self, params):
         from module.api.statistics_service import report
         return report(self.configs, params.instance, params.category, params.month,
-                      params.days, params.period, research_series=params.series)
+                      params.days, params.period, research_series=params.series,
+                      research_scope=params.scope, loot_task=params.task)
 
     def meowfficer_score_report(self, params):
         from module.api.meowfficer_service import report

@@ -23,14 +23,22 @@ const iconImages: Record<string, string> = {
   Chip: `${iconBase}core_data.webp`,
 }
 
-export function isActionPointDog(resource?: Resource): boolean {
-  if (!resource || resource.name !== 'ActionPoint') return false
-  if (resource.record?.startsWith('2020-01-01')) return false
+/* 行动力越高换越大的狗图，四档从高到低取第一张命中的；未达第一档不换图。 */
+const dogIconTiers = [
+  {threshold: 12000, icon: `${iconBase}dog_king.webp`},
+  {threshold: 10000, icon: `${iconBase}dog_large.webp`},
+  {threshold: 8000, icon: `${iconBase}dog_medium.webp`},
+  {threshold: 6000, icon: `${iconBase}dog_small.webp`},
+]
+
+export function actionPointDogIcon(resource?: Resource): string | undefined {
+  if (!resource || resource.name !== 'ActionPoint') return undefined
+  if (resource.record?.startsWith('2020-01-01')) return undefined
   const value = typeof resource.value === 'number' && Number.isFinite(resource.value) ? resource.value : 0
   const total = typeof resource.total === 'number' && Number.isFinite(resource.total) && resource.total >= value
     ? resource.total
     : value
-  return total > 5000
+  return dogIconTiers.find(tier => total > tier.threshold)?.icon
 }
 
 function ResourceIcon({resourceKey, size = 32, src}: {resourceKey: string; size?: number; src?: string}) {
@@ -144,7 +152,7 @@ export function ResourceCards({resources, selected}: {resources: Resource[]; sel
     const suffix = prefs.totalFirst && totalText ? currentText : recorded && showLimit ? limit.toLocaleString() : totalText
     const record = recordText(resource?.record)
     const foot = recorded ? (record.stale ? ui('resource.recordedTooOld') : record.text) : ui('resource.waitingSync')
-    const iconSrc = isActionPointDog(resource) ? `${iconBase}dog.webp` : undefined
+    const iconSrc = prefs.dogIcon ? actionPointDogIcon(resource) : undefined
     return {key, index, label, displayValue, suffix, foot, iconSrc}
   })
 
@@ -166,6 +174,11 @@ export function ResourceCards({resources, selected}: {resources: Resource[]; sel
 }
 export function ResourceSettings({resources, selected, onChange}: {resources: Resource[]; selected: string[]; onChange: (keys: string[]) => void}) {
   const {ui} = useApp()
+  const prefs = useSyncExternalStore(subscribeDashboardPrefs, readDashboardPrefs, readDashboardPrefs)
+  const ap = resources.find(item => item.name === 'ActionPoint')
+  const dogIcon = (name: string, item?: Resource) => name === 'ActionPoint' && prefs.dogIcon
+    ? actionPointDogIcon(item ?? ap)
+    : undefined
   const [pickerOpen, setPickerOpen] = useState(false)
   const [draggingKey, setDraggingKey] = useState<string | null>(null)
   const [dragOrder, setDragOrder] = useState<string[] | null>(null)
@@ -497,7 +510,7 @@ export function ResourceSettings({resources, selected, onChange}: {resources: Re
           }}
           onPointerCancel={event => finishDrag(event.pointerId, false)}>
           <span className="resource-editor-grip" aria-hidden="true"><GripVertical size={16}/></span>
-          <span className="resource-editor-icon resource-editor-icon-image"><ResourceIcon resourceKey={key} size={30} src={isActionPointDog(resources.find(item => item.name === key)) ? `${iconBase}dog.webp` : undefined}/></span>
+          <span className="resource-editor-icon resource-editor-icon-image"><ResourceIcon resourceKey={key} size={30} src={dogIcon(key, resources.find(item => item.name === key))}/></span>
           <span className="resource-editor-label">{label}</span>
           <button type="button" className="resource-editor-remove" aria-label={ui('resource.remove', {label})} title={ui('resource.remove', {label})} onClick={() => remove(key)}><X size={15}/></button>
         </div>
@@ -552,7 +565,7 @@ export function ResourceSettings({resources, selected, onChange}: {resources: Re
             pickerEditorRef.current = null
             markDropFrame(pickerFrameRef.current)
             setEditorDropIndex(null) }}
-          onClick={() => add(resource.name)}><span className="resource-editor-icon resource-editor-icon-image"><ResourceIcon resourceKey={resource.name} size={28} src={isActionPointDog(resource) ? `${iconBase}dog.webp` : undefined}/></span><span>{label}</span><Plus size={15}/></button></Fragment>
+          onClick={() => add(resource.name)}><span className="resource-editor-icon resource-editor-icon-image"><ResourceIcon resourceKey={resource.name} size={28} src={dogIcon(resource.name, resource)}/></span><span>{label}</span><Plus size={15}/></button></Fragment>
     })}<div className="resource-editor-card resource-drop-slot resource-drop-frame" ref={pickerFrameRef} aria-hidden="true"/>{pickerDropIndex !== null && pickerDropIndex >= pickerShown.length && <div className="resource-editor-card resource-drop-slot" aria-hidden="true"/>}</div> : <div className="resource-picker-empty">{ui('resource.allAdded')}</div>}</div>}
   </div>
 }

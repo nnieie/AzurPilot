@@ -17,6 +17,8 @@ test('总览、配置实时更新与刷新持久化', async ({page}) => {
   await expect(page.getByRole('button', {name: '撤销修改'})).toHaveCount(0)
   await expect(page.locator('.save-bar')).toHaveCount(0)
   await serial.fill('127.0.0.1:5557')
+  // 输入框失焦才提交：键入期间不写配置。
+  await serial.blur()
   await page.waitForTimeout(500)
   await page.reload()
   await expect(serial).toHaveValue('127.0.0.1:5557')

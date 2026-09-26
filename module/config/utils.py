@@ -45,6 +45,10 @@ SERVER_TO_TIMEZONE = {
 }
 DEFAULT_TIME = datetime(2023, 1, 1, 0, 0)
 DEFAULT_CONFIG_NAME = 'ap'
+# 实例名会拼进 ./config/<name>.json，含这些字符会越出配置目录或触发 Windows 保留名。
+# 与 module/runtime/deploy_settings.py 的 INVALID_INSTANCE_CHARS 同源，但不拦 `.`：
+# `ap.fpy` 这类模块实例本身就带点，见 filepath_config 的 mod_name。
+INVALID_CONFIG_NAME_CHARS = set('\\/:*?"\'<>|')
 
 
 # https://stackoverflow.com/questions/8640959/how-can-i-control-what-scalar-form-pyyaml-uses-for-my-data/15423007
@@ -223,6 +227,46 @@ def alas_instance():
         out = [DEFAULT_CONFIG_NAME]
 
     return out
+
+
+def parse_config_name(argv):
+    """
+    解析入口参数中的实例名。
+
+    不传参数时回退到 `DEFAULT_CONFIG_NAME`，保持 `python alas.py` 的原有行为；
+    传入实例名时按 `alas_instance()` 校验，使 AUTO-MAS 等外部调度器可以按实例
+    拉起调度器进程，并据 `get_log_file_path()` 定位该实例的运行日志。
+
+    Args:
+        argv (list[str]): 入口脚本参数，不含脚本名本身。
+
+    Returns:
+        str: 实例名。
+
+    Raises:
+        ValueError: 参数多于一个，或实例名非法、不存在。
+    """
+    argv = list(argv)
+
+    if len(argv) > 1:
+        raise ValueError(f'只接受一个实例名，收到 {len(argv)} 个参数：{" ".join(argv)}')
+    if not argv:
+        return DEFAULT_CONFIG_NAME
+
+    name = argv[0].strip()
+    if not name or name in ('.', '..') or set(name) & INVALID_CONFIG_NAME_CHARS:
+        raise ValueError(f'实例名非法：{name!r}')
+
+    try:
+        instances = alas_instance()
+    except OSError:
+        # config 目录尚未创建，交给 OOBE 检查给出首次配置提示
+        return name
+
+    if name not in instances:
+        raise ValueError(f'实例不存在：{name}')
+
+    return name
 
 
 def parse_value(value, data):

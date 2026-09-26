@@ -431,7 +431,7 @@ button:disabled, input:disabled, textarea:disabled, select:disabled, .select-tri
    - 标签栏带浅灰蓝/暗色顶栏槽道底色（--tab-strip-bg）；
    - 激活标签纯白底色，顶部 9px 圆角，底部完全无下横线开口融入下方内容区；
    - 激活标签左右底脚采用经典 radial-gradient 反向倒角，呈现完美的流线型连接；
-   - 激活标签常驻柔和关闭 × 按钮，未激活标签悬停微亮，带精致居中分割线。 */
+   - 关闭 × 按钮默认不绘制，标签悬停微亮、按钮悬停高亮，带精致居中分割线。 */
 :root[data-theme='legacy-light'] {
   --tab-strip-bg: #e6ebf2;
 }
@@ -578,16 +578,26 @@ button:disabled, input:disabled, textarea:disabled, select:disabled, .select-tri
   color: var(--theme-success, #16a34a) !important;
 }
 .app-shell.legacy-shell .instance-tab.current.running .instance-tab-name {
-  color: var(--text) !important;
+  color: var(--theme-success, #16a34a) !important;
 }
 .app-shell.legacy-shell .instance-tab.current.error {
   color: var(--theme-danger, #dc2626) !important;
 }
 .app-shell.legacy-shell .instance-tab.current.error .instance-tab-name {
-  color: var(--text) !important;
+  color: var(--theme-danger, #dc2626) !important;
 }
 
-/* 标签内的关闭 × 按钮（激活标签上始终柔和可见，像 Edge 截图一样） */
+/* 状态色只落在图标与实例名上，标签页底色与外框不跟状态走。 */
+.app-shell.legacy-shell .instance-tab.running .instance-tab-icon,
+.app-shell.legacy-shell .instance-tab.running .instance-tab-name {
+  color: var(--theme-success, #16a34a);
+}
+.app-shell.legacy-shell .instance-tab.error .instance-tab-icon,
+.app-shell.legacy-shell .instance-tab.error .instance-tab-name {
+  color: var(--theme-danger, #dc2626);
+}
+
+/* 标签内的关闭 × 按钮：平时不绘制，鼠标悬浮到标签上才现形；格子定宽，显隐不改变标签宽度。 */
 .app-shell.legacy-shell .instance-tab .instance-tab-remove {
   border-radius: 50%;
   width: 18px;
@@ -601,9 +611,6 @@ button:disabled, input:disabled, textarea:disabled, select:disabled, .select-tri
   opacity: 0;
   display: block;
   transition: opacity .15s ease;
-}
-.app-shell.legacy-shell .instance-tab.current .instance-tab-remove .lucide {
-  opacity: .5;
 }
 .app-shell.legacy-shell .instance-tab:hover .instance-tab-remove .lucide {
   opacity: .7;
@@ -715,8 +722,9 @@ button:disabled, input:disabled, textarea:disabled, select:disabled, .select-tri
     display: flex;
     flex-direction: column;
     gap: 12px;
-    /* flex-basis 取 auto：内容比视口高时停在自己的内容高上，让 main 去滚；
-       取 0 会被压成视口高的一条内滚动带。 */
+    /* flex-basis 取 auto：内容比视口高时停在自己的内容高上，交给外层滚动；
+       本类有两处用法，外层滚动容器不同：独立统计页是 main；
+       总览页的日志/统计面板是 .instance-panel-stats（那边 main 是 overflow:hidden）。 */
     flex: 1 0 auto;
     min-height: 0;
     overflow-y: auto;
@@ -778,7 +786,8 @@ button:disabled, input:disabled, textarea:disabled, select:disabled, .select-tri
 .legacy-stat-title:hover {border-color: var(--accent); background: var(--accent-soft); color: var(--accent)}
 .legacy-stat-title[aria-pressed='true'] {cursor: default}
 .legacy-stat-title:focus-visible {outline: 2px solid var(--accent); outline-offset: 1px}
-.instance-panel-stats {display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; overflow: hidden}
+/* 统计内容的滚动容器：内容层只自然撑高，滚动条在本层出现。 */
+.instance-panel-stats {display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; overflow-y: auto}
 .group-nav {padding: 6px; border-radius: var(--theme-radius-panel)}
 .group-nav a {border-radius: 4px}
 .monitor-tabs {height: auto; min-height: 60px; padding: 10px 16px; flex-wrap: wrap; gap: 8px}
@@ -786,6 +795,7 @@ button:disabled, input:disabled, textarea:disabled, select:disabled, .select-tri
 .monitor-panel .log-panel {border: 0; border-radius: 0}
 .monitor-panel .log-content {font-size: 12px; line-height: 1.8; background: var(--surface)}
 .monitor-segmented {display: inline-flex; align-items: center; gap: 0; padding: 0; border: 1px solid var(--border); border-radius: 20px; background: transparent; max-width: 100%; overflow: hidden}
+.statistics-edit-actions.monitor-segmented {border-radius: 0}
 .monitor-segmented button {display: inline-flex; align-items: center; justify-content: center; gap: 7px; flex-shrink: 0; min-height: 36px; padding: 6px 16px; border: 0; border-right: 1px solid var(--border); border-radius: 0; color: var(--muted); font-size: 13px; font-weight: 500; white-space: nowrap; transition: background-color .15s, color .15s}
 .monitor-segmented button:last-child {border-right: 0}
 .monitor-segmented button[aria-selected='true'] {background: var(--accent-soft); color: var(--accent)}
@@ -869,3 +879,10 @@ button:disabled, input:disabled, textarea:disabled, select:disabled, .select-tri
 .app-shell.legacy-shell .rail-task-list {scrollbar-width: none}
 .app-shell.legacy-shell .task-rail-scheduler::-webkit-scrollbar,
 .app-shell.legacy-shell .rail-task-list::-webkit-scrollbar {width: 0}
+
+/* 总览页的统计面板只留分类切换那一行：紧凑版式的工具栏与周期控件是为独占整页的
+   独立统计页排的三行结构，落在这个窄面板里会换行留白。
+   周期控件在面板下方还有一份，隐藏这里不影响选择时间范围与各类筛选。 */
+.instance-panel-stats .statistics-actions,
+.instance-panel-stats .statistics-toolbar-right,
+.instance-panel-stats .statistics-controls.period-controls {display: none}
