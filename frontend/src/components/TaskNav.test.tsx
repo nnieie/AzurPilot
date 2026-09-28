@@ -51,6 +51,8 @@ function contextWith(theme: Theme): AppContextValue {
     setDevMode: () => {},
     theme,
     setTheme: () => {},
+    material: 'glass',
+    setMaterial: () => {},
     colorMode: 'auto', resolvedMode: 'light', setColorMode: () => {},
     customPalettes: [], saveCustomPalette: () => {}, deleteCustomPalette: () => {},
     compactRailSide: 'right', setCompactRailSide: () => {}, compactRailWidth: 244, setCompactRailWidth: () => {},

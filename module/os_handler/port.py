@@ -55,8 +55,10 @@ class PortHandler(OSShop):
         pass  # 已在 ui_click 中确保
 
     def port_quit(self, skip_first_screenshot=True):
-        """
-        退出港口。
+        """退出港口。
+
+        Args:
+            skip_first_screenshot (bool): 是否跳过首次截图。默认 True。
 
         Pages:
             in: PORT_CHECK
@@ -69,8 +71,7 @@ class PortHandler(OSShop):
         self.wait_os_map_buttons()
 
     def port_mission_accept(self):
-        """
-        接受港口中的所有任务。
+        """接受港口中的所有任务。
 
         自 2022.01.13 起已弃用，任务仅在总览中显示，不再在港口中显示。
 
@@ -109,8 +110,7 @@ class PortHandler(OSShop):
         return success
 
     def port_shop_enter(self):
-        """
-        进入港口商店。
+        """进入港口商店。
 
         Pages:
             in: PORT_CHECK
@@ -123,8 +123,10 @@ class PortHandler(OSShop):
         self.device.screenshot()
 
     def port_shop_quit(self, skip_first_screenshot=True):
-        """
-        退出港口商店。
+        """退出港口商店。
+
+        Args:
+            skip_first_screenshot (bool): 是否跳过首次截图。默认 True。
 
         Pages:
             in: PORT_SUPPLY_CHECK

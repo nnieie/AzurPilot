@@ -1,3 +1,7 @@
+/**
+ * @fileoverview 数据统计与图表分析页面。
+ */
+
 import {NumberDraftInput, Select} from '../components/FormControls'
 import { Fragment, lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { getSelectedKeysForCategory, getStatisticsPrefs, getStatisticsPrefsVersion, subscribeStatisticsPrefs } from '../app/statisticsPrefs'
@@ -37,20 +41,20 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { api } from '../api/client'
-import type { StatisticsReport } from '../api/types'
+import type { StatTable, StatisticsReport } from '../api/types'
 import type { Parameters } from '../api/generated'
 import { useApp, useConnection } from '../app/context'
 import { usesLegacyLayout } from '../app/theme'
 import { ErrorBox, Loading, PageTitle } from '../components/ui'
 import { SegmentedControl } from '../components/SegmentedControl'
-import { resolveIcon, StatisticsTable } from '../components/StatisticsTable'
+import { resolveIcon, resourceIcons, StatisticsTable, TEMPLATE_PREFIXES } from '../components/StatisticsTable'
 import { CategorySection } from '../components/CategorySection'
 import { PageChainSlots } from '../components/PageChainSlots'
 import { StatisticsEditConsole } from '../components/StatisticsEditConsole'
 import { buildSeriesView, downloadCsv } from '../components/statisticsData'
 import type { UiKey } from '../i18n'
 import { readStatisticsPrefs, updateStatisticsPrefs } from '../app/statisticsPrefs'
-import {applySlots, cardKey, cardSpace, defaultStatisticsLayout, foldCard, hasStatisticsLayout, hideCard, isCardFolded, isCardHidden, isChartCompact, isLinked, isMetricsTable, isPageEnabled, isPickerHidden, isStackedRise, linkChains, movePageBeside, orderCards, orderPages, placeCard, readChains, readStatisticsEditMode, readStatisticsLayout, rechain, resetStatisticsLayout, setChartCompact, setMetricsTable, setPageEnabled, setPickerHidden, setStackedRise, setTableDisplay, showCard, splitChains, tableDisplay, toggleSeriesFilter, unfoldCard, writeStatisticsEditMode, writeStatisticsLayout} from '../app/statisticsLayout'
+import {applySlots, cardKey, cardSpace, DEFAULT_TABLE_ROWS, defaultStatisticsLayout, foldCard, hasStatisticsLayout, hideCard, isCardFolded, isCardHidden, isChartCompact, isLinked, isMetricsTable, isPageEnabled, isPickerHidden, isStackedRise, linkChains, movePageBeside, orderCards, orderPages, placeCard, readChains, readStatisticsEditMode, readStatisticsLayout, rechain, resetStatisticsLayout, setChartCompact, setMetricsTable, setPageEnabled, setPickerHidden, setStackedRise, setTableDisplay, showCard, splitChains, tableDisplay, toggleSeriesFilter, unfoldCard, writeStatisticsEditMode, writeStatisticsLayout} from '../app/statisticsLayout'
 import type {StatisticsLayout} from '../app/statisticsLayout'
 
 const metricIcons: Record<string, LucideIcon> = {
@@ -86,7 +90,7 @@ const metricWebpIcons: Record<string, string> = {
   '完成委托': `${iconBase}honor_medal.webp`,
   '钻石': `${iconBase}diamond.webp`,
   '心智魔方': `${iconBase}cube.webp`,
-  '心智单元': `${iconBase}core_data.webp`,
+  '心智单元': `${iconBase}cognitive_chips.webp`,
   '石油': `${iconBase}oil.webp`,
   '物资': `${iconBase}gold.webp`,
 }
@@ -124,14 +128,17 @@ function metricIcon(item: {label: string; icon?: string}) {
   return null
 }
 
-/* 收获的表格式呈现：表头一行放指标名（不重复图标），表体一行放数值。 */
-function MetricsTable({metrics}: {metrics: {label: string; value: number | null; unit: string; icon?: string}[]}) {
-  return <div className="summary-metrics-table-wrap">
-    <table className="summary-metrics-table">
-      <thead><tr>{metrics.map(item => <th key={item.label} scope="col">{item.label}</th>)}</tr></thead>
-      <tbody><tr>{metrics.map(item => <td key={item.label}><strong>{item.value == null ? '—' : item.value.toLocaleString(undefined, {maximumFractionDigits: 2})}<small>{item.unit}</small></strong></td>)}</tr></tbody>
-    </table>
-  </div>
+/* 收获的表格模式：把指标摊成一张单行表，复用明细表那套表格。
+   标题由调用方带前缀传入（如「大世界总结·收获」）；表格模式下容器不画标题行，由这行标题承担。 */
+/* 这张表有没有图标可出：资源名认列名；科研与大世界掉落的图标写在单元格值里（research: / opsi: 前缀），
+   列名看不出来，两者都要查。 */
+function hasTableIcons(table: StatTable): boolean {
+  if (table.columns.some(column => column in resourceIcons || TEMPLATE_PREFIXES.some(prefix => column.startsWith(prefix)))) return true
+  return table.rows.some(row => row.some(value => typeof value === 'string' && TEMPLATE_PREFIXES.some(prefix => value.startsWith(prefix))))
+}
+
+function metricsTableData(title: string, metrics: StatisticsReport['metrics']): StatTable {
+  return {title, columns: metrics.map(item => item.label), rows: [metrics.map(item => item.value)]}
 }
 
 
@@ -149,6 +156,7 @@ export function Statistics() {
   const [researchSeries, setResearchSeriesState] = useState(initialPrefs.researchSelect)
   // 大世界掉落视图：'' = 全部大世界任务，其余是任务标识（选项由后端 taskOptions 给出）
   const [lootTask, setLootTaskState] = useState(initialPrefs.lootTask)
+  const [zeroBase, setZeroBaseState] = useState(initialPrefs.chartZeroBase)
 
   const setCategory = useCallback((next: Category) => {
     setCategoryState(next)
@@ -169,6 +177,10 @@ export function Statistics() {
   const setLootTask = useCallback((next: string) => {
     setLootTaskState(next)
     updateStatisticsPrefs({lootTask: next})
+  }, [])
+  const setZeroBase = useCallback((next: boolean) => {
+    setZeroBaseState(next)
+    updateStatisticsPrefs({chartZeroBase: next})
   }, [])
 
   const [revision, setRevision] = useState(0)
@@ -212,9 +224,10 @@ export function Statistics() {
     setLayout(next)
     setCustomized(true)
   }
-  /* 放大视图由页面工具栏控制：紧凑主题把「放大查看」并进工具栏，面板内不再重复标题行。 */
-  const [expanded, setExpanded] = useState(false)
-  const toggleExpanded = useCallback(() => setExpanded(value => !value), [])
+  /* 展开状态按分区记录：组合页里每个分区各有一张图卡，放大只作用于被点的那张。
+     紧凑主题把「放大查看」并进工具栏，面板内不再重复标题行。 */
+  const [expandedChart, setExpandedChart] = useState<string | null>(null)
+  const toggleExpanded = useCallback((page: string) => setExpandedChart(current => current === page ? null : page), [])
   // 分段控件放不下时会被压缩并横向滚动（.monitor-segmented 带 overflow-x: auto），
   // 这里按可用宽度精确判断、一旦放不下就换成下拉；右侧控件宽度随分类变化，不能用固定断点。
   const [compact, setCompact] = useState(false)
@@ -465,7 +478,10 @@ export function Statistics() {
   }
 
   /* 排序只在编辑模式开放：把手起拖，或用上移 / 下移按钮。 */
+  /* 收获卡片标题带页面前缀，形如「大世界总结·收获」；卡片态与表格态共用同一个标题。 */
   const renderCard = (page: Category, view: PageView, report: StatisticsReport | undefined, key: string, index: number, boundary?: string) => {
+    const metricsTitle = `${ui(categories[page])}·${ui('stats.metricsTitle')}`
+    const metricsTable = report ? metricsTableData(metricsTitle, report.metrics) : undefined
     /* 隐藏卡的占位条由前一张可见卡的接缝层承载，接缝因此只画一个连接符。 */
     if (isCardHidden(layout, key)) {
       /* 前面没有可见卡的隐藏卡由自己渲染占位条。 */
@@ -496,7 +512,7 @@ export function Statistics() {
     const hide = editMode ? <button type="button" className="text-button stat-card-hide" aria-label={ui('stats.hideCard')} title={ui('stats.hideCard')} onClick={() => hideKey(page, view, key)}><EyeOff size={15}/></button> : null
     const className = `${view.cardClass(key)}${key === view.chartKey && isCardFolded(layout, view.plotKey) ? ' is-plot-folded' : ''}${draggingKey === key ? ' is-dragging' : ''}${drop}`
     return <Fragment key={key}><div data-card-key={key} className={className}>{bar}{key === view.metricsKey
-      ? <><section className="panel summary-metrics-panel"><div className="panel-heading"><div><h3>{ui('stats.metricsTitle')}</h3>{editMode ? <button type="button" className="text-button statistics-metrics-table" aria-pressed={isMetricsTable(layout, page)} aria-label={isMetricsTable(layout, page) ? ui('stats.cardMode') : ui('stats.metricsTable')} title={isMetricsTable(layout, page) ? ui('stats.cardMode') : ui('stats.metricsTable')} onClick={() => applyLayout(setMetricsTable(layout, page, !isMetricsTable(layout, page)))}>{isMetricsTable(layout, page) ? ui('stats.cardMode') : ui('stats.metricsTable')}</button> : undefined}</div><div className="stat-card-actions">{view.foldControl(view.metricsKey)}</div></div>{isMetricsTable(layout, page) ? <MetricsTable metrics={report!.metrics}/> : <div className="stat-metrics summary-metrics">{report!.metrics.map(item => {
+      ? <><section className="panel summary-metrics-panel">{isMetricsTable(layout, page) ? <StatisticsTable data={metricsTable!} foldControl={view.foldControl(view.metricsKey)} editControls={editMode ? <><button type="button" className="text-button statistics-metrics-table" aria-pressed={isMetricsTable(layout, page)} aria-label={ui('stats.cardMode')} title={ui('stats.cardMode')} onClick={() => applyLayout(setMetricsTable(layout, page, false))}>{ui('stats.cardMode')}</button>{tableSettings(view.metricsKey, metricsTable!)}</> : undefined}/> : <><div className="panel-heading"><div><h3>{metricsTitle}</h3>{editMode ? <button type="button" className="text-button statistics-metrics-table" aria-pressed={isMetricsTable(layout, page)} aria-label={isMetricsTable(layout, page) ? ui('stats.cardMode') : ui('stats.metricsTable')} title={isMetricsTable(layout, page) ? ui('stats.cardMode') : ui('stats.metricsTable')} onClick={() => applyLayout(setMetricsTable(layout, page, !isMetricsTable(layout, page)))}>{isMetricsTable(layout, page) ? ui('stats.cardMode') : ui('stats.metricsTable')}</button> : undefined}</div><div className="stat-card-actions">{view.foldControl(view.metricsKey)}</div></div><div className="stat-metrics summary-metrics">{report!.metrics.map(item => {
     return <div key={item.label} className="summary-metric-card">
       <div className="summary-metric-head">
         <span className="summary-metric-label">{item.label}</span>
@@ -504,29 +520,34 @@ export function Statistics() {
       </div>
       <strong>{item.value == null ? '—' : item.value.toLocaleString(undefined, {maximumFractionDigits: 2})}<small>{item.unit}</small></strong>
     </div>
-  })}</div>}</section></>
+  })}</div></>}</section></>
       : key === view.chartKey
-        ? <Suspense fallback={<Loading/>}><StatisticsChart key={page} category={page} compact={isChartCompact(layout, page)} compactControl={editMode ? <button type="button" className="text-button statistics-compact-toggle" aria-pressed={isChartCompact(layout, page)} aria-label={isChartCompact(layout, page) ? ui('stats.cardMode') : ui('stats.compactHeader')} title={isChartCompact(layout, page) ? ui('stats.cardMode') : ui('stats.compactHeader')} onClick={() => applyLayout(setChartCompact(layout, page, !isChartCompact(layout, page)))}>{isChartCompact(layout, page) ? ui('stats.cardMode') : ui('stats.compactHeader')}</button> : undefined} showPicker={Boolean(editMode) || !isPickerHidden(layout, page)} pickerMuted={isPickerHidden(layout, page)} stackedRise={isStackedRise(layout, page)} stackedControl={editMode ? <button type="button" className="text-button statistics-stacked-rise" aria-pressed={isStackedRise(layout, page)} aria-label={isStackedRise(layout, page) ? ui('stats.plainColor') : ui('stats.stackedRise')} title={isStackedRise(layout, page) ? ui('stats.plainColor') : ui('stats.stackedRise')} onClick={() => applyLayout(setStackedRise(layout, page, !isStackedRise(layout, page)))}>{isStackedRise(layout, page) ? ui('stats.plainColor') : ui('stats.stackedRise')}</button> : undefined} pickerControl={editMode ? <button type="button" className="text-button statistics-picker-toggle" aria-pressed={isPickerHidden(layout, page)} aria-label={isPickerHidden(layout, page) ? ui('stats.showPicker') : ui('stats.hidePicker')} title={isPickerHidden(layout, page) ? ui('stats.showPicker') : ui('stats.hidePicker')} onClick={() => applyLayout(setPickerHidden(layout, page, !isPickerHidden(layout, page)))}>{isPickerHidden(layout, page) ? ui('stats.showPicker') : ui('stats.hidePicker')}</button> : undefined} filtered={layout.filteredSeries[page] ?? []} onToggleFilter={key => applyLayout(toggleSeriesFilter(layout, page, key))} series={report!.series} heading={!condensed} expanded={expanded} onToggleExpanded={toggleExpanded} title={ui(categories[category])} foldControl={condensed ? undefined : view.foldControl(view.chartKey)} plotFoldControl={view.foldControl(view.plotKey, 'corner', 'stats.foldChart', 'stats.unfoldChart')}/></Suspense>
+        ? <Suspense fallback={<Loading/>}><StatisticsChart key={page} category={page} compact={isChartCompact(layout, page)} compactControl={editMode ? <button type="button" className="text-button statistics-compact-toggle" aria-pressed={isChartCompact(layout, page)} aria-label={isChartCompact(layout, page) ? ui('stats.cardMode') : ui('stats.compactHeader')} title={isChartCompact(layout, page) ? ui('stats.cardMode') : ui('stats.compactHeader')} onClick={() => applyLayout(setChartCompact(layout, page, !isChartCompact(layout, page)))}>{isChartCompact(layout, page) ? ui('stats.cardMode') : ui('stats.compactHeader')}</button> : undefined} showPicker={Boolean(editMode) || !isPickerHidden(layout, page)} pickerMuted={isPickerHidden(layout, page)} stackedRise={isStackedRise(layout, page)} stackedControl={editMode ? <button type="button" className="text-button statistics-stacked-rise" aria-pressed={isStackedRise(layout, page)} aria-label={isStackedRise(layout, page) ? ui('stats.plainColor') : ui('stats.stackedRise')} title={isStackedRise(layout, page) ? ui('stats.plainColor') : ui('stats.stackedRise')} onClick={() => applyLayout(setStackedRise(layout, page, !isStackedRise(layout, page)))}>{isStackedRise(layout, page) ? ui('stats.plainColor') : ui('stats.stackedRise')}</button> : undefined} pickerControl={editMode ? <button type="button" className="text-button statistics-picker-toggle" aria-pressed={isPickerHidden(layout, page)} aria-label={isPickerHidden(layout, page) ? ui('stats.showPicker') : ui('stats.hidePicker')} title={isPickerHidden(layout, page) ? ui('stats.showPicker') : ui('stats.hidePicker')} onClick={() => applyLayout(setPickerHidden(layout, page, !isPickerHidden(layout, page)))}>{isPickerHidden(layout, page) ? ui('stats.showPicker') : ui('stats.hidePicker')}</button> : undefined} zeroBase={zeroBase} zeroBaseControl={editMode ? <button type="button" className="text-button statistics-zero-base" aria-pressed={zeroBase} aria-label={zeroBase ? ui('stats.zeroBase') : ui('stats.axisAuto')} title={zeroBase ? ui('stats.zeroBase') : ui('stats.axisAuto')} onClick={() => setZeroBase(!zeroBase)}>{zeroBase ? ui('stats.zeroBase') : ui('stats.axisAuto')}</button> : undefined} filtered={layout.filteredSeries[page] ?? []} onToggleFilter={key => applyLayout(toggleSeriesFilter(layout, page, key))} series={report!.series} heading={!condensed} expanded={expandedChart === page} onToggleExpanded={() => toggleExpanded(page)} title={ui(categories[page])} foldControl={condensed ? undefined : view.foldControl(view.chartKey)} plotFoldControl={view.foldControl(view.plotKey, 'corner', 'stats.foldChart', 'stats.unfoldChart')}/></Suspense>
         : key === view.rawKey
-                ? <section className="panel"><StatisticsTable data={rawTableOf(page, report)!} foldControl={view.foldControl(view.rawKey)} {...tableDisplay(layout, view.rawKey)} editControls={editMode ? tableSettings(view.rawKey) : undefined}/></section>
-          : <section className="panel"><StatisticsTable data={table!} foldControl={view.foldControl(key)} {...tableDisplay(layout, key)} editControls={editMode ? tableSettings(key) : undefined}/></section>}{hide}</div>{seam}</Fragment>
+                ? <section className="panel"><StatisticsTable data={rawTableOf(page, report)!} foldControl={view.foldControl(view.rawKey)} {...tableDisplay(layout, view.rawKey)} editControls={editMode ? tableSettings(view.rawKey, rawTableOf(page, report)!) : undefined}/></section>
+          : <section className="panel"><StatisticsTable data={table!} foldControl={view.foldControl(key)} {...tableDisplay(layout, key)} editControls={editMode ? tableSettings(key, table!) : undefined}/></section>}{hide}</div>{seam}</Fragment>
   }
 
-  /* 单张表格的设置：每页行数输入框，加上补图标、简洁显示两个开关；一表一份，互不影响。 */
-  const tableSettings = (cardKey: string) => {
+  /* 单张表格的设置：每页行数、补图标、简洁显示；一表一份，互不影响。 */
+  const tableSettings = (cardKey: string, table: StatTable) => {
     const display = tableDisplay(layout, cardKey)
+    const showRows = table.rows.length > DEFAULT_TABLE_ROWS
+    /* 简洁模式把每个数据行压成一行文字，靠图标代替列名。 */
+    const showIcons = hasTableIcons(table)
+    const showPlain = showIcons
+    if (!showRows && !showIcons) return undefined
     return (
       <div className="statistics-table-settings">
-        <label className="statistics-table-rows">
+        {showRows && <label className="statistics-table-rows">
           <NumberDraftInput value={display.rows} label={ui('stats.tableRows')} onCommit={rows => applyLayout(setTableDisplay(layout, cardKey, {rows}))}/>
           {ui('stats.tableRows')}
-        </label>
-        <button type="button" className="text-button statistics-table-icons" aria-pressed={display.icons} disabled={display.plain}
+        </label>}
+        {showIcons && <button type="button" className="text-button statistics-table-icons" aria-pressed={display.icons} disabled={display.plain}
           aria-label={display.icons ? ui('stats.tableNoIcons') : ui('stats.tableIcons')} title={display.icons ? ui('stats.tableNoIcons') : ui('stats.tableIcons')}
-          onClick={() => applyLayout(setTableDisplay(layout, cardKey, {icons: !display.icons}))}>{display.icons ? ui('stats.tableNoIcons') : ui('stats.tableIcons')}</button>
-        <button type="button" className="text-button statistics-table-plain" aria-pressed={display.plain}
+          onClick={() => applyLayout(setTableDisplay(layout, cardKey, {icons: !display.icons}))}>{display.icons ? ui('stats.tableNoIcons') : ui('stats.tableIcons')}</button>}
+        {showPlain && <button type="button" className="text-button statistics-table-plain" aria-pressed={display.plain}
           aria-label={display.plain ? ui('stats.tableNormal') : ui('stats.tablePlain')} title={display.plain ? ui('stats.tableNormal') : ui('stats.tablePlain')}
-          onClick={() => applyLayout(setTableDisplay(layout, cardKey, {plain: !display.plain}))}>{display.plain ? ui('stats.tableNormal') : ui('stats.tablePlain')}</button>
+          onClick={() => applyLayout(setTableDisplay(layout, cardKey, {plain: !display.plain}))}>{display.plain ? ui('stats.tableNormal') : ui('stats.tablePlain')}</button>}
       </div>
     )
   }
@@ -539,7 +560,7 @@ export function Statistics() {
           <Select openOnFocus className="statistics-category-select" aria-label={ui('stats.categoryLabel')} value={category} onChange={event => setCategory(event.target.value as Category)}>
             {visiblePageEntries.map(([value, label]) => <option value={value} key={value}>{ui(label)}</option>)}
           </Select>
-          <div className="statistics-toolbar-right" ref={toolbarRight}>{hasChart && activeView.foldControl(activeView.chartKey)}{hasChart && <button className="text-button" onClick={toggleExpanded}>{expanded ? ui('stats.collapseChart') : ui('stats.expandChart')}</button>}{rangeControls}<div className="statistics-actions">{actions}</div></div>
+          <div className="statistics-toolbar-right" ref={toolbarRight}>{hasChart && activeView.foldControl(activeView.chartKey)}{hasChart && <button className="text-button" onClick={() => category && toggleExpanded(category)}>{expandedChart === category ? ui('stats.collapseChart') : ui('stats.expandChart')}</button>}{rangeControls}<div className="statistics-actions">{actions}</div></div>
         </div>
       : <>
           <div className="statistics-toolbar-row">

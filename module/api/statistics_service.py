@@ -1,11 +1,10 @@
 """复用既有统计源，为分类页面提供指标、时间线和可导出的明细。"""
 import math
+import os
 import threading
 from datetime import datetime, timedelta
 
-import os
 from module.api.protocol import ApiError
-
 
 _loot_lock = threading.Lock()
 
@@ -15,6 +14,12 @@ def get_statistics_fingerprint(instance: str) -> str:
 
     检测 SQLite 本地快照库、CL1 记录库、舰船统计文件以及配置文件修改时间，
     用于 WebSocket 会话高效判断后端统计数据是否有更新。
+
+    Args:
+        instance: 实例名称。
+
+    Returns:
+        str: 由各文件修改时间及文件大小拼接而成的指纹字符串。
     """
     parts = []
     # 1. 资源快照数据库 (azurstats_local.db)
@@ -52,9 +57,16 @@ def get_statistics_fingerprint(instance: str) -> str:
     return ';'.join(parts)
 
 
+def refresh_loot(configs, instance: str) -> dict:
+    """重新计算已有本地掉落记录，复用旧界面刷新操作。
 
-def refresh_loot(configs, instance):
-    """只重算已有本地掉落记录，复用旧界面刷新操作。"""
+    Args:
+        configs: 配置管理服务实例。
+        instance: 实例名称。
+
+    Returns:
+        dict: 包含刷新成功标识的字典。
+    """
     configs.path(instance)
     from module.statistics.azurstats import AzurStats
     with _loot_lock:
@@ -69,15 +81,38 @@ RESOURCE_LABELS = {
 }
 
 
-def table(title, columns, rows, note='', default_sort=None):
+def table(title: str, columns: list[str], rows: list[list], note: str = '', default_sort: dict = None) -> dict:
+    """构造前端通用的数据表格结构字典。
+
+    Args:
+        title: 表格标题。
+        columns: 列名称列表。
+        rows: 数据行列表。
+        note: 表格备注或提示说明。
+        default_sort: 默认排序规则字典，如 ``{'index': 0, 'descending': True}``。
+
+    Returns:
+        dict: 格式化后的表格结构字典。
+    """
     result = {'title': title, 'columns': columns, 'rows': rows, 'note': note}
     if default_sort is not None:
         result['defaultSort'] = default_sort
     return result
 
 
-def series(rows, key, label):
-    """保留真实采集时间与来源，跳过无效值，绝不把缺失值补成零。"""
+def series(rows: list[dict], key: str, label: str) -> dict:
+    """提取时间线序列数据，保留真实采集时间与来源，跳过无效值。
+
+    绝不把缺失值补充为零。
+
+    Args:
+        rows: 包含时间戳与属性值的数据字典列表。
+        key: 数据字段键名。
+        label: 展现标签名称。
+
+    Returns:
+        dict: 包含字段键、标签及按时间排序的数据点列表字典。
+    """
     points = []
     for row in rows:
         value = row.get(key)
@@ -93,20 +128,19 @@ def series(rows, key, label):
     return {'key': key, 'label': label, 'points': points}
 
 
-def _research_record_rows(instance, start, end, scope):
-    """区间内的科研掉落记录，供「掉落记录」表使用。
+def _research_record_rows(instance: str, start: datetime, end: datetime, scope: str) -> list[list]:
+    """获取指定区间内的科研掉落记录，供「掉落记录」表使用。
 
-    只列本视图认的物品：那一次只掉了本视图不看的物品时，不算它的一次掉落
-    （期数视图与心智/物资视图各认各的）。
+    只列当前视图认定的物品：那一次只掉了本视图不看的物品时，不算作一次有效掉落。
 
     Args:
-        instance (str): ALAS 实例名。
-        start (datetime): 区间起点（含）。
-        end (datetime): 区间终点（不含）。
-        scope (str): 视图口径。
+        instance: 实例名称。
+        start: 区间起点（含）。
+        end: 区间终点（不含）。
+        scope: 视图口径。
 
     Returns:
-        list: 表格行 [时间, 项目, 期数, 掉落物]。
+        list[list]: 表格数据行列表，每行为 [时间, 项目, 期数, 掉落物]。
     """
     from module.statistics.cl1_database import db as cl1_db
     from module.statistics.research_stats import item_info, should_show
@@ -132,13 +166,41 @@ def _research_record_rows(instance, start, end, scope):
     return rows
 
 
-def _month_end(moment):
-    """该时刻所在月份的下月 1 号（0 点）。"""
+def _month_end(moment: datetime) -> datetime:
+    """计算指定时刻所在月份的下月 1 号（0 点）。
+
+    Args:
+        moment: 基准时间对象。
+
+    Returns:
+        datetime: 下月首日零点的时间对象。
+    """
     return (moment.replace(day=28) + timedelta(days=4)).replace(day=1)
 
 
-def report(configs, instance, category, month, days, period, research_series=0, research_scope='series',
-           loot_task=None):
+def report(configs, instance: str, category: str, month: str, days: int, period: str,
+           research_series: int = 0, research_scope: str = 'series', loot_task: str = None) -> dict:
+    """生成并获取指定维度的统计报表。
+
+    支持资源变动趋势、大世界运营、委托收益、舰船经验以及科研和大世界掉落明细。
+
+    Args:
+        configs: 配置管理服务实例。
+        instance: 实例名称。
+        category: 统计分类（resources, opsi, action, commission, ships, research, loot）。
+        month: 目标月份，格式为 ``YYYY-MM``。
+        days: 趋势查询天数。
+        period: 汇总周期（day, week, month）。
+        research_series: 科研期数过滤编号。
+        research_scope: 科研口径范围（series, consumable 等）。
+        loot_task: 掉落所属任务过滤名称。
+
+    Returns:
+        dict: 统计报表数据字典，包含 metrics 指标、series 时间序列、tables 表格及 notes 备注。
+
+    Raises:
+        ApiError: 月份格式错误或超出有效年份范围 (INVALID_PARAMS)。
+    """
     configs.path(instance)
     now = datetime.now()
     try:
@@ -192,6 +254,15 @@ def report(configs, instance, category, month, days, period, research_series=0, 
             ('净行动力', purchased - cost, ''), ('循环效率', round((purchased - cost) / cost * 100, 2) if cost else None, '%'),
         ]:
             metric(label, value, unit)
+        # 收获卡片同时给出舰船经验侧的效率与今日进度，与「舰船经验」页同一批数据。
+        from module.statistics.ship_exp_stats import ShipExpStats
+        exp_stats = ShipExpStats(instance_name=instance)
+        today_exp = exp_stats.get_today_stats() or {}
+        metric('平均战斗时长', exp_stats.get_average_battle_time(), '秒')
+        metric('预估经验效率', exp_stats.get_exp_per_hour(), '/小时')
+        metric('今日战斗', today_exp.get('battle_count'), '场')
+        metric('今日经验', today_exp.get('total_exp_gained'))
+        metric('今日运行', round(today_exp['total_run_time'] / 60, 1) if 'total_run_time' in today_exp else None, '分钟')
         rows = []
         for hazard in (3, 5):
             data = db.get_meow_stats(instance, year, month_number, hazard_level=hazard)
@@ -200,6 +271,7 @@ def report(configs, instance, category, month, days, period, research_series=0, 
                          data.get('siren_research_devices'), round(data.get('siren_research_rate', 0) * 100, 2),
                          {'exact': '实测', 'estimated': '估算', 'none': '暂无记录'}.get(data.get('by_hazard', {}).get(str(hazard), {}).get('source', 'none'))])
         result['tables'].append(table('短猫运行统计', ['侵蚀等级', '战斗次数', '有效轮数', '平均战斗秒数', '平均每轮秒数', '研究装置', '获取率（%）', '统计来源'], rows))
+        # 收获只作卡片渲染：卡片 / 表格两种呈现由前端布局按页切换，后端不另出表。
     elif category == 'action':
         from module.statistics.opsi_month import get_ap_timeline, get_coins_timeline
         ap = get_ap_timeline(year, month_number, instance)

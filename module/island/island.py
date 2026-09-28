@@ -199,7 +199,12 @@ class Island(SelectCharacter):
         return [(self._item_cn(name), number) for name, number in products]
 
     def post_add_one(self, count, interval=0):
-        """按 A/B/C 轮转点击生产数量 +1 按钮。"""
+        """按 A/B/C 轮转点击生产数量 +1 按钮。
+
+        Args:
+            count (int): 点击次数。
+            interval (float): 点击间隔时间（秒）。
+        """
         buttons = (POST_ADD_ONE_A, POST_ADD_ONE_B, POST_ADD_ONE_C)
         for index in range(max(0, count)):
             self.device.click(buttons[index % len(buttons)])
@@ -207,7 +212,15 @@ class Island(SelectCharacter):
                 self.device.sleep(interval)
 
     def warehouse_absolute_area(self, button, relative_area):
-        """将相对坐标转换为绝对坐标"""
+        """将相对坐标转换为绝对坐标。
+
+        Args:
+            button (Button): 基准按钮。
+            relative_area (tuple): 相对区域坐标 (x1, y1, x2, y2)。
+
+        Returns:
+            tuple: 绝对区域坐标 (x1, y1, x2, y2)。
+        """
         x1 = button.area[0] + relative_area[0]
         y1 = button.area[1] + relative_area[1]
         x2 = button.area[0] + relative_area[2]
@@ -215,11 +228,29 @@ class Island(SelectCharacter):
         return (x1, y1, x2, y2)
 
     def warehouse_filter_button_selected(self, button):
+        """检查仓库筛选按钮是否处于选中状态。
+
+        Args:
+            button (Button): 待检测的筛选按钮。
+
+        Returns:
+            bool: 按钮是否已被选中。
+        """
         warehouse_area = self.warehouse_absolute_area(button, self.warehouse_area_relative)
         warehouse_color = get_color(self.device.image, warehouse_area)
         return color_similar(warehouse_color, (60, 61, 63), 80)
 
     def warehouse_filter(self, button1, button2=None):
+        """设置仓库的分类和来源筛选器。
+
+        Args:
+            button1 (str): 第一个筛选分类名称（如 'basic', 'product' 等）。
+            button2 (str, optional): 第二个筛选来源名称（如 'farm', 'ranch' 等）。
+
+        Raises:
+            ValueError: 传入未知的筛选按钮名称。
+            GameStuckError: 筛选器重置或按钮选择超时。
+        """
         self.ui_goto(page_island_warehouse_filter, get_ship=False)
         # 定义按钮名称到网格坐标的映射
         kind_map = {
@@ -308,21 +339,28 @@ class Island(SelectCharacter):
         self.device.sleep(1)
 
     def goto_postmanage(self):
+        """导航进入岗位管理页面。"""
         page = self.ui_get_current_page()
         valid_pages = ['page_island_management', 'page_island_postmanage', 'page_island', 'page_island_warehouse', 'page_island_visit', 'page_island_season']
         if page.name in valid_pages:
-            self.ui_goto(page_island_postmanage,get_ship=False)
+            self.ui_goto(page_island_postmanage, get_ship=False)
         else:
             self.goto_management()
-            self.ui_goto(page_island_postmanage,get_ship=False)
+            self.ui_goto(page_island_postmanage, get_ship=False)
+
     def goto_management(self):
+        """导航进入岛屿管理页面。
+
+        Raises:
+            GameStuckError: 进入岛屿管理页面超时。
+        """
         page = self.ui_get_current_page()
         valid_pages = ['page_island_management', 'page_island_postmanage', 'page_island', 'page_island_warehouse',
                        'page_island_visit', 'page_island_season']
         if page.name in valid_pages:
             self.ui_goto(page_island_management, get_ship=False)
         else:
-            self.ui_goto(page_island,get_ship=False)
+            self.ui_goto(page_island, get_ship=False)
             # 入口按钮点击后岛屿场景需要转场，这里限制两次点击的间隔，
             # 避免云机上因为画面还没切走而反复点击同一个入口按钮
             entry_timer = Timer(ISLAND_ENTRY_RETRY_WAIT).clear()
@@ -345,6 +383,11 @@ class Island(SelectCharacter):
                 self.ui_goto(page_island_management, get_ship=False)
 
     def is_in_friend_island(self):
+        """检测当前是否处于好友岛屿场景中。
+
+        Returns:
+            bool: 是否在好友岛屿。
+        """
         leave = self.appear(AIR_DROP_RUN_AWAY, offset=(20, 20))
         access_map = self.appear(ISLAND_ACCESS_MAP, offset=(20, 20))
         return leave and access_map
@@ -353,9 +396,15 @@ class Island(SelectCharacter):
         """点击好友拜访按钮并等待进入好友岛屿。
 
         检测逻辑分为两个阶段：
-        1. 等待 ISLAND_ACCESS_MAP（右上角地图入口）出现，表示已开始加载好友岛
-        2. 等待 AIR_DROP_RUN_AWAY（顶部"离开"按钮）也出现，确认场景完全加载完毕
+        1. 等待 ISLAND_ACCESS_MAP（右上角地图入口）出现，表示已开始加载好友岛。
+        2. 等待 AIR_DROP_RUN_AWAY（顶部"离开"按钮）也出现，确认场景完全加载完毕。
         只有两者同时出现（is_in_friend_island() 为 True），才视为成功进入好友岛屿。
+
+        Args:
+            visit_button (Button): 好友拜访按钮。
+
+        Returns:
+            bool: 是否成功进入好友岛屿。
         """
         click_timer = Timer(3).start()
         self.device.click(visit_button)
@@ -364,7 +413,7 @@ class Island(SelectCharacter):
             if self.is_in_friend_island():
                 logger.info("[岛屿] 二次检测拜访状态......")
                 # 在等待的过程中, 先后会出现黑底黄鸡loading、UI(一闪而过)、白底沙漏loading
-				# 因此等待1s后进行二次确认, 避免中间UI一闪而过时出现误判
+                # 因此等待1s后进行二次确认, 避免中间UI一闪而过时出现误判
                 self.device.sleep(1)
                 self.device.screenshot()
                 if self.is_in_friend_island():
@@ -383,7 +432,11 @@ class Island(SelectCharacter):
         return False
 
     def exit_friend_island(self):
-        """退出好友岛屿。"""
+        """退出好友岛屿。
+
+        Returns:
+            bool: 退出成功返回 True，超时返回 False。
+        """
         logger.info("[岛屿] 退出好友岛屿")
         self._island_expect_friend = False
         for _ in self.loop(timeout=30):
@@ -398,6 +451,14 @@ class Island(SelectCharacter):
         return False
 
     def _wait_island_map_entry(self, timeout=3):
+        """等待并检测岛屿地图入口相关按钮的状态。
+
+        Args:
+            timeout (int): 等待超时时间（秒）。
+
+        Returns:
+            dict: 包含各入口按钮出现状态的字典。
+        """
         last_status = None
         for _ in self.loop(timeout=timeout, skip_first=False):
             in_map = self.appear(ISLAND_MAP_CHECK)
@@ -425,6 +486,11 @@ class Island(SelectCharacter):
         }
 
     def goto_island_map(self):
+        """导航进入岛屿地图页面。
+
+        Returns:
+            bool: 进入成功返回 True，超时返回 False。
+        """
         logger.hr("岛屿-前往地图", level=2)
         expect_friend = bool(getattr(self, "_island_expect_friend", False))
         status = self._wait_island_map_entry(timeout=10 if expect_friend else 3)
@@ -437,7 +503,7 @@ class Island(SelectCharacter):
                 logger.warning("[岛屿] 预期已进入好友岛，但暂未识别到地图入口，继续等待好友岛入口")
             else:
                 logger.info("[岛屿] 当前不在岛屿地图或好友岛，先导航到本岛")
-                self.ui_goto(page_island,get_ship=False)
+                self.ui_goto(page_island, get_ship=False)
 
         for _ in self.loop(timeout=30 if expect_friend else 20, skip_first=False):
             if self.appear(ISLAND_MAP_CHECK):
@@ -453,7 +519,18 @@ class Island(SelectCharacter):
             logger.warning("[岛屿] 进入岛屿地图超时")
             return False
 
-    def island_map_goto(self,destination):
+    def island_map_goto(self, destination):
+        """在岛屿地图中点击目的地并确认前往。
+
+        Args:
+            destination (str): 目的地名称（如 'farm', 'port', 'mine_forest' 等）。
+
+        Returns:
+            bool: 是否成功到达目的地。
+
+        Raises:
+            ValueError: 传入未知的目的地名称。
+        """
         def get_destination_buttons(name):
             if name == 'mine_forest':
                 return ISLAND_MAP_MINE_FOREST, ISLAND_MAP_MINE_FOREST_CHECK
@@ -533,6 +610,17 @@ class Island(SelectCharacter):
         logger.warning(f"[岛屿] 岛屿地图进入目的地超时: {destination}")
         return False
     def post_manage_mode(self, post_manage_mode):
+        """切换岗位管理的模式页签（生产/经营）。
+
+        Args:
+            post_manage_mode (Button): 目标模式的标识按钮（如 POST_MANAGE_PRODUCTION 或 POST_MANAGE_BUSINESS）。
+
+        Returns:
+            bool: 切换成功返回 True。
+
+        Raises:
+            GameStuckError: 切换岗位管理页签超时。
+        """
         post_manage_button = POST_MANAGE_BUSINESS if post_manage_mode == POST_MANAGE_PRODUCTION else POST_MANAGE_PRODUCTION
         direct_click_timer = Timer(1)
         for _ in self.loop(timeout=15, skip_first=False):
@@ -550,9 +638,15 @@ class Island(SelectCharacter):
         raise GameStuckError(f"切换岗位管理页签超时: {post_manage_mode}")
 
     def post_manage_mode_collection(self):
-        """
-        切换到采集页签（管理页面左侧第三个页签）
-        如果已经在采集页签则跳过，否则从当前页签切换过去
+        """切换到采集页签（管理页面左侧第三个页签）。
+
+        如果已经在采集页签则跳过，否则从当前页签切换过去。
+
+        Returns:
+            bool: 切换成功返回 True。
+
+        Raises:
+            GameStuckError: 切换采集页签超时。
         """
         for _ in self.loop(timeout=15, skip_first=False):
             if self.appear(ISLAND_GATHER_COLLECT_CHECK):
@@ -562,6 +656,15 @@ class Island(SelectCharacter):
         raise GameStuckError("切换采集页签超时")
 
     def select_product(self, product_selection, product_selection_check):
+        """在产品选择列表中寻找并选择指定产品。
+
+        Args:
+            product_selection (Button): 待点击的产品选择按钮模板。
+            product_selection_check (Button): 选中状态确认按钮模板。
+
+        Returns:
+            bool: 是否成功选中目标产品。
+        """
         # 清理之前可能残留的滑动记录，避免多次调用累积触发单按钮死循环检测
         # （click_record maxlen=15，两次调用各 _SELECT_PRODUCT_MAX_SWIPES 条 >12 阈值）
         self.device.click_record_remove(SELECTION_UP_SWIPE_NAME)
@@ -590,12 +693,24 @@ class Island(SelectCharacter):
         return False
 
     def _handle_select_product_failure(self, product):
-        """select_product 失败时的统一处理：记录警告、关闭岗位面板、返回 False"""
+        """处理选择产品失败的后续操作：记录警告、关闭岗位面板、返回 False。
+
+        Args:
+            product (str): 产品标识。
+
+        Returns:
+            bool: 始终返回 False。
+        """
         logger.warning(f"[岛屿] select_product 失败：未能找到产品 {self._item_cn(product)} 的选择项")
         self.device.click(POST_CLOSE)
         return False
 
     def post_close(self):
+        """关闭岗位详情弹窗，回到岗位管理主界面。
+
+        Returns:
+            bool: 关闭成功返回 True，超时返回 False。
+        """
         for _ in self.loop(timeout=15, skip_first=False):
             if self.ui_page_appear(page_island_postmanage) and not self.is_post_detail_visible():
                 return True
@@ -609,7 +724,11 @@ class Island(SelectCharacter):
         return False
 
     def is_post_detail_visible(self):
-        """判断岗位详情弹窗是否仍覆盖在岗位管理页上。"""
+        """判断岗位详情弹窗是否仍覆盖在岗位管理页上。
+
+        Returns:
+            bool: 岗位详情相关按钮是否可见。
+        """
         return (
                 self.appear(ISLAND_POST_CHECK, offset=1)
                 or self.appear(ISLAND_POST_VACANT_CHECK, offset=1)
@@ -620,6 +739,11 @@ class Island(SelectCharacter):
         )
 
     def post_get_and_close(self):
+        """收取当前岗位产物并关闭岗位详情弹窗。
+
+        Returns:
+            bool: 收取并关闭成功返回 True，超时返回 False。
+        """
         for _ in self.loop(timeout=20, skip_first=False):
             if self.ui_page_appear(page_island_postmanage) and not self.is_post_detail_visible():
                 return True
@@ -645,7 +769,11 @@ class Island(SelectCharacter):
         return False
 
     def post_get_stay(self):
-        """收取当前岗位产物并停留在岗位详情界面，供后续直接复检状态。"""
+        """收取当前岗位产物并停留在岗位详情界面，供后续直接复检状态。
+
+        Returns:
+            bool: 收取成功返回 True，超时返回 False。
+        """
         for _ in self.loop(timeout=20, skip_first=False):
             if self.appear(ERROR1, offset=30):
                 self.device.click(POST_CLOSE)
@@ -667,7 +795,16 @@ class Island(SelectCharacter):
         logger.warning("[岛屿] 收取当前岗位产物超时")
         return False
 
-    def post_get_and_add(self,product_selection,product_selection_check):
+    def post_get_and_add(self, product_selection, product_selection_check):
+        """收取产物并追加派遣生产。
+
+        Args:
+            product_selection (Button): 目标产品的选择按钮。
+            product_selection_check (Button): 目标产品的选中确认标识。
+
+        Returns:
+            bool: 成功追加派遣返回 True，失败或超时返回 False。
+        """
         for _ in self.loop(timeout=30, skip_first=False):
             if self.appear(ERROR1,offset=30):
                 self.device.click(POST_CLOSE)
@@ -725,7 +862,11 @@ class Island(SelectCharacter):
         return False
 
     def back_to_postmanage_from_dispatch(self):
-        """从角色选择或产品选择流程退回岗位管理页。"""
+        """从角色选择或产品选择流程退回岗位管理页。
+
+        Returns:
+            bool: 是否成功退回岗位管理页。
+        """
         self.interval_clear([SELECT_UI_BACK, POST_CLOSE])
         for _ in self.loop(timeout=15, skip_first=False):
             if (
@@ -752,7 +893,14 @@ class Island(SelectCharacter):
         return False
 
     def confirm_post_add_order(self, context="岗位派遣"):
-        """材料确认足够后，点击最大数量并确认派遣。"""
+        """材料确认足够后，点击最大数量并确认派遣。
+
+        Args:
+            context (str): 操作上下文描述（用于日志记录）。
+
+        Returns:
+            bool: 确认派遣是否成功。
+        """
         clicked = False
         max_clicked = False
         button_seen = False
@@ -836,6 +984,12 @@ class Island(SelectCharacter):
         ISLAND_CHARACTER_CONFIRM_RETRY_WAIT 秒间隔重试，最多点击
         ISLAND_CHARACTER_CONFIRM_MAX_CLICKS 次；次数用尽后只观察页面是否切换，
         仍无进展则记录次数并返回 False，交由调用方回退岗位管理页，避免卡死。
+
+        Args:
+            context (str): 操作上下文描述（用于日志记录）。
+
+        Returns:
+            bool: 是否成功进入下一步。
         """
         self.interval_clear([SELECT_UI_CONFIRM])
         # 首次确认立即点击，之后每次补点至少间隔 ISLAND_CHARACTER_CONFIRM_RETRY_WAIT 秒
@@ -898,6 +1052,13 @@ class Island(SelectCharacter):
         才补点，点击前重新截图复核，且两次点击间隔不小于
         ISLAND_CHARACTER_CONFIRM_RETRY_WAIT（需大于云手机的页面转场时间），
         避免上一次点击已经生效、页面正在切换时把确认按钮点到下一页同位置的按钮上。
+
+        Args:
+            context (str): 操作上下文描述。
+            timeout (int): 等待超时时间（秒）。
+
+        Returns:
+            bool: 角色选择页是否成功关闭。
         """
         if not self.click_selected_character_confirm(context=context):
             return False
@@ -920,10 +1081,17 @@ class Island(SelectCharacter):
         return False
 
     def click_selected_character_confirm(self, context="角色选择", timeout=5):
-        """等待角色确认按钮出现并点击。
+        """等待角色确认按钮出现并点击安全段。
 
         点击前重新截取一帧复核，并只点击确认按钮右侧安全段（与选餐页确认按钮等
         其它页面按钮不重叠），避免云手机转场较慢时误点到下一页同位置的按钮。
+
+        Args:
+            context (str): 操作上下文描述。
+            timeout (int): 等待超时时间（秒）。
+
+        Returns:
+            bool: 是否成功点击确认。
         """
         self.interval_clear([SELECT_UI_CONFIRM])
         for _ in self.loop(timeout=timeout, skip_first=False):
@@ -945,13 +1113,24 @@ class Island(SelectCharacter):
             return False
         return True
 
-    def post_open(self,post):
+    def post_open(self, post):
+        """点击并打开指定岗位，支持重试滑动定位。
+
+        Args:
+            post (Button): 目标岗位按钮。
+
+        Returns:
+            bool: 岗位是否成功打开（未解锁返回 False）。
+
+        Raises:
+            GameStuckError: 岗位按钮未识别或打开超时。
+        """
         template = TEMPLATE_POST_LOCK
         retry_swipe_timer = Timer(3, count=3).start()
         retry_swipe_used = 0
         full_retry_used = 0
         for image in self.loop(timeout=45, skip_first=False):
-            post_appear = self.appear(post,offset=300)
+            post_appear = self.appear(post, offset=300)
             if post_appear:
                 retry_swipe_timer.reset()
                 cell_image = crop(image, post.button)
@@ -1002,10 +1181,22 @@ class Island(SelectCharacter):
                     continue
                 raise GameStuckError(f"岗位按钮 {post} 完整重试后仍未识别")
         raise GameStuckError(f"打开岗位详情超时: {post}")
-    def post_manage_up_swipe(self,distance):
+
+    def post_manage_up_swipe(self, distance):
+        """在岗位列表中向上滑动指定距离。
+
+        Args:
+            distance (int): 滑动距离像素。
+        """
         self.device.swipe_vector(vector=(0, -distance), box=(688, 69, 725, 656), name="PostUpSwipe")
         self.device.click(POST_MANAGE_SWIPE_STOP, control_check=False)
-    def post_manage_down_swipe(self,distance):
+
+    def post_manage_down_swipe(self, distance):
+        """在岗位列表中向下滑动指定距离。
+
+        Args:
+            distance (int): 滑动距离像素。
+        """
         self.device.swipe_vector(vector=(0, distance), box=(688, 69, 725, 656), name="PostDownSwipe")
         self.device.click(POST_MANAGE_SWIPE_STOP, control_check=False)
 
@@ -1018,7 +1209,7 @@ class Island(SelectCharacter):
         闭环，向下滑动会被列表顶部截断，因此不会滑过头。
 
         Args:
-            max_swipes (int): 最大补滑次数，默认 ISLAND_POST_SWIPE_TO_TOP_MAX。
+            max_swipes (int, optional): 最大补滑次数，默认 ISLAND_POST_SWIPE_TO_TOP_MAX。
 
         Returns:
             bool: 列表是否已回到顶部。
@@ -1037,7 +1228,12 @@ class Island(SelectCharacter):
         logger.warning(f"[岛屿] 岗位列表回顶部失败（已补滑 {max_swipes} 次），岗位定位可能不准")
         return False
 
-    def post_manage_swipe(self,count):
+    def post_manage_swipe(self, count):
+        """按指定步数在岗位列表中执行定位滑动。
+
+        Args:
+            count (int): 滑动步数。
+        """
         if count >= 2:
             # 先回到列表顶部再按固定步数下滑，避免从上一次遗留的滚动位置出发
             # 导致滑动距离不够或过头
@@ -1082,23 +1278,52 @@ class Island(SelectCharacter):
             self.device.sleep(0.3)
         return False
 
-    def island_up(self,hold_time):
+    def island_up(self, hold_time):
+        """在岛屿场景中按住向上移动摇杆。
+
+        Args:
+            hold_time (int): 按住移动的时间（毫秒）。
+        """
         p1 = (218, 507)
         p2 = (218, 441)
-        self.device.island_swipe_hold(p1, p2,hold_time)
-    def island_down(self,hold_time):
+        self.device.island_swipe_hold(p1, p2, hold_time)
+
+    def island_down(self, hold_time):
+        """在岛屿场景中按住向下移动摇杆。
+
+        Args:
+            hold_time (int): 按住移动的时间（毫秒）。
+        """
         p1 = (218, 507)
         p2 = (218, 572)
-        self.device.island_swipe_hold(p1, p2,hold_time)
-    def island_right(self,hold_time):
+        self.device.island_swipe_hold(p1, p2, hold_time)
+
+    def island_right(self, hold_time):
+        """在岛屿场景中按住向右移动摇杆。
+
+        Args:
+            hold_time (int): 按住移动的时间（毫秒）。
+        """
         p1 = (218, 507)
         p2 = (282, 507)
-        self.device.island_swipe_hold(p1, p2,hold_time)
-    def island_left(self,hold_time):
+        self.device.island_swipe_hold(p1, p2, hold_time)
+
+    def island_left(self, hold_time):
+        """在岛屿场景中按住向左移动摇杆。
+
+        Args:
+            hold_time (int): 按住移动的时间（毫秒）。
+        """
         p1 = (218, 507)
         p2 = (152, 507)
-        self.device.island_swipe_hold(p1, p2,hold_time)
+        self.device.island_swipe_hold(p1, p2, hold_time)
+
     def set_buy_number(self, target):
+        """设置购买弹窗中的目标购买数量。
+
+        Args:
+            target (int): 目标购买数量。
+        """
         increment = target - 1
         add_ten_clicks = increment // 10
         add_one_clicks = increment % 10
@@ -1111,7 +1336,15 @@ class Island(SelectCharacter):
             self.device.click(add_one_buttons[index % len(add_one_buttons)])
 
     def switch_shop_tab(self, tab_check, tab_button):
-        """切换岛屿商店内的页签。"""
+        """切换岛屿商店内的页签。
+
+        Args:
+            tab_check (Button): 目标页签激活状态的判定按钮。
+            tab_button (Button): 目标页签的点击按钮。
+
+        Returns:
+            bool: 切换成功返回 True，超时返回 False。
+        """
         click_count = 0
         self.interval_clear([tab_button])
         for _ in self.loop(timeout=8, skip_first=False):
@@ -1131,7 +1364,19 @@ class Island(SelectCharacter):
 
     def buy_shop_item(self, item_button, quantity, shop_check, item_name=None,
                       tab_check=None, tab_button=None):
-        """购买岛屿商店商品，适用于种子、鱼苗等同构购买弹窗。"""
+        """购买岛屿商店商品，适用于种子、鱼苗等同构购买弹窗。
+
+        Args:
+            item_button (Button): 商品图标按钮。
+            quantity (int): 购买数量。
+            shop_check (Button): 商店界面判定按钮。
+            item_name (str, optional): 商品名称。默认为 None。
+            tab_check (Button, optional): 所属页签激活判定按钮。默认为 None。
+            tab_button (Button, optional): 所属页签点击按钮。默认为 None。
+
+        Returns:
+            bool: 购买成功返回 True，失败或超时返回 False。
+        """
         quantity = max(1, int(quantity))
         if tab_check is not None and tab_button is not None:
             if not self.switch_shop_tab(tab_check, tab_button):
@@ -1180,7 +1425,16 @@ class Island(SelectCharacter):
         return True
 
     def goto_shop_from_select_product(self, shop_check, tab_check=None, tab_button=None):
-        """从岗位产品选择页跳转到补充材料的商店页签。"""
+        """从岗位产品选择页跳转到补充材料的商店页签。
+
+        Args:
+            shop_check (Button): 商店界面判定按钮。
+            tab_check (Button, optional): 目标页签激活判定按钮。默认为 None。
+            tab_button (Button, optional): 目标页签点击按钮。默认为 None。
+
+        Returns:
+            bool: 跳转成功返回 True，超时返回 False。
+        """
         self.interval_clear([ISLAND_SELECT_GOTO_BUY_SEED, ISLAND_SELECT_SEED])
         tab_click_count = 0
         for _ in self.loop(timeout=20, skip_first=False):
@@ -1224,10 +1478,27 @@ class Island(SelectCharacter):
 
     @staticmethod
     def normalize_select_product_material_text(result):
+        """规范化岗位产品选择页材料 OCR 文本，修复易混淆字符。
+
+        Args:
+            result (str | list): OCR 识别结果文本。
+
+        Returns:
+            str: 规范化后的字符串。
+        """
         return str(result).replace('I', '1').replace('D', '0').replace('S', '5').replace('B', '8')
 
     @staticmethod
     def parse_select_product_material_current(result, require_separator=False):
+        """解析岗位材料文本中的当前库存数值。
+
+        Args:
+            result (str): 材料数量文本（如 "12/20" 或 "12"）。
+            require_separator (bool): 是否强制要求包含分隔符 '/'。默认为 False。
+
+        Returns:
+            int | None: 解析出的库存数量；未找到或不符合要求返回 None。
+        """
         result = Island.normalize_select_product_material_text(result)
         if '/' in result:
             current_text = result.split('/', 1)[0]
@@ -1244,6 +1515,17 @@ class Island(SelectCharacter):
 
     @staticmethod
     def build_select_product_material_counter_text(current, result, prefix_text=None, allow_suffix_rebuild=True):
+        """构建规范化的岗位材料需求计数文本。
+
+        Args:
+            current (int): 当前材料库存数量。
+            result (str): 识别到的原始材料文本。
+            prefix_text (str, optional): 前缀候选文本。默认为 None。
+            allow_suffix_rebuild (bool): 是否允许通过后缀重建需求数。默认为 True。
+
+        Returns:
+            str: 格式化后的材料文本（如 "current/required" 或 "current"）。
+        """
         result = Island.normalize_select_product_material_text(result)
         prefix_text = Island.normalize_select_product_material_text(prefix_text or '')
 
@@ -1270,7 +1552,15 @@ class Island(SelectCharacter):
         return str(current)
 
     def ocr_select_product_material_text(self, button=None, show_log=True):
-        """读取岗位产品选择页底部材料数量文本。"""
+        """读取岗位产品选择页底部材料数量文本。
+
+        Args:
+            button (Button, optional): OCR 识别区域按钮。默认为 OCR_SELECT_PRODUCT_MATERIAL_AMOUNT。
+            show_log (bool): 是否打印 OCR 日志。默认为 True。
+
+        Returns:
+            str: 规范化后的材料数量文本。
+        """
         button = button or OCR_SELECT_PRODUCT_MATERIAL_AMOUNT
         ocr = Ocr(
             button,
@@ -1286,7 +1576,14 @@ class Island(SelectCharacter):
         return self.normalize_select_product_material_text(result)
 
     def ocr_select_product_material_detail(self, expected_quantity=None):
-        """读取岗位产品选择页材料数量，返回当前库存和页面材料文本。"""
+        """读取岗位产品选择页材料数量，返回当前库存和页面材料文本。
+
+        Args:
+            expected_quantity (int, optional): 期望或最大需要的数量，用于辅助校验 OCR 候选值。默认为 None。
+
+        Returns:
+            tuple[int, str]: (当前库存数量, 格式化后的材料文本)。
+        """
         result = self.ocr_select_product_material_text()
         current = self.parse_select_product_material_current(result, require_separator=True)
         if current is not None:
@@ -1368,12 +1665,23 @@ class Island(SelectCharacter):
         return 0, '0'
 
     def ocr_select_product_material(self, expected_quantity=None):
-        """读取岗位产品选择页中当前种子、鱼苗或饲料数量。"""
+        """读取岗位产品选择页中当前种子、鱼苗或饲料数量。
+
+        Args:
+            expected_quantity (int, optional): 期望数量，用于辅助校验。默认为 None。
+
+        Returns:
+            int: 当前材料库存数量。
+        """
         current, _ = self.ocr_select_product_material_detail(expected_quantity=expected_quantity)
         return current
 
     def ocr_select_product_material_counter(self):
-        """读取岗位产品选择页材料数量，返回当前库存和页面显示需求。"""
+        """读取岗位产品选择页材料数量，返回当前库存和页面显示需求。
+
+        Returns:
+            tuple[int | None, int]: (当前库存数量, 总需求数量)。
+        """
         current, result = self.ocr_select_product_material_detail()
 
         required = 0
@@ -1387,7 +1695,14 @@ class Island(SelectCharacter):
         return current, required
 
     def back_to_select_product_after_shop(self, back_button=ISLAND_BACK):
-        """从补货商店返回岗位产品选择页。"""
+        """从补货商店返回岗位产品选择页。
+
+        Args:
+            back_button (Button, optional): 返回按钮。默认为 ISLAND_BACK。
+
+        Returns:
+            bool: 返回成功为 True，超时为 False。
+        """
         self.interval_clear([back_button])
         for _ in self.loop(timeout=15, skip_first=False):
             if self.appear(ISLAND_SELECT_PRODUCT_CHECK, offset=1):
@@ -1405,8 +1720,15 @@ class Island(SelectCharacter):
 
     def ensure_select_product_material(self, item_button, required_quantity, shop_check,
                                        item_name=None, tab_check=None, tab_button=None):
-        """
-        在岗位产品选择页读取当前材料数量，不足时进入对应商店补买。
+        """在岗位产品选择页读取当前材料数量，不足时进入对应商店补买。
+
+        Args:
+            item_button (Button): 商店中商品图标按钮。
+            required_quantity (int): 所需材料数量。
+            shop_check (Button): 商店界面判定按钮。
+            item_name (str, optional): 商品名称。默认为 None。
+            tab_check (Button, optional): 商店页签判定按钮。默认为 None。
+            tab_button (Button, optional): 商店页签点击按钮。默认为 None。
 
         Returns:
             bool: True 表示发生过补货，调用方需要重新选择产品；False 表示库存已足够。
@@ -1440,6 +1762,14 @@ class Island(SelectCharacter):
         return True
 
     def goto_mill(self, max_attempts=3):
+        """前往磨坊并打开磨坊界面。
+
+        Args:
+            max_attempts (int): 最大尝试次数。默认为 3。
+
+        Returns:
+            bool: 成功到达并打开磨坊界面返回 True，失败返回 False。
+        """
         for attempt in range(max_attempts):
             logger.info(f"[岛屿] 尝试前往磨坊，第{attempt + 1}次尝试")
             if not self.island_map_goto('farm'):

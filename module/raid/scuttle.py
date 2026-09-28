@@ -12,12 +12,13 @@ from module.raid.run import RaidRun
 
 
 class RaidScuttleCombat(RaidCombat):
+    """弃船突袭战斗结算处理器。"""
+
     def handle_battle_status(self, drop=None):
-        """
-        处理弃船突袭的战斗结算画面，优先识别弃船专用结算按钮。
+        """处理弃船突袭的战斗结算画面，优先识别弃船专用结算按钮。
 
         Args:
-            drop (DropImage): 掉落物图像处理器。
+            drop (DropImage, optional): 掉落物图像处理器。
 
         Returns:
             bool: 是否成功识别并处理了战斗结算。
@@ -45,8 +46,7 @@ class RaidScuttleCombat(RaidCombat):
         return False
 
     def handle_exp_info(self):
-        """
-        处理弃船突袭的经验结算画面。
+        """处理弃船突袭的经验结算画面。
 
         Returns:
             bool: 是否成功识别并处理了经验结算。
@@ -71,10 +71,12 @@ class RaidScuttleRun(RaidRun, RaidScuttleCombat):
     """
 
     def handle_combat_low_emotion(self):
-        """
-        重写红脸出击警告弹窗处理。
+        """重写红脸出击警告弹窗处理。
 
         沉船任务中牺牲舰必然低心情，红脸弹窗出现时点击确认继续出击，
         不触发计算模式下的心情清零保底。
+
+        Returns:
+            bool: 是否处理了弹窗确认。
         """
         return self.handle_popup_confirm('IGNORE_LOW_EMOTION')

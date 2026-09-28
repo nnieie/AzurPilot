@@ -15,7 +15,19 @@ def _cmd(*args):
 
 
 class GitConfigParser(configparser.ConfigParser):
+    """Git 配置文件解析器，提供配置值检查功能。"""
+
     def check(self, section, option, value):
+        """检查指定配置小节下的配置项是否与期望值一致。
+
+        Args:
+            section (str): 配置小节名称。
+            option (str): 配置选项名称。
+            value (str | None): 期望的配置值。
+
+        Returns:
+            bool: 配置项是否存在且与期望值相等。
+        """
         result = self.get(section, option, fallback=None)
         if result == value:
             logger.info(f'Git config {section}.{option} = {value}')
@@ -25,7 +37,10 @@ class GitConfigParser(configparser.ConfigParser):
 
 
 class GitOverCdnClientWindows(GitOverCdnClient):
+    """带安装器进度上报的 Windows 版 GitOverCDN 客户端。"""
+
     def update(self, *args, **kwargs):
+        """执行更新并通知安装器进度。"""
         Progress.GitInit()
         _ = super().update(*args, **kwargs)
         Progress.GitShowVersion()
@@ -33,19 +48,28 @@ class GitOverCdnClientWindows(GitOverCdnClient):
 
     @cached_property
     def latest_commit(self) -> str:
+        """获取最新 commit 并通知安装器进度。"""
         _ = super().latest_commit
         Progress.GitLatestCommit()
         return _
 
     def download_pack(self):
+        """下载 pack 包并通知安装器进度。"""
         _ = super().download_pack()
         Progress.GitDownloadPack()
         return _
 
 
 class GitManager(DeployConfig):
+    """Windows 下 Git 仓库初始化与分支同步管理类。"""
+
     @staticmethod
     def remove(file):
+        """安全删除指定文件。
+
+        Args:
+            file (str): 待删除的文件路径。
+        """
         try:
             os.remove(file)
             logger.info(f'Removed file: {file}')
@@ -54,6 +78,11 @@ class GitManager(DeployConfig):
 
     @cached_property
     def git_config(self):
+        """获取当前仓库的 .git/config 解析器对象。
+
+        Returns:
+            GitConfigParser: 配置文件解析实例。
+        """
         conf = GitConfigParser()
         conf.read('./.git/config')
         return conf
@@ -235,6 +264,7 @@ class GitManager(DeployConfig):
         return url
 
     def git_install(self):
+        """执行 Git 仓库的更新或完整初始化流程。"""
         logger.hr('Update AzurPilot', 0)
 
         if not self.AutoUpdate:

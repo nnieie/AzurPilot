@@ -1,3 +1,7 @@
+/**
+ * @fileoverview 通用配置参数项输入控件（支持文本、数值、选择与开关）。
+ */
+
 import { Checkbox, PasswordInput, Select, useDraftInput } from './FormControls'
 import type { Value } from '../api/types'
 import { lazy, Suspense } from 'react'

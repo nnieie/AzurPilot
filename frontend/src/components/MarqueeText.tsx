@@ -1,3 +1,7 @@
+/**
+ * @fileoverview 溢出文本横向跑马灯动画组件。
+ */
+
 import { useEffect, useRef, useState } from 'react'
 import { syncMarquee } from '../app/marquee'
 

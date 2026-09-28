@@ -4,7 +4,7 @@
 
 ## 1. 模块概述
 
-gui.py 是用户进入系统的第一个进程。用户执行 `python gui.py`（Windows 启动器 `deploy/launcher/Alas.bat` 会以 `--electron` 调用它，Docker 镜像的 `CMD` 也是它）之后，由它完成前端构建检查、依赖同步、端口监听，直到浏览器可以打开 `http://{host}:{port}`。
+gui.py 是用户进入系统的第一个进程。用户执行 `uv run python gui.py`（Windows 启动器 `deploy/launcher/Alas.bat` 会以 `--electron` 调用它，Docker 镜像的 `CMD` 也是它）之后，由它完成前端构建检查、依赖同步、端口监听，直到浏览器可以打开 `http://{host}:{port}`。
 
 它解决的核心问题是：一个按 7×24 小时运行设计的自动化框架，其控制台自身也要能**安全地自我更新**。更新会改写源码和 `.venv`，而一个正在运行的进程无法给自己换环境，也不可靠地重启自己。因此 gui.py 把职责拆成两层：真正提供 HTTP/WS 服务的代码运行在一个可以随时终止重建的**子进程**里；父进程（`run_webui_supervisor`）只持有子进程句柄、跨进程事件和一个独立的依赖同步服务，负责在「更新完成」「子进程崩溃」「上次异常退出留下残留」这几种情况下把环境收拾干净，再拉起新的服务子进程。
 
@@ -75,7 +75,7 @@ AzurPilot/
 
 | 入口 | 用途 |
 | --- | --- |
-| `python gui.py`（`__main__`） | 主入口：强制 `spawn` 启动方式后按 `EnableReload` 分流 |
+| `uv run python gui.py`（`__main__`） | 主入口：强制 `spawn` 启动方式后按 `EnableReload` 分流 |
 | `run_webui_supervisor()` | 热重载模式的父进程监督循环，`EnableReload=true` 时由主入口调用 |
 | `func(ev, dependency_sync_event, ready_event)` | 服务子进程入口，由监督器 `spawn`（进程名 `gui`）；非重载模式直接调用 `func(None, None)` |
 | `func` 内的 uvicorn 工厂字符串 `"module.api.app:create_app"` | ASGI 应用实际创建点，服务重启后以新代码重新 import |

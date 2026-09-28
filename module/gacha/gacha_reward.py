@@ -34,6 +34,13 @@ OCR_BUILD_SUBMIT_WW_COUNT = Digit(BUILD_SUBMIT_WW_COUNT, letter=(255, 247, 247),
 
 
 class RewardGacha(GachaUI, Retirement, CampaignStatus):
+    """建造处理器，负责执行舰船建造全流程。
+
+    Attributes:
+        build_coin_count (int): 当前识别到的金币存量。
+        build_cube_count (int): 当前识别到的心智魔方存量。
+        build_ticket_count (int): 当前识别到的建造券存量。
+    """
     build_coin_count = 0
     build_cube_count = 0
     build_ticket_count = 0

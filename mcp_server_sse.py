@@ -1,22 +1,27 @@
+"""AzurPilot MCP SSE 服务入口。
+
+提供基于 SSE（Server-Sent Events）传输通道的 MCP（Model Context Protocol）服务，
+供大语言模型（如 Claude / ChatGPT）查询 AzurPilot 状态、任务列表、读取截图与配置等。
+"""
+
 import logging
 import re
-from typing import List, Dict, Any
+from contextvars import ContextVar
+from typing import Any, Dict, List
 
-from starlette.applications import Starlette
-from starlette.middleware import Middleware
-from starlette.middleware.cors import CORSMiddleware
 from mcp.server import Server
 from mcp.server.sse import SseServerTransport
 from mcp.types import (
-    TextContent,
     ImageContent,
+    TextContent,
     Tool,
 )
+from starlette.applications import Starlette
+from starlette.middleware import Middleware
+from starlette.middleware.cors import CORSMiddleware
 
-from contextvars import ContextVar
-
-from module.mcp.tools import Tools
 from module.mcp.lifecycle import lifespan
+from module.mcp.tools import Tools
 from module.runtime import mcp_auth
 from module.runtime.setting import State
 
@@ -33,8 +38,14 @@ mcp_server = Server("AzurPilot-MCP")
 
 ToolResponse = List[TextContent | ImageContent]
 
+
 @mcp_server.list_tools()
 async def list_tools() -> List[Tool]:
+    """列出 MCP 服务器当前支持的所有工具定义。
+
+    Returns:
+        List[Tool]: 工具对象列表。
+    """
     return [
         Tool(
             name="list_instances",
@@ -186,8 +197,18 @@ async def list_tools() -> List[Tool]:
         ),
     ]
 
+
 @mcp_server.call_tool()
 async def call_tool(name: str, arguments: Dict[str, Any]) -> ToolResponse:
+    """调用指定的 MCP 工具并返回执行结果。
+
+    Args:
+        name (str): 工具名称。
+        arguments (Dict[str, Any]): 工具入参字典。
+
+    Returns:
+        ToolResponse: 工具执行结果（文本或图片列表）。
+    """
     return await active_tools.get().call(name, arguments)
 
 
@@ -221,7 +242,7 @@ def configure_auth(key, public_bind=False):
 
     Args:
         key: 复用自 WebUI 的密码。
-        public_bind (bool): 监听地址是否对公网开放。
+        public_bind (bool, optional): 监听地址是否对公网开放。默认为 False。
     """
     mcp_auth.install_access_log_filter()
     mcp_auth.configure(key, public_bind=public_bind)
@@ -240,7 +261,7 @@ def _sniff_session_id(message, buffer, captured):
     Args:
         message (dict): ASGI 待发送的消息。
         buffer (list[bytes]): 单元素列表，作为跨分块的嗅探缓冲区。
-        captured (list[str]): 已捕获的 session_id。
+        captured (list[str]): 已捕获的 session_id 列表。
     """
     if captured or message.get("type") != "http.response.body":
         return
@@ -258,6 +279,13 @@ def _sniff_session_id(message, buffer, captured):
 
 
 async def _run_sse(scope, receive, send):
+    """处理 /sse 端点的请求，建立并运行 SSE 流式连接。
+
+    Args:
+        scope: ASGI scope 字典。
+        receive: ASGI receive 异步可调用对象。
+        send: ASGI send 异步可调用对象。
+    """
     logger.info("Matched endpoint: /sse. Opening SSE connection...")
     captured = []
     buffer = [b""]
@@ -282,7 +310,16 @@ async def _run_sse(scope, receive, send):
 
 
 def _is_mcp_client_disconnected(error: Exception) -> bool:
-    # ClosedResourceError：SSE 已断开但客户端仍在宽限期内投递消息，属正常现象
+    """判断异常是否属于客户端主动断开连接。
+
+    ClosedResourceError：SSE 已断开但客户端仍在宽限期内投递消息，属正常现象。
+
+    Args:
+        error (Exception): 捕获的异常对象。
+
+    Returns:
+        bool: 是否属于客户端正常断连。
+    """
     return (
         "BrokenResourceError" in str(type(error))
         or "BrokenPipeError" in str(error)
@@ -291,6 +328,14 @@ def _is_mcp_client_disconnected(error: Exception) -> bool:
 
 
 async def _handle_mcp_post(scope, receive, send, method):
+    """处理客户端通过 POST /messages 发送过来的消息。
+
+    Args:
+        scope: ASGI scope 字典。
+        receive: ASGI receive 异步可调用对象。
+        send: ASGI send 异步可调用对象。
+        method (str): HTTP 请求方法。
+    """
     logger.info(f"Matched endpoint: /messages. Method: {method}")
     try:
         await transport.handle_post_message(scope, receive, send)
@@ -304,7 +349,11 @@ async def _handle_mcp_post(scope, receive, send, method):
 
 
 async def _send_not_found(send):
-    # 未匹配路由，返回 404
+    """返回 404 Not Found 响应。
+
+    Args:
+        send: ASGI send 异步可调用对象。
+    """
     await send({
         'type': 'http.response.start',
         'status': 404,
@@ -317,8 +366,16 @@ async def _send_not_found(send):
 
 
 async def _send_denied(scope, send, status):
-    # 鉴权未通过。刻意不返回 WWW-Authenticate：MCP 客户端会把该响应头
-    # 判定为"本服务要求 OAuth"并转去请求 resource metadata。
+    """发送鉴权失败或服务未就绪的拒绝响应。
+
+    刻意不返回 WWW-Authenticate：MCP 客户端会把该响应头判定为
+    "本服务要求 OAuth"并转去请求 resource metadata。
+
+    Args:
+        scope: ASGI scope 字典。
+        send: ASGI send 异步可调用对象。
+        status (int): HTTP 状态码。
+    """
     body = DENIED_MESSAGES.get(status, "Forbidden").encode("utf-8")
     client = scope.get("client") or ("unknown", 0)
     logger.warning(
@@ -345,7 +402,13 @@ async def _send_denied(scope, send, status):
 
 
 async def mcp_asgi_app(scope, receive, send):
-    """MCP 服务的纯 ASGI 应用，带鉴权与增强日志记录。"""
+    """MCP 服务的纯 ASGI 应用，带鉴权与增强日志记录。
+
+    Args:
+        scope: ASGI scope 字典。
+        receive: ASGI receive 异步可调用对象。
+        send: ASGI send 异步可调用对象。
+    """
     path = scope.get("path", "")
     method = scope.get("method", "")
 
@@ -382,8 +445,20 @@ async def mcp_asgi_app(scope, receive, send):
     else:
         await _send_not_found(send)
 
+
 def create_app(configs=None, runtime=None, *, manage_runtime=True):
-    """独立模式管理 State；挂载模式复用宿主注入的服务与生命周期。"""
+    """创建 Starlette 应用实例。
+
+    独立模式管理 State；挂载模式复用宿主注入的服务与生命周期。
+
+    Args:
+        configs: 配置映射字典。默认为 None。
+        runtime: 运行时管理服务。默认为 None。
+        manage_runtime (bool, optional): 是否由本应用接管生命周期。默认为 True。
+
+    Returns:
+        Starlette: 已配置好的 ASGI Starlette 应用。
+    """
     tools = Tools(configs, runtime)
 
     async def bound_app(scope, receive, send):

@@ -1,3 +1,7 @@
+/**
+ * @fileoverview 首页系统公告卡片组件。
+ */
+
 import { Link } from 'react-router-dom'
 import { Megaphone, ExternalLink, Check, ArrowRight } from 'lucide-react'
 import type { Announcement } from '../api/types'

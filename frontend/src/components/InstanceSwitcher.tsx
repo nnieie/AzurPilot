@@ -1,3 +1,7 @@
+/**
+ * @fileoverview 顶栏实例切换下拉菜单组件。
+ */
+
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Check, ChevronDown, Plus, Ship } from 'lucide-react'

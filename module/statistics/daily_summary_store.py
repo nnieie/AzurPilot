@@ -219,7 +219,16 @@ class DailySummaryStore:
             (self._serialize_time(started_at), instance),
         )
     def record_task_start(self, instance: str, task: str, started_at: datetime) -> int | None:
-        """记录任务开始，失败时返回 ``None`` 而不影响调度器。"""
+        """记录任务开始，失败时返回 ``None`` 而不影响调度器。
+
+        Args:
+            instance (str): 实例名称。
+            task (str): 任务名称。
+            started_at (datetime): 任务启动时间。
+
+        Returns:
+            int | None: 数据库自增记录 ID，失败返回 None。
+        """
         try:
             self._ensure_tables()
             with self._lock, self._connect() as connection:
@@ -249,7 +258,15 @@ class DailySummaryStore:
         status: str,
         duration_seconds: float,
     ) -> None:
-        """补全已记录任务的结果；不会向外抛出数据库错误。"""
+        """补全已记录任务的结果；不会向外抛出数据库错误。
+
+        Args:
+            instance (str): 实例名称。
+            run_id (int | None): record_task_start 返回的记录 ID。
+            finished_at (datetime): 任务结束时间。
+            status (str): 任务结束状态（如 'success', 'failed', 'recoverable'）。
+            duration_seconds (float): 任务耗时（秒）。
+        """
         if run_id is None:
             return
         try:
@@ -273,8 +290,19 @@ class DailySummaryStore:
         except Exception as error:
             self._mark_collection_degraded(instance, 'task', finished_at)
             logger.warning(f'[日报] 记录任务结果失败，已忽略: {type(error).__name__}')
+
     def get_task_summary(self, instance: str, start: datetime, end: datetime, limit: int = 15) -> dict[str, Any]:
-        """聚合在统计窗口内结束的结构化任务结果。"""
+        """聚合在统计窗口内结束的结构化任务结果。
+
+        Args:
+            instance (str): 实例名称。
+            start (datetime): 窗口开始时间。
+            end (datetime): 窗口结束时间。
+            limit (int): 返回任务细分列表的条数上限。
+
+        Returns:
+            dict[str, Any]: 结构化任务统计结果字典。
+        """
         self._ensure_tables()
         with self._lock, self._connect() as connection:
             persisted = self._flush_pending_degradations(connection)
@@ -368,7 +396,14 @@ class DailySummaryStore:
             'task_breakdown': breakdown[:max(0, int(limit))],
         }
     def record_cl1_battle_event(self, instance: str, timestamp: datetime, duration_seconds: float, estimated_exp: int) -> None:
-        """记录可精确归属到日报窗口的侵蚀1战斗事件。"""
+        """记录可精确归属到日报窗口的侵蚀 1 战斗事件。
+
+        Args:
+            instance (str): 实例名称。
+            timestamp (datetime): 战斗发生时间。
+            duration_seconds (float): 战斗耗时（秒）。
+            estimated_exp (int): 预估获得经验值。
+        """
         try:
             self._ensure_tables()
             with self._lock, self._connect() as connection:
@@ -402,7 +437,16 @@ class DailySummaryStore:
             logger.warning(f'[日报] 记录侵蚀1战斗事件失败，已忽略: {type(error).__name__}')
 
     def get_cl1_interval_summary(self, instance: str, start: datetime, end: datetime) -> dict[str, Any]:
-        """读取指定窗口内的新式侵蚀1战斗事件。"""
+        """读取指定窗口内的新式侵蚀 1 战斗事件。
+
+        Args:
+            instance (str): 实例名称。
+            start (datetime): 窗口开始时间。
+            end (datetime): 窗口结束时间。
+
+        Returns:
+            dict[str, Any]: 侵蚀 1 战斗聚合统计字典。
+        """
         self._ensure_tables()
         with self._lock, self._connect() as connection:
             persisted = self._flush_pending_degradations(connection)
@@ -483,7 +527,18 @@ class DailySummaryStore:
         window_start: datetime,
         window_end: datetime,
     ) -> bool:
-        """原子抢占一份日报，确保同一实例周期只会生成一次。"""
+        """原子抢占一份日报，确保同一实例周期只会生成一次。
+
+        Args:
+            instance (str): 实例名称。
+            period_key (str): 周期唯一标识。
+            server (str): 服务器代码。
+            window_start (datetime): 周期开始时间。
+            window_end (datetime): 周期结束时间。
+
+        Returns:
+            bool: 成功抢占返回 True，已被抢占或已存在返回 False。
+        """
         self._ensure_tables()
         now = self._serialize_time(datetime.now())
         with self._lock, self._connect() as connection:
@@ -514,7 +569,15 @@ class DailySummaryStore:
         window_start: datetime,
         window_end: datetime,
     ) -> None:
-        """记录错过的周期，防止进程恢复后补发旧日报。"""
+        """记录错过的周期，防止进程恢复后补发旧日报。
+
+        Args:
+            instance (str): 实例名称。
+            period_key (str): 周期唯一标识。
+            server (str): 服务器代码。
+            window_start (datetime): 周期开始时间。
+            window_end (datetime): 周期结束时间。
+        """
         self._ensure_tables()
         now = self._serialize_time(datetime.now())
         with self._lock, self._connect() as connection:
@@ -547,7 +610,17 @@ class DailySummaryStore:
         send_attempts: int | None = None,
         error_kind: str | None = None,
     ) -> None:
-        """更新日报处理状态，不保存异常正文或敏感配置。"""
+        """更新日报处理状态，不保存异常正文或敏感配置。
+
+        Args:
+            instance (str): 实例名称。
+            period_key (str): 周期唯一标识。
+            status (str): 目标状态 ('generating', 'sending', 'sent', 'failed', 'skipped')。
+            report_text (str | None): 生成的日报正文。
+            llm_attempts (int | None): LLM 调用次数。
+            send_attempts (int | None): 推送发送次数。
+            error_kind (str | None): 错误类别代码。
+        """
         self._ensure_tables()
         values: dict[str, Any] = {
             'status': status,
@@ -574,7 +647,15 @@ class DailySummaryStore:
             )
 
     def get_period(self, instance: str, period_key: str) -> dict[str, Any] | None:
-        """读取单个周期状态，供测试和运行时去重检查使用。"""
+        """读取单个周期状态，供测试和运行时去重检查使用。
+
+        Args:
+            instance (str): 实例名称。
+            period_key (str): 周期唯一标识。
+
+        Returns:
+            dict[str, Any] | None: 周期记录字典，不存在返回 None。
+        """
         self._ensure_tables()
         with self._lock, self._connect() as connection:
             row = connection.execute(
@@ -587,7 +668,12 @@ class DailySummaryStore:
         return dict(row) if row is not None else None
 
     def cleanup(self, now: datetime | None = None, keep_days: int = 35) -> None:
-        """删除过期的任务事件和日报状态。"""
+        """删除过期的任务事件和日报状态。
+
+        Args:
+            now (datetime | None): 当前参考时间。
+            keep_days (int): 保留天数，默认 35 天。
+        """
         self._ensure_tables()
         now = now or datetime.now()
         cutoff = self._serialize_time(now - timedelta(days=max(1, int(keep_days))))

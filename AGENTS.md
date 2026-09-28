@@ -23,10 +23,12 @@ AzurPilot 是面向安卓模拟器的碧蓝航线自动化框架，支持 CN/EN/
 | 同步 Python 依赖 | `uv sync --frozen` |
 | 安装前端锁定依赖 | `npm ci --prefix frontend` |
 | 启动 WebUI | `uv run python gui.py` |
+| 启动终端交互界面 (TUI) | `uv run python tui.py` |
 | 启动游戏调度器 | `uv run python alas.py` |
 | 启动独立 MCP SSE 服务 | `uv run python mcp_server_sse.py` |
 | Python 单个测试模块（示例） | `uv run python -m unittest tests.test_api` |
 | Python 全量单元测试 | `uv run python -m unittest discover -s tests` |
+| Python pytest 测试（含 shop_event 等） | `uv run pytest tests/shop_event` |
 | Python 基础 CI lint | `uv run ruff check . --select E9,F63,F7,F82 --ignore F821,F722` |
 | 前端类型检查 | `npm run typecheck --prefix frontend` |
 | 前端单元测试 | `npm test --prefix frontend` |

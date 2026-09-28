@@ -57,6 +57,9 @@ from module.ui.assets import BACK_ARROW
 
 
 class OpsiFleetAutoChange(CoinTaskMixin, DockMixin, OSMap):
+    """侵蚀一舰队自动配队处理器。
+
+    当经验检测发现指定舰位已满经验时，自动进入船坞选择替换舰船。
     """
     侵蚀一舰队自动配队
 
@@ -107,7 +110,7 @@ class OpsiFleetAutoChange(CoinTaskMixin, DockMixin, OSMap):
         自动配队后运行经验检测
 
         Args:
-            custom_positions: 自定义舰位列表
+            custom_positions (list[int]): 自定义舰位列表。
         """
         logger.info("自动配队后运行经验检测")
 
@@ -129,7 +132,7 @@ class OpsiFleetAutoChange(CoinTaskMixin, DockMixin, OSMap):
         确保返回大世界地图
 
         Returns:
-            bool: 是否成功返回大世界地图
+            bool: 是否成功返回大世界地图。
         """
         timeout = 10
         for _ in range(timeout * 2):
@@ -150,7 +153,7 @@ class OpsiFleetAutoChange(CoinTaskMixin, DockMixin, OSMap):
         return False
 
     def _return_to_main_page(self):
-        """回到主界面"""
+        """返回游戏主界面。"""
         from module.ui.page import page_main
         logger.info("尝试回到主界面")
 
@@ -165,7 +168,7 @@ class OpsiFleetAutoChange(CoinTaskMixin, DockMixin, OSMap):
         推送自动配队完成通知
 
         Args:
-            custom_positions: 自定义舰位列表
+            custom_positions (list[int]): 自定义舰位列表。
         """
         try:
             positions_str = ', '.join(map(str, custom_positions))
@@ -194,7 +197,7 @@ class OpsiFleetAutoChange(CoinTaskMixin, DockMixin, OSMap):
         处理自动配队错误
 
         Args:
-            error_msg: 错误信息
+            error_msg (str): 错误信息。
         """
         logger.error(f"自动配队发生错误: {error_msg}")
 
@@ -217,7 +220,7 @@ class OpsiFleetAutoChange(CoinTaskMixin, DockMixin, OSMap):
         检查冷却时间
 
         Returns:
-            bool: 是否可以运行
+            bool: 若冷却已结束或从未运行过返回 True，否则返回 False。
         """
         last_run = self.config.OpsiFleetAutoChange_LastRun
         if last_run is None:
@@ -233,7 +236,7 @@ class OpsiFleetAutoChange(CoinTaskMixin, DockMixin, OSMap):
         解析自定义舰位配置
 
         Returns:
-            list: 舰位列表，如 [1, 3, 5]
+            list[int]: 需检查和更换的舰位列表，如 [1, 2, 3, 4, 5, 6]。
         """
         enable_custom_check = self.config.OpsiCheckLeveling_EnableCustomCheck
         if not enable_custom_check:
@@ -260,7 +263,7 @@ class OpsiFleetAutoChange(CoinTaskMixin, DockMixin, OSMap):
             custom_positions: 自定义舰位列表
 
         Returns:
-            bool: 是否触发自动配队
+            bool: 所有指定舰位均已满经验时返回 True，否则返回 False。
         """
         target_exp = LIST_SHIP_EXP[target_level - 1]
 
@@ -282,7 +285,7 @@ class OpsiFleetAutoChange(CoinTaskMixin, DockMixin, OSMap):
         执行自动配队
 
         Args:
-            positions: 需要更换的舰位列表
+            positions (list[int]): 需要更换的舰位列表。
         """
         self._cancel_favorite_for_positions(positions)
         self._enter_fleet_deploy()
@@ -294,7 +297,7 @@ class OpsiFleetAutoChange(CoinTaskMixin, DockMixin, OSMap):
         取消指定舰位的常用标记
 
         Args:
-            positions: 舰位列表，如 [1, 3, 5]
+            positions (list[int]): 舰位列表，如 [1, 3, 5]。
         """
         logger.info(f"取消舰位 {positions} 的常用标记")
 
@@ -331,7 +334,7 @@ class OpsiFleetAutoChange(CoinTaskMixin, DockMixin, OSMap):
         """进入舰队部署界面
 
         Raises:
-            ScriptError: 当无法进入舰队部署界面时抛出
+            ScriptError: 无法进入舰队部署界面时抛出。
         """
         logger.info("进入舰队部署界面")
 
@@ -365,7 +368,7 @@ class OpsiFleetAutoChange(CoinTaskMixin, DockMixin, OSMap):
             positions: 舰位列表，如 [1, 4, 5, 6]
 
         Raises:
-            ScriptError: 当船坞中没有可用舰船时抛出
+            ScriptError: 船坞中没有可用常用舰船时抛出。
         """
         sorted_positions = sorted(positions)
         logger.info(f"在舰位 {sorted_positions} 选择舰船")
@@ -406,7 +409,7 @@ class OpsiFleetAutoChange(CoinTaskMixin, DockMixin, OSMap):
         """确认舰船选择
 
         Raises:
-            ScriptError: 当无法确认舰船选择时抛出
+            ScriptError: 无法找到确认按钮或确认后未返回部署界面时抛出。
         """
         logger.info("确认舰船选择")
 
@@ -434,7 +437,7 @@ class OpsiFleetAutoChange(CoinTaskMixin, DockMixin, OSMap):
         """确认出发
 
         Raises:
-            ScriptError: 当无法完成出发确认时抛出
+            ScriptError: 出发确认超时且无法返回大世界地图时抛出。
         """
         logger.info("确认出发")
 
@@ -476,7 +479,7 @@ class OpsiFleetAutoChange(CoinTaskMixin, DockMixin, OSMap):
         raise ScriptError("出发确认超时，无法返回大世界地图")
 
     def _set_cooldown(self):
-        """设置冷却时间"""
+        """设置自动配队冷却时间。"""
         self.config.OpsiFleetAutoChange_LastRun = current_time().replace(microsecond=0)
         logger.info(f"已设置冷却时间，下次可运行时间: {self.config.OpsiFleetAutoChange_LastRun}")
 
@@ -582,7 +585,10 @@ class OpsiFleetAutoChange(CoinTaskMixin, DockMixin, OSMap):
             ship_data_list: 舰船数据列表
 
         Returns:
-            dict: {'valid': bool, 'reason': str}
+            dict: 校验结果字典：
+                - 'valid' (bool): 数据是否有效。
+                - 'reason' (str): 验证失败或重试的原因说明。
+                - 'need_retry' (bool, optional): 是否建议重试确认。
         """
         if not ship_data_list:
             return {'valid': False, 'reason': '舰船数据为空'}

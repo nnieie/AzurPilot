@@ -1,7 +1,13 @@
+/**
+ * @fileoverview 应用顶层外壳组件与全局路由布局。
+ */
+
 import { PasswordInput, Select } from '../components/FormControls'
 import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent, type MouseEvent, type ChangeEvent } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { ArrowRight, CalendarClock, ChartNoAxesCombined, Code2, Compass, FileJson, GalleryHorizontal, LayoutDashboard, Globe, House, Download, ExternalLink, Maximize2, Megaphone, Menu, Minimize2, Palette, PanelTop, Settings2, WifiOff, X, CirclePause, CirclePlay, LoaderCircle} from 'lucide-react'
+import { getLayout, setSidebarCollapsed, subscribeLayout } from './layout'
+import { getThemePreference, usesMaterial } from './theme'
+import { ArrowRight, CalendarClock, ChartNoAxesCombined, CirclePause, CirclePlay, Code2, Compass, Download, ExternalLink, FileJson, GalleryHorizontal, Globe, House, LayoutDashboard, LoaderCircle, Maximize2, Megaphone, Menu, Minimize2, Palette, PanelTop, Settings2, WifiOff, X, ChevronRight } from 'lucide-react'
 import { api } from '../api/client'
 import { editor } from '../config/editors'
 import {bulkAction, bulkTargets} from './instanceBulk'
@@ -9,6 +15,7 @@ import { useApp, useConnection } from './context'
 import { useAnnouncement } from './announcement'
 import { ErrorBox, Loading, Modal } from '../components/ui'
 import { GlassMaterial } from '../components/GlassMaterial'
+import { MaterialQuickButton } from '../components/MaterialDetailModal'
 import { InstanceSwitcher } from '../components/InstanceSwitcher'
 import { InstanceTabs } from '../components/InstanceTabs'
 import { RightRail } from '../components/RightRail'
@@ -185,7 +192,6 @@ export function App() {
     if (connection !== 'ready') return
     void api.request('events.subscribe', {instance: instance ?? null, topics: instance ? previewEnabled ? ['instances', 'overview', 'logs', 'preview'] : ['instances', 'overview', 'logs'] : ['instances']}).catch(error => notify(error.message, true))
   }, [instance, connection, notify, previewEnabled])
-  if (connection === 'auth') return <Login/>
   // 旧版主题下点进实例后，外壳回到「顶栏跨全宽 + 单列侧栏」；主页视图一律沿用新版外壳。
   const legacyShell = usesLegacyShell(theme, instance)
   /* 主页与五个二级菜单也走旧版外壳：它们没有实例内容，顶栏只写居中的页名。 */
@@ -266,16 +272,24 @@ export function App() {
   </header>
   // 旧版顶栏只留招牌与居中的页面名，「主页 / 实例 / 任务」这一行落到内容区顶部。
   const pageNav = <div className="legacy-page-nav"><div className={`breadcrumb${tabsShown ? ' with-tabs' : ''}`}>{topbarActions}{tabsShown ? tabStrip : <><span>/</span><InstanceSwitcher onCreate={() => setCreating(true)}/></>}{currentTask && <><span>/</span><TaskSwitcher/></>}</div></div>
-  return <div className={`app-shell ${showRail ? 'with-rail' : ''} ${currentTask ? 'task-config-shell' : ''} ${legacyShell ? 'legacy-shell' : ''} ${legacyHomeShell ? 'legacy-shell legacy-home-shell' : ''} ${mobileOpen ? 'mobile-open' : ''} ${railOpen ? 'rail-open' : ''}`}>
+  /* 登录页要在所有 Hook 调用之后返回。放在这类提前返回之后才调用的 Hook
+     （useIsDesktop、bulkBusy）会让同一次会话里的 Hook 数量随连接状态变化，
+     隧道远程访问首帧就走 auth，React 会直接抛 #300 崩掉整页。 */
+  if (connection === 'auth') return <Login/>
+  /* shell 自己必须订阅：收起状态变了要重渲染才能加上 nav-collapsed 类（按钮订阅管不到这里）。 */
+  const layout = useSyncExternalStore(subscribeLayout, getLayout)
+  return <div className={`app-shell ${layout.sidebarCollapsed ? 'nav-collapsed' : ''} ${showRail ? 'with-rail' : ''} ${currentTask ? 'task-config-shell' : ''} ${legacyShell ? 'legacy-shell' : ''} ${legacyHomeShell ? 'legacy-shell legacy-home-shell' : ''} ${mobileOpen ? 'mobile-open' : ''} ${railOpen ? 'rail-open' : ''}`}>
     <a className="skip-link" href="#main-content" onClick={event => {event.preventDefault(); document.getElementById('main-content')?.focus()}}>{ui('nav.skipContent')}</a>
     {(legacyShell || legacyHomeShell) && topbar}
+    <NavHandle/>
     <aside className="sidebar">
       {/* 旧版把招牌放进顶栏，桌面端这一行隐藏；窄屏侧栏是抽屉，招牌回抽屉里。 */}
       <div className={`sidebar-brand ${legacyShell || legacyHomeShell ? 'legacy-sidebar-actions' : ''}`.trim()}><div className="sidebar-brand-left">{brand}</div><button className="mobile-close icon-button" aria-label={ui('nav.close')} onClick={() => setMobileOpen(false)}><X size={18}/></button></div>
       <SidebarTransition viewKey={instance ? `instance:${instance}` : 'global'}>
         <nav className="primary-nav" aria-label={ui('nav.primary')}>
-          {instance ? <><NavLink to={`${base}/overview`} onClick={closeDrawer}><LayoutDashboard size={17}/>{ui('nav.overview')}</NavLink><NavLink to={`${base}/statistics`} onClick={closeDrawer}><ChartNoAxesCombined size={17}/>{ui('nav.statistics')}</NavLink></> : <><NavLink to="/" end onClick={closeDrawer}><House size={17}/>{ui('nav.home')}</NavLink><NavLink to="/announcement" onClick={closeDrawer}><Megaphone size={17}/>{ui('nav.announcement')}{announcement.unread && <span className="tiny-dot red"/>}</NavLink><NavLink to="/updater" onClick={closeDrawer}><Download size={17}/>{ui('nav.updater')}{updateAvailable && <span className="tiny-dot teal"/>}</NavLink><NavLink to="/interface" onClick={closeDrawer}><Palette size={17}/>{ui('nav.interface')}</NavLink><NavLink to="/remote" onClick={closeDrawer}><Globe size={17}/>{ui('nav.remote')}</NavLink><NavLink to="/configs" onClick={closeDrawer}><FileJson size={17}/>{ui('nav.configs')}</NavLink><NavLink to="/settings" onClick={closeDrawer}><Settings2 size={17}/>{ui('nav.settings')}</NavLink><NavLink to="/dev" onClick={closeDrawer}><Code2 size={17}/>{ui('nav.developer')}</NavLink><a className="nav-open-source" href="https://github.com/wess09/AzurPilot" target="_blank" rel="noreferrer" onClick={closeDrawer}><ExternalLink size={17}/>{ui('nav.openSource')}</a></>}
+          {instance ? <><NavLink to={`${base}/overview`} onClick={closeDrawer}><LayoutDashboard size={17}/>{ui('nav.overview')}</NavLink><NavLink to={`${base}/statistics`} onClick={closeDrawer}><ChartNoAxesCombined size={17}/>{ui('nav.statistics')}</NavLink><MaterialQuickButton/></> : <><NavLink to="/" end onClick={closeDrawer}><House size={17}/>{ui('nav.home')}</NavLink><NavLink to="/announcement" onClick={closeDrawer}><Megaphone size={17}/>{ui('nav.announcement')}{announcement.unread && <span className="tiny-dot red"/>}</NavLink><NavLink to="/updater" onClick={closeDrawer}><Download size={17}/>{ui('nav.updater')}{updateAvailable && <span className="tiny-dot teal"/>}</NavLink><NavLink to="/interface" onClick={closeDrawer}><Palette size={17}/>{ui('nav.interface')}</NavLink><NavLink to="/remote" onClick={closeDrawer}><Globe size={17}/>{ui('nav.remote')}</NavLink><NavLink to="/configs" onClick={closeDrawer}><FileJson size={17}/>{ui('nav.configs')}</NavLink><NavLink to="/settings" onClick={closeDrawer}><Settings2 size={17}/>{ui('nav.settings')}</NavLink><NavLink to="/dev" onClick={closeDrawer}><Code2 size={17}/>{ui('nav.developer')}</NavLink><a className="nav-open-source" href="https://github.com/wess09/AzurPilot" target="_blank" rel="noreferrer" onClick={closeDrawer}><ExternalLink size={17}/>{ui('nav.openSource')}</a></>}
 
+          {/* 收起整条侧栏：全页面有效，收起后只在左缘留一道窄边上的展开按钮。 */}
         </nav>
         {instance && <TaskNav onNavigate={closeDrawer}/>}
       </SidebarTransition>
@@ -291,4 +305,39 @@ export function App() {
     <CompactScrollbars/>
     {creating && <CreateInstance onClose={() => setCreating(false)}/>}
   </div>
+}
+
+/** 侧栏收起/展开把手：侧栏边缘一条很细的竖带 + 一枚扁的指示标记（收起时贴屏幕左缘）。
+ *  自己订阅布局状态，不依赖所在页面的局部量；把手始终在，收起后就是那唯一的一道细带。 */
+function NavHandle() {
+  const {ui} = useApp()
+  const layout = useSyncExternalStore(subscribeLayout, getLayout)
+  const collapsed = layout.sidebarCollapsed
+  /* 看图模式的退出条件是「再次与页面交互」（人类明确修正：不是离开页面）。
+     用捕获阶段监听，交互一发生就先折回展开，再让这次交互照常作用到目标上；
+     把手自身排除：它的点击本身就是展开/收起，不参与自动折回。 */
+  useEffect(() => {
+    if (!collapsed) return
+    const restore = (event: Event) => {
+      const target = event.target as HTMLElement | null
+      if (target?.closest?.('.nav-handle')) return
+      setSidebarCollapsed(false)
+    }
+    document.addEventListener('pointerdown', restore, true)
+    document.addEventListener('keydown', restore, true)
+    return () => {
+      document.removeEventListener('pointerdown', restore, true)
+      document.removeEventListener('keydown', restore, true)
+    }
+  }, [collapsed])
+  /* 只有会铺壁纸的族才需要这个把手：简约/紧凑族根本没有背景，收起也没意义（人类要求）。 */
+  if (!usesMaterial(getThemePreference().theme)) return null
+  return <button
+    type="button"
+    className="nav-handle"
+    aria-label={ui(collapsed ? 'nav.expand' : 'nav.collapse')}
+    title={ui(collapsed ? 'nav.expand' : 'nav.collapse')}
+    aria-expanded={!collapsed}
+    onClick={() => setSidebarCollapsed(!collapsed)}
+  ><ChevronRight size={15} aria-hidden="true" style={{transform: collapsed ? 'none' : 'rotate(180deg)'}}/></button>
 }

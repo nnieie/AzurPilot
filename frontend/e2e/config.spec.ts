@@ -15,14 +15,19 @@ test('两个页面的旧快照均能保存，字段更新互不覆盖', async ({
   await page.locator(serialSelector).blur()
   // “已保存”提示会延迟出现并自动消失，不能把瞬时 UI 当作提交屏障；
   // 从另一页面重新读取服务端快照，才能真正证明旧快照的字段已经合并保存。
+  /* 切走再切回同一实例的任务页：组件重新挂载即重新向服务端取快照。 */
+  const reread = async (target: typeof page) => {
+    await target.evaluate(() => { location.hash = '#/i/testpilot/overview' })
+    await target.evaluate(() => { location.hash = '#/i/testpilot/task/Alas' })
+  }
   await expect.poll(async () => {
-    await second.reload()
+    await reread(second)
     return second.locator(serialSelector).inputValue()
   }).toBe('parallel-page-edit')
   await threshold.fill('7')
   await threshold.blur()
   await expect.poll(async () => {
-    await page.reload()
+    await reread(page)
     return page.locator('[id="Alas.Error.GameStuckThreshold"]').inputValue()
   }).toBe('7')
   await expect(second.locator(serialSelector)).toHaveValue('parallel-page-edit')

@@ -102,6 +102,12 @@ def retry(func):
 
 
 class AdbDeviceWithStatus(AdbDevice):
+    """带状态信息的 ADB 设备包装类。
+
+    Attributes:
+        status: 设备连接状态（如 'device', 'offline', 'unauthorized'）。
+    """
+
     def __init__(self, client: AdbClient, serial: str, status: str):
         self.status = status
         super().__init__(client, serial)

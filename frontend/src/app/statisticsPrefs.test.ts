@@ -61,6 +61,7 @@ describe('统计页与图表选项持久化', () => {
       lootTask: 'opsi_abyssal',
       chartMode: 'candlestick',
       chartAxisMode: 'unified',
+      chartZeroBase: false,
       bucket: 60,
       rangeFrom: '',
       rangeTo: '',

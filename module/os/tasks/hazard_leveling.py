@@ -29,7 +29,11 @@ from module.os_handler.action_point import ActionPointLimit
 
 class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
     def _cl1_resource_check(self, yellow_coins):
-        """侵蚀 1 独立运行时的资源保护检查。"""
+        """侵蚀 1 独立运行时的资源保护检查。
+
+        Args:
+            yellow_coins (int): 当前作战补给凭证（黄币）数量。
+        """
         if self.is_running_smart_scheduling_task():
             return
 
@@ -250,7 +254,7 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
         )
 
     def _cl1_ap_check(self):
-        """最低行动力保留检查"""
+        """检查最低行动力保留，不足时推迟任务并视情况推送通知。"""
         min_reserve = self.config.OS_ACTION_POINT_PRESERVE
         if self._action_point_total < min_reserve:
             logger.warning(
@@ -277,7 +281,7 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
         self.config.OpsiHazard1_PreviousApInsufficient = _previous_ap_insufficient
 
     def _cl1_run_battle(self):
-        """执行侵蚀 1 战后的战略搜索与事件检索逻辑"""
+        """执行侵蚀 1 战后的战略搜索与事件检索逻辑。"""
         search_completed = self.run_strategic_search()
 
         if not search_completed and search_completed is not None:
@@ -326,7 +330,7 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
                 logger.exception("Failed to persist CL1 akashi monthly count")
 
     def _cl1_handle_telemetry(self):
-        """处理遥测数据提交"""
+        """在后台异步线程中提交侵蚀 1 遥测数据指标。"""
         try:
             if not getattr(self.config, "DropRecord_TelemetryReport", True):
                 logger.info("[大世界-侵蚀1练级] [错误] 遥测上报已关闭")
@@ -369,7 +373,11 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
             self.config.check_task_switch()
 
     def run_hazard1_leveling_once(self, ap_preserve=None):
-        """执行一轮侵蚀 1 练级，由独立任务或 OpsiScheduling 调用。"""
+        """执行一轮侵蚀 1 练级，由独立任务或 OpsiScheduling 调用。
+
+        Args:
+            ap_preserve (int | None): 行动力最低保留阈值。为 None 时从配置中读取。
+        """
         # 启用随机事件以获得收益。调度器直接调用单轮时也需要保持该行为。
         self.config.override(
             OpsiGeneral_DoRandomMapEvent=True,
@@ -588,7 +596,7 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
             custom_positions: 自定义舰位列表
 
         Returns:
-            bool: 是否满足前置条件
+            bool: 满足前置条件或未启用自动配队时返回 True，否则返回 False。
         """
         if not self.config.OpsiFleetAutoChange_Enable:
             return True
@@ -616,7 +624,7 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
             custom_positions: 自定义舰位列表，None时显示所有舰船
 
         Returns:
-            str: 格式化的报告文本
+            str: 格式化后的排版报告文本。
         """
         lines = []
         lines.append("【舰船经验检测报告】")
@@ -867,7 +875,10 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
             ship_data_list: 舰船数据列表
 
         Returns:
-            dict: {'valid': bool, 'reason': str}
+            dict: 校验结果字典：
+                - 'valid' (bool): 数据是否有效。
+                - 'reason' (str): 验证失败或重试的原因说明。
+                - 'need_retry' (bool, optional): 是否建议重试确认。
         """
         if not ship_data_list:
             return {'valid': False, 'reason': '舰船数据为空'}
@@ -907,9 +918,9 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
         检查自定义舰位是否满经验
 
         Args:
-            ship_data_list: 舰船数据列表
-            target_level: 目标等级
-            custom_positions: 自定义舰位列表，如 [4, 5]
+            ship_data_list (list[dict]): 舰船数据列表。
+            target_level (int): 目标等级。
+            custom_positions (list[int]): 自定义舰位列表，如 [4, 5]。
         """
         target_exp = LIST_SHIP_EXP[target_level - 1]
 
@@ -966,10 +977,10 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
                 self.config.task_stop()
 
     def _record_ap_and_coins(self, sea_miles=None):
-        """记录体力和货币到 Dashboard（始终执行）。
+        """记录体力和货币到仪表盘数据库（始终执行）。
 
         Args:
-            sea_miles: 海里数（可选），由 detect_and_record_sea_miles 传入
+            sea_miles (int | None): 海里数，由 `detect_and_record_sea_miles` 识别传入。
         """
         try:
             if self._action_point_current > 0:
@@ -1006,11 +1017,10 @@ class OpsiHazard1Leveling(CoinTaskMixin, OSMap):
             logger.error(f"[大世界-侵蚀1练级] 体力/货币记录异常: {e}")
 
     def detect_and_record_sea_miles(self):
-        """
-        检测海里数
-        
+        """进入情报页面检测并记录当前大世界航行海里数。
+
         Returns:
-            int: 海里数，失败时返回None
+            int | None: 识别出的海里数数值，识别失败时返回 None。
         """
         logger.info("[大世界-侵蚀1练级] 开始海里数检测")
         

@@ -18,18 +18,24 @@ ITEM_GRIDS_3 = ButtonGrid(origin=(336, 223), delta=(128, 149), button_shape=(96,
 
 
 def merge_get_items(item_list_1, item_list_2):
-    """
+    """合并两个掉落物品列表并去重。
+
     Args:
-        item_list_1 (list[Item]):
-        item_list_2 (list[Item]):
+        item_list_1 (list[Item]): 第一个物品列表。
+        item_list_2 (list[Item]): 第二个物品列表。
 
     Returns:
-        list[Item]:
+        list[Item]: 去重后的合并物品列表。
     """
     return list(set(item_list_1 + item_list_2))
 
 
 class GetItemsStatistics:
+    """获得物品统计器。
+
+    根据获得物品界面（GET_ITEMS_1/2/3）动态计算物品网格布局，
+    识别物品图标并提取掉落数量。
+    """
     # 物品网格。默认共用模块级的 ITEM_GROUP（战斗掉落那份）；科研统计等
     # 需要另一套模板的场景传入自己的 ItemGrid，避免两套模板互相污染。
     grid = None
@@ -43,24 +49,37 @@ class GetItemsStatistics:
         return self.grid if self.grid is not None else ITEM_GROUP
 
     def appear_on(self, image):
+        """检查图像中是否包含获得物品弹窗。
+
+        Args:
+            image (np.ndarray): 待检查截图。
+
+        Returns:
+            bool: 匹配成功返回 True，否则返回 False。
+        """
         return GET_ITEMS_1.match(image, offset=(20, 20)) or GET_ITEMS_2.match(image, offset=(20, 20))
 
     @staticmethod
     def _stats_get_items_is_odd(image):
-        """
+        """判断单行掉落物品数量是否为奇数个（5个为奇数，4个为偶数）。
+
         Args:
-            image (np.ndarray):
+            image (np.ndarray): 截图图像。
 
         Returns:
-            bool: If the number of items in row is odd.
+            bool: 奇数个返回 True，偶数个返回 False。
         """
         image = crop(image, GET_ITEMS_ODD.area, copy=False)
         return np.mean(rgb2gray(image) > 127) > 0.1
 
     def _stats_get_items_load(self, image):
-        """
+        """根据截图匹配对应的网格布局并检查遮挡。
+
         Args:
-            image (np.ndarray):
+            image (np.ndarray): 截图图像。
+
+        Raises:
+            ImageError: 截图包含消息栏遮挡或非有效的获得物品界面。
         """
         grid = self._target_grid()
         grid.item_class = Item
@@ -79,12 +98,14 @@ class GetItemsStatistics:
             raise ImageError('Stat image is not a get_items image')
 
     def stats_get_items(self, image, **kwargs):
-        """
+        """从获得物品界面截图中解析出所有物品对象。
+
         Args:
-            image (np.ndarray):
+            image (np.ndarray): 截图图像。
+            **kwargs: 传给 ItemGrid.predict 的额外参数。
 
         Returns:
-            list[Item]:
+            list[Item]: 识别出的物品列表。
         """
         self._stats_get_items_load(image)
 
@@ -96,17 +117,19 @@ class GetItemsStatistics:
             return grid.items
 
     def load_template_folder(self, folder):
-        """
+        """加载指定文件夹下的物品模板图像。
+
         Args:
-            folder (str): Template folder.
+            folder (str): 模板文件夹路径。
         """
         self._target_grid().load_template_folder(folder)
 
     def extract_template(self, image, folder):
-        """
+        """从截图中裁剪未识别的物品并保存为新模板。
+
         Args:
-            image:
-            folder: Folder to save new templates.
+            image (np.ndarray): 截图图像。
+            folder (str): 新模板的保存目录。
         """
         self._stats_get_items_load(image)
         grid = self._target_grid()

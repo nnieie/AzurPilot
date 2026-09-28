@@ -1,3 +1,7 @@
+/**
+ * @fileoverview 统计页布局文档、卡片与页面排序、组合链及折叠状态管理。
+ */
+
 import { VALID_CATEGORIES, type StatisticsCategory } from './statisticsPrefs'
 
 export type PageId = StatisticsCategory

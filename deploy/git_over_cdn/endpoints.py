@@ -1,3 +1,4 @@
+"""GitOverCDN 更新节点端点配置。"""
 CLOUDFLARE_UPDATE_URLS = (
     'https://ap-update-cdn-cloudflare.3463343.xyz',
     'https://ap-update-cdn-cloudflare-a3.haiteluo.com',

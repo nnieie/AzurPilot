@@ -15,6 +15,10 @@ from module.retire.dock import CARD_GRIDS, Dock
 
 
 class DockMixin(Dock):
+    """船坞操作混入类，用于大世界舰队配队。
+
+    提供船坞界面中的舰船选择功能，支持通过网格索引选择指定位置的舰船。
+    继承自 Dock 类，提供 dock_favourite_set 等方法。
     """
     船坞操作Mixin，用于大世界舰队配队
 
@@ -32,7 +36,7 @@ class DockMixin(Dock):
                        7-13: 第二排 (从左到右)
 
         Returns:
-            bool: 是否成功选择舰船
+            bool: 是否成功选择舰船。
         """
         if grid_index < 0 or grid_index >= 14:
             logger.warning(f"[大世界] 无效的网格索引: {grid_index}")

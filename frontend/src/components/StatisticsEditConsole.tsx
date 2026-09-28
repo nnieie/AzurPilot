@@ -1,3 +1,7 @@
+/**
+ * @fileoverview 统计页布局自定义编辑控制台组件。
+ */
+
 import { RotateCcw } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useApp } from '../app/context'

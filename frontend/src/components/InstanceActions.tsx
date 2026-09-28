@@ -1,3 +1,7 @@
+/**
+ * @fileoverview 实例卡片快捷操作按钮组（启停、日志、设置）。
+ */
+
 import { useState, useSyncExternalStore } from 'react'
 import { Settings2 } from 'lucide-react'
 import type { Resource } from '../api/types'

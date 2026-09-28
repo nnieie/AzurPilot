@@ -1,3 +1,7 @@
+/**
+ * @fileoverview 开发者调试工具箱页面，提供动效、状态模拟与控件预览。
+ */
+
 import { useState, useSyncExternalStore, type ReactNode } from 'react'
 import { MarqueeText } from '../components/MarqueeText'
 import { useNavigate } from 'react-router-dom'

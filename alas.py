@@ -60,8 +60,17 @@ DAILY_SUMMARY_CHECK_INTERVAL = 1
 
 # 缓存 i18n 任务名查找
 _i18n_task_names = None
+
+
 def _get_task_display_name(task_command):
-    """从 i18n 获取任务的本地化显示名，找不到则返回英文名"""
+    """从 i18n 获取任务的本地化显示名，找不到则返回英文名。
+
+    Args:
+        task_command (str): 任务命令名称。
+
+    Returns:
+        str: 任务的本地化显示名称或原名称。
+    """
     global _i18n_task_names
     if _i18n_task_names is None:
         _i18n_task_names = {}
@@ -93,9 +102,18 @@ ADB_REBOOT_TIMEOUT = 180
 
 
 class AzurLaneAutoScript:
+    """碧蓝航线自动化脚本调度器核心类。
+
+    负责任务调度、异常捕获与恢复、看门狗监控及设备管理。
+    """
     stop_event: threading.Event = None
 
     def __init__(self, config_name=DEFAULT_CONFIG_NAME):
+        """初始化调度器实例。
+
+        Args:
+            config_name (str, optional): 配置实例名称。默认为 DEFAULT_CONFIG_NAME。
+        """
         logger.hr('Start', level=0)
         self.config_name = config_name
         # 跳过启动后的第一次 Restart 任务
@@ -132,7 +150,11 @@ class AzurLaneAutoScript:
         self._daily_summary_settings = None
 
     def _get_daily_summary_service(self):
-        """惰性获取实例级日报服务，避免普通运行引入额外 I/O。"""
+        """惰性获取实例级日报服务，避免普通运行引入额外 I/O。
+
+        Returns:
+            DailySummaryService: 日报服务实例。
+        """
         if getattr(self, '_daily_summary_service', None) is None:
             from module.statistics.daily_summary import DailySummaryService
 
@@ -141,7 +163,14 @@ class AzurLaneAutoScript:
 
     @staticmethod
     def _daily_summary_settings_from_config(config):
-        """从主线程已加载的配置创建日报专用只读快照。"""
+        """从主线程已加载的配置创建日报专用只读快照。
+
+        Args:
+            config: 主配置对象。
+
+        Returns:
+            SimpleNamespace: 日报配置快照。
+        """
         return SimpleNamespace(
             DailySummary_Enable=bool(
                 getattr(config, 'DailySummary_Enable', False)
@@ -163,7 +192,14 @@ class AzurLaneAutoScript:
 
     @staticmethod
     def _daily_summary_settings_from_data(data):
-        """仅从配置文件数据创建日报快照，不访问调度器配置对象。"""
+        """仅从配置文件数据创建日报快照，不访问调度器配置对象。
+
+        Args:
+            data (dict): 配置字典数据。
+
+        Returns:
+            SimpleNamespace: 日报配置快照。
+        """
         alas = data.get('Alas') if isinstance(data, dict) else None
         if not isinstance(alas, dict):
             alas = {}
@@ -184,7 +220,11 @@ class AzurLaneAutoScript:
         )
 
     def _check_daily_summary(self, config=None):
-        """检查日报，不连接设备，也不影响调度器主流程。"""
+        """检查日报，不连接设备，也不影响调度器主流程。
+
+        Args:
+            config (SimpleNamespace, optional): 日报配置快照。默认为 None。
+        """
         try:
             if config is None:
                 config = self._get_daily_summary_settings()
@@ -202,7 +242,11 @@ class AzurLaneAutoScript:
             logger.warning(f'[日报] 调度检查失败，已忽略: {type(error).__name__}')
 
     def _get_daily_summary_settings(self):
-        """读取最新日报设置，不重载正在执行任务的完整配置对象。"""
+        """读取最新日报设置，不重载正在执行任务的完整配置对象。
+
+        Returns:
+            SimpleNamespace: 日报配置快照。
+        """
         try:
             config_path = filepath_config(self.config_name)
             modified_at = os.stat(config_path).st_mtime_ns
@@ -246,7 +290,14 @@ class AzurLaneAutoScript:
                 self._daily_summary_thread = None
 
     def _start_daily_summary_scheduler(self, config=None):
-        """启动不依赖游戏任务的日报定时检查线程。"""
+        """启动不依赖游戏任务的日报定时检查线程。
+
+        Args:
+            config (AzurLaneConfig, optional): 配置对象。默认为 None。
+
+        Returns:
+            bool: 启动成功或已在运行返回 True，否则返回 False。
+        """
         # 只使用调用方已经持有的配置；绝不通过 self.config 触发懒加载。
         if config is None or not bool(
             getattr(config, 'DailySummary_Enable', False)
@@ -295,7 +346,11 @@ class AzurLaneAutoScript:
         return True
 
     def _stop_daily_summary_scheduler(self):
-        """停止日报定时检查线程。"""
+        """停止日报定时检查线程。
+
+        Returns:
+            bool: 成功停止返回 True，未运行或无需停止返回 False。
+        """
         stop_event = self._daily_summary_stop
         thread = self._daily_summary_thread
         if stop_event is None and thread is None:
@@ -311,7 +366,14 @@ class AzurLaneAutoScript:
         return True
 
     def _record_daily_summary_task_start(self, task: str):
-        """为启用日报的实例记录任务开始，不向调度器传播存储错误。"""
+        """为启用日报的实例记录任务开始，不向调度器传播存储错误。
+
+        Args:
+            task (str): 任务名称。
+
+        Returns:
+            Any: 任务运行记录 ID，失败或未启用时返回 None。
+        """
         if not self._daily_summary_enabled:
             return None
         try:
@@ -325,7 +387,13 @@ class AzurLaneAutoScript:
     def _record_daily_summary_task_finish(
         self, run_id, success, started_at: datetime
     ):
-        """记录任务结果；日报存储异常不能改变既有错误恢复逻辑。"""
+        """记录任务结果；日报存储异常不能改变既有错误恢复逻辑。
+
+        Args:
+            run_id: 任务运行记录 ID。
+            success (bool | str): 任务执行结果。
+            started_at (datetime): 任务开始时间。
+        """
         if run_id is None:
             return
         try:
@@ -544,7 +612,14 @@ class AzurLaneAutoScript:
 
     @staticmethod
     def _warmup_duration_text(seconds):
-        """把秒数格式化为人类可读的耗时文本，如 '3 分 15 秒'。"""
+        """把秒数格式化为人类可读的耗时文本，如 '3 分 15 秒'。
+
+        Args:
+            seconds (int | float): 耗时秒数。
+
+        Returns:
+            str: 格式化后的耗时文本。
+        """
         seconds = max(0, int(seconds))
         h, m = divmod(seconds, 3600)
         m, s = divmod(m, 60)
@@ -682,7 +757,14 @@ class AzurLaneAutoScript:
             exit(1)
 
     def _is_strict_restart(self, command):
-        """统一任务异常和调度结果的敏感任务停机条件。"""
+        """统一任务异常和调度结果的敏感任务停机条件。
+
+        Args:
+            command (str): 任务命令名称。
+
+        Returns:
+            bool: 是否属于严格重启模式下的敏感任务。
+        """
         task_name = inflection.camelize(command)
         return self.config.Error_StrictRestart and self.config.cross_get(
             keys=f'{task_name}.Scheduler.Sensitive', default=False
@@ -1186,6 +1268,7 @@ class AzurLaneAutoScript:
             self.cleanup_error_logs(config_folder)
 
     def restart(self):
+        """执行游戏客户端重启任务。"""
         from module.handler.login import LoginHandler
         if self.delay_due_restart():
             return
@@ -1193,7 +1276,11 @@ class AzurLaneAutoScript:
         self.delay_next_restart()
 
     def restart_random_delay_minutes(self):
-        """获取每日重启的随机延后分钟数。"""
+        """获取每日重启的随机延后分钟数。
+
+        Returns:
+            int: 随机延后的分钟数。
+        """
         random_delay = getattr(self.config, 'Restart_RandomDelay', 0)
         if isinstance(random_delay, list) and len(random_delay) == 2:
             random_delay = tuple(random_delay)
@@ -1206,7 +1293,11 @@ class AzurLaneAutoScript:
         return max(delay, 0)
 
     def delay_due_restart(self):
-        """把已排在服务器刷新整点的每日重启改排到随机延后时间。"""
+        """把已排在服务器刷新整点的每日重启改排到随机延后时间。
+
+        Returns:
+            bool: 触发了随机延后返回 True，无需延后返回 False。
+        """
         current = self.config.Scheduler_NextRun
         if not isinstance(current, datetime):
             return False
@@ -1644,6 +1735,7 @@ class AzurLaneAutoScript:
         GameManager(config=self.config, device=self.device, task="GameManager").run()
 
     def emulator_manager(self):
+        """执行模拟器管理器任务（支持通过 SSH 执行远程启动/关闭命令）。"""
         import subprocess
         # 优先使用 EmulatorInfo 中的 SSH 配置
         if getattr(self.config, 'EmulatorInfo_EnableRemoteSSH', False):
@@ -1723,10 +1815,12 @@ class AzurLaneAutoScript:
             import threading
             
             def collect_stderr():
+                """收集子进程的标准错误输出。"""
                 for line in process.stderr:
                     stderr_content.append(line.strip())
             
             def collect_stdout():
+                """收集并输出子进程的标准输出。"""
                 for line in process.stdout:
                     logger.info(f'[Alas-SSH] 远程输出: {line.strip()}')
 
@@ -1966,6 +2060,10 @@ class AzurLaneAutoScript:
         return task.command
 
     def loop(self):
+        """调度器主事件循环。
+
+        负责任务提取、看门狗生命周期管理、日常维护检查、异常恢复与重试逻辑。
+        """
         logger.set_file_logger(self.config_name)
         logger.info(f'[Alas] 启动调度器循环: {self.config_name}')
 
@@ -2270,6 +2368,12 @@ class AzurLaneAutoScript:
                 time.sleep(wait_seconds)
 
 if __name__ == '__main__':
+    if '--tui' in sys.argv:
+        from tui import main as tui_main
+        sys.argv.remove('--tui')
+        tui_main()
+        sys.exit(0)
+
     try:
         config_name = parse_config_name(sys.argv[1:])
     except ValueError as error:

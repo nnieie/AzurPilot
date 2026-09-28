@@ -1,20 +1,15 @@
-"""
-实例进程管理器。
+"""实例进程管理器。
 
 管理 Alas 多实例运行时的进程生命周期，包括进程池维护、状态追踪
 （运行中/停止/异常）及进程间通信的安全处理逻辑。
 """
-
 import argparse
-
-# 此文件专门用于管理 Alas 运行时各实例进程的生存周期及其子进程。
-# 负责多账号多开时的进程池维护、状态（运行中、停止、异常）追踪及进程间通信的安全处理逻辑。
-from collections.abc import Sequence
 import os
 import queue
-import uuid
 import threading
 import time
+import uuid
+from collections.abc import Sequence
 from multiprocessing import Process
 from typing import Dict, List, Union
 
@@ -22,8 +17,18 @@ import inflection
 from rich.console import ConsoleRenderable
 from rich.text import Text
 
-from module.logger import logger, set_file_logger, set_func_logger
 from module.config.utils import DEFAULT_CONFIG_NAME
+from module.logger import logger, set_file_logger, set_func_logger
+from module.runtime.process_control import is_process_alive, stop_process, stop_process_tree
+from module.runtime.setting import State
+from module.runtime.worker_events import ExitEvent, TaskEvent, WorkerResult
+from module.runtime.worker_registry import (
+    get_workers,
+    is_current_owner,
+    process_matches,
+    register_worker,
+    unregister_worker,
+)
 from module.submodule.submodule import load_mod
 from module.submodule.utils import (
     get_available_func,
@@ -33,16 +38,6 @@ from module.submodule.utils import (
     get_func_mod,
     list_mod_instance,
 )
-from module.runtime.setting import State
-from module.runtime.process_control import is_process_alive, stop_process, stop_process_tree
-from module.runtime.worker_events import ExitEvent, TaskEvent, WorkerResult
-from module.runtime.worker_registry import (
-    get_workers,
-    is_current_owner,
-    process_matches,
-    register_worker,
-    unregister_worker,
-)
 
 _STOP_ACTION_UNSET = object()
 
@@ -51,6 +46,21 @@ USB_CAPTURE_PREVIEW_SUFFIX = "__usb_capture_preview"
 
 
 class ProcessManager:
+    """单个 Alas 配置实例的进程生命周期管理器。
+
+    管理工作进程启动、优雅与强制停止、日志及截图队列消费，维护多实例间的进程隔离。
+
+    Attributes:
+        config_name: 配置实例名称。
+        current_task: 当前正在执行的任务名称。
+        started_func: 启动时指定的目标函数或模块。
+        run_id: 当前运行轮次的唯一标识 UUID。
+        exit_result: 退出结果状态枚举。
+        renderables: 缓存的日志渲染元素列表。
+        renderables_max_length: 日志条目上限。
+        renderables_reduce_length: 超出上限时单次削减条数。
+        thd_log_queue_handler: 日志队列处理线程。
+    """
     _processes: Dict[str, "ProcessManager"] = {}
     _managers_lock = threading.RLock()
     _lifecycle_locks: Dict[str, threading.RLock] = {}
@@ -58,6 +68,11 @@ class ProcessManager:
     MANUAL_STOP_ACTION_TIMEOUT = 30
 
     def __init__(self, config_name: str = DEFAULT_CONFIG_NAME) -> None:
+        """初始化实例进程管理器。
+
+        Args:
+            config_name: 配置实例名称。
+        """
         self.config_name = config_name
         self._renderable_queue: queue.Queue[ConsoleRenderable | TaskEvent | ExitEvent] = State.manager.Queue()
         self._preview_queue = None
@@ -78,7 +93,14 @@ class ProcessManager:
 
     @classmethod
     def _get_lifecycle_lock(cls, config_name: str) -> threading.RLock:
-        """返回配置实例共享的生命周期锁。"""
+        """获取指定配置实例共享的生命周期互斥锁。
+
+        Args:
+            config_name: 实例名称。
+
+        Returns:
+            threading.RLock: 对应的可重入锁对象。
+        """
         with cls._lifecycle_locks_lock:
             try:
                 return cls._lifecycle_locks[config_name]
@@ -88,12 +110,14 @@ class ProcessManager:
                 return lock
 
     def set_state_override(self, state: int, duration: float = 10) -> None:
-        """
-        强制设置临时的 UI 状态，用于图标测试。
+        """强制设置临时的 UI 状态，用于图标与状态展示测试。
 
         Args:
-            state: 状态值（1=运行中, 2=停止, 3=错误, 4=更新）
-            duration: 覆盖持续时间（秒），为 0 或 None 时持续生效直到手动清除
+            state: 状态值（1=运行中, 2=停止, 3=错误, 4=更新）。
+            duration: 覆盖持续时间（秒），为 0 或 None 时持续生效直到手动清除。
+
+        Raises:
+            ValueError: 传入无效的状态码。
         """
         if state not in (1, 2, 3, 4):
             raise ValueError(f"Invalid state override: {state}")
@@ -104,10 +128,16 @@ class ProcessManager:
             self._state_override_deadline = None
 
     def clear_state_override(self) -> None:
+        """清除手动设置的临时状态覆盖。"""
         self._state_override = None
         self._state_override_deadline = None
 
     def _get_state_override(self) -> int | None:
+        """获取当前有效的临时状态覆盖值（若已过期则自动清除）。
+
+        Returns:
+            int | None: 状态码；无覆盖或已过期返回 None。
+        """
         if self._state_override is None:
             return None
         if (
@@ -119,6 +149,12 @@ class ProcessManager:
         return self._state_override
 
     def start(self, func: str | None, ev: threading.Event | None = None) -> None:
+        """启动实例子进程运行指定任务或调度器。
+
+        Args:
+            func: 执行的功能或模块名称；为 None 时自动从配置获取。
+            ev: 可选的通知子进程退出的同步事件对象。
+        """
         # 更新事务持有 restart_lock；清理过程持有 cleanup_lock。请求线程不能在事务
         # 期间长期阻塞；同线程的 RLock 重入仍允许更新失败后的实例恢复。
         if not State.restart_lock.acquire(blocking=False):
@@ -129,7 +165,8 @@ class ProcessManager:
                 logger.info(f"[{self.config_name}] WebUI 清理进行中，拒绝启动 worker")
                 return
             try:
-                with self._get_lifecycle_lock(self.config_name):
+                from module.runtime.account_vault import OPERATIONS
+                with self._get_lifecycle_lock(self.config_name), OPERATIONS:
                     if State._restart_requested or State._clearup:
                         logger.warning(
                             f"[{self.config_name}] WebUI 正在重启或已清理，拒绝启动 worker"
@@ -147,6 +184,8 @@ class ProcessManager:
                         return
                     if func is None:
                         func = get_config_mod(self.config_name)
+                    from module.api.account_service import prepare_worker
+                    account_key = prepare_worker(self.config_name)
                     self.started_func = func
                     with self._runtime_lock:
                         self.current_task = None
@@ -165,6 +204,7 @@ class ProcessManager:
                         ev,
                         self._preview_queue,
                         self.run_id,
+                        account_key,
                     )
                     process = Process(
                         target=ProcessManager.run_process,
@@ -188,6 +228,7 @@ class ProcessManager:
             State.restart_lock.release()
 
     def start_log_queue_handler(self) -> None:
+        """启动后台线程监听并分发工作进程的日志和截图队列。"""
         threading.Thread(target=self._thread_preview_queue_handler,
                          args=(self._preview_queue, self.run_id), daemon=True).start()
         self.thd_log_queue_handler = threading.Thread(
@@ -197,7 +238,11 @@ class ProcessManager:
         self.thd_log_queue_handler.start()
 
     def stop(self) -> bool:
-        """停止 worker 进程树，并返回是否确认全部结束。"""
+        """停止 worker 进程树，并返回是否确认全部结束。
+
+        Returns:
+            bool: 进程树全部退出并成功注销登记返回 True，否则返回 False。
+        """
         with self._get_lifecycle_lock(self.config_name):
             stopped, _ = self._stop_worker_locked()
         if stopped:
@@ -215,6 +260,12 @@ class ProcessManager:
         ``stay_there`` 直接复用最初的强制停止路径，不启动收尾进程，确保
         停止行为和响应速度与未引入停止后动作前完全一致。未传入动作时保留
         旧调用行为，由独立收尾进程重新读取配置。
+
+        Args:
+            action: 可选的停止收尾动作（如 'stay_there', 'close_game' 等）。
+
+        Returns:
+            bool: 进程已停止且收尾逻辑执行完成返回 True。
         """
         if action is not _STOP_ACTION_UNSET:
             from module.runtime.scheduler_stop import normalize_stop_action
@@ -234,7 +285,11 @@ class ProcessManager:
         return stopped
 
     def _stop_worker_locked(self) -> tuple[bool, bool]:
-        """在实例生命周期锁内终止 worker，并返回是否可执行收尾动作。"""
+        """在实例生命周期锁内终止 worker，并返回是否可执行收尾动作。
+
+        Returns:
+            tuple[bool, bool]: (进程是否已完全停止, 是否允许触发收尾动作)。
+        """
         process = self._process
         local_process_alive = self._is_process_alive(process)
 
@@ -315,13 +370,21 @@ class ProcessManager:
 
     @staticmethod
     def _terminate_manual_stop_action(process: Process) -> None:
-        """终止超时收尾进程及其子树，避免遗留设备操作。"""
+        """终止超时收尾进程及其子树，避免遗留设备操作。
+
+        Args:
+            process: 收尾子进程对象。
+        """
         if not stop_process_tree(process, name="停止收尾", timeout=1, kill_timeout=1):
             logger.warning("[WebUI-进程管理] 终止停止收尾进程失败")
 
     @staticmethod
     def run_manual_stop_action(config_name: str) -> None:
-        """独立进程入口，延迟导入以避免 WebUI 父进程加载设备依赖。"""
+        """独立进程入口，延迟导入以避免 WebUI 父进程加载设备依赖。
+
+        Args:
+            config_name: 配置实例名称。
+        """
         from module.runtime.scheduler_stop import run_stop_action
 
         run_stop_action(config_name)
@@ -330,7 +393,11 @@ class ProcessManager:
 
     @classmethod
     def _terminate_unregistered_process(cls, process: Process) -> None:
-        """通过本地句柄回滚登记失败的进程及其子树。"""
+        """通过本地句柄回滚登记失败的进程及其子树。
+
+        Args:
+            process: 启动异常的未登记子进程句柄。
+        """
         if not stop_process_tree(process, name="未登记 worker", timeout=3):
             logger.warning("[WebUI-进程管理] 回滚未登记 worker 失败")
             # 树枚举可能被拒绝，但刚创建的 Process 句柄仍可安全终止根进程。
@@ -339,7 +406,14 @@ class ProcessManager:
     def _registered_worker(
         self, expected_pid: int | None = None
     ) -> tuple[int | None, dict | None, bool]:
-        """返回已验证的 worker 身份；调用方必须持有生命周期锁。"""
+        """返回已验证的 worker 身份；调用方必须持有生命周期锁。
+
+        Args:
+            expected_pid: 预期的进程 PID。
+
+        Returns:
+            tuple[int | None, dict | None, bool]: (进程 PID, 登记记录字典, 是否通过验证)。
+        """
         registry = State.process_registry
         cached_pid = None
         if registry is not None:
@@ -409,11 +483,20 @@ class ProcessManager:
         return pid, None, False
 
     def _registered_pid(self) -> tuple[int | None, bool]:
-        """返回登记的 worker PID 及其身份是否已被持久化记录确认。"""
+        """返回登记的 worker PID 及其身份是否已被持久化记录确认。
+
+        Returns:
+            tuple[int | None, bool]: (PID, 是否已验证)。
+        """
         pid, _, verified = self._registered_worker()
         return pid, verified
 
     def _register_process(self, pid: int | None) -> None:
+        """登记启动的工作进程 PID。
+
+        Args:
+            pid: 进程 PID。
+        """
         if pid is None:
             return
         register_worker(os.getpid(), self.config_name, pid)
@@ -421,6 +504,11 @@ class ProcessManager:
             State.process_registry[self.config_name] = pid
 
     def _unregister_process(self) -> bool:
+        """从注册表中注销当前实例的工作进程记录。
+
+        Returns:
+            bool: 注销成功返回 True，当前 WebUI 不拥有所有权或出错返回 False。
+        """
         try:
             if not unregister_worker(os.getpid(), self.config_name):
                 logger.error(
@@ -441,7 +529,12 @@ class ProcessManager:
         return True
 
     def _thread_preview_queue_handler(self, output, run_id):
-        """从子进程接收已编码截图并通知浏览器，不访问设备。"""
+        """从子进程接收已编码截图并通知浏览器，不访问设备。
+
+        Args:
+            output: 截图帧队列。
+            run_id: 运行轮次 ID。
+        """
         from module.runtime.preview import hub
         while self.run_id == run_id:
             try:
@@ -456,7 +549,14 @@ class ProcessManager:
                 return
 
     def _consume_worker_message(self, message, run_id) -> None:
-        """状态只接受当前轮事件；已确认的最终结果不被迟到事件覆盖。"""
+        """解析并消费子进程发送的事件消息。
+
+        状态只接受当前轮事件；已确认的最终结果不被迟到事件覆盖。
+
+        Args:
+            message: 事件或日志消息对象。
+            run_id: 运行轮次 ID。
+        """
         with self._runtime_lock:
             if run_id != self.run_id:
                 return
@@ -474,7 +574,11 @@ class ProcessManager:
         self._append_renderable(message)
 
     def _append_renderable(self, renderable) -> None:
-        """保存一条日志并在锁外通知订阅者，避免 UI 轮询造成批量刷新。"""
+        """保存一条日志并在锁外通知订阅者，避免 UI 轮询造成批量刷新。
+
+        Args:
+            renderable: 待保存的日志渲染条目。
+        """
         with self._runtime_lock:
             self.renderables.append(renderable)
             if len(self.renderables) > self.renderables_max_length:
@@ -483,7 +587,13 @@ class ProcessManager:
         hub.publish(self.config_name)
 
     def _drain_worker_queue(self, output, run_id, queue_lock=None) -> None:
-        """已确认 worker 退出后排空队列，包含其最后一次同步 put。"""
+        """已确认 worker 退出后排空队列，包含其最后一次同步 put。
+
+        Args:
+            output: 队列对象。
+            run_id: 运行轮次 ID。
+            queue_lock: 队列锁。
+        """
         if queue_lock is None:
             queue_lock = self._queue_lock
         with queue_lock:
@@ -495,6 +605,14 @@ class ProcessManager:
                 self._consume_worker_message(message, run_id)
 
     def _thread_log_queue_handler(self, output, process, run_id, queue_lock=None) -> None:
+        """后台线程持续从跨进程队列读取日志并分发。
+
+        Args:
+            output: 消息队列。
+            process: 子进程句柄。
+            run_id: 运行轮次 ID。
+            queue_lock: 队列访问互斥锁。
+        """
         # 锁与队列一起绑定本轮，旧线程的阻塞读取不影响新轮状态。
         if queue_lock is None:
             queue_lock = self._queue_lock
@@ -514,6 +632,11 @@ class ProcessManager:
 
     @property
     def alive(self) -> bool:
+        """判断当前实例工作进程是否处于存活状态。
+
+        Returns:
+            bool: 进程仍在存活运行返回 True，否则返回 False。
+        """
         with self._get_lifecycle_lock(self.config_name):
             if self._is_process_alive(self._process):
                 self._worker_observed = True
@@ -530,6 +653,11 @@ class ProcessManager:
 
     @property
     def state(self) -> int:
+        """获取当前实例运行状态码。
+
+        Returns:
+            int: 1=运行中, 2=停止, 3=异常, 4=更新中。
+        """
         override_state = self._get_state_override()
         if override_state is not None:
             return override_state
@@ -560,14 +688,13 @@ class ProcessManager:
 
     @classmethod
     def get_manager(cls, config_name: str) -> "ProcessManager":
-        """
-        获取指定配置名称的进程管理器，不存在时自动创建。
+        """获取指定配置名称的进程管理器，不存在时自动创建。
 
         Args:
-            config_name: 配置实例名称（如 'alas'）
+            config_name: 配置实例名称（如 'alas'）。
 
         Returns:
-            对应的 ProcessManager 实例。
+            ProcessManager: 对应的 ProcessManager 实例。
         """
         with cls._managers_lock:
             if config_name not in cls._processes:
@@ -576,30 +703,57 @@ class ProcessManager:
 
     @classmethod
     def is_running(cls, config_name: str) -> bool:
-        """检查指定配置实例是否正在运行。"""
+        """检查指定配置实例是否正在运行。
+
+        Args:
+            config_name: 配置实例名称。
+
+        Returns:
+            bool: 处于运行状态返回 True，否则返回 False。
+        """
         with cls._managers_lock:
             manager = cls._processes.get(config_name)
         return manager is not None and manager.alive
 
     @classmethod
     def remove_manager(cls, config_name: str) -> None:
-        """移除指定配置实例的进程管理器。"""
+        """移除指定配置实例的进程管理器缓存。
+
+        Args:
+            config_name: 配置实例名称。
+        """
         with cls._managers_lock:
             cls._processes.pop(config_name, None)
 
     @staticmethod
     def run_process(
-        config_name,
+        config_name: str,
         func: str,
         q: queue.Queue[ConsoleRenderable | TaskEvent | ExitEvent],
         e: threading.Event | None = None,
         preview_queue=None,
-        run_id=None,
+        run_id: str = None,
+        account_key=None,
     ) -> None:
-        """统一发布最终结果，包括调度器通过 SystemExit 退出的路径。"""
+        """工作子进程的主入口点函数。
+
+        统一发布最终结果，包括调度器通过 SystemExit 退出的路径。
+
+        Args:
+            config_name: 配置实例名称。
+            func: 执行的任务或模块名。
+            q: 跨进程消息与日志队列。
+            e: 停止通知同步事件。
+            preview_queue: 预览帧队列。
+            run_id: 运行轮次 ID。
+            account_key: 解密注入的账号密钥。
+        """
         from module.runtime.worker_events import initialize
 
         initialize(q.put, run_id)
+        if account_key is not None:
+            from module.runtime.account_vault import vault
+            vault.keys[config_name] = account_key
         result = WorkerResult.ERROR
         try:
             result = ProcessManager._run_process(config_name, func, q, e, preview_queue, run_id)
@@ -613,7 +767,20 @@ class ProcessManager:
             q.put(ExitEvent(run_id, result))
 
     @staticmethod
-    def _run_process(config_name, func, q, e, preview_queue, run_id) -> WorkerResult:
+    def _run_process(config_name: str, func: str, q, e, preview_queue, run_id) -> WorkerResult:
+        """子进程执行具体业务的核心流程。
+
+        Args:
+            config_name: 配置实例名称。
+            func: 执行的任务或模块名称。
+            q: 日志输出队列。
+            e: 退出事件。
+            preview_queue: 预览帧输出队列。
+            run_id: 运行轮次 ID。
+
+        Returns:
+            WorkerResult: 执行最终结果状态。
+        """
         import sys
 
         if sys.platform != "win32":
@@ -639,9 +806,8 @@ class ProcessManager:
 
         # 初始化日志器
         set_file_logger(name=config_name)
-        if State.electron:
-            # 参考 https://github.com/LmeSzinc/AzurLaneAutoScript/issues/2051
-            logger.info("[WebUI] 检测到 Electron 环境，移除标准输出日志处理器")
+        if State.electron or os.environ.get("AZURPILOT_TUI") == "1":
+            # 运行于 Electron 或 TUI 终端界面时，移除标准输出处理器避免污染终端渲染
             from module.logger import console_hdlr
 
             logger.removeHandler(console_hdlr)
@@ -661,7 +827,6 @@ class ProcessManager:
             return WorkerResult.FINISHED
 
         from module.config.config import AzurLaneConfig
-
 
         # 设置环境变量，使预加载模块（如 al_ocr.py）可以提前读取配置
         os.environ["ALAS_CONFIG_NAME"] = config_name
@@ -737,8 +902,7 @@ class ProcessManager:
         instances: Sequence[Union["ProcessManager", str]] | None = None,
         ev: threading.Event | None = None,
     ) -> None:
-        """
-        更新重载后（或更新失败时），重启所有更新前正在运行的 AzurPilot 实例。
+        """更新重载后（或更新失败时），重启所有更新前正在运行的 AzurPilot 实例。
 
         Args:
             instances: 需要重启的实例列表，元素为 ProcessManager 或配置名称字符串。
@@ -768,9 +932,19 @@ class ProcessManager:
         except FileNotFoundError:
             pass
 
+        from module.api.protocol import ApiError
+
         for process in _instances:
             logger.info(f"启动中 [{process.config_name}]")
-            process.start(func=get_config_mod(process.config_name), ev=ev)
+            try:
+                process.start(func=get_config_mod(process.config_name), ev=ev)
+            except ApiError as error:
+                process.exit_result = WorkerResult.ERROR
+                logger.error(f'[{process.config_name}] 自动恢复被阻止（{error.code}）；请在 WebUI 检查账号管理，其他实例继续启动')
+            except Exception:
+                process.exit_result = WorkerResult.ERROR
+                # 启动异常可能带有账号上下文，只记录安全的通用说明。
+                logger.error(f'[{process.config_name}] 自动恢复失败；该实例保持停止，其他实例和 WebUI 继续启动')
 
         try:
             os.remove("./config/reloadalas")

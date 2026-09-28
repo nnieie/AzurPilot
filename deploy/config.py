@@ -81,6 +81,8 @@ class ConfigModel:
 
 
 class DeployConfig(DeployConfigTransaction, ConfigModel):
+    """部署配置管理器，负责配置的读取、保存、重定向与执行环境管理。"""
+
     def __init__(self, file=DEPLOY_CONFIG):
         """初始化部署配置。
 
@@ -97,6 +99,7 @@ class DeployConfig(DeployConfigTransaction, ConfigModel):
         self.show_config()
 
     def show_config(self):
+        """打印与默认模板不同的配置项。"""
         logger.hr("Show deploy config", 1)
         for k, v in self.config.items():
             if k in ("Password", "SSHUser"):
@@ -173,6 +176,11 @@ class DeployConfig(DeployConfigTransaction, ConfigModel):
 
     @cached_property
     def root_filepath(self):
+        """获取项目根目录绝对路径。
+
+        Returns:
+            str: 格式化为斜杠分隔的根目录绝对路径。
+        """
         return (
             os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))
             .replace(r"\\", "/")
@@ -210,6 +218,11 @@ class DeployConfig(DeployConfigTransaction, ConfigModel):
             return True
 
     def show_error(self, command=None):
+        """展示更新失败信息及排查指引。
+
+        Args:
+            command (str, optional): 导致失败的命令。
+        """
         logger.hr("Update failed", 0)
         self.show_config()
         logger.info("")

@@ -2,6 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { spawn, spawnSync } from "node:child_process";
+import { pathToFileURL } from "node:url";
 
 import yazl from "yazl";
 
@@ -40,12 +41,11 @@ function printHelp() {
   --site-url <url>     canonical/sitemap 默认站点 URL，默认 ${DEFAULT_SITE_URL}
   --remote <name>      拉取历史时使用的 remote，默认 origin
   --no-fetch           跳过 git fetch
-  --fetch-full         浅克隆时执行 git fetch --unshallow
   --help               显示帮助
 
 环境变量：
   GOC_BRANCH, GOC_REF, GOC_HISTORY, GOC_OUTPUT, GOC_REMOTE,
-  GOC_SITE_URL, GOC_MIRROR_URLS, GOC_FETCH=0, GOC_FETCH_FULL=1
+  GOC_SITE_URL, GOC_MIRROR_URLS, GOC_FETCH=0
 `);
 }
 
@@ -104,7 +104,6 @@ function parseArgs(argv) {
     siteUrl: normalizeSiteUrl(env.GOC_SITE_URL || DEFAULT_SITE_URL),
     remote: env.GOC_REMOTE || "origin",
     fetch: env.GOC_FETCH !== "0",
-    fetchFull: env.GOC_FETCH_FULL === "1",
   };
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -130,9 +129,6 @@ function parseArgs(argv) {
         break;
       case "--no-fetch":
         options.fetch = false;
-        break;
-      case "--fetch-full":
-        options.fetchFull = true;
         break;
       case "--help":
       case "-h":
@@ -217,27 +213,7 @@ function maybeFetchHistory(options, repoRoot) {
     return;
   }
 
-  const fetchDepth = String(options.history + 5);
-  const isShallow = runGit(
-    ["rev-parse", "--is-shallow-repository"],
-    repoRoot,
-    { allowFailure: true },
-  ) === "true";
-
-  if (!isShallow) {
-    runGit(["fetch", "--no-tags", options.remote, options.branch], repoRoot, { allowFailure: true });
-    return;
-  }
-
-  if (options.fetchFull) {
-    if (gitOk(["fetch", "--no-tags", "--unshallow", options.remote, options.branch], repoRoot)) {
-      return;
-    }
-  } else if (gitOk(["fetch", "--no-tags", "--deepen", fetchDepth, options.remote, options.branch], repoRoot)) {
-    return;
-  }
-
-  runGit(["fetch", "--no-tags", "--depth", fetchDepth, options.remote, options.branch], repoRoot);
+  runGit(["fetch", "--no-tags", options.remote, options.branch], repoRoot);
 }
 
 function resolveBuildRef(options, repoRoot) {
@@ -841,9 +817,7 @@ function writeIndexHtml(outputDir, options, latest, oldCommits, commitInfos, gen
   fs.writeFileSync(path.join(outputDir, "index.html"), html, "utf8");
 }
 
-async function main() {
-  const options = parseArgs(process.argv.slice(2));
-  const repoRoot = resolveRepoRoot();
+export async function buildStaticFiles(options, repoRoot) {
   maybeFetchHistory(options, repoRoot);
 
   const buildRef = resolveBuildRef(options, repoRoot);
@@ -891,7 +865,9 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : error);
-  process.exit(1);
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
+  buildStaticFiles(parseArgs(process.argv.slice(2)), resolveRepoRoot()).catch((error) => {
+    console.error(error instanceof Error ? error.message : error);
+    process.exit(1);
+  });
+}

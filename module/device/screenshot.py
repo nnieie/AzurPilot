@@ -289,6 +289,12 @@ class Screenshot(Adb, WSA, DroidCast, AScreenCap, Scrcpy, NemuIpc, LDOpenGL, Usb
         """检查屏幕分辨率是否为 1280x720。
 
         调用前需先截取截图。
+
+        Returns:
+            bool: 尺寸符合要求或处于可兼容状态返回 True，需要重试返回 False。
+
+        Raises:
+            RequestHumanTakeover: 当分辨率不受支持时抛出。
         """
         if self._screen_size_checked:
             return True

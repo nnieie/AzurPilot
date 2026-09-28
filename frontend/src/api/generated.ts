@@ -25,12 +25,19 @@ export interface Parameters {
   "settings.patch": { values: Record<string, unknown> }
   "startup.get": { instance: string }
   "startup.set": { instance: string; enabled?: boolean | null; remember?: boolean | null }
+  "accounts.status": { instance: string }
+  "accounts.manage": { instance: string; action: "create" | "unlock" | "lock" | "list" | "capture" | "select" | "enable" | "password" | "delete" | "bind_tpm" | "unbind_tpm" | "bind_local" | "unbind_local"; password?: string; new_password?: string; label?: string; profile?: string; enabled?: boolean }
   "updater.status": Record<string, never>
   "updater.commits": { offset?: number; limit?: number }
   "updater.fetch": Record<string, never>
   "updater.apply": Record<string, never>
   "updater.cancel": Record<string, never>
   "announcement.get": { force?: boolean }
+  "background.resolve": { url: string }
+  "background.gallery.list": Record<string, never>
+  "background.gallery.add": { url: string; name?: string }
+  "background.gallery.remove": { id: string }
+  "background.gallery.open": Record<string, never>
   "auth.login": { password?: string }
   "events.subscribe": { instance?: string | null; topics: Array<"instances" | "overview" | "logs" | "preview"> }
 }

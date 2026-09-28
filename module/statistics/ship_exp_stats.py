@@ -30,13 +30,11 @@ from module.config.time_source import now as current_time
 
 
 class ShipExpStats:
+    """舰船经验统计类。
+
+    记录每场战斗时间和经验，统计每日效率（经验/小时），并保存舰船检测数据。
     """
-    舰船经验统计类
-    - 记录每场战斗时间和经验
-    - 统计每日效率 (经验/小时)
-    - 保存舰船检测数据
-    """
-    
+
     # 每个位置的每场战斗经验值
     EXP_PER_BATTLE = {
         1: 431,  # 旗舰
@@ -44,7 +42,7 @@ class ShipExpStats:
     }
     AVG_EXP_PER_BATTLE = 312  # 平均每场经验
     BATTLES_PER_ROUND = 2     # 侵蚀1每轮默认2场战斗
-    
+
     MAX_BATTLE_TIME_SAMPLES = 100  # 保留最近100场战斗时间样本
     MAX_DAILY_STATS_DAYS = 30      # 保留最近30天的统计
     
@@ -57,7 +55,7 @@ class ShipExpStats:
             self._path = Path(path)
         self._instance_name = instance_name or "default"
         self.data = self._load()
-        
+
         # 当前战斗的开始时间
         self._battle_start_time: Optional[float] = None
     
@@ -74,9 +72,9 @@ class ShipExpStats:
         except Exception as e:
             logger.warning(f'[统计-经验] 加载舰船经验数据失败: {e}')
             return {}
-    
+
     def _save(self) -> None:
-        """保存数据文件"""
+        """保存数据文件到本地。"""
         try:
             self._path.parent.mkdir(parents=True, exist_ok=True)
             self._path.write_text(
@@ -85,11 +83,11 @@ class ShipExpStats:
             )
         except Exception as e:
             logger.warning(f'[统计-经验] 保存舰船经验数据失败: {e}')
-    
+
     # ========== 战斗时间记录 ==========
-    
+
     def on_battle_start(self) -> None:
-        """战斗开始时调用（侵蚀1 / 耄耋相接等统一入口）"""
+        """战斗开始时调用（侵蚀1 / 耄耋相接等统一入口）。"""
         self._battle_start_time = time.time()
     
     def on_battle_end(self, fleet_index: int = 1, source: str = "cl1") -> Optional[float]:
@@ -97,30 +95,27 @@ class ShipExpStats:
         战斗结束时调用
         
         Args:
-            fleet_index: 舰队索引 (1-6), 用于确定经验值
-            source: 战斗来源:
-                - "cl1": 侵蚀1练级
-                - "meow": 耄耋相接
-                - 其他值默认按 "cl1" 处理
-            record_daily_summary: 是否记录日报专用的精确侵蚀1事件
-        
+            fleet_index (int): 舰队索引（1-6），用于确定经验值。默认为 1。
+            source (str): 战斗来源。"cl1" 表示侵蚀1练级，"meow" 表示耄耋相接。默认为 "cl1"。
+            record_daily_summary (bool): 是否记录日报专用的精确侵蚀1事件。默认为 False。
+
         Returns:
-            本场战斗耗时(秒), 如果未记录开始时间则返回None
+            float | None: 本场战斗耗时（秒）。若未记录开始时间则返回 None。
         """
         if self._battle_start_time is None:
             return None
-        
+
         duration = time.time() - self._battle_start_time
         self._battle_start_time = None
-        
+
         # 过滤异常值 (太短或太长的战斗)
         if duration < 1 or duration > 300:
-            logger.debug(f'Battle duration {duration:.1f}s out of range, not recorded')
+            logger.debug(f'战斗时长 {duration:.1f} 秒超出合理范围，不予记录')
             return duration
-        
+
         # 记录战斗时间（根据来源分别统计）
         self._record_battle_time(duration, source=source)
-        
+
         # 计算本场经验 (使用平均值，因为每个位置经验不同)
         # 旗舰 431 + 其他位置 288*5 = 1871, 平均 312
         avg_exp = self.AVG_EXP_PER_BATTLE
@@ -132,11 +127,11 @@ class ShipExpStats:
         return duration
 
     def _record_battle_time(self, duration: float, source: str = "cl1") -> None:
-        """记录单场战斗时间到样本
-        
+        """记录单场战斗时间到样本列表中。
+
         Args:
-            duration: 本场战斗时长（秒）
-            source: 战斗来源 ("cl1" / "meow")
+            duration (float): 本场战斗时长（秒）。
+            source (str): 战斗来源（"cl1" 或 "meow"）。默认为 "cl1"。
         """
         # 不同来源使用不同的键，避免侵蚀1与耄耋相接混合统计
         if source == "meow":
@@ -145,55 +140,61 @@ class ShipExpStats:
         else:
             key = 'battle_times'
             default_avg = 52.0
-        
+
         if key not in self.data:
             self.data[key] = {'samples': [], 'average': default_avg}
-        
+
         samples = self.data[key]['samples']
         samples.append(round(duration, 2))
-        
+
         # 只保留最近N个样本
         if len(samples) > self.MAX_BATTLE_TIME_SAMPLES:
             self.data[key]['samples'] = samples[-self.MAX_BATTLE_TIME_SAMPLES:]
             samples = self.data[key]['samples']
-        
+
         # 更新平均值
         if samples:
             self.data[key]['average'] = round(sum(samples) / len(samples), 2)
-        
+
         self._save()
-    
+
     def record_round_time(self, round_duration: float) -> None:
-        """记录单轮侵蚀1时间到样本"""
+        """记录单轮侵蚀1时间到样本列表中。
+
+        Args:
+            round_duration (float): 单轮战斗耗时（秒）。
+        """
         if 'round_times' not in self.data:
             self.data['round_times'] = {'samples': [], 'average': 120.0}
-        
+
         samples = self.data['round_times']['samples']
         samples.append(round(round_duration, 2))
-        
+
         # 只保留最近100个样本
         if len(samples) > 100:
             self.data['round_times']['samples'] = samples[-100:]
             samples = self.data['round_times']['samples']
-        
+
         # 更新平均值
         if samples:
             self.data['round_times']['average'] = round(sum(samples) / len(samples), 2)
-        
+
         self._save()
-    
+
     # ========== 每日经验效率统计 ==========
-    
+
     def _update_daily_stats(self, exp_gained: int, battle_duration: float) -> None:
-        """
-        更新每日统计数据
-        每场战斗结束后调用，累加到当天的统计
+        """更新每日统计数据，在每场战斗结束后累加到当天的统计。
+
+        Args:
+            exp_gained (int): 本场获得的经验值。
+            battle_duration (float): 本场战斗耗时（秒）。
         """
         today = date.today().isoformat()  # "2026-01-01"
-        
+
         if 'daily_stats' not in self.data:
             self.data['daily_stats'] = {}
-        
+
         if today not in self.data['daily_stats']:
             self.data['daily_stats'][today] = {
                 'total_run_time': 0.0,
@@ -201,50 +202,65 @@ class ShipExpStats:
                 'battle_count': 0,
                 'exp_per_hour': 0.0
             }
-        
+
         stats = self.data['daily_stats'][today]
         stats['total_run_time'] += battle_duration
         stats['total_exp_gained'] += exp_gained
         stats['battle_count'] += 1
-        
+
         # 计算每小时经验效率
         hours = stats['total_run_time'] / 3600
         if hours > 0:
             stats['exp_per_hour'] = round(stats['total_exp_gained'] / hours, 2)
-        
+
         # 清理旧数据
         self._cleanup_old_daily_stats()
-        
+
         self._save()
-    
+
     def _cleanup_old_daily_stats(self) -> None:
-        """清理超过30天的旧统计数据"""
+        """清理超过保留天数的旧统计数据。"""
         if 'daily_stats' not in self.data:
             return
-        
+
         dates = sorted(self.data['daily_stats'].keys(), reverse=True)
         if len(dates) > self.MAX_DAILY_STATS_DAYS:
             for old_date in dates[self.MAX_DAILY_STATS_DAYS:]:
                 del self.data['daily_stats'][old_date]
-    
+
     def get_average_battle_time(self) -> float:
-        """获取平均每场战斗时间(秒)"""
+        """获取平均每场战斗时间。
+
+        Returns:
+            float: 平均耗时（秒）。
+        """
         return self.data.get('battle_times', {}).get('average', 52.0)
-    
+
     def get_average_meow_battle_time(self) -> float:
-        """获取耄耋相接平均每场战斗时间(秒)"""
+        """获取耄耋相接平均每场战斗时间。
+
+        Returns:
+            float: 平均耗时（秒）。
+        """
         return self.data.get('meow_battle_times', {}).get('average', self.get_average_battle_time())
-    
+
     def get_average_round_time(self) -> float:
-        """获取平均每轮侵蚀1时间(秒)"""
+        """获取平均每轮侵蚀1时间。
+
+        Returns:
+            float: 平均耗时（秒）。
+        """
         if 'round_times' in self.data and self.data['round_times'].get('samples'):
             return self.data['round_times']['average']
         return self.get_average_battle_time() * 2 + 15
-    
+
     def get_exp_per_hour(self) -> float:
-        """
-        获取经验效率 (经验/小时)
-        使用公式估算：平均每场经验 * 2 / 平均一轮时长
+        """获取经验效率（经验/小时）。
+
+        使用公式估算：平均每场经验 * 2 / 平均一轮时长。
+
+        Returns:
+            float: 每小时获取的经验值。
         """
         avg_round_time = self.get_average_round_time()
         if avg_round_time > 0:
@@ -264,9 +280,9 @@ class ShipExpStats:
         if 'daily_stats' not in self.data:
             return None
         return self.data['daily_stats'].get(today)
-    
+
     # ========== 舰船数据保存与进度计算 ==========
-    
+
     def save_ship_data(
         self,
         ships: List[Dict[str, Any]],
@@ -274,14 +290,13 @@ class ShipExpStats:
         fleet_index: int,
         battle_count_at_check: int
     ) -> None:
-        """
-        保存舰船经验检测数据
-        
+        """保存舰船经验检测数据。
+
         Args:
-            ships: 舰船数据列表, 每项包含 position, level, current_exp, total_exp
-            target_level: 目标等级
-            fleet_index: 舰队索引
-            battle_count_at_check: 检测时的战斗场次
+            ships (list[dict[str, Any]]): 舰船数据列表，每项包含 position, level, current_exp, total_exp。
+            target_level (int): 目标等级。
+            fleet_index (int): 舰队索引。
+            battle_count_at_check (int): 检测时的战斗场次。
         """
         self.data['last_check_time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         self.data['target_level'] = target_level
@@ -290,7 +305,7 @@ class ShipExpStats:
         self.data['ships'] = ships
         self._save()
         logger.info(f'[统计-经验] 舰船经验数据已保存: {len(ships)} 艘舰船，目标等级 {target_level}')
-    
+
     def calculate_progress(
         self,
         ship: Dict[str, Any],
@@ -301,32 +316,32 @@ class ShipExpStats:
         计算单艘舰船的升级进度
         
         Args:
-            ship: 舰船数据 (position, level, current_exp, total_exp)
-            target_level: 目标等级
-            current_battle_count: 当前战斗场次
-        
+            ship (dict[str, Any]): 舰船数据字典（包含 position, level, current_exp, total_exp）。
+            target_level (int): 目标等级。
+            current_battle_count (int): 当前战斗场次。
+
         Returns:
-            进度数据字典
+            dict[str, Any]: 升级进度数据字典。
         """
         # 处理等级边界 (1-125)
         if target_level < 1:
             target_level = 1
         elif target_level > 125:
             target_level = 125
-        
+
         target_exp = LIST_SHIP_EXP[target_level - 1]
         current_total_exp = ship.get('total_exp', 0)
         exp_needed = max(0, target_exp - current_total_exp)
-        
+
         # 计算还需出击次数
         position = ship.get('position', 1)
         exp_per_battle = self.EXP_PER_BATTLE.get(position, 288)
         battles_needed = math.ceil(exp_needed / exp_per_battle) if exp_needed > 0 else 0
-        
+
         # 计算已战斗场次 (自上次检测以来)
         battle_count_at_check = self.data.get('battle_count_at_check', 0)
         battles_done = max(0, current_battle_count - battle_count_at_check)
-        
+
         # 计算预估时间 (经验值*2/平均一轮时长)
         avg_round_time = self.get_average_round_time()
         if avg_round_time > 0 and exp_needed > 0 and exp_per_battle > 0:
@@ -340,7 +355,7 @@ class ShipExpStats:
             time_seconds = hours_needed * 3600
         else:
             time_seconds = 0
-        
+
         return {
             'position': position,
             'level': ship.get('level', 0),
@@ -358,28 +373,35 @@ class ShipExpStats:
         获取所有舰船的升级进度
         
         Args:
-            current_battle_count: 当前战斗场次
-        
+            current_battle_count (int): 当前战斗场次。
+
         Returns:
-            所有舰船的进度数据列表
+            list[dict[str, Any]]: 所有舰船的进度数据列表。
         """
         ships = self.data.get('ships', [])
         target_level = self.data.get('target_level', 125)
-        
+
         return [
             self.calculate_progress(ship, target_level, current_battle_count)
             for ship in ships
         ]
-    
+
     @staticmethod
     def _format_time(seconds: float) -> str:
-        """格式化时间显示"""
+        """格式化时间显示为时分文本。
+
+        Args:
+            seconds (float): 秒数。
+
+        Returns:
+            str: 格式化后的时间字符串（例如 "1小时30分钟" 或 "45分钟"）。
+        """
         if seconds <= 0:
             return "0分钟"
-        
+
         hours = int(seconds // 3600)
         minutes = int((seconds % 3600) // 60)
-        
+
         if hours > 0:
             return f"{hours}小时{minutes}分钟"
         return f"{minutes}分钟"
@@ -409,7 +431,15 @@ def save_ship_exp_data(
     battle_count_at_check: int,
     instance_name: Optional[str] = None
 ) -> None:
-    """便捷函数: 保存舰船经验检测数据"""
+    """便捷函数：保存舰船经验检测数据。
+
+    Args:
+        ships (list[dict[str, Any]]): 舰船数据列表。
+        target_level (int): 目标等级。
+        fleet_index (int): 舰队索引。
+        battle_count_at_check (int): 检测时的战斗场次。
+        instance_name (str | None): 实例名称。
+    """
     get_ship_exp_stats(instance_name=instance_name).save_ship_data(
         ships=ships,
         target_level=target_level,

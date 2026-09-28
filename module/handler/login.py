@@ -74,10 +74,14 @@ class LoginHandler(UI):
     """
 
     def _handle_app_login(self):
-        """
+        """执行应用登录的主循环逻辑。
+
         Pages:
             in: 任意页面
             out: page_main
+
+        Returns:
+            bool: 是否成功登录并到达主界面。
 
         Raises:
             GameStuckError: 游戏卡死。
@@ -181,6 +185,11 @@ class LoginHandler(UI):
     _user_agreement_timer = Timer(1, count=2)
 
     def handle_cn_user_agreement(self):
+        """处理国服用户协议与登录确认弹窗。
+
+        Returns:
+            bool: 是否检测并处理了协议或登录确认。
+        """
         if not self._user_agreement_timer.reached():
             return False
 
@@ -340,11 +349,10 @@ class LoginHandler(UI):
         return timeout
 
     def handle_app_login(self):
-        """
-        处理应用登录流程。
+        """处理应用登录流程入口。
 
         Returns:
-            是否登录成功。
+            bool: 是否登录成功。
 
         Raises:
             GameStuckError: 游戏卡死。
@@ -366,10 +374,12 @@ class LoginHandler(UI):
             self.device.screenshot_interval_set()
 
     def app_stop(self):
+        """停止游戏应用。"""
         logger.hr('应用停止')
         self.device.app_stop()
 
     def app_start(self):
+        """启动游戏应用并处理登录。"""
         logger.hr('应用启动')
         self.device.app_start()
         self.handle_app_login()
@@ -438,6 +448,11 @@ class LoginHandler(UI):
         return result[0]
 
     def app_restart(self):
+        """重启游戏应用并重新登录。
+
+        Raises:
+            EmulatorNotRunningError: 重启操作超时或多次重启仍无法恢复时抛出。
+        """
         logger.hr('应用重启')
         is_restart_success = False
 
@@ -525,12 +540,14 @@ class LoginHandler(UI):
         # self.ensure_no_unfinished_campaign()
 
     def ensure_no_unfinished_campaign(self, confirm_wait=3):
-        """
+        """确保没有未完成的战役，如有则撤退。
+
         Pages:
             in: page_main
             out: page_main
 
-        确保没有未完成的战役，如有则撤退。
+        Args:
+            confirm_wait (int): 确认等待秒数。默认为 3。
         """
 
         def ensure_campaign_retreat():
@@ -565,14 +582,17 @@ class LoginHandler(UI):
         self.ui_goto_main()
 
     def handle_user_agreement(self, xp, hierarchy):
-        """
-        处理用户协议弹窗（仅限国服）。
+        """处理用户协议弹窗（仅限国服）。
 
         国服客户端存在 bug，用户协议和隐私政策可能在已同意后再次弹出。
         此方法滑动到底部并点击同意按钮。
 
+        Args:
+            xp: XPath 实例。
+            hierarchy: 界面层级 dump 结果。
+
         Returns:
-            是否处理了用户协议弹窗。
+            bool: 是否处理了用户协议弹窗。
         """
 
         if server.server == 'cn':
@@ -617,7 +637,15 @@ class LoginHandler(UI):
             return True
 
     def handle_user_login(self, xp, hierarchy) -> bool:
-        """处理用户登录按钮点击。"""
+        """处理用户登录按钮点击。
+
+        Args:
+            xp: XPath 实例。
+            hierarchy: 界面层级 dump 结果。
+
+        Returns:
+            bool: 是否点击了登录按钮。
+        """
         login_wait_results = self.get_for_any_ele([
             XPS('//*[@text="登录"]', xp, hierarchy),
             XPS('//*[@content-desc="登录"]', xp, hierarchy)])
@@ -634,10 +662,10 @@ class LoginHandler(UI):
         从候选 XPath 或 UiObject 列表中查找第一个存在的元素。
 
         Args:
-            list_u2_path: UiObject 或 XPathSelector 的列表，长度 >= 1。
+            list_u2_path (list): UiObject 或 XPathSelector 的列表，长度 >= 1。
 
         Returns:
-            False 表示未找到元素，tuple 表示找到的元素边界。
+            bool | tuple: 未找到元素返回 False，找到返回元素边界元组。
         """
         for path in list_u2_path:
             try:
@@ -656,6 +684,11 @@ class LoginHandler(UI):
         return False
 
     def get_cn_xp_hierarchy(self) -> tuple:
+        """获取当前界面的 XPath 实例与 dump 层级数据。
+
+        Returns:
+            tuple: (XPath 实例, dump_hierarchy 结果)。
+        """
         d = self.device.u2
         xp = XPath(d)
         hierarchy = d.dump_hierarchy()
@@ -663,5 +696,14 @@ class LoginHandler(UI):
 
 
 class XPS(XPathSelector):
+    """XPath 选择器包装类。"""
+
     def __init__(self, xpath, parent, source):
+        """初始化 XPath 选择器。
+
+        Args:
+            xpath (str): XPath 表达式。
+            parent: 父级选择器或 XPath 对象。
+            source: 页面源数据。
+        """
         super().__init__(parent, xpath, source)

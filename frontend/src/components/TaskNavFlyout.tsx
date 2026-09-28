@@ -1,3 +1,7 @@
+/**
+ * @fileoverview 侧边栏悬停二级弹出任务菜单组件。
+ */
+
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { MarqueeText } from './MarqueeText'
 import { createPortal } from 'react-dom'

@@ -1,3 +1,7 @@
+/**
+ * @fileoverview 统计页多页面组合链槽位编辑组件。
+ */
+
 import { Plus, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 

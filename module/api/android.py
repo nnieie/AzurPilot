@@ -1,4 +1,7 @@
-"""Android 宿主本机控制接口；调度器仍由 WebUI 的 ProcessManager 独占。"""
+"""Android 宿主本机控制接口模块。
+
+为 Android 宿主环境提供回环控制接口，调度器仍由 WebUI 的 ProcessManager 独占管理。
+"""
 
 import asyncio
 import json
@@ -19,6 +22,14 @@ _operation_lock = threading.RLock()
 
 
 def _local(request):
+    """校验请求是否来自本地回环地址且携带有效的安全令牌。
+
+    Args:
+        request: Starlette HTTP 请求对象。
+
+    Returns:
+        bool: 请求合法返回 True，否则返回 False。
+    """
     token = os.environ.get('AZURPILOT_ANDROID_TOKEN', '')
     supplied = request.headers.get('x-azurpilot-android-token', '')
     return (request.client and request.client.host in ('127.0.0.1', '::1')
@@ -26,6 +37,11 @@ def _local(request):
 
 
 def _legacy_app_running():
+    """检查旧版 ALAS-AOS 应用或服务是否正在运行。
+
+    Returns:
+        bool: 正在运行返回 True，未运行返回 False。
+    """
     try:
         with socket.create_connection(('127.0.0.1', 22300), timeout=0.2):
             return True
@@ -40,11 +56,22 @@ def _legacy_app_running():
 
 
 def routes(configs, runtime):
-    """仅在 AZURPILOT_ANDROID=1 且请求源为 loopback 时注册和响应。"""
+    """创建 Android 专用的本地回环 HTTP 路由列表。
+
+    仅在环境变量 AZURPILOT_ANDROID=1 时激活。
+
+    Args:
+        configs: 配置管理服务实例。
+        runtime: 运行时管理服务实例。
+
+    Returns:
+        list[Route]: Starlette Route 列表。
+    """
     if os.environ.get('AZURPILOT_ANDROID') != '1':
         return []
 
     def instance(request):
+        """解析请求中的实例名称。"""
         name = request.query_params.get('config')
         if not name:
             name = next((key for key, proc in list(ProcessManager._processes.items()) if proc.alive), 'alas')
@@ -52,15 +79,18 @@ def routes(configs, runtime):
         return name
 
     def manager(name):
+        """获取指定实例的进程管理器。"""
         return ProcessManager._processes.get(name)
 
     def active_tool():
+        """查找当前正在执行的工具任务及其所属实例。"""
         for name, proc in list(ProcessManager._processes.items()):
             if proc.alive and proc.started_func in TOOLS.values():
                 return name, proc.started_func
         return None, None
 
     def status(request):
+        """构建 Android 宿主所请求的实例状态字典。"""
         name = instance(request)
         proc = manager(name)
         tool_config, task = active_tool()
@@ -77,6 +107,7 @@ def routes(configs, runtime):
         }
 
     def execute(request):
+        """处理启动/停止实例或工具任务的操作命令。"""
         with _operation_lock:
             name = instance(request)
             path = request.url.path
@@ -107,6 +138,7 @@ def routes(configs, runtime):
             return status(request)
 
     async def dispatch(request):
+        """分派处理 Android 宿主 HTTP 请求。"""
         if not _local(request):
             return JSONResponse({'error': 'loopback only'}, status_code=403)
         path = request.url.path

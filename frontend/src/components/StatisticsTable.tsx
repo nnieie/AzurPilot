@@ -1,5 +1,9 @@
+/**
+ * @fileoverview 统计数据明细与掉落记录表格组件。
+ */
+
 import type {ReactNode} from 'react'
-import { ArrowDown, ArrowUp } from 'lucide-react'
+import { ArrowDown, ArrowUp, Search } from 'lucide-react'
 import { useState } from 'react'
 import type { StatTable, TableSort } from '../api/types'
 import { downloadCsv } from './statisticsData'
@@ -8,11 +12,11 @@ import { useApp } from '../app/context'
 import { localeForLanguage } from '../i18n'
 
 const iconBase = import.meta.env.BASE_URL
-const resourceIcons: Record<string, string> = {
+export const resourceIcons: Record<string, string> = {
   '钻石': `${iconBase}diamond.webp`,
   '心智魔方': `${iconBase}cube.webp`,
   '魔方': `${iconBase}cube.webp`,
-  '心智单元': `${iconBase}core_data.webp`,
+  '心智单元': `${iconBase}cognitive_chips.webp`,
   '石油': `${iconBase}oil.webp`,
   '物资': `${iconBase}gold.webp`,
   '完成委托': `${iconBase}honor_medal.webp`,
@@ -87,12 +91,14 @@ function numericValue(value: StatTable['rows'][number][number]): number | undefi
   const perPage = rowsPerPage > 0 ? rowsPerPage : Math.max(rows.length, 1)
   const pages = Math.max(1, Math.ceil(rows.length / perPage))
   const current = Math.min(page, pages - 1)
-  return <section className="statistics-table"><div className="panel-heading"><h3>{data.title}</h3><div className="stat-card-actions">{editControls}{foldControl}<button className="text-button" disabled={!rows.length} onClick={() => downloadCsv(data.title, [data.columns, ...rows])}>{ui('stats.exportDetails')}</button></div></div>{data.note && <p className="panel-note">{data.note}</p>}<div className="table-toolbar"><input aria-label={ui('stats.searchTable', {title: data.title})} value={search} onChange={event => {setSearch(event.target.value); setPage(0)}} placeholder={ui('stats.searchPlaceholder')}/><span>{ui('stats.records', {count: rows.length})}</span></div><div className="table-scroll">{plain ? (<div className="table-lines">{rows.slice(current * perPage, (current + 1) * perPage).map((row, index) => (
+  const singleRow = rows.length === 1
+  /* 只有一页时不画分页栏：页码恒为 1 / 1，两个翻页钮也点不动。 */
+  return <section className={`statistics-table${singleRow ? ' is-single-row' : ''}`}><div className="panel-heading"><h3>{data.title}</h3><div className="table-search"><Search size={14}/><input aria-label={ui('stats.searchTable', {title: data.title})} value={search} onChange={event => {setSearch(event.target.value); setPage(0)}} placeholder={ui('stats.searchPlaceholder')}/><span>{ui('stats.records', {count: rows.length})}</span></div><div className="stat-card-actions">{editControls}{foldControl}<button className="text-button" disabled={!rows.length} onClick={() => downloadCsv(data.title, [data.columns, ...rows])}>{ui('stats.exportDetails')}</button></div></div>{data.note && <p className="panel-note">{data.note}</p>}<div className="table-scroll">{plain ? (<div className="table-lines">{rows.slice(current * perPage, (current + 1) * perPage).map((row, index) => (
               <p className="table-line" key={index}>
                 <span className="table-line-first">{cellText(row[0])}：</span>
                 {row.slice(1).map((value, cell) => {const icon = typeof value === 'string' ? resolveIcon(value, false) : undefined
                   const src = icon?.src ?? (numericValue(value) !== undefined ? resourceIcons[data.columns[cell + 1]] : undefined)
                   return ({src, text: cellText(value, icon)})}).filter(item => item.src && item.text !== '—').map((item, cell) => (
                   <span className="table-line-cell" key={cell}>{cell ? '、' : ''}{item.src ? <img className="table-resource-icon" src={item.src} alt="" draggable={false}/> : null}{item.src ? '×' : ''}{item.text}</span>))}
-              </p>))}</div>) : (<table><thead><tr>{data.columns.map((column, index) => {const colIcon = resourceIcons[column]; return <th key={column} aria-sort={activeSort?.index === index ? activeSort.descending ? 'descending' : 'ascending' : 'none'}><button onClick={() => {setPage(0); setSort(currentSort => {const current = currentSort ?? data.defaultSort; return {index, descending: current?.index === index ? !current.descending : false}})}}>{colIcon && <img className="table-resource-icon table-header-icon" src={colIcon} alt="" width={24} height={24} draggable={false}/>}{column}{activeSort?.index === index ? activeSort.descending ? <ArrowDown size={14} aria-hidden="true"/> : <ArrowUp size={14} aria-hidden="true"/> : null}</button></th>})}</tr></thead><tbody>{rows.slice(current * perPage, (current + 1) * perPage).map((row, index) => {const templateRow = row.some(value => typeof value === 'string' && TEMPLATE_PREFIXES.some(prefix => value.startsWith(prefix))); return <tr key={index}>{row.map((value, cell) => {const icon = typeof value === 'string' ? resolveIcon(value, !templateRow) : undefined; const formatted = cellText(value, icon); const columnIcon = numericValue(value) !== undefined && (icons || plain) ? resourceIcons[data.columns[cell]] : undefined; return <td key={cell}>{icon ? <span className="table-resource-cell"><img className="table-resource-icon" src={icon.src} alt="" width={26} height={26} draggable={false}/><span>{formatted}</span></span> : columnIcon ? <span className="table-resource-cell"><img className="table-resource-icon" src={columnIcon} alt="" width={26} height={26} draggable={false}/><span>{formatted}</span></span> : formatted}</td>})}</tr>})}</tbody></table>)}{!rows.length && <p className="panel-note">{ui('stats.noRecords')}</p>}</div><div className="table-toolbar"><button className="text-button" disabled={!current} onClick={() => setPage(current - 1)}>{ui('common.previous')}</button><span>{current + 1} / {pages}</span><button className="text-button" disabled={current + 1 === pages} onClick={() => setPage(current + 1)}>{ui('common.next')}</button></div></section>
+              </p>))}</div>) : (<table><thead><tr>{data.columns.map((column, index) => {const colIcon = resourceIcons[column]; return <th key={column} aria-sort={activeSort?.index === index ? activeSort.descending ? 'descending' : 'ascending' : 'none'}><button onClick={() => {setPage(0); setSort(currentSort => {const current = currentSort ?? data.defaultSort; return {index, descending: current?.index === index ? !current.descending : false}})}}>{colIcon && <img className="table-resource-icon table-header-icon" src={colIcon} alt="" width={24} height={24} draggable={false}/>}{column}{activeSort?.index === index ? activeSort.descending ? <ArrowDown size={14} aria-hidden="true"/> : <ArrowUp size={14} aria-hidden="true"/> : null}</button></th>})}</tr></thead><tbody>{rows.slice(current * perPage, (current + 1) * perPage).map((row, index) => {const templateRow = row.some(value => typeof value === 'string' && TEMPLATE_PREFIXES.some(prefix => value.startsWith(prefix))); return <tr key={index}>{row.map((value, cell) => {const icon = typeof value === 'string' ? resolveIcon(value, !templateRow) : undefined; const formatted = cellText(value, icon); const columnIcon = numericValue(value) !== undefined && (icons || plain) ? resourceIcons[data.columns[cell]] : undefined; return <td key={cell}>{icon ? <span className="table-resource-cell"><img className="table-resource-icon" src={icon.src} alt="" width={26} height={26} draggable={false}/><span>{formatted}</span></span> : columnIcon ? <span className="table-resource-cell"><img className="table-resource-icon" src={columnIcon} alt="" width={26} height={26} draggable={false}/><span>{formatted}</span></span> : formatted}</td>})}</tr>})}</tbody></table>)}{!rows.length && <p className="panel-note">{ui('stats.noRecords')}</p>}</div>{pages > 1 && <div className="table-toolbar"><button className="text-button" disabled={!current} onClick={() => setPage(current - 1)}>{ui('common.previous')}</button><span>{current + 1} / {pages}</span><button className="text-button" disabled={current + 1 === pages} onClick={() => setPage(current + 1)}>{ui('common.next')}</button></div>}</section>
 }

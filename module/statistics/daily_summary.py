@@ -49,7 +49,14 @@ RESOURCE_LABELS = {
 
 
 def parse_daily_summary_trigger(value: Any) -> tuple[int, int] | None:
-    """校验日报触发时间，格式固定为 24 小时制 ``HH:MM``。"""
+    """校验日报触发时间，格式固定为 24 小时制 ``HH:MM``。
+
+    Args:
+        value (Any): 触发时间字符串。
+
+    Returns:
+        tuple[int, int] | None: (小时, 分钟) 元组，无效返回 None。
+    """
     match = re.fullmatch(r'([01]\d|2[0-3]):([0-5]\d)', str(value or '').strip())
     if match is None:
         return None
@@ -63,6 +70,13 @@ def resolve_daily_summary_server(
 
     显式包名或游戏内服务器优先；只有设备已确认运行时服务器时，才使用
     ``current_server`` 作为自动包名的回退。
+
+    Args:
+        config (Any): 实例配置对象。
+        current_server (str | None): 当前设备已识别的服务器代码。
+
+    Returns:
+        str | None: 服务器标识代码（如 'cn', 'en', 'jp', 'tw'），未确认返回 None。
     """
     package = getattr(config, 'Emulator_PackageName', 'auto')
     if package in server_config.VALID_PACKAGE or package in server_config.VALID_CHANNEL_PACKAGE:
@@ -82,7 +96,16 @@ def get_daily_summary_window(
     server: str,
     trigger: tuple[int, int],
 ) -> tuple[datetime, datetime, str, bool]:
-    """返回最近一个服务器日触发周期及当前是否处于允许发送窗口。"""
+    """返回最近一个服务器日触发周期及当前是否处于允许发送窗口。
+
+    Args:
+        now (datetime): 当前时间。
+        server (str): 服务器代码。
+        trigger (tuple[int, int]): 触发时间 (时, 分)。
+
+    Returns:
+        tuple[datetime, datetime, str, bool]: (窗口开始时间, 窗口结束时间, 周期唯一键, 是否到达触发窗口)。
+    """
     server = server if server in SERVER_TO_TIMEZONE else 'cn'
     offset = server_time_offset_for(server, now)
     server_now = now - offset
@@ -99,7 +122,15 @@ def get_daily_summary_window(
 
 
 def server_time_offset_for(server: str, now: datetime | None = None) -> timedelta:
-    """将服务器时间转换为本地 naive 时间所需的偏移量。"""
+    """将服务器时间转换为本地 naive 时间所需的偏移量。
+
+    Args:
+        server (str): 目标服务器代码。
+        now (datetime | None): 当前参考时间。
+
+    Returns:
+        timedelta: 时间偏移量。
+    """
     current = server_config.server
     current_server_offset = SERVER_TO_TIMEZONE.get(
         current, SERVER_TO_TIMEZONE['cn']
@@ -153,7 +184,16 @@ class DailySummaryService:
         current_server: str | None = None,
         now: datetime | None = None,
     ) -> bool:
-        """如到达日报窗口则启动后台生成；返回是否已提交处理。"""
+        """检查是否到达日报触发窗口并启动后台生成。
+
+        Args:
+            config (Any): 任务配置对象。
+            current_server (str | None): 当前游戏服务器。
+            now (datetime | None): 当前时间戳。
+
+        Returns:
+            bool: 若触发并成功提交生成任务返回 True。
+        """
         if not bool(getattr(config, 'DailySummary_Enable', False)):
             return False
         trigger = parse_daily_summary_trigger(

@@ -1,6 +1,6 @@
-/* 平滑滚动工具：替换原生 scrollIntoView({behavior: 'smooth'})，
-   解决「点击章节导航后滑动近 1 秒」的问题（issue #1024）。
-   时长可控（默认 280ms），尊重 prefers-reduced-motion 与 scroll-margin-top。 */
+/**
+ * @fileoverview 平滑滚动辅助函数，支持自定义缓动与滚动边距计算。
+ */
 
 import { motionReducedActive } from './motionPrefs'
 

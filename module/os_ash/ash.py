@@ -28,6 +28,14 @@ class DailyDigitCounter(DigitCounter):
     """每日计数器，对图像左侧进行裁剪以去除干扰区域。"""
 
     def pre_process(self, image):
+        """对输入图像进行预处理，去除左侧干扰像素。
+
+        Args:
+            image (np.ndarray): 待处理的原始图像。
+
+        Returns:
+            np.ndarray: 裁剪预处理后的图像。
+        """
         image = super().pre_process(image)
         image = image_left_strip(image, threshold=120, length=35)
         return image
@@ -78,21 +86,26 @@ class AshCombat(Combat):
         return False
 
     def handle_exp_info(self):
-        """
-        META 战斗不掉落经验，无需处理经验信息。
+        """处理经验信息界面。
 
+        META 战斗不掉落经验，无需处理经验信息。
         BATTLE_STATUS 的随机背景可能误触发 EXP_INFO_B，直接忽略。
+
+        Returns:
+            bool: 始终返回 False。
         """
         return False
 
     def handle_battle_preparation(self):
-        """
-        处理战斗准备页面，点击开始战斗按钮。
+        """处理战斗准备页面，点击开始战斗按钮。
 
         如果信标已完成或为空，则抛出 AshBeaconFinished。
 
         Returns:
             bool: 是否采取了行动。
+
+        Raises:
+            AshBeaconFinished: 当信标已完成、为空或已在 META 对决页面时抛出。
         """
         if super().handle_battle_preparation():
             return True
@@ -114,11 +127,12 @@ class AshCombat(Combat):
         return False
 
     def combat(self, *args, expected_end=None, **kwargs):
-        """
-        执行战斗，捕获信标完成异常以正常退出。
+        """执行战斗，捕获信标完成异常以正常退出。
 
         Args:
-            expected_end: 战斗结束判断函数。
+            *args: 传递给父类 combat 的位置参数。
+            expected_end (callable, optional): 战斗结束判断函数。
+            **kwargs: 传递给父类 combat 的关键字参数。
         """
         try:
             super().combat(*args, expected_end=expected_end, **kwargs)
@@ -147,10 +161,8 @@ class OSAsh(UI, MapEventHandler):
         通过 OCR 读取余烬信标的收集进度。
 
         Returns:
-            int: 收集进度值。今日已收集满或状态被遮挡时返回 0，表示无需再收集。
+            int: 信标记录仪当前点数；状态被遮挡时返回 0。
         """
-        if self._ash_fully_collected:
-            return 0
         if self.image_color_count(ASH_COLLECT_STATUS, color=(235, 235, 235), threshold=30, count=20):
             logger.info('[META作战] 信标状态：可收集')
             ocr_collect = DigitCounter(
@@ -174,11 +186,6 @@ class OSAsh(UI, MapEventHandler):
         if daily >= 200:
             logger.info('[META作战] 今日信标数据已收集满')
             self._ash_fully_collected = True
-            # 开头的短路返回只对下一次调用生效，本次必须直接返回 0。
-            # 否则 handle_ash_beacon_attack() 仍会因 status >= 100 触发 OpsiAshBeacon，
-            # 该任务优先级高于 OpsiScheduling，会把正在进行的自动搜索打断，
-            # 而任务本身又无事可做、延迟到次日，导致每轮重复触发形成死循环。
-            return 0
         elif status >= 200:
             logger.info('[META作战] 信标数据达到持有上限')
             self._ash_fully_collected = True

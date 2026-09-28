@@ -187,6 +187,14 @@ class ResearchAmountOcr(AmountOcr):
         return amount
 
     def pre_process(self, image):
+        """预处理科研数量图像，提取白字、滤除碎片噪点并定位数字列。
+
+        Args:
+            image (np.ndarray): 原始输入切片图像。
+
+        Returns:
+            np.ndarray: 处理后的二值化图像。
+        """
         image = extract_white_letters(image, threshold=self.threshold)
         image = remove_small_fragments(
             image,
@@ -248,6 +256,7 @@ class ResearchDrop:
 
     @property
     def valid(self) -> bool:
+        """检查科研掉落解析结果是否有效（至少包含一个有效物品）。"""
         return bool(self.items)
 
 

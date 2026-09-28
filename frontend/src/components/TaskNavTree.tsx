@@ -1,3 +1,7 @@
+/**
+ * @fileoverview 旧版侧边栏树状展开任务列表组件。
+ */
+
 import { useState } from 'react'
 import { MarqueeText } from './MarqueeText'
 import { NavLink, useLocation, useParams } from 'react-router-dom'

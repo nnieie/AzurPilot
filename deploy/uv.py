@@ -37,15 +37,36 @@ class UvCommandResult:
 
 
 def project_root() -> Path:
+    """获取项目根目录路径。
+
+    Returns:
+        Path: 项目根目录的 Path 对象。
+    """
     return Path(__file__).resolve().parent.parent
 
 
 def venv_path(root: Path = None) -> Path:
+    """获取虚拟环境目录路径。
+
+    Args:
+        root (Path, optional): 项目根目录。
+
+    Returns:
+        Path: .venv 目录路径。
+    """
     root = root or project_root()
     return root / ".venv"
 
 
 def venv_bin(root: Path = None) -> Path:
+    """获取虚拟环境的二进制或脚本目录路径。
+
+    Args:
+        root (Path, optional): 项目根目录。
+
+    Returns:
+        Path: Windows 下为 Scripts 目录，Unix 下为 bin 目录。
+    """
     venv = venv_path(root)
     if os.name == "nt":
         return venv / "Scripts"
@@ -53,25 +74,65 @@ def venv_bin(root: Path = None) -> Path:
 
 
 def venv_python(root: Path = None) -> Path:
+    """获取虚拟环境中的 Python 可执行文件路径。
+
+    Args:
+        root (Path, optional): 项目根目录。
+
+    Returns:
+        Path: Python 可执行文件路径。
+    """
     executable = "python.exe" if os.name == "nt" else "python"
     return venv_bin(root) / executable
 
 
 def venv_python_install_dir(root: Path = None) -> Path:
+    """获取由 uv 管理的独立 Python 解释器安装目录。
+
+    Args:
+        root (Path, optional): 项目根目录。
+
+    Returns:
+        Path: 解释器安装根目录路径。
+    """
     return venv_path(root) / "python"
 
 
 def venv_uv(root: Path = None) -> Path:
+    """获取虚拟环境中的 uv 可执行文件路径。
+
+    Args:
+        root (Path, optional): 项目根目录。
+
+    Returns:
+        Path: uv 可执行文件路径。
+    """
     executable = "uv.exe" if os.name == "nt" else "uv"
     return venv_bin(root) / executable
 
 
 def venv_adb(root: Path = None) -> Path:
+    """获取虚拟环境中的 adb 可执行文件路径。
+
+    Args:
+        root (Path, optional): 项目根目录。
+
+    Returns:
+        Path: adb 可执行文件路径。
+    """
     executable = "adb.exe" if os.name == "nt" else "adb"
     return venv_bin(root) / executable
 
 
 def venv_git(root: Path = None) -> Path:
+    """获取虚拟环境或项目内内置的 git 可执行文件路径。
+
+    Args:
+        root (Path, optional): 项目根目录。
+
+    Returns:
+        Path: git 可执行文件路径。
+    """
     root = root or project_root()
     if os.name == "nt":
         return venv_path(root) / "Scripts" / "git" / "cmd" / "git.exe"
@@ -87,6 +148,14 @@ def _is_relative_to(path: Path, parent: Path) -> bool:
 
 
 def in_project_venv(root: Path = None) -> bool:
+    """判断当前运行中的解释器是否位于项目虚拟环境中。
+
+    Args:
+        root (Path, optional): 项目根目录。
+
+    Returns:
+        bool: 当前运行环境是否为项目内虚拟环境。
+    """
     root = root or project_root()
     executable = Path(sys.executable).resolve()
     python = venv_python(root)
@@ -217,11 +286,13 @@ def _venv_python_works(root: Path) -> bool:
 
 
 def _remove_stale_venv_launcher(root: Path):
-    """
-    清理 uv venv 在 Windows 上重建可重定位环境时可能撞到的旧启动器。
+    """清理 uv venv 在 Windows 上重建可重定位环境时可能撞到的旧启动器。
 
     uv 使用 --allow-existing 时会复用 .venv，但 Windows 上已有的
     Scripts/python.exe 可能阻止它创建新的可执行文件链接，报 os error 80。
+
+    Args:
+        root (Path): 项目根目录。
     """
     if os.name != "nt":
         return
@@ -394,7 +465,14 @@ def _ensure_self_contained_python(
 
 
 def command_output(exc: BaseException) -> str:
-    """提取由 subprocess 保留的合并输出。"""
+    """提取由 subprocess 保留的合并输出。
+
+    Args:
+        exc (BaseException): 异常对象。
+
+    Returns:
+        str: 解码后的输出文本。
+    """
     output = getattr(exc, "stdout", None)
     if output is None:
         output = getattr(exc, "output", "")
@@ -404,7 +482,14 @@ def command_output(exc: BaseException) -> str:
 
 
 def redact_sensitive_text(value: object) -> str:
-    """脱敏命令输出中的 URL 凭据和常见认证字段。"""
+    """脱敏命令输出中的 URL 凭据和常见认证字段。
+
+    Args:
+        value (object): 待脱敏的文本或对象。
+
+    Returns:
+        str: 脱敏处理后的字符串。
+    """
     text = str(value or "")
     text = _URL_USERINFO_RE.sub(r"\g<scheme>***@", text)
     text = _SENSITIVE_QUERY_RE.sub(r"\1***", text)
@@ -412,7 +497,13 @@ def redact_sensitive_text(value: object) -> str:
 
 
 def log_command_output(logger, output: str, prefix: str = "[uv]"):
-    """将已捕获的子进程输出逐行交给调用方的日志器。"""
+    """将已捕获的子进程输出逐行交给调用方的日志器。
+
+    Args:
+        logger: 日志记录器。
+        output (str): 命令输出文本。
+        prefix (str): 日志行前缀，默认为 '[uv]'。
+    """
     for line in output.splitlines():
         logger.info(f"{prefix} {redact_sensitive_text(line)}")
 
@@ -423,7 +514,21 @@ def sync_project_venv(
     capture_output: bool = False,
     timeout: float | None = None,
 ) -> Optional[UvCommandResult]:
-    """在单一总时限内准备解释器、虚拟环境并同步项目依赖。"""
+    """在单一总时限内准备解释器、虚拟环境并同步项目依赖。
+
+    Args:
+        root (Path, optional): 项目根目录。
+        bootstrap_uv (PathLikeArg, optional): 引导阶段使用的 uv 路径。
+        capture_output (bool): 是否捕获并返回命令执行输出。
+        timeout (float, optional): 超时时限（秒）。
+
+    Returns:
+        Optional[UvCommandResult]: capture_output 为 True 时返回执行结果，否则返回 None。
+
+    Raises:
+        subprocess.CalledProcessError: 当子进程执行失败时抛出。
+        subprocess.TimeoutExpired: 当执行超出时限时抛出。
+    """
     root = root or project_root()
     if not _deploy_bool(root, "InstallDependencies", default=True):
         output = "InstallDependencies is disabled, skip uv sync"
@@ -475,7 +580,14 @@ def dependency_sync_service(
     root: PathLikeArg = None,
     timeout: float | None = DEPENDENCY_SYNC_TIMEOUT,
 ):
-    """空闲等待 WebUI 更新请求的独立依赖同步服务。"""
+    """空闲等待 WebUI 更新请求的独立依赖同步服务。
+
+    Args:
+        request_queue: 接收依赖同步请求的多进程队列。
+        response_queue: 发送同步结果响应的多进程队列。
+        root (PathLikeArg, optional): 项目根目录。
+        timeout (float, optional): 同步超时时限（秒）。
+    """
     root = Path(root) if root is not None else project_root()
     parent = multiprocessing.parent_process()
 
@@ -528,6 +640,7 @@ def dependency_sync_service(
 
 
 def ensure_uv_environment():
+    """确保当前运行在准备完毕的 uv 虚拟环境中，否则同步依赖并自重启切入。"""
     if os.environ.get(NO_BOOTSTRAP_ENV):
         return
     if in_project_venv():

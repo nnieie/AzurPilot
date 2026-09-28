@@ -210,13 +210,12 @@ class AppControl(AzurPilotAndroid, Adb, WSA, Uiautomator2):
         return self.hierarchy
 
     def xpath_to_button(self, xpath: str) -> HierarchyButton:
-        """
+        """根据 XPath 表达式在当前 UI 层级树中查找匹配的虚拟按钮。
+
         Args:
-            xpath (str):
+            xpath (str): 待查找的 XPath 表达式。
 
         Returns:
-            HierarchyButton:
-                An object with methods and properties similar to Button.
-                If element not found or multiple elements were found, return None.
+            HierarchyButton: 匹配到的虚拟按钮对象。若未找到或匹配到多个元素则可能无法正确获取区域。
         """
         return HierarchyButton(self.hierarchy, xpath)

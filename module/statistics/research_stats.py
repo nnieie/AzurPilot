@@ -278,6 +278,14 @@ def collect(
                 month_by_item[name] += amount
 
     def build(name: str) -> dict:
+        """构建单个科研物品的统计展示字典。
+
+        Args:
+            name (str): 物品唯一标识名。
+
+        Returns:
+            dict: 包含中英文名称、稀有度、总掉落量、今日掉落、本月掉落等属性的字典。
+        """
         info = item_info(name)
         amount = amount_by_item.get(name, 0)
         count = count_by_item.get(name, 0)

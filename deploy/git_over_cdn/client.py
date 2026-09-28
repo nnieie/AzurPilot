@@ -22,7 +22,11 @@ CLOUDFLARE_VERSION_KEY_HEADER = 'Cloudflare-Workers-Version-Key'
 
 
 def _read_device_id() -> str:
-    """从 log/device_id.json 读取当前设备 ID，文件缺失或损坏时返回空字符串。"""
+    """从 log/device_id.json 读取当前设备 ID，文件缺失或损坏时返回空字符串。
+
+    Returns:
+        str: 设备 ID 字符串。
+    """
     try:
         path = Path(__file__).resolve().parents[2] / 'log' / 'device_id.json'
         device_id = json.loads(path.read_text(encoding='utf-8')).get('device_id', '')
@@ -39,9 +43,23 @@ class cached_property(Generic[T]):
     """
 
     def __init__(self, func: Callable[..., T]):
+        """初始化缓存属性描述符。
+
+        Args:
+            func (Callable): 用于计算属性值的函数。
+        """
         self.func = func
 
     def __get__(self, obj, cls) -> T:
+        """获取属性值，未计算时调用底层函数并写入实例字典。
+
+        Args:
+            obj: 宿主对象实例。
+            cls: 宿主类。
+
+        Returns:
+            T: 属性值。
+        """
         if obj is None:
             return self
 
@@ -50,16 +68,24 @@ class cached_property(Generic[T]):
 
 
 class PrintLogger:
+    """简易打印日志器，用于独立客户端的回退输出。"""
     info = print
     warning = print
     error = print
 
     @staticmethod
     def attr(name, text):
+        """格式化输出属性名称与值。
+
+        Args:
+            name (str): 属性名称。
+            text (str): 属性内容。
+        """
         print(f'[{name}] {text}')
 
 
 class GitOverCdnClient:
+    """Git over CDN 客户端，通过 CDN 节点下载 git pack 包实现轻量快速更新。"""
     logger = PrintLogger()
 
     def __init__(self, url, folder, source='origin', branch='master', git='git', fallback_urls=None):
@@ -93,38 +119,62 @@ class GitOverCdnClient:
         return [url.strip('/') for url in urls]
 
     def filepath(self, path):
+        """获取本地 .git 目录下的绝对文件路径。
+
+        Args:
+            path (str): 相对 .git 目录的路径。
+
+        Returns:
+            str: 格式化为正斜杠的绝对路径。
+        """
         path = os.path.join(self.folder, '.git', path)
         return os.path.abspath(path).replace('\\', '/')
 
     def urlpath(self, path, base=None):
+        """拼接 CDN 请求的完整 URL。
+
+        Args:
+            path (str): 请求相对路径。
+            base (str, optional): 基础 URL，默认使用当前选定的 CDN 地址。
+
+        Returns:
+            str: 拼接后的完整 URL。
+        """
         if base is None:
             base = self.url
         return f'{base}{path}'
 
     @cached_property
     def current_commit(self) -> str:
-        for file in [
-            f'./refs/remotes/{self.source}/{self.branch}',
-            f'./refs/heads/{self.branch}',
-            'ORIG_HEAD',
-        ]:
-            file = self.filepath(file)
-            try:
-                with open(file, 'r', encoding='utf-8') as f:
-                    commit = f.read()
-                res = re.search(r'([0-9a-f]{40})', commit)
-                if res:
-                    commit = res.group(1)
-                    self.logger.attr('CurrentCommit', commit)
-                    return commit
-            except FileNotFoundError as e:
-                self.logger.error(f'Failed to get local commit: {e}')
-            except Exception as e:
-                self.logger.error(f'Failed to get local commit: {e}')
+        """获取本地仓库当前 HEAD 对应的完整 commit SHA。
+
+        Returns:
+            str: 40 位十六进制 commit 哈希，失败时返回空字符串。
+        """
+        # 以实际 HEAD 为准，兼容 packed-refs，避免旧的远端引用选错历史或更新包。
+        try:
+            result = subprocess.run(
+                [self.git, 'rev-parse', '--verify', 'HEAD'], cwd=self.folder,
+                capture_output=True, text=True, timeout=10,
+            )
+            commit = result.stdout.strip()
+            if result.returncode == 0 and re.fullmatch(r'[0-9a-f]{40}', commit):
+                self.logger.attr('CurrentCommit', commit)
+                return commit
+        except (OSError, subprocess.TimeoutExpired) as e:
+            self.logger.error(f'Failed to get local commit: {e}')
         return ''
 
     @staticmethod
     def _create_session(max_retries=3):
+        """创建配置了请求头和重试策略的 requests.Session。
+
+        Args:
+            max_retries (int): 最大重试次数。
+
+        Returns:
+            requests.Session: 已配置的会话对象。
+        """
         session = requests.Session()
         session.trust_env = False
         device_id = _read_device_id()
@@ -138,10 +188,23 @@ class GitOverCdnClient:
 
     @cached_property
     def session(self):
+        """获取复用的 HTTP 会话对象。
+
+        Returns:
+            requests.Session: 会话对象。
+        """
         return self._create_session()
 
     def probe_url(self, url_base, timeout=3):
-        """在给定总时限内探测候选地址的可用性与延迟。"""
+        """在给定总时限内探测候选地址的可用性与延迟。
+
+        Args:
+            url_base (str): 候选 CDN 基础 URL。
+            timeout (float): 探测超时时间（秒），默认为 3。
+
+        Returns:
+            float | None: 响应耗时（秒），失败或超时返回 None。
+        """
         url = self.urlpath('/latest.json', base=url_base)
         started = time.perf_counter()
         session = self._create_session(max_retries=0)
@@ -171,7 +234,15 @@ class GitOverCdnClient:
         return None
 
     def _probe_urls(self, urls, timeout):
-        """并发测速并返回在时限内可用的地址，按延迟排序。"""
+        """并发测速并返回在时限内可用的地址，按延迟升序排序。
+
+        Args:
+            urls (list[str]): 待探测的 URL 列表。
+            timeout (float): 探测时限（秒）。
+
+        Returns:
+            list[str]: 测速通过且按延迟排序的 URL 列表。
+        """
         scored = []
         if not urls:
             return scored
@@ -196,6 +267,11 @@ class GitOverCdnClient:
 
     @cached_property
     def preferred_urls(self):
+        """获取按测速延迟排序后的 CDN 地址列表，若探测超时则回退到备用列表。
+
+        Returns:
+            list[str]: 排序后的有效 CDN 节点列表。
+        """
         ordered = self._probe_urls(self.urls, timeout=5)
         if ordered:
             self.logger.attr('PreferredUrl', ordered[0])
@@ -210,6 +286,11 @@ class GitOverCdnClient:
 
     @cached_property
     def latest_commit(self) -> str:
+        """从优先 CDN 节点拉取最新的 commit 哈希。
+
+        Returns:
+            str: 40 位 commit SHA，失败时返回空字符串。
+        """
         for url_base in self.preferred_urls:
             self.url = url_base
             url = self.urlpath('/latest.json')
@@ -223,7 +304,13 @@ class GitOverCdnClient:
             if resp.status_code == 200:
                 try:
                     info = json.loads(resp.text)
+                    if not isinstance(info, dict) or info.get('branch', 'master') != self.branch:
+                        self.logger.warning('CDN manifest does not match the configured branch')
+                        continue
                     commit = info['commit']
+                    if not isinstance(commit, str) or not re.fullmatch(r'[0-9a-f]{40}', commit):
+                        self.logger.error('CDN manifest contains an invalid commit')
+                        continue
                     self.logger.attr('LatestCommit', commit)
                     return commit
                 except json.JSONDecodeError:
@@ -237,6 +324,11 @@ class GitOverCdnClient:
         return ''
 
     def download_pack(self):
+        """从 CDN 下载增量 pack 压缩包并解压至本地 objects/pack 目录。
+
+        Returns:
+            bool: 下载并解压是否成功。
+        """
         latest = self.latest_commit
         current = self.current_commit
         for url_base in self.preferred_urls:
@@ -276,6 +368,11 @@ class GitOverCdnClient:
         return False
 
     def update_refs(self):
+        """将远端引用文件更新为最新 commit SHA。
+
+        Returns:
+            bool: 写入引用是否成功。
+        """
         file = self.filepath(f'./refs/remotes/{self.source}/{self.branch}')
         text = f'{self.latest_commit}\n'
         self.logger.info(f'Update refs: {file}')
@@ -302,32 +399,44 @@ class GitOverCdnClient:
         Returns:
             str: 命令的标准输出。
         """
-        os.chdir(self.folder)
         cmd = list(map(str, args))
         cmd = [self.git] + cmd
         self.logger.info(f'Execute: {cmd}')
 
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=False)
+        process = subprocess.Popen(cmd, cwd=self.folder, stdout=subprocess.PIPE, shell=False)
         try:
             stdout, stderr = process.communicate(timeout=timeout)
         except subprocess.TimeoutExpired:
             process.kill()
             stdout, stderr = process.communicate()
             self.logger.warning(f'TimeoutExpired when calling {cmd}, stdout={stdout}, stderr={stderr}')
+        if process.returncode != 0:
+            raise subprocess.CalledProcessError(process.returncode, cmd, output=stdout)
         return stdout.decode()
 
     def git_reset(self):
-        """执行 git reset --hard 到远程分支。"""
+        """执行 git reset --hard 到远程分支，清理锁文件并重置工作区。
+
+        Returns:
+            bool: 重置是否成功。
+        """
         # 移除 git 锁文件
         for lock_file in [
             './.git/index.lock',
             './.git/HEAD.lock',
-            './.git/refs/heads/master.lock',
+            f'./.git/refs/heads/{self.branch}.lock',
         ]:
+            lock_file = os.path.join(self.folder, lock_file)
             if os.path.exists(lock_file):
                 self.logger.info(f'Lock file {lock_file} exists, removing')
                 os.remove(lock_file)
-        self.git_command('reset', '--hard', f'{self.source}/{self.branch}')
+        try:
+            self.git_command('reset', '--hard', f'{self.source}/{self.branch}')
+        except (OSError, subprocess.CalledProcessError) as e:
+            self.logger.error(f'Failed to reset local repository: {e}')
+            return False
+        self.__dict__.pop('current_commit', None)
+        return True
 
     def get_status(self):
         """获取仓库状态。
@@ -365,13 +474,16 @@ class GitOverCdnClient:
             return False
         if self.current_commit == self.latest_commit:
             self.logger.info('Already up to date')
-            self.git_reset()
-            return True
+            # HEAD 可能已更新而远端引用仍旧，先对齐引用再 reset，避免回退版本。
+            if not self.update_refs():
+                return False
+            return self.git_reset()
 
         if not self.download_pack():
             return False
         if not self.update_refs():
             return False
-        self.git_reset()
+        if not self.git_reset():
+            return False
         self.logger.info('Update success')
         return True

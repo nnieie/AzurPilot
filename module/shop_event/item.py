@@ -32,11 +32,21 @@ else:
 
 
 class CounterOcr(Ocr):
+    """活动商店库存计数器 OCR（例如 14/15）。"""
+
     def __init__(self, buttons, lang='azur_lane', letter=(255, 255, 255), threshold=128,
                  alphabet='0123456789/IDSB', name=None):
         super().__init__(buttons, lang=lang, letter=letter, threshold=threshold, alphabet=alphabet, name=name)
 
     def pre_process(self, image):
+        """预处理计数器图像，裁剪掉左侧空白。
+
+        Args:
+            image (np.ndarray): 原始图像。
+
+        Returns:
+            np.ndarray: 裁剪后的二值化图像。
+        """
         mask = color_similarity_2d(image, (255, 255, 255))
         brightness = np.min(mask, axis=0)
         match = np.where(brightness < COUNTER_THRESHOLD)[0]
@@ -49,10 +59,18 @@ class CounterOcr(Ocr):
         return image
 
     def after_process(self, result):
+        """后处理 OCR 文本，校正易混淆字符并修复缺失斜杠的计数。
+
+        Args:
+            result (str): 原始识别字符串。
+
+        Returns:
+            str: 校正后的计数文本。
+        """
         result = super().after_process(result)
         result = result.replace('I', '1').replace('D', '0').replace('S', '5')
         result = result.replace('B', '8')
-        # fixup result like "55" -> "5/5", "2530" -> "25/30"
+        # 修复类似 "55" -> "5/5"、"2530" -> "25/30" 的无斜杠识别结果
         if result.isdigit() and result not in [str(total) for total in COUNTER_TOTALS]:
             candidates = []
             for total in COUNTER_TOTALS:
@@ -60,35 +78,42 @@ class CounterOcr(Ocr):
                 current_str = result[:-len(total_str)]
                 if result.endswith(total_str) and current_str and int(current_str) <= total:
                     candidates.append(f'{current_str}/{total_str}')
-            # For example, "1350" can be either "13/50" or "1/350".
-            # Leave ambiguous results invalid so the shop scanner retries them.
+            # 例如 "1350" 既可能是 "13/50" 也可能是 "1/350"
+            # 存在二义性时保持无效，以便商店扫描器重试
             if len(candidates) == 1:
                 result = candidates[0]
         return result
 
     @staticmethod
     def parse_result(result):
+        """解析斜杠分隔的计数字符串为整数对。
+
+        Args:
+            result (str):形如 '14/15' 的字符串。
+
+        Returns:
+            list[int]: [当前数量, 总数量]，解析失败返回 [0, 0]。
+        """
         parts = result.split('/') if result else []
         if len(parts) != 2 or not all(part.isdigit() for part in parts):
-            logger.warning(f'Invalid counter format: {result}')
+            logger.warning(f'无效的计数格式: {result}')
             return [0, 0]
 
         current, total = [int(part) for part in parts]
         if total <= 0 or current > total:
-            logger.warning(f'Invalid counter value: {result}')
+            logger.warning(f'无效的计数值: {result}')
             return [0, 0]
         return [current, total]
 
     def ocr(self, image, direct_ocr=False):
-        """
-        Do OCR on a counter, such as `14/15`, and returns 14, 15
+        """对计数器进行 OCR 识别并解析出 [当前, 总量]。
 
         Args:
-            image:
-            direct_ocr:
+            image (np.ndarray | list[np.ndarray]): 输入图像或图像列表。
+            direct_ocr (bool): 是否直接识别。默认为 False。
 
         Returns:
-            list[list[int]: [[current, total]].
+            list[int] | list[list[int]]: 单图返回 [当前, 总量]，多图返回列表。
         """
         result_list = super().ocr(image, direct_ocr=direct_ocr)
         if isinstance(result_list, list):
@@ -97,7 +122,17 @@ class CounterOcr(Ocr):
 
 
 class PriceOcr(Digit):
+    """活动商店价格 OCR。"""
+
     def pre_process(self, image):
+        """预处理价格图像，裁切左侧空白。
+
+        Args:
+            image (np.ndarray): 原始输入图像。
+
+        Returns:
+            np.ndarray: 处理后的二值化图像。
+        """
         mask = color_similarity_2d(image, PRICE_BACKGROUND_COLOR)
         brightness = np.min(mask, axis=0)
         match = np.where(brightness < PRICE_THRESHOLD)[0]
@@ -136,27 +171,43 @@ class EventShopItem(Item):
         return name
 
     def predict_valid(self):
+        """判断商品格是否包含有效商品（非空白或已售空变暗）。
+
+        Returns:
+            bool: 亮度达到阈值返回 True，否则返回 False。
+        """
         luma = rgb2luma(self.image)
         return np.mean(luma > 127) >= 0.3
 
     @property
     def scroll_pos(self):
+        """获取商品所在的滚动条位置。
+
+        Returns:
+            float | None: 滚动条相对位置值。
+        """
         return self._scroll_pos
 
     @scroll_pos.setter
     def scroll_pos(self, value):
+        """设置商品所在的滚动条位置。
+
+        Args:
+            value (float | None): 滚动条相对位置值。
+        """
         self._scroll_pos = value
 
     def __eq__(self, other):
         return id(self) == id(other)
 
     def correct_name_and_cost(self):
+        """根据物品价格和总限购数量校正物品名称和货币消耗类型。"""
         if self.price in UR_SHIP_PRICES_IN_URPT and self.total_count == 1:
             self.name = 'ShipUR'
             self.cost = 'URpt'
             self.is_ship = True
         elif self.price == COIN_PRICE_IN_URPT and self.total_count == 350:
-            # URpt to Coin
+            # URpt 兑换金币
             self.name = 'Coin'
             self.cost = 'URpt'
         else:
@@ -179,19 +230,17 @@ class EventShopItem(Item):
                 self.name = 'URpt'
             elif self.name.isdigit():
                 logger.warning(f'[活动商店-物品] 未识别的物品，价格 {self.price}，总数 {self.total_count}，'
-                               # f'defaulting to EquipSSR')
-                               f'saving image for analysis.')
+                               f'保存图像以便分析。')
                 import os
                 from module.base.utils import save_image
                 os.mkdir('assets/shop/event/new_templates/') if not os.path.exists('assets/shop/event/new_templates/') else None
                 save_image(self.image, f'assets/shop/event/new_templates/{self.name}.png')
-                # self.name = 'EquipSSR'
 
     def predict_genre(self):
+        """使用正则表达式解析物品名称，填充 group、sub_genre 和 tier 属性。"""
         self.group, self.sub_genre, self.tier = None, None, None
 
-        # Can use regular expression to quickly populate
-        # the new attributes
+        # 使用正则表达式快速填充新属性
         name = self.name.lower()
         result = re.search(FILTER_REGEX, name)
         if result:
@@ -202,6 +251,8 @@ class EventShopItem(Item):
 
 
 class EventShopItemGrid(ItemGrid):
+    """活动商店商品网格处理器。"""
+
     item_class = EventShopItem
 
     def __init__(self,
@@ -224,12 +275,35 @@ class EventShopItemGrid(ItemGrid):
         self.price_ocr = PRICE_OCR
 
     def predict_tag(self, image):
+        """识别商品角标（如未获得）。
+
+        Args:
+            image (np.ndarray): 角标区域图像。
+
+        Returns:
+            str | None: 'unobtained' 表示未获得，无对应角标返回 None。
+        """
         color = cv2.mean(np.array(image))[:3]
         if color_similar(color1=color, color2=(255, 72, 72), threshold=50):
             return 'unobtained'
         return None
 
     def predict(self, image, name=True, amount=True, cost=False, price=True, tag=True, counter=True, scroll_pos=None):
+        """识别活动商店网格中的全部商品。
+
+        Args:
+            image (np.ndarray): 商店截图。
+            name (bool): 是否识别物品名称。
+            amount (bool): 是否识别单次获得数量。
+            cost (bool): 是否识别货币类型。
+            price (bool): 是否识别价格。
+            tag (bool): 是否识别角标。
+            counter (bool): 是否识别库存计数器（如 14/15）。默认为 True。
+            scroll_pos (float, optional): 关联的滚动条纵向相对位置。默认为 None。
+
+        Returns:
+            list[EventShopItem]: 识别出的物品列表。
+        """
         super().predict(image, name=name, amount=amount, cost=cost, price=price, tag=tag)
         if counter and len(self.items):
             counter_list = [item.crop(self.counter_area) for item in self.items]

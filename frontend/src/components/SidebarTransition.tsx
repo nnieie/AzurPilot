@@ -1,3 +1,7 @@
+/**
+ * @fileoverview 侧边栏内容切换过渡动画组件。
+ */
+
 import { useMemo, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { motionReducedActive } from '../app/motionPrefs'

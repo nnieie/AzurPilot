@@ -1,3 +1,7 @@
+/**
+ * @fileoverview 仪表盘资源（石油、物资、魔方等）统计卡片组件。
+ */
+
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { Box, GripVertical, Plus, X } from 'lucide-react'
 import type { Resource } from '../api/types'
@@ -5,7 +9,7 @@ import { useApp } from '../app/context'
 import { readDashboardPrefs, subscribeDashboardPrefs } from '../app/dashboardPrefs'
 import type { UiKey } from '../i18n'
 
-export const resourceLabels: Record<string, UiKey> = {Oil: 'resource.Oil', Coin: 'resource.Coin', Gem: 'resource.Gem', Cube: 'resource.Cube', Pt: 'resource.Pt', ActionPoint: 'resource.ActionPoint', YellowCoin: 'resource.YellowCoin', PurpleCoin: 'resource.PurpleCoin', Core: 'resource.Core', Medal: 'resource.Medal', Merit: 'resource.Merit', GuildCoin: 'resource.GuildCoin', Chip: 'resource.Chip'}
+export const resourceLabels: Record<string, UiKey> = {Oil: 'resource.Oil', Coin: 'resource.Coin', Gem: 'resource.Gem', Cube: 'resource.Cube', Pt: 'resource.Pt', ActionPoint: 'resource.ActionPoint', YellowCoin: 'resource.YellowCoin', PurpleCoin: 'resource.PurpleCoin', Core: 'resource.Core', Medal: 'resource.Medal', Merit: 'resource.Merit', GuildCoin: 'resource.GuildCoin', Chip: 'resource.Chip', Distance: 'resource.Distance', ActionAsset: 'resource.ActionAsset'}
 const iconBase = import.meta.env.BASE_URL
 const iconImages: Record<string, string> = {
   Oil: `${iconBase}oil.webp`,
@@ -20,7 +24,9 @@ const iconImages: Record<string, string> = {
   Medal: `${iconBase}honor_medal.webp`,
   Merit: `${iconBase}merit.webp`,
   GuildCoin: `${iconBase}stamina.webp`,
-  Chip: `${iconBase}core_data.webp`,
+  Chip: `${iconBase}cognitive_chips.webp`,
+  Distance: `${iconBase}nautical_miles.webp`,
+  ActionAsset: `${iconBase}action_asset.webp`,
 }
 
 /* 行动力越高换越大的狗图，四档从高到低取第一张命中的；未达第一档不换图。 */
@@ -45,7 +51,7 @@ function ResourceIcon({resourceKey, size = 32, src}: {resourceKey: string; size?
   const imageSrc = src ?? iconImages[resourceKey]
   return imageSrc ? <img className="resource-icon-image" src={imageSrc} alt="" width={size} height={size} draggable={false}/> : <Box size={Math.round(size * .62)}/>
 }
-export const defaultResourceKeys = ['Oil', 'Coin', 'Gem', 'Cube']
+export const defaultResourceKeys = ['Oil', 'Coin', 'Gem', 'Cube', 'Distance', 'ActionAsset']
 
 export function moveResourceKey(keys: string[], fromKey: string, toKey: string): string[] {
   if (fromKey === toKey) return keys

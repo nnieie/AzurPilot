@@ -69,6 +69,14 @@ class ShopItem_250814(Item):
     """
 
     def predict_valid(self):
+        """判断商品是否有效（未售罄）。
+
+        通过统计商品图标区域高亮度像素的占比来区分是否售罄。
+        未售出商品的亮度均值通常 > 0.36，已售罄商品则变暗 < 0.2。
+
+        Returns:
+            bool: 商品未售罄返回 True，已售罄返回 False。
+        """
         mean = np.mean(np.max(self.image, axis=2) > 139)
         return mean > 0.3
 

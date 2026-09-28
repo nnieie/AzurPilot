@@ -365,6 +365,7 @@ class Item:
 
     @property
     def name(self):
+        """获取物品名称。"""
         return self._name
 
     @name.setter
@@ -384,10 +385,12 @@ class Item:
 
     @property
     def cost(self):
+        """获取商品消耗的货币类型名称。"""
         return self._cost
 
     @cost.setter
     def cost(self, value):
+        """设置商品消耗的货币类型名称，自动去除尾部数字后缀。"""
         if '_' in value:
             pre, suffix = value.rsplit('_', 1)
             if suffix.isdigit():
@@ -395,6 +398,11 @@ class Item:
         self._cost = value
 
     def is_known_item(self):
+        """判断物品是否为已成功识别的已知物品（非默认名或纯数字临时名）。
+
+        Returns:
+            bool: 是已知物品返回 True，否则返回 False。
+        """
         if self.name == 'DefaultItem':
             return False
         elif self.name.isdigit():
@@ -416,10 +424,16 @@ class Item:
         return name
 
     def predict_valid(self):
+        """判断该物品格是否包含有效物品图标。
+
+        Returns:
+            bool: 灰度均值大于阈值返回 True，否则返回 False。
+        """
         return np.mean(rgb2gray(self.image) > 127) > 0.1
 
     @property
     def button(self):
+        """获取物品关联的按钮点击目标区域。"""
         return self._button.button
 
     @property
@@ -432,6 +446,14 @@ class Item:
         return self._button.area
 
     def crop(self, area):
+        """基于当前物品图标左上角相对偏移进行局部裁切。
+
+        Args:
+            area (tuple): 相对物品左上角的 (x1, y1, x2, y2) 区域。
+
+        Returns:
+            np.ndarray: 裁切后的图像。
+        """
         return crop(self.image_raw, area_offset(area, offset=self._button.area[:2]))
 
     def __eq__(self, other):

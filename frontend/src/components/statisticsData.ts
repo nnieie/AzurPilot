@@ -1,3 +1,7 @@
+/**
+ * @fileoverview 统计数据聚合、图表计算与表格排序辅助工具。
+ */
+
 import type { StatSeries,  Scalar, StatPoint } from '../api/types'
 import type { ChartMode } from '../app/statisticsPrefs'
 

@@ -1,3 +1,7 @@
+/**
+ * @fileoverview 主页仪表盘与实例列表导航卡片视图。
+ */
+
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, ExternalLink, History, Megaphone, Plus, Server } from 'lucide-react'

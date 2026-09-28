@@ -1,4 +1,6 @@
-/* 任务标题的灯带滚动：只有超出可视宽度的标题才滚，短标题仍走原来的省略号截断。 */
+/**
+ * @fileoverview 超长任务标题跑马灯滚动计算与同步逻辑。
+ */
 
 import { motionReducedActive, motionSpeedValue } from './motionPrefs'
 

@@ -34,6 +34,15 @@ class CampaignHard(CampaignRun):
     campaign: Campaign
 
     def run(self):
+        """执行困难关卡出击主流程。
+
+        流程包括：覆写困难模式配置、加载战役与地图模块、导航至困难关卡界面、
+        OCR 识别剩余次数并循环出击，完成后退出自动搜索并延迟到次日服务器刷新。
+
+        Pages:
+            in: 任意页面
+            out: page_campaign 或关卡选择界面
+        """
         logger.hr('困难战役', level=1)
         name = to_map_file_name(self.config.Hard_HardStage)
         # Hard.HardFleet 指定出击舰队，另一支在基地待命、不参与战斗。

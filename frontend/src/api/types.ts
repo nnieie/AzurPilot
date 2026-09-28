@@ -1,3 +1,7 @@
+/**
+ * @fileoverview 后端 WebSocket API 接口与数据模型类型定义。
+ */
+
 export type Scalar = string | number | boolean | null
 export type Value = Scalar | Value[] | {[key: string]: Value}
 export type Values = Record<string, Record<string, Record<string, Value>>>
@@ -6,6 +10,8 @@ export interface Instance { name: string; status: Status; serial: string; server
 export interface UpdateStatus {
   state: string; localHead: string | null; upstreamHead: string | null; branch: string
   ahead: number; behind: number; available: boolean; busy: boolean; canApply: boolean; canCancel: boolean; error: string
+  /** 本地与更新源历史互不包含（例如镜像重写历史导致 SHA 分离），更新前需弹窗确认。 */
+  shaMismatch?: boolean
   managedByAndroid?: boolean
 }
 export interface Commit { sha: string; author: string; date: string; message: string }
@@ -33,10 +39,10 @@ export interface StatTable {title: string; columns: string[]; rows: Scalar[][]; 
 export interface TableSort {index: number; descending: boolean}
 export interface StatisticsReport {
   instance: string; category: string; month: string
-  /* icon 可选：给卡片单独指定图标（科研物品写 'research:<模板名>'，大世界掉落写 'opsi:<模板名>'），缺省按 label 查内置表 */
+  /** 图标名称（可选）：为卡片单独指定图标（科研物品填 'research:<模板名>'，大世界掉落填 'opsi:<模板名>'），缺省按 label 查内置表。 */
   metrics: {label: string; value: number | null; unit: string; icon?: string}[]
   series: StatSeries[]; tables: StatTable[]; notes: string[]
-  /* 大世界掉落专用：任务筛选的选项（含当前窗口内没有记录的任务），count 是窗口内掉落记录数 */
+  /** 大世界掉落专用：任务筛选选项（含当前时间窗口内没有记录的任务），count 表示窗口内掉落记录数。 */
   taskOptions?: {key: string; label: string; count: number}[]
 }
 /** 指挥喵评分的单条天赋。`kind` 为 `special`（彩天赋）时高亮，`inferred` 表示这条由识别推断而来。 */
@@ -78,8 +84,25 @@ export interface Announcement {
   content: string
   url?: string
 }
+/** 背景图库条目：文件都放在服务器的 cache/background/library 下。 */
+export interface BackgroundGalleryEntry {
+  id: string
+  name: string
+  size: number
+  added: number
+  kind: 'image' | 'video'
+  source?: string
+}
+
 export interface Results {
+  'accounts.status': AccountStatus
+  'accounts.manage': AccountStatus
   'announcement.get': Announcement | null
+  'background.resolve': {final_url: string; content_type: string}
+  'background.gallery.list': BackgroundGalleryEntry[]
+  'background.gallery.add': {entry: BackgroundGalleryEntry}
+  'background.gallery.remove': {removed: boolean}
+  'background.gallery.open': {path: string}
   'updater.status': UpdateStatus
   'updater.commits': CommitHistory
   'updater.fetch': {accepted: boolean}
@@ -112,4 +135,13 @@ export interface Results {
   'settings.patch': {updated: string[]}
   'startup.get': {enabled: boolean; remember: boolean}
   'startup.set': {enabled: boolean; remember: boolean}
+}
+
+export interface AccountStatus {
+  destroyed?: boolean
+  local_bound?: boolean
+  tpm_available?: boolean
+  initialized: boolean; enabled: boolean; unlocked: boolean; tpm_bound: boolean
+  profiles?: Array<{id: string; label: string; users: Array<{uid: string; name: string}>}>
+  selected?: string | null
 }

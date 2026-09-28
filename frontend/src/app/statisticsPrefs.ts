@@ -1,4 +1,8 @@
 /**
+ * @fileoverview 统计页外观偏好、时间跨度、图表类型与指标筛选持久化。
+ */
+
+/**
  * 统计页外观与交互偏好：统计分类、时间跨度、图表类型、采样粒度和选中的指标。
  *
  * 与其它界面偏好一致：关掉再打开接着上次的样子，直到用户自己调整。
@@ -19,6 +23,8 @@ export interface StatisticsPrefs {
   lootTask: string
   chartMode: ChartMode
   chartAxisMode: ChartAxisMode
+  /** 纵轴起始值固定为 0，缩放后不跟着可见范围浮动 */
+  chartZeroBase: boolean
   bucket: number
   /** 图表与原始记录卡共用的时间范围，空表示不限 */
   rangeFrom: string
@@ -46,6 +52,7 @@ export const DEFAULT_STATISTICS_PREFS: StatisticsPrefs = {
   lootTask: '',
   chartMode: 'line',
   chartAxisMode: 'separate',
+  chartZeroBase: false,
   bucket: 0,
   rangeFrom: '',
   rangeTo: '',
@@ -80,6 +87,7 @@ export function readStatisticsPrefs(): StatisticsPrefs {
       const chartAxisMode = VALID_AXIS_MODES.includes(obj.chartAxisMode as ChartAxisMode)
         ? (obj.chartAxisMode as ChartAxisMode)
         : DEFAULT_STATISTICS_PREFS.chartAxisMode
+      const chartZeroBase = typeof obj.chartZeroBase === 'boolean' ? obj.chartZeroBase : DEFAULT_STATISTICS_PREFS.chartZeroBase
       const bucket = typeof obj.bucket === 'number' && VALID_BUCKETS.includes(obj.bucket)
         ? obj.bucket
         : DEFAULT_STATISTICS_PREFS.bucket
@@ -104,6 +112,7 @@ export function readStatisticsPrefs(): StatisticsPrefs {
         lootTask,
         chartMode,
         chartAxisMode,
+        chartZeroBase,
         bucket,
               rangeFrom,
               rangeTo,

@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
-"""
-CL1 数据自动提交模块
-负责收集侵蚀1统计数据并定时提交到云端API
+"""CL1 数据自动提交模块。
+
+负责收集侵蚀 1 统计数据并定时提交到云端 API。
 """
 from __future__ import annotations
 
@@ -22,14 +21,23 @@ from module.statistics.cl1_database import db as cl1_db
 
 
 class Cl1DataSubmitter:
-    """CL1数据提交器"""
+    """CL1 数据提交器。
+
+    负责从数据库读取月度统计数据，计算相关衍生指标，并通过 API 客户端上报。
+
+    Attributes:
+        _device_id (Optional[str]): 匿名设备标识。
+        _last_submit_time (float): 上次成功提交的时间戳。
+        _submit_interval (int): 提交最小时间间隔（秒）。
+        project_root (Path): 项目根目录路径。
+        _instance_name (str): Alas 配置实例名称。
+    """
     
     def __init__(self, instance_name: str | None = None):
-        """
-        初始化数据提交器
-        
+        """初始化数据提交器。
+
         Args:
-            instance_name: Alas实例名称
+            instance_name (str | None): Alas 实例名称。
         """
         self._device_id: Optional[str] = None
         self._last_submit_time: float = 0
@@ -47,19 +55,22 @@ class Cl1DataSubmitter:
     
     @property
     def device_id(self) -> str:
-        """获取设备ID"""
+        """获取设备 ID。
+
+        Returns:
+            str: 匿名设备唯一标识。
+        """
         return get_device_id()
     
     def collect_data(self, year: int = None, month: int = None) -> Dict[str, Any]:
-        """
-        收集指定月份的CL1统计数据
-        
+        """收集指定月份的 CL1 统计数据。
+
         Args:
-            year: 年份 (默认当前年份)
-            month: 月份 (默认当前月份)
-        
+            year (int, optional): 年份，默认当前年份。
+            month (int, optional): 月份，默认当前月份。
+
         Returns:
-            包含统计数据的字典
+            Dict[str, Any]: 包含月份、战斗次数、明石相遇次数及行动力获取的字典。
         """
         now = datetime.now()
         if year is None:
@@ -80,7 +91,14 @@ class Cl1DataSubmitter:
         }
     
     def _empty_data(self, month_key: str) -> Dict[str, Any]:
-        """返回空数据"""
+        """返回空数据字典。
+
+        Args:
+            month_key (str): 年月标识。
+
+        Returns:
+            Dict[str, Any]: 全 0 的统计数据字典。
+        """
         return {
             'month': month_key,
             'battle_count': 0,
@@ -89,14 +107,13 @@ class Cl1DataSubmitter:
         }
     
     def calculate_metrics(self, raw_data: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        计算各项指标
-        
+        """根据原始统计数据计算衍生指标。
+
         Args:
-            raw_data: 原始统计数据
-        
+            raw_data (Dict[str, Any]): 原始统计数据字典。
+
         Returns:
-            包含计算后指标的完整数据
+            Dict[str, Any]: 包含计算后指标的完整上报数据字典。
         """
         battle_count = raw_data['battle_count']
         akashi_encounters = raw_data['akashi_encounters']
@@ -140,27 +157,24 @@ class Cl1DataSubmitter:
         }
     
     def submit_data(self, data: Dict[str, Any], timeout: int = 10) -> bool:
-        """
-        提交数据到API
-        
+        """提交数据到 API。
+
         Args:
-            data: 要提交的数据
-            timeout: 请求超时时间(秒)
-        
+            data (Dict[str, Any]): 要提交的数据字典。
+            timeout (int): 请求超时时间（秒）。
+
         Returns:
-            是否提交成功
+            bool: 是否提交成功。
         """
         # 委托给ApiClient处理
         ApiClient.submit_cl1_data(data, timeout=timeout)
         return True
     
     def should_submit(self) -> bool:
-        """
-        检查是否应该提交数据
-        基于时间间隔判断
-        
+        """检查是否应该提交数据（基于时间间隔判断）。
+
         Returns:
-            是否应该提交
+            bool: 达到间隔时间则返回 True。
         """
         current_time = time.time()
         if current_time - self._last_submit_time >= self._submit_interval:
@@ -168,45 +182,45 @@ class Cl1DataSubmitter:
         return False
     
     def auto_submit(self) -> bool:
-        """
-        自动提交当月数据
-        会检查时间间隔,避免频繁提交
-        
+        """自动提交当月数据。
+
+        检查时间间隔，避免频繁提交。
+
         Returns:
-            是否成功提交
+            bool: 是否成功提交。
         """
         if not self.should_submit():
             return False
-        
+
         try:
             # 收集数据
             raw_data = self.collect_data()
-            
+
             # 计算指标
             metrics = self.calculate_metrics(raw_data)
-            
+
             # 提交数据
             success = self.submit_data(metrics)
-            
+
             if success:
                 self._last_submit_time = time.time()
-            
+
             return success
-        
+
         except Exception as e:
-            logger.exception(f'Failed to auto submit CL1 data: {e}')
+            logger.exception(f'[侵蚀1统计] 自动提交数据失败: {e}')
             return False
-    
+
     def auto_submit_daemon(self):
-        """
-        定时提交守护进程 (生成器函数,用于task_handler)
-        每次被调用时检查是否需要提交
+        """定时提交守护进程 (生成器函数，用于 task_handler)。
+
+        每次被调用时检查是否需要提交。
         """
         while True:
             try:
                 self.auto_submit()
             except Exception as e:
-                logger.exception(f'Error in CL1 auto submit daemon: {e}')
+                logger.exception(f'[侵蚀1统计] 自动提交守护进程异常: {e}')
             yield
 
 
@@ -215,7 +229,14 @@ _submitters: Dict[str, Cl1DataSubmitter] = {}
 
 
 def get_cl1_submitter(instance_name: str | None = None) -> Cl1DataSubmitter:
-    """获取CL1数据提交器实例"""
+    """获取 CL1 数据提交器单例实例。
+
+    Args:
+        instance_name (str | None): Alas 实例名称。
+
+    Returns:
+        Cl1DataSubmitter: 对应实例的数据提交器。
+    """
     global _submitters
     key = instance_name or 'default'
     if key not in _submitters:

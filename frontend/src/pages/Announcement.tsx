@@ -1,3 +1,7 @@
+/**
+ * @fileoverview 系统公告详情展示页面。
+ */
+
 import { useEffect } from 'react'
 import { Megaphone, RefreshCw } from 'lucide-react'
 import { useAnnouncement } from '../app/announcement'

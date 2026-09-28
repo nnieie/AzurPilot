@@ -1,3 +1,9 @@
+"""AzurPilot WebUI 启动器与多进程监督服务。
+
+负责管理 WebUI 子进程（Uvicorn / FastAPI / Starlette）、处理热重载、
+跨平台进程清理以及在独立子进程中执行 Python 依赖同步（uv sync）。
+"""
+
 import errno
 import os
 import queue
@@ -25,13 +31,13 @@ from deploy.uv import (
     redact_sensitive_text,
 )
 from module.logger import logger
+from module.runtime import worker_registry
+from module.runtime.process_control import pid_exists, stop_process, stop_process_tree
 from module.runtime.setting import (
     State,
     clear_dependency_sync_pending,
     is_dependency_sync_pending,
 )
-from module.runtime import worker_registry
-from module.runtime.process_control import pid_exists, stop_process, stop_process_tree
 
 
 WEBUI_READY_TIMEOUT = 120
@@ -55,16 +61,36 @@ EXIT_IPC_FAILURE = 78                  # 进程间通信或重载状态读取异
 
 
 class FatalStartupError(Exception):
-    """本进程无法再提供服务，需以非零退出码结束后由启动器报告。"""
+    """启动阶段的致命错误。
+
+    本进程无法再提供服务，需以非零退出码结束后由启动器报告。
+
+    Attributes:
+        reason (str): 失败原因说明。
+        exit_code (int): 进程退出码。
+    """
 
     def __init__(self, reason: str, exit_code: int = EXIT_STARTUP_FAILURE) -> None:
+        """初始化致命启动异常。
+
+        Args:
+            reason (str): 失败原因。
+            exit_code (int, optional): 退出码。默认为 EXIT_STARTUP_FAILURE。
+        """
         super().__init__(reason)
         self.reason = reason
         self.exit_code = exit_code
 
 
 def _is_ipv6_unavailable_error(exc: OSError) -> bool:
-    """判断 IPv6 地址族在当前系统中是否不可用。"""
+    """判断 IPv6 地址族在当前系统中是否不可用。
+
+    Args:
+        exc (OSError): 捕获到的套接字系统异常。
+
+    Returns:
+        bool: 当前错误属于 IPv6 不支持时返回 True，否则返回 False。
+    """
     errno_values = {
         errno.EAFNOSUPPORT,
         errno.EPROTONOSUPPORT,
@@ -83,7 +109,19 @@ def _create_dual_stack_sockets(
     *,
     allow_ipv6_fallback: bool = False,
 ) -> list[socket.socket]:
-    """创建同端口的 IPv4/IPv6 WebUI socket，并可降级为 IPv4。"""
+    """创建同端口的 IPv4/IPv6 WebUI socket，并可降级为 IPv4。
+
+    Args:
+        port (int): 绑定监听端口。
+        backlog (int, optional): 套接字等待队列大小。默认为 2048。
+        allow_ipv6_fallback (bool, optional): 是否允许在 IPv6 不可用时降级。默认为 False。
+
+    Returns:
+        list[socket.socket]: 创建并监听的套接字列表。
+
+    Raises:
+        OSError: 端口占用或绑定失败时抛出。
+    """
     sockets = []
     listen_port = port
     try:
@@ -95,6 +133,9 @@ def _create_dual_stack_sockets(
                     listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 if family == socket.AF_INET6:
                     listener.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 1)
+                # WebUI 明确支持局域网/远程访问，因此双栈监听所有接口是产品行为；
+                # 访问控制由 WebSocket 鉴权、Origin/远程访问网关等应用层边界负责。
+                # codeql[py/bind-socket-all-network-interfaces]
                 listener.bind((address, listen_port))
                 listener.listen(backlog)
                 listener.setblocking(False)
@@ -119,7 +160,12 @@ def _create_dual_stack_sockets(
 
 
 def _watch_server_started(server, ready_event: Event) -> None:
-    """在 Uvicorn 完成监听后通知父进程。"""
+    """在 Uvicorn 完成监听后通知父进程。
+
+    Args:
+        server: Uvicorn Server 实例。
+        ready_event (Event): 用于通知就绪的 multiprocessing.Event 事件。
+    """
     while not server.started:
         if server.should_exit or server.force_exit:
             return
@@ -128,7 +174,13 @@ def _watch_server_started(server, ready_event: Event) -> None:
 
 
 def _run_uvicorn_server(config, ready_event: Optional[Event] = None, sockets=None) -> None:
-    """运行 Uvicorn，并在端口实际监听后发送就绪信号。"""
+    """运行 Uvicorn，并在端口实际监听后发送就绪信号。
+
+    Args:
+        config: uvicorn.Config 配置对象。
+        ready_event (Optional[Event], optional): 就绪信号事件。默认为 None。
+        sockets: 预先绑定的套接字列表。默认为 None。
+    """
     import uvicorn
 
     server = uvicorn.Server(config)
@@ -147,13 +199,15 @@ def func(
     dependency_sync_event: Optional[Event] = None,
     ready_event: Optional[Event] = None,
 ):
-    """
-    主函数：运行Web服务。
+    """主函数：运行 Web 服务。
 
     Args:
-        ev: 可选的重启事件，用于热重载功能
-        dependency_sync_event: 请求父进程同步依赖的事件
-        ready_event: Uvicorn 完成监听后通知父进程的事件
+        ev: 可选的重启事件，用于热重载功能。
+        dependency_sync_event: 请求父进程同步依赖的事件。
+        ready_event: Uvicorn 完成监听后通知父进程的事件。
+
+    Raises:
+        Exception: WebUI 启动失败时向外抛出。
     """
     import argparse
     import asyncio
@@ -293,12 +347,29 @@ def func(
 
 
 def _stop_process(process, timeout=5) -> bool:
-    """通过本地句柄逐级停止服务，退出结果由 multiprocessing 回收。"""
+    """通过本地句柄逐级停止服务，退出结果由 multiprocessing 回收。
+
+    Args:
+        process: 进程对象。
+        timeout (int, optional): 超时秒数。默认为 5。
+
+    Returns:
+        bool: 进程已停止返回 True，否则返回 False。
+    """
     return stop_process(process, timeout=timeout)
 
 
 def _wait_for_webui_ready(process, ready_event: Event, timeout=WEBUI_READY_TIMEOUT) -> bool:
-    """等待 WebUI 完成 ASGI 启动和 socket 监听。"""
+    """等待 WebUI 完成 ASGI 启动和 socket 监听。
+
+    Args:
+        process: WebUI 进程对象。
+        ready_event (Event): 就绪通知事件。
+        timeout (int, optional): 最长等待超时时间（秒）。默认为 WEBUI_READY_TIMEOUT。
+
+    Returns:
+        bool: 在超时时间内成功就绪且进程存活返回 True，否则返回 False。
+    """
     deadline = time.monotonic() + timeout
     while True:
         remaining = deadline - time.monotonic()
@@ -311,12 +382,29 @@ def _wait_for_webui_ready(process, ready_event: Event, timeout=WEBUI_READY_TIMEO
 
 
 def _stop_process_tree(process, name: str) -> bool:
-    """统一回收服务进程树，保留根进程的 multiprocessing 退出状态。"""
+    """统一回收服务进程树，保留根进程的 multiprocessing 退出状态。
+
+    Args:
+        process: 进程对象或进程树根。
+        name (str): 进程名称（用于日志展示）。
+
+    Returns:
+        bool: 进程树成功终止返回 True，否则返回 False。
+    """
     return stop_process_tree(process, name=name, timeout=0)
 
 
 def _stop_registered_worker(pid: int, name: str, record: dict) -> bool:
-    """按持久化身份回收 worker，不按缓存 PID 发信号。"""
+    """按持久化身份回收 worker，不按缓存 PID 发信号。
+
+    Args:
+        pid (int): worker 进程 PID。
+        name (str): worker 标识名称。
+        record (dict): 登记的进程属性记录。
+
+    Returns:
+        bool: 成功终止返回 True，否则返回 False。
+    """
     if record.get("pid") != pid:
         return False
     return stop_process_tree(record=record, name=f"worker {name}", timeout=0)
@@ -326,7 +414,15 @@ def _stop_registered_workers(
     owner_pid: int | None,
     discard_reused: bool = False,
 ) -> bool:
-    """回收指定 WebUI 所登记的 worker，覆盖根进程已异常退出的场景。"""
+    """回收指定 WebUI 所登记的 worker，覆盖根进程已异常退出的场景。
+
+    Args:
+        owner_pid (int | None): 所属父 WebUI 进程 PID。
+        discard_reused (bool, optional): 是否丢弃 PID 已被系统复用的陈旧记录。默认为 False。
+
+    Returns:
+        bool: 全部关联 worker 均被安全停止并清除登记返回 True，否则返回 False。
+    """
     if owner_pid is None:
         return True
     try:
@@ -369,11 +465,23 @@ def _stop_registered_workers(
 
 
 def _pid_exists(pid: int) -> bool:
+    """检查指定 PID 的进程是否存在。
+
+    Args:
+        pid (int): 进程 ID。
+
+    Returns:
+        bool: 存在返回 True，不存在返回 False。
+    """
     return pid_exists(pid)
 
 
 def _recover_orphaned_workers() -> bool:
-    """启动前回收上次异常退出的 WebUI worker。"""
+    """启动前回收上次异常退出的 WebUI worker。
+
+    Returns:
+        bool: 成功回收或无需回收返回 True，存在活跃旧实例冲突或清理失败返回 False。
+    """
     try:
         owner_record = worker_registry.get_owner_record()
     except RuntimeError as exc:
@@ -412,12 +520,26 @@ def _recover_orphaned_workers() -> bool:
 
 
 def _stop_dependency_sync_service_tree(process) -> bool:
-    """终止卡住的依赖同步服务及其 uv 子进程。"""
+    """终止卡住的依赖同步服务及其 uv 子进程。
+
+    Args:
+        process: 同步服务进程对象。
+
+    Returns:
+        bool: 成功停止返回 True，否则返回 False。
+    """
     return _stop_process_tree(process, "依赖同步服务")
 
 
 def _stop_webui_process_tree(process) -> bool:
-    """终止 WebUI 及其 AzurPilot worker 子进程，避免重启后重复控制设备。"""
+    """终止 WebUI 及其 AzurPilot worker 子进程，避免重启后重复控制设备。
+
+    Args:
+        process: WebUI 进程对象。
+
+    Returns:
+        bool: 根进程及所有登记的 worker 均成功停止返回 True，否则返回 False。
+    """
     root_stopped = _stop_process_tree(process, "WebUI")
     if not root_stopped:
         # 根 WebUI 仍可能继续创建或管理 worker，不能清除其登记。
@@ -428,7 +550,11 @@ def _stop_webui_process_tree(process) -> bool:
 
 
 def _start_dependency_sync_service():
-    """启动空闲的依赖同步服务，避免 WebUI 进程修改自身环境。"""
+    """启动空闲的依赖同步服务，避免 WebUI 进程修改自身环境。
+
+    Returns:
+        tuple[Process, Queue, Queue]: 进程对象、请求队列、响应队列。
+    """
     request_queue = Queue()
     response_queue = Queue()
     process = Process(
@@ -443,7 +569,11 @@ def _start_dependency_sync_service():
 
 
 def _start_dependency_sync_service_with_retry():
-    """有限重试启动依赖同步服务，避免启动器因单次进程错误直接崩溃。"""
+    """有限重试启动依赖同步服务，避免启动器因单次进程错误直接崩溃。
+
+    Returns:
+        tuple[Process, Queue, Queue] | None: 启动成功返回元组，全部尝试失败返回 None。
+    """
     for attempt in range(1, DEPENDENCY_SYNC_START_RETRY_LIMIT + 1):
         try:
             return _start_dependency_sync_service()
@@ -465,7 +595,15 @@ def _start_dependency_sync_service_with_retry():
 
 
 def _stop_dependency_sync_service(process, request_queue) -> bool:
-    """停止依赖同步服务，确保启动器关闭时不遗留后端进程。"""
+    """停止依赖同步服务，确保启动器关闭时不遗留后端进程。
+
+    Args:
+        process: 依赖同步进程对象。
+        request_queue: 请求消息队列。
+
+    Returns:
+        bool: 服务已成功终止返回 True，终止失败返回 False。
+    """
     if not process:
         return True
     if not process.is_alive():
@@ -492,7 +630,17 @@ def _sync_dependencies(
     response_queue,
     timeout=DEPENDENCY_SYNC_RESPONSE_TIMEOUT,
 ) -> bool:
-    """向独立服务请求同步，并将完整 uv 输出写入 GUI 日志。"""
+    """向独立服务请求同步，并将完整 uv 输出写入 GUI 日志。
+
+    Args:
+        process: 依赖同步子进程。
+        request_queue: 请求队列。
+        response_queue: 响应队列。
+        timeout (int, optional): 超时时间（秒）。默认为 DEPENDENCY_SYNC_RESPONSE_TIMEOUT。
+
+    Returns:
+        bool: 同步成功返回 True，失败或超时返回 False。
+    """
     logger.hr("Update Dependencies", 0)
     if not process or not process.is_alive():
         logger.critical("Dependency sync service is not running")
@@ -540,7 +688,17 @@ def _complete_pending_dependency_sync(
     *,
     force: bool = False,
 ) -> bool:
-    """完成更新遗留的依赖同步，并仅在成功后清除持久化标记。"""
+    """完成更新遗留的依赖同步，并仅在成功后清除持久化标记。
+
+    Args:
+        process: 同步子进程。
+        request_queue: 请求队列。
+        response_queue: 响应队列。
+        force (bool, optional): 是否强制同步。默认为 False。
+
+    Returns:
+        bool: 无待处理或同步完成返回 True，读取失败或同步失败返回 False。
+    """
     try:
         pending = is_dependency_sync_pending()
     except OSError as exc:
@@ -571,7 +729,18 @@ def _prepare_dependency_sync_before_webui_start(
     *,
     force: bool = False,
 ):
-    """在创建 WebUI 前完成必要的依赖同步，失败时拒绝启动子进程。"""
+    """在创建 WebUI 前完成必要的依赖同步，失败时拒绝启动子进程。
+
+    Args:
+        service: 当前同步服务进程。
+        request_queue: 请求队列。
+        response_queue: 响应队列。
+        force (bool, optional): 是否强制触发同步。默认为 False。
+
+    Returns:
+        tuple[bool, Process | None, Queue | None, Queue | None]:
+            就绪状态、服务进程、请求队列、响应队列。
+    """
     try:
         pending = is_dependency_sync_pending()
     except OSError as exc:
@@ -633,7 +802,11 @@ def _prepare_dependency_sync_before_webui_start(
 
 
 def run_webui_supervisor() -> int:
-    """监督热重载 WebUI 子进程及其独立依赖同步服务，返回本进程退出码。"""
+    """监督热重载 WebUI 子进程及其独立依赖同步服务，返回本进程退出码。
+
+    Returns:
+        int: 退出状态码（0 表示正常退出，非零表示发生致命故障）。
+    """
     fatal_error: Optional[FatalStartupError] = None
     should_exit = False
     process = None

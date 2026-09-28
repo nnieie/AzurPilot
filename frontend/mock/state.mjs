@@ -167,7 +167,14 @@ export function createMockState({ empty = false } = {}) {
   const commits = Array.from({ length: 123 }, (_, index) => ({ sha: createHash('sha1').update(`mock-commit-${123 - index}`).digest('hex'), author: 'AzurPilot', date: new Date(Date.UTC(2026, 8, 14, 0, -index)).toISOString(), message: index === 0 ? 'feat(webui): 新增主页与实例状态\n\n统一全局设置和更新入口。' : `fix(runtime): 改善任务运行稳定性 ${123 - index}` }))
   let localHead = commits[3].sha
   let upstreamHead = commits[0].sha
-  const updateStatus = () => ({ state: localHead === upstreamHead ? 'idle' : 'available', localHead, upstreamHead, branch: 'dev', ahead: 0, behind: commits.findIndex(item => item.sha === localHead), available: localHead !== upstreamHead, busy: false, canApply: localHead !== upstreamHead, canCancel: false, error: '' })
+  // 端到端场景开关：模拟本地与更新源历史分叉（镜像重写历史导致 SHA 不匹配）。
+  let divergedUpdater = false
+  const divergedLocalHead = createHash('sha1').update('mock-diverged-local').digest('hex')
+  const setUpdateScenario = mode => {
+    divergedUpdater = mode === 'diverged'
+    localHead = divergedUpdater ? divergedLocalHead : commits[3].sha
+  }
+  const updateStatus = () => ({ state: localHead === upstreamHead ? 'idle' : 'available', localHead, upstreamHead, branch: 'dev', ahead: divergedUpdater ? 1 : 0, behind: divergedUpdater ? 3 : commits.findIndex(item => item.sha === localHead), available: localHead !== upstreamHead, busy: false, canApply: localHead !== upstreamHead, canCancel: false, error: '', shaMismatch: divergedUpdater })
   const settings = {
     groups: [
       {
@@ -194,14 +201,249 @@ export function createMockState({ empty = false } = {}) {
   }
   const get = name => instances.get(name) ?? fail('NOT_FOUND', '实例不存在')
   const snapshot = name => ({ instance: name, revision: revision(get(name).values), values: structuredClone(get(name).values) })
+  // 日志时间与真实后端一致使用本地时区（timestamp() 供调度比较，保持 UTC）。
+  const logTime = date => [date.getHours(), date.getMinutes(), date.getSeconds()].map(n => String(n).padStart(2, '0')).join(':')
+    + '.' + String(date.getMilliseconds()).padStart(3, '0')
   function log(name, text, level = 'INFO') {
     const instance = get(name)
-    instance.logs.push({ id: ++instance.cursor, level, text: `${timestamp(new Date())} [${name}] ${text}` })
+    const now = new Date()
+    instance.logs.push({
+      id: ++instance.cursor, level,
+      // 与真实后端 web_formatter 一致：级别列宽 8、时分秒加毫秒、竖线分隔；多行文本只挂首行前缀。
+      text: `${level.padEnd(8)} ${logTime(now)} │ ${text}`,
+    })
+    instance.logs = instance.logs.slice(-400)
+  }
+  // 独立渲染对象（分割线、居中标题等）不带级别与时间前缀，与真实后端一致。
+  function logRaw(name, text, level = 'INFO') {
+    const instance = get(name)
+    instance.logs.push({ id: ++instance.cursor, level, text })
     instance.logs = instance.logs.slice(-400)
   }
   function add(name, values) {
     instances.set(name, { values: structuredClone(values), status: 'stopped', logs: [], cursor: 0 })
     log(name, '测试实例已就绪，所有操作均为模拟。')
+  }
+  // 中文与全角字符按两列计宽，保证演示日志里的 Rich 框线在等宽字体下右缘对齐。
+  const displayWidth = text => [...text].reduce((sum, ch) => sum + (/[\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]/.test(ch) ? 2 : 1), 0)
+  const padDisplay = (text, size) => text + ' '.repeat(Math.max(0, size - displayWidth(text)))
+  // 按真实 Rich 排版生成异常堆栈：外层框含源码行与 locals 子框，框内嵌套框。
+  function stackTraceText() {
+    const W = 149
+    const box = (title, rows, w = W) => [
+      title
+        ? `╭${'─'.repeat(Math.floor((w - 2 - displayWidth(title) - 2) / 2))} ${title} ${'─'.repeat(Math.ceil((w - 2 - displayWidth(title) - 2) / 2))}╮`
+        : `╭${'─'.repeat(w - 2)}╮`,
+      ...rows.map(row => `│ ${padDisplay(row, w - 4)} │`),
+      `╰${'─'.repeat(w - 2)}╯`,
+    ]
+    const locals = box('locals', [
+      `command = 'opsi_ash_beacon'`,
+      `set_task = <function set_task at 0x0000015959B907D0>`,
+      `skip_first_screenshot = False`,
+    ], W - 10)
+    const metaLocals = box('locals', [`self = <module.os_ash.meta.OpsiAshBeacon object at 0x0000015941D4AFD0>`], W - 10)
+    const rows = [
+      ...box('Traceback (most recent call last)', [
+        ``,
+        `E:\\AzurPilot\\alas.py:1019 in run`,
+        ``,
+        `  1017 │   │   │   elif not self._channel_float_done:`,
+        `  1018 │   │   │   │   self.handle_channel_float()`,
+        `❱ 1019 │   │   │   self.__getattribute__(command)()`,
+        `  1020 │   │   │   return True`,
+        `  1021 │   │   except TaskEnd:`,
+        ``,
+        ...locals,
+        ``,
+        `E:\\AzurPilot\\module\\os_ash\\meta.py:616 in run`,
+        ``,
+        `  614 │   │   """执行信标攻击任务主流程：进入 META 页面、攻击、领取奖励、延迟到下次服务器更新。"""`,
+        `  615 │   │   self.ui_ensure(page_reward)`,
+        `❱ 616 │   │   self._begin_beacon()`,
+        `  617 │   │   self.ui_goto_main()`,
+        ``,
+        ...metaLocals,
+        ``,
+      ]),
+      `ScriptEnd: [心情-保底] 计算模式红脸弹窗，心情清零并延时`,
+    ]
+    return rows.join('\n')
+  }
+  // 注入覆盖各种真实日志形态的演示数据：各级别、分割线、居中标题、属性对齐、多行消息、海图识别、透视边缘、表格与异常堆栈。
+  function seedLogShowcase(name) {
+    const seed = (text, level = 'INFO') => log(name, text, level)
+    const bare = (text, level = 'INFO') => logRaw(name, text, level)
+    const W = 160
+    const rule = (char, title) => {
+      if (!title) return char.repeat(W)
+      const span = W - displayWidth(title) - 2
+      return char.repeat(Math.floor(span / 2)) + ' ' + title + ' ' + char.repeat(Math.ceil(span / 2))
+    }
+    const indent = ' '.repeat(9)
+
+    bare(rule('═'))
+    bare(padDisplay('调度器', Math.floor((W - displayWidth('调度器')) / 2) * 2 + displayWidth('调度器')))
+    bare(rule('═'))
+    seed('调度器已就绪，开始按任务队列执行')
+    bare(rule('═', 'COMMISSION'))
+    seed('COMMISSION')
+    bare(rule('─', 'SUB_STAGE'))
+    seed('SUB_STAGE')
+    seed('<<< 查找所有舰队 >>>')
+    seed('[META作战] 战斗结束并回到正确页面')
+
+    // 1. 海域透视与边缘线识别（完整闭合 vs 边缘缺失对比）
+    // 样例 A: 四边完整闭合 (全绿高亮)
+    seed('[地图-透视] 0.045s  _   水平: 7 (7 内部, 0 边缘)')
+    seed('[地图-透视] 边缘: /_\\    垂直: 8 (8 内部, 0 边缘)')
+
+    // 样例 B: 右边缘与下边缘缺失 (视角滑至海域右下角，右/下红虚线警示)
+    seed('[地图-透视] 0.041s      水平: 5 (5 内部, 0 边缘)')
+    seed('[地图-透视] 边缘: /_     垂直: 6 (6 内部, 0 边缘)')
+
+    // 样例 C: 单应性左边缘缺失 (单应性位置偏左，左红虚线警示)
+    seed('[地图-单应性] 0.038s  _   边缘线: 1 水平, 2 垂直')
+    seed('[地图-单应性] 边缘:  _\\   单应位置: (  4,   2)')
+
+    // 2. 连续右对齐属性块 (attr_align)
+    seed(`${padDisplay('摄像机', 22)}: (4, 3)`)
+    seed(`${padDisplay('摄像机修正', 22)}: (4, 3) -> (5, 3)`)
+    seed(`${padDisplay('之前中心偏移', 22)}: (12, -4)`)
+    seed(`${padDisplay('敌舰覆盖', 22)}: [C3, D4, E2]`)
+
+    // 3. 局部海图视野 (view.show)
+    seed('.. .. ++ ++ -- -- -- --')
+    seed('.. ++ ++ -- 1M -- -- --')
+    seed('++ ++ -- -- -- -- 2C --')
+    seed('-- -- FL -- -- -- ++ ++')
+    seed('-- -- -- MY -- ++ ++ ++')
+
+    // 4. 全局海图主网格 (map.show)
+    seed('[地图-显示]   A  B  C  D  E  F  G  H')
+    seed(' 1 ++ ++ ++ -- -- -- -- --')
+    seed(' 2 ++ ++ ++ -- 1M -- -- --')
+    seed(' 3 -- -- -- -- -- -- 2C --')
+    seed(' 4 -- -- FL -- -- -- -- --')
+    seed(' 5 -- -- -- -- MY ++ ++ ++')
+    seed(' 6 -- -- -- -- -- ++ ++ ++')
+    seed(' 7 ++ ++ ++ -- -- -- -- --')
+
+    // 5. 寻路代价网格 (map.show_cost)
+    seed('      A    B    C    D    E    F    G    H')
+    seed(' 1 9999 9999 9999    4    5    6    7    8')
+    seed(' 2 9999 9999 9999    3    4    5    6    7')
+    seed(' 3    3    2    1    2    3    4    5    6')
+    seed(' 4    2    1    0    1    2    3    4    5')
+    seed(' 5    3    2    1    2    3 9999 9999 9999')
+    seed(' 6    4    3    2    3    4 9999 9999 9999')
+    seed(' 7 9999 9999 9999    4    5    6    7    8')
+
+    // 6. 大世界雷达扫描 (radar.show)
+    seed('-- -- -- -- -- -- -- -- -- --')
+    seed('-- AK -- PO -- RE -- -- 1E --')
+    seed('-- -- -- -- -- == == -- -- --')
+    seed('-- -- FL -- -- == == -- EX --')
+    seed('-- AR -- -- ME -- -- -- -- SD')
+    seed('-- QU -- -- -- -- EN -- -- --')
+
+    // 7.1 Rich Table: 设备基准测试 (Device Benchmark)
+    bare([
+      '                                                                        Benchmark Result                                                                        ',
+      '                                                          ┌──────────────┬──────────┬──────┬─────────┐                                                          ',
+      '                                                          │ Device       │  Method  │  FPS │ Latency │                                                          ',
+      '                                                          ├──────────────┼──────────┼──────┼─────────┤                                                          ',
+      '                                                          │ MuMuPlayer12 │ nemu_ipc │ 58.4 │  0.005s │                                                          ',
+      '                                                          │ MuMuPlayer12 │    u2    │ 18.2 │  0.052s │                                                          ',
+      '                                                          │ MuMuPlayer12 │  adb_nc  │ 24.1 │  0.038s │                                                          ',
+      '                                                          └──────────────┴──────────┴──────┴─────────┘                                                          '
+    ].join('\n'))
+
+    // 7.2 Rich Table: 截图方式性能测试 (Screenshot Benchmark)
+    bare([
+      '                                                                      Screenshot Benchmark                                                                      ',
+      '                                                          ┌──────────────┬────────┬─────────┐                                                           ',
+      '                                                          │ Screenshot   │  Time  │  Speed  │                                                           ',
+      '                                                          ├──────────────┼────────┼─────────┤                                                           ',
+      '                                                          │ nemu_ipc     │ 0.005s │ Fastest │                                                           ',
+      '                                                          │ DroidCast    │ 0.018s │  Fast   │                                                           ',
+      '                                                          │ uiautomator2 │ 0.052s │ Medium  │                                                           ',
+      '                                                          │ ADB          │ 0.319s │  Slow   │                                                           ',
+      '                                                          │ aScreenCap   │ Failed │ Failed  │                                                           ',
+      '                                                          └──────────────┴────────┴─────────┘                                                           '
+    ].join('\n'))
+
+    // 7.3 Rich Table: 控制点击方式测试 (Click Benchmark)
+    bare([
+      '                                                                         Click Benchmark                                                                        ',
+      '                                                          ┌──────────────┬────────┬─────────┐                                                           ',
+      '                                                          │ Control      │  Time  │  Speed  │                                                           ',
+      '                                                          ├──────────────┼────────┼─────────┤                                                           ',
+      '                                                          │ minitouch    │ 0.012s │ Fastest │                                                           ',
+      '                                                          │ ADB_NC       │ 0.038s │  Fast   │                                                           ',
+      '                                                          │ uiautomator2 │ 0.052s │  Fast   │                                                           ',
+      '                                                          │ ADB          │ 0.120s │ Medium  │                                                           ',
+      '                                                          └──────────────┴────────┴─────────┘                                                           '
+    ].join('\n'))
+
+    // 7.4 Rich Table: OCR 识别基准摘要 (OCR Benchmark Summary)
+    bare([
+      '                                                                        OCR基准测试摘要                                                                         ',
+      '                                        ┌──────────┬──────────┬──────────────────┬──────────┬────────┬────────┐                                         ',
+      '                                        │ Model    │ Dataset  │ Accuracy         │ Avg Time │ Rating │ Status │                                         ',
+      '                                        ├──────────┼──────────┼──────────────────┼──────────┼────────┼────────┤                                         ',
+      '                                        │ CRNN     │ general  │ 100.00% (50/50)  │ 12.345 ms│ Fast   │  PASS  │                                         ',
+      '                                        │ Paddle   │ button   │  96.00% (48/50)  │ 28.120 ms│ Good   │  PASS  │                                         ',
+      '                                        │ CNS      │ number   │  85.00% (42/50)  │  8.500 ms│ Fast   │ Warning│                                         ',
+      '                                        └──────────┴──────────┴──────────────────┴──────────┴────────┴────────┘                                         '
+    ].join('\n'))
+
+    // 7.5 Rich Table: 指挥喵评分汇总 (Meowfficer Score Summary)
+    bare([
+      '                                                                           评分汇总                                                                             ',
+      '                                                            ┌────────┬────────┬──────────┬──────┬────────┐                                                      ',
+      '                                                            │ 来源   │ 指挥喵 │ 口径     │ 档位 │ 参考分 │                                                      ',
+      '                                                            ├────────┼────────┼──────────┼──────┼────────┤                                                      ',
+      '                                                            │ 喵窝-1 │ 莫桑   │ 战列旗舰 │  T0  │ 96/100 │                                                      ',
+      '                                                            │ 喵窝-2 │ 小吉丸 │ 驱逐雷击 │  T1  │ 85/100 │                                                      ',
+      '                                                            │ 喵窝-3 │ 伯克   │ 巡洋雷击 │  T2  │ 72/100 │                                                      ',
+      '                                                            └────────┴────────┴──────────┴──────┴────────┘                                                      '
+    ].join('\n'))
+
+    // 7.6 ASCII Table: 经典 ASCII 字符画表格 (Legacy ASCII Table)
+    bare([
+      '                                                                    Legacy ASCII Benchmark                                                                      ',
+      '                                                          +--------------+--------+--------+                                                            ',
+      '                                                          |  Screenshot  |  Time  | Speed  |                                                            ',
+      '                                                          +--------------+--------+--------+                                                            ',
+      '                                                          |     ADB      | 0.319s |  Fast  |                                                            ',
+      '                                                          | uiautomator2 | 0.476s | Medium |                                                            ',
+      '                                                          |  aScreenCap  | Failed | Failed |                                                            ',
+      '                                                          +--------------+--------+--------+                                                            '
+    ].join('\n'))
+
+    seed('带有路径 E:\\AzurPilot\\module\\os_ash\\meta.py 和 True/False/None', 'WARNING')
+    seed('大括号 { [ ( ) ] }，相对路径 ./relative/path/log.txt')
+    seed(`多行消息：当前任务队列\n${indent}Commission（进行中）\n${indent}Research（等待下一轮）`)
+
+    // 9. 统一错误上下文 (error_context) 与完整堆栈
+    seed('[错误] 任务执行发生未处理异常（opsi_ash_beacon）\n'
+      + `${indent}原因：程序抛出了 ScriptEnd，具体原因需要结合下方堆栈定位。\n`
+      + `${indent}影响：当前任务无法确认执行结果，调度器将尝试重启恢复。\n`
+      + `${indent}建议：查看错误现场中的 log.txt、截图和完整堆栈，确认是否需要更新资源或提交问题。\n`
+      + `${indent}异常：ScriptEnd: [心情-保底] 计算模式红脸弹窗，心情清零并延时\n`
+      + stackTraceText().split('\n').map(line => indent + line).join('\n'), 'ERROR')
+
+    // 10. LLM 智能分析报告
+    bare(rule('═', '[LLM] LLM 错误分析'))
+    seed('[LLM] 正在调用 LLM 分析异常原因...')
+    seed('[LLM] 该错误已被 LLM 分析过，直接复用上次的分析结果以节省 API ...')
+    seed(`[LLM] \n[LLM 分析报告 (由 gpt-4o-mini 提供, 复用缓存)]\n### 根本原因\n任务在执行 \`opsi_ash_beacon\` 时遇到了心情归零保底机制，触发了 \`ScriptEnd\` 正常流程中断。\n\n### 处置建议\n1. 检查调度设置中的心情恢复时长；\n2. 确认大世界信标是否已进入冷却状态。`)
+    bare(rule('═', '[LLM] LLM 分析结束'))
+
+    seed('CRITICAL 级别消息，用于验证最高级别配色', 'CRITICAL')
+    seed('DEBUG 级别消息，级别筛选为 ALL 时同样可见', 'DEBUG')
+    bare(rule('─'))
   }
   if (!empty) {
     for (const [index, name] of ['demo-main', 'demo-alt', 'demo-error', 'demo-dog'].entries()) {
@@ -234,6 +476,7 @@ export function createMockState({ empty = false } = {}) {
         values[task].Scheduler.NextRun = timestamp(new Date(Date.now() + (order - 1) * 1800000))
       }
       add(name, values)
+      seedLogShowcase(name)
     }
     get('demo-error').status = 'error'
     get('demo-error').values.Alas.Storage.Storage = { failureCount: 3, lastError: '模拟器连接失败', retry: { enabled: false, remaining: 0 }, tasks: ['Commission', 'Research'] }
@@ -263,7 +506,7 @@ export function createMockState({ empty = false } = {}) {
       case 'updater.status': return updateStatus()
       case 'updater.commits': return { entries: commits.slice(params.offset, params.offset + params.limit), total: commits.length, hasMore: params.offset + params.limit < commits.length, localHead, upstreamHead }
       case 'updater.fetch': return { accepted: true }
-      case 'updater.apply': localHead = upstreamHead; return { accepted: true }
+      case 'updater.apply': localHead = upstreamHead; divergedUpdater = false; return { accepted: true }
       case 'updater.cancel': return { accepted: true }
       case 'system.ping': return { pong: true }
       case 'schema.get': return { args, menu, translations: locales[params.language] }
@@ -688,5 +931,5 @@ export function createMockState({ empty = false } = {}) {
       log(name, '模拟任务正在运行，等待下一轮调度。')
     }
   }
-  return { dispatch, tick }
+  return { dispatch, tick, setUpdateScenario }
 }

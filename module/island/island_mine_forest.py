@@ -162,7 +162,7 @@ class IslandMineForest(Island,LoginHandler):
 
             # 读取数字区域
             cx = self.WAREHOUSE_GRID_ORIGIN[0] + idx * self.WAREHOUSE_GRID_DELTA[0]
-            cy = self.WAREHOUSE_GRID_ORIGIN[1]  # row 0
+            cy = self.WAREHOUSE_GRID_ORIGIN[1]  # 第 0 行
             nx1 = cx + self.NUMBER_REL[0]
             ny1 = cy + self.NUMBER_REL[1]
             nx2 = cx + self.NUMBER_REL[2]

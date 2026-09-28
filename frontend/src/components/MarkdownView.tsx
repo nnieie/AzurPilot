@@ -1,3 +1,7 @@
+/**
+ * @fileoverview 支持数学公式与代码高亮的 Markdown 渲染组件。
+ */
+
 import { useMemo, type MouseEvent } from 'react'
 import { Marked, type Token } from 'marked'
 import katex from 'katex'
@@ -184,15 +188,190 @@ const DOMPURIFY_CONFIG: Config = {
   ],
 }
 
+const SSR_ALLOWED_TAGS = new Set([
+  'a', 'abbr', 'b', 'blockquote', 'br', 'button', 'code', 'del', 'details', 'div', 'em',
+  'font', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'i', 'img', 'input', 'kbd', 'li',
+  'mark', 'ol', 'p', 'pre', 's', 'span', 'strong', 'sub', 'summary', 'sup', 'table',
+  'tbody', 'td', 'tfoot', 'th', 'thead', 'tr', 'u', 'ul',
+  'math', 'semantics', 'mrow', 'mi', 'mo', 'mn', 'annotation', 'mfrac', 'msup', 'msub',
+  'msubsup', 'mtable', 'mtr', 'mtd', 'svg', 'path', 'line',
+])
+
+const SSR_ALLOWED_ATTRS = new Set([
+  'alt', 'aria-hidden', 'checked', 'class', 'color', 'd', 'data-code', 'disabled',
+  'encoding', 'fill', 'height', 'href', 'open', 'rel', 'role', 'src', 'stroke', 'style',
+  'target', 'title', 'type', 'viewbox', 'width', 'xmlns',
+])
+
+const SSR_DROP_CONTENT_TAGS = new Set([
+  'script', 'style', 'iframe', 'object', 'embed', 'template', 'noscript',
+])
+
+function htmlEscapeAttribute(value: string): string {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('"', '&quot;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+}
+
+function safeHtmlUrl(value: string, attribute: string): boolean {
+  let normalized = ''
+  for (const char of value.trim()) {
+    const code = char.charCodeAt(0)
+    if (code > 0x20 && code !== 0x7f) normalized += char
+  }
+  const lower = normalized.toLowerCase()
+  if (!lower) return true
+  if (lower.startsWith('#') || lower.startsWith('/') || lower.startsWith('./') || lower.startsWith('../')) return true
+  if (lower.startsWith('https:') || lower.startsWith('http:') || lower.startsWith('mailto:') || lower.startsWith('tel:')) return true
+  return attribute === 'src' && lower.startsWith('data:image/')
+}
+
+function findHtmlTagEnd(html: string, start: number): number {
+  let quote = ''
+  for (let index = start + 1; index < html.length; index++) {
+    const char = html[index]
+    if (quote) {
+      if (char === quote) quote = ''
+      continue
+    }
+    if (char === '"' || char === "'") {
+      quote = char
+      continue
+    }
+    if (char === '>') return index
+  }
+  return -1
+}
+
+function sanitizeSsrTag(raw: string): {html: string; name: string; closing: boolean; dropContent: boolean} {
+  let cursor = 1
+  while (cursor < raw.length && raw[cursor] <= ' ') cursor++
+
+  let closing = false
+  if (raw[cursor] === '/') {
+    closing = true
+    cursor++
+    while (cursor < raw.length && raw[cursor] <= ' ') cursor++
+  }
+
+  const nameStart = cursor
+  while (cursor < raw.length) {
+    const char = raw[cursor]
+    const code = char.charCodeAt(0)
+    const isName = (code >= 48 && code <= 57) || (code >= 65 && code <= 90)
+      || (code >= 97 && code <= 122) || char === ':' || char === '-'
+    if (!isName) break
+    cursor++
+  }
+  const name = raw.slice(nameStart, cursor).toLowerCase()
+  if (!name) return {html: '', name: '', closing, dropContent: false}
+
+  const dropContent = SSR_DROP_CONTENT_TAGS.has(name)
+  if (dropContent || !SSR_ALLOWED_TAGS.has(name)) {
+    return {html: '', name, closing, dropContent}
+  }
+  if (closing) return {html: `</${name}>`, name, closing, dropContent: false}
+
+  const attributes: string[] = []
+  let selfClosing = false
+  while (cursor < raw.length) {
+    while (cursor < raw.length && raw[cursor] <= ' ') cursor++
+    if (raw[cursor] === '>' || cursor >= raw.length) break
+    if (raw[cursor] === '/') {
+      selfClosing = true
+      cursor++
+      continue
+    }
+
+    const attrStart = cursor
+    while (cursor < raw.length) {
+      const char = raw[cursor]
+      if (char <= ' ' || char === '=' || char === '>' || char === '/') break
+      cursor++
+    }
+    const attrName = raw.slice(attrStart, cursor).toLowerCase()
+    if (!attrName) {
+      cursor++
+      continue
+    }
+
+    while (cursor < raw.length && raw[cursor] <= ' ') cursor++
+    let value: string | null = null
+    if (raw[cursor] === '=') {
+      cursor++
+      while (cursor < raw.length && raw[cursor] <= ' ') cursor++
+      const quote = raw[cursor] === '"' || raw[cursor] === "'" ? raw[cursor++] : ''
+      const valueStart = cursor
+      if (quote) {
+        while (cursor < raw.length && raw[cursor] !== quote) cursor++
+        value = raw.slice(valueStart, cursor)
+        if (raw[cursor] === quote) cursor++
+      } else {
+        while (cursor < raw.length) {
+          const char = raw[cursor]
+          if (char <= ' ' || char === '>' || char === '/') break
+          cursor++
+        }
+        value = raw.slice(valueStart, cursor)
+      }
+    }
+
+    if (attrName.startsWith('on') || !SSR_ALLOWED_ATTRS.has(attrName)) continue
+    if ((attrName === 'href' || attrName === 'src') && value !== null && !safeHtmlUrl(value, attrName)) continue
+    attributes.push(value === null ? attrName : `${attrName}="${htmlEscapeAttribute(value)}"`)
+  }
+
+  const attrs = attributes.length ? ` ${attributes.join(' ')}` : ''
+  return {html: `<${name}${attrs}${selfClosing ? ' /' : ''}>`, name, closing, dropContent: false}
+}
+
+function sanitizeSsrHtml(html: string): string {
+  let output = ''
+  let cursor = 0
+  while (cursor < html.length) {
+    const tagStart = html.indexOf('<', cursor)
+    if (tagStart < 0) {
+      output += html.slice(cursor)
+      break
+    }
+    output += html.slice(cursor, tagStart)
+
+    const tagEnd = findHtmlTagEnd(html, tagStart)
+    if (tagEnd < 0) {
+      output += '&lt;' + html.slice(tagStart + 1)
+      break
+    }
+
+    const raw = html.slice(tagStart, tagEnd + 1)
+    const tag = sanitizeSsrTag(raw)
+    if (tag.dropContent && !tag.closing) {
+      const closePrefix = `</${tag.name}`
+      const lower = html.toLowerCase()
+      const closeStart = lower.indexOf(closePrefix, tagEnd + 1)
+      if (closeStart < 0) {
+        cursor = html.length
+        break
+      }
+      const closeEnd = findHtmlTagEnd(html, closeStart)
+      cursor = closeEnd < 0 ? html.length : closeEnd + 1
+      continue
+    }
+
+    output += tag.html
+    cursor = tagEnd + 1
+  }
+  return output
+}
+
 function sanitizeHtml(html: string): string {
   if (typeof window !== 'undefined' && typeof DOMPurify.sanitize === 'function') {
     return DOMPurify.sanitize(html, DOMPURIFY_CONFIG)
   }
-  // 在 SSR / 纯 Node 测试环境中兜底拦截危险标签与事件属性
-  return html
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/\son\w+=("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
-    .replace(/javascript:[^\s"'>]+/gi, '')
+  // React SSR / Vitest 的 Node 环境没有浏览器 DOM。这里使用线性 tokenizer 做白名单过滤，
+  // 不使用正则“删除危险片段”，因此不会出现多次替换绕过或 ReDoS。
+  return sanitizeSsrHtml(html)
 }
 
 /**

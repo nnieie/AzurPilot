@@ -37,7 +37,7 @@ class EventShopClerk(EventShopUI):
     urpt_image = None
 
     def _get_event_shop_grid(self):
-        # PRICE_THRESHOLD is a color similarity, color_mask takes a color tolerance
+        # PRICE_THRESHOLD 为颜色相似度，color_mask 使用颜色容差
         mask = color_mask(self.device.image, PRICE_BACKGROUND_COLOR, threshold=255 - PRICE_THRESHOLD)
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=8)
@@ -56,7 +56,7 @@ class EventShopClerk(EventShopUI):
             delta_y = 215
         else:
             logger.warning(f"[活动商店-购买] 行数异常: {row}，假设滚动条在顶部")
-            y = 1 + DETECT_AREA[1]  # Start position is 1 pixel lower than detect area
+            y = 1 + DETECT_AREA[1]  # 起始位置比检测区域低 1 像素
             delta_y = 215
 
         shop_grid = ButtonGrid(
@@ -70,11 +70,29 @@ class EventShopClerk(EventShopUI):
 
     @cached_property
     def event_shop_items(self):
+        """活动商店物品网格解析器缓存。
+
+        Returns:
+            EventShopItemGrid: 物品网格对象。
+        """
         event_shop_items = EventShopItemGrid(grids=None, templates={})
         event_shop_items.load_template_folder('./assets/shop/event')
         return event_shop_items
 
     def event_shop_get_items(self, scroll_pos=None):
+        """获取当前可见屏幕中的活动商店物品列表。
+
+        自动检测网格并识别名称、价格、库存等属性，若出现异常计数会重试识别。
+
+        Args:
+            scroll_pos (float, optional): 关联的滚动条纵向相对位置。默认为 None。
+
+        Returns:
+            list[EventShopItem]: 当前视野内识别出的物品列表。
+
+        Raises:
+            ItemNotFoundError: 多次重试后仍存在计数识别异常的物品。
+        """
         self.ensure_no_info_bar()
         for attempt in range(3):
             self.event_shop_items.grids = self._get_event_shop_grid()
@@ -83,15 +101,15 @@ class EventShopClerk(EventShopUI):
             self.event_shop_items.predict(self.device.image, name=True, amount=True, cost=False,
                                           price=True, tag=True, counter=True, scroll_pos=scroll_pos)
             shop_items = self.event_shop_items.items
-            # Invalid OCR uses 0/0; a valid sold-out counter is 0/N.
+            # OCR 识别失败时使用 0/0；正常售罄计数为 0/N。
             invalid = [item for item in shop_items if item.count == 0 and item.total_count == 0]
             if not invalid:
                 break
             if attempt >= 2:
-                message = f'Invalid event shop counter after {attempt + 1} scans: {[str(item) for item in invalid]}'
+                message = f'扫描 {attempt + 1} 次后仍存在无效的活动商店计数: {[str(item) for item in invalid]}'
                 logger.error(message)
                 raise ItemNotFoundError(message)
-            logger.warning(f'Invalid event shop counter, retrying: {[str(item) for item in invalid]}')
+            logger.warning(f'活动商店物品计数无效，重试中: {[str(item) for item in invalid]}')
             self.device.screenshot()
 
         if len(shop_items):
@@ -106,6 +124,13 @@ class EventShopClerk(EventShopUI):
             return []
 
     def scan_all(self):
+        """从顶部到底部完整扫描活动商店所有页面并汇总全部物品。
+
+        通过滚动页面拼接商品列表，自动去重两页之间重叠出现的行。
+
+        Returns:
+            list[EventShopItem]: 活动商店中的完整物品列表。
+        """
         items = []
         self.device.click_record_clear()
 
@@ -134,6 +159,15 @@ class EventShopClerk(EventShopUI):
         return items
 
     def event_shop_buy_item(self, item_to_buy, amount=None):
+        """滚动到目标物品位置并执行购买。
+
+        Args:
+            item_to_buy (EventShopItem): 待购买的物品对象。
+            amount (int, optional): 购买数量。未指定时购买最大可用数量。
+
+        Raises:
+            ItemNotFoundError: 滚动至记录位置后未能重新定位到目标物品。
+        """
         scroll_pos = item_to_buy.scroll_pos
         EVENT_SHOP_SCROLL.set(scroll_pos, main=self)
         items = self.event_shop_get_items()
@@ -146,7 +180,7 @@ class EventShopClerk(EventShopUI):
         elif len(items) > 1:
             logger.warning(f'[活动商店-购买] 在滚动位置 {scroll_pos} 找到多个物品 {item_to_buy}，购买第一个')
         item = items[0]
-        # For ship items, while it may have multiple stock, can only buy one at a time.
+        # 舰船类商品即使有多个库存，每次也只能购买 1 艘
         if getattr(item, 'is_ship', False):
             buy_times = item.count if amount is None else min(amount, item.count)
             for _ in range(buy_times):
@@ -155,6 +189,12 @@ class EventShopClerk(EventShopUI):
             self.event_shop_buy_item_execute(item, amount=amount)
 
     def event_shop_buy_item_execute(self, item, amount):
+        """执行单个物品的点击、数量选择与确认购买。
+
+        Args:
+            item (EventShopItem): 待购买物品对象。
+            amount (int, optional): 购买数量。None 则使用最大数量。
+        """
         self.event_shop_handle_obstruct()
         executed = False
         amount_handled = False
@@ -196,6 +236,11 @@ class EventShopClerk(EventShopUI):
                 continue
 
     def event_shop_handle_obstruct(self):
+        """处理购买商品后可能出现的遮挡界面（如获得舰船、指挥喵、物资提示等）。
+
+        Returns:
+            bool: 是否处理了遮挡弹窗。
+        """
         if self.handle_info_bar():
             return True
         if self.handle_get_meowfficer():

@@ -98,7 +98,21 @@
 :root[data-theme='extreme'] .dev-nav-preview,
 :root[data-theme='extreme'] .dev-submenu-list,
 :root[data-theme='extreme'] .live-label,
-:root[data-theme='extreme'] .nav-pill {border-radius: 0}
+:root[data-theme='extreme'] .nav-pill,
+:root[data-theme='extreme'] .log-card,
+:root[data-theme='extreme'] .card-btn-action,
+:root[data-theme='extreme'] .card-btn-icon,
+:root[data-theme='extreme'] .badge-shape,
+:root[data-theme='extreme'] .badge-pill,
+:root[data-theme='extreme'] .trapezoid-visual,
+:root[data-theme='extreme'] .prop-pill,
+:root[data-theme='extreme'] .prop-badge,
+:root[data-theme='extreme'] .error-tag,
+:root[data-theme='extreme'] .section-action,
+:root[data-theme='extreme'] .traceback-viewer,
+:root[data-theme='extreme'] .traceback-frame-card,
+:root[data-theme='extreme'] .traceback-exc-banner,
+:root[data-theme='extreme'] .log-card-line {border-radius: 0}
 
 /* 常驻滚动条：全局规则是 5px 宽、8px 圆角，既占内容宽度又难拖，也不符合直角风格。
    Chromium 的原生滚动条只有「占位」和「彻底消失」两种状态，所以这里把 CompactScrollbars
@@ -180,6 +194,46 @@
 :root[data-theme='extreme'] .log-filters {padding: 6px 11px}
 :root[data-theme='extreme'] .log-entry-line {padding: 0}
 :root[data-theme='extreme'] .log-rule {margin: 4px 0}
+/* 卡片式日志紧凑适配 (LogCardView Extreme) */
+:root[data-theme='extreme'] .log-cards-container {gap: 4px; padding: 2px 0}
+:root[data-theme='extreme'] .log-card {border-radius: 0; box-shadow: none}
+:root[data-theme='extreme'] .card-header {padding: 4px 8px; font-size: 10px}
+:root[data-theme='extreme'] .card-title {gap: 6px; font-size: 10px}
+:root[data-theme='extreme'] .card-time {font-size: 9px}
+:root[data-theme='extreme'] .card-actions {gap: 4px}
+:root[data-theme='extreme'] .card-btn-action {border-radius: 0; padding: 1px 5px; font-size: 9px}
+:root[data-theme='extreme'] .card-btn-icon {border-radius: 0; padding: 2px}
+:root[data-theme='extreme'] .card-body {padding: 6px 8px}
+:root[data-theme='extreme'] .badge-shape {font-size: 8px; padding: 0 4px; border-radius: 0}
+:root[data-theme='extreme'] .badge-pill {font-size: 8px; padding: 0 5px; border-radius: 0}
+:root[data-theme='extreme'] .trapezoid-visual {width: 140px; height: 90px; padding: 2px; border-radius: 0}
+:root[data-theme='extreme'] .perspective-body {gap: 12px}
+:root[data-theme='extreme'] .perspective-metrics {font-size: 10px; gap: 4px}
+:root[data-theme='extreme'] .property-row {padding: 0 2px; font-size: 10px}
+:root[data-theme='extreme'] .prop-pill,
+:root[data-theme='extreme'] .prop-badge {border-radius: 0; font-size: 9px; padding: 0 4px}
+:root[data-theme='extreme'] .table-card-header {padding: 3px 6px}
+:root[data-theme='extreme'] .native-log-table th {padding: 3px 8px; font-size: 10px}
+:root[data-theme='extreme'] .native-log-table td {padding: 2px 8px; font-size: 10px}
+:root[data-theme='extreme'] .error-body {gap: 4px; padding: 6px 8px}
+:root[data-theme='extreme'] .error-section {gap: 6px; font-size: 10px}
+:root[data-theme='extreme'] .error-tag {border-radius: 0; font-size: 9px; min-width: 44px; padding: 0 3px}
+:root[data-theme='extreme'] .section-action {border-radius: 0; padding: 4px 6px}
+:root[data-theme='extreme'] .traceback-viewer {border-radius: 0}
+:root[data-theme='extreme'] .traceback-toolbar {padding: 3px 6px; font-size: 10px}
+:root[data-theme='extreme'] .traceback-frames-list {gap: 4px; padding: 4px}
+:root[data-theme='extreme'] .traceback-frame-card {border-radius: 0}
+:root[data-theme='extreme'] .traceback-frame-header {padding: 3px 6px; font-size: 10px}
+:root[data-theme='extreme'] .traceback-code-block {font-size: 10px; line-height: 1.4}
+:root[data-theme='extreme'] .traceback-locals-block {padding: 3px 6px; font-size: 9px}
+:root[data-theme='extreme'] .traceback-exc-banner {border-radius: 0; margin: 0 4px 4px; padding: 4px 6px; font-size: 10px}
+:root[data-theme='extreme'] .traceback-raw-pre {padding: 4px 6px; font-size: 9px}
+:root[data-theme='extreme'] .llm-markdown-view {font-size: 11px; line-height: 1.5}
+:root[data-theme='extreme'] .cost-table .map-th-col {width: 26px; min-width: 26px; max-width: 26px; font-size: 10px; padding: 2px 0}
+:root[data-theme='extreme'] .cost-cell {width: 26px; height: 22px; font-size: 10px}
+:root[data-theme='extreme'] .system-banner-card {padding: 4px 0; margin: 2px 0}
+:root[data-theme='extreme'] .stage-header-card {margin: 3px 0}
+:root[data-theme='extreme'] .log-card-line {padding: 1px 4px; border-radius: 0}
 :root[data-theme='extreme'] .statistics-toolbar-row {padding: 6px 0; margin-bottom: 8px}
 :root[data-theme='extreme'] .panel-note {padding: 7px 12px}
 :root[data-theme='extreme'] .settings-notice {margin: 10px 0 8px}
@@ -311,6 +365,7 @@
   :root[data-theme='extreme'] .button {padding: 5px 12px}
   :root[data-theme='extreme'] .icon-button {width: 28px; height: 28px}
   :root[data-theme='extreme'] .text-button {min-height: 26px; padding: 2px}
+  :root[data-theme='extreme'] {--table-heading-control: 26px}
   :root[data-theme='extreme'] .select-trigger {padding: 5px 10px}
   :root[data-theme='extreme'] .multi-options {gap: 5px}
   :root[data-theme='extreme'] .multi-options .checkbox-control {min-height: 28px; padding: 4px 8px}

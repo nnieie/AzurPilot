@@ -397,15 +397,22 @@ def dict_to_kv(dictionary, allow_none=True):
 
 
 def server_timezone() -> timedelta:
+    """获取当前游戏服务器对应的时区时差。
+
+    Returns:
+        timedelta: 与 UTC 的时间差对象。
+    """
     return SERVER_TO_TIMEZONE.get(server_.server, SERVER_TO_TIMEZONE['cn'])
 
 
 def server_time_offset() -> timedelta:
-    """
-    计算本地时间与服务器时间的偏移量。
+    """计算本地时间与服务器时间的偏移量。
 
     本地时间转服务器时间：server_time = local_time - server_time_offset()
     服务器时间转本地时间：local_time = server_time + server_time_offset()
+
+    Returns:
+        timedelta: 本地时区与游戏服务器时区的差值。
     """
     return current_time(timezone.utc).astimezone().utcoffset() - server_timezone()
 
@@ -736,9 +743,15 @@ def time_delta(_timedelta):
     return _time_dict
 
 
-def readable_time(before: str, value: str) -> str:
-    """
-    计算两个时间之间的差值，返回人类可读的时间描述。
+def readable_time(before: str, value: str) -> dict:
+    """计算两个时间之间的差值，返回人类可读的时间描述。
+
+    Args:
+        before: 历史时间 ISO 格式字符串。
+        value: 默认展示值。
+
+    Returns:
+        dict: 包含 value、time 与 time_name 键的人类可读描述字典。
     """
     timedata = {
         'value': value,
@@ -776,7 +789,12 @@ def readable_time(before: str, value: str) -> str:
     return timedata
 
 @run_once
-def is_good_gpu():
+def is_good_gpu() -> bool:
+    """检测当前机器是否拥有显存 >= 1GB 的独立/高性能 GPU。
+
+    Returns:
+        bool: Windows 平台且显存 >= 1GB 返回 True，否则返回 False。
+    """
     if os.name != 'nt':
         logger.info("[Config] 当前系统为非 Windows，不使用 GPU")
         return False

@@ -1,3 +1,7 @@
+/**
+ * @fileoverview 系统公告拉取、未读状态管理与轮询订阅。
+ */
+
 import { useCallback, useEffect, useSyncExternalStore } from 'react'
 import { api } from '../api/client'
 import type { Announcement } from '../api/types'

@@ -1,3 +1,7 @@
+/**
+ * @fileoverview 统计页面单分类内容区组件。
+ */
+
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 
 import { api } from '../api/client'

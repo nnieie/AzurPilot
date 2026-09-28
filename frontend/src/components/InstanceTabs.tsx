@@ -1,3 +1,7 @@
+/**
+ * @fileoverview 顶栏多实例平铺标签页组件。
+ */
+
 import { matchPath, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { AlertTriangle, LoaderCircle, Play, Plus, Square, Trash2, X } from 'lucide-react'
 import { useState, type ComponentType } from 'react'

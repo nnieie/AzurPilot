@@ -59,6 +59,16 @@ class Cl1Database:
     def get_siren_research_device_count(
         self, data: dict, source: str = "cl1", hazard_level: int = None
     ) -> int:
+        """从统计数据字典中提取塞壬研究装置出现次数。
+
+        Args:
+            data (dict): 月度统计数据。
+            source (str): 统计来源（'cl1' 或 'meow'）。默认为 'cl1'。
+            hazard_level (int, optional): 侵蚀等级（仅当 source='meow' 时有效）。
+
+        Returns:
+            int: 记录的研究装置数量。
+        """
         devices = self._normalize_siren_research_devices(data)
         if source == "meow":
             if hazard_level is None:
@@ -892,13 +902,13 @@ class Cl1Database:
         if not old_db_dir.exists():
             return
 
-        # logger.info(f"Scanning for legacy CL1 data in {old_db_dir}...")
+        # logger.info(f"在 {old_db_dir} 中扫描旧版 CL1 数据...")
         try:
             for instance_dir in old_db_dir.iterdir():
                 if instance_dir.is_dir():
                     json_file = instance_dir / "cl1_monthly.json"
                     if json_file.exists():
-                        # logger.info(f"Found legacy data for instance: {instance_dir.name}")
+                        # logger.info(f"发现实例旧数据: {instance_dir.name}")
                         self.migrate_from_json(json_file, instance_dir.name)
         except Exception as e:
             logger.error(f"[统计-数据库] 自动迁移扫描错误: {e}")
@@ -1067,21 +1077,25 @@ class Cl1Database:
         return result
 
     def async_get_stats(self, instance: str, month: str):
+        """异步获取指定月份的 CL1 统计数据。"""
         from module.base.async_executor import async_executor
 
         return async_executor.submit(self.get_stats, instance, month)
 
     def async_save_stats(self, instance: str, month: str, data: Dict[str, Any]):
+        """异步保存指定月份的 CL1 统计数据。"""
         from module.base.async_executor import async_executor
 
         return async_executor.submit(self.save_stats, instance, month, data)
 
     def async_increment_battle_count(self, instance: str, delta: int = 1):
+        """异步增加战斗场次计数。"""
         from module.base.async_executor import async_executor
 
         return async_executor.submit(self.increment_battle_count, instance, delta)
 
     def async_increment_akashi_encounter(self, instance: str):
+        """异步增加明石遭遇次数。"""
         from module.base.async_executor import async_executor
 
         return async_executor.submit(self.increment_akashi_encounter, instance)
@@ -1089,6 +1103,7 @@ class Cl1Database:
     def async_add_akashi_ap_entry(
         self, instance: str, amount: int, base: int, count: int, source: str
     ):
+        """异步记录明石购买行动力条目。"""
         from module.base.async_executor import async_executor
 
         return async_executor.submit(
@@ -1098,11 +1113,13 @@ class Cl1Database:
     def async_add_ap_snapshot(
         self, instance: str, ap_current: int, source: str = "cl1", distance: int = None, ap_total: int = None
     ):
+        """异步添加行动力快照。"""
         from module.base.async_executor import async_executor
 
         return async_executor.submit(self.add_ap_snapshot, instance, ap_current, source, distance, ap_total)
 
     def async_set_last_ap_notification(self, instance: str, ap_current: int):
+        """异步记录最近一次行动力通知值。"""
         from module.base.async_executor import async_executor
 
         return async_executor.submit(
@@ -1112,6 +1129,7 @@ class Cl1Database:
     def async_add_yellow_coin_snapshot(
         self, instance: str, yellow_coin: int, source: str = "dashboard"
     ):
+        """异步记录代币快照。"""
         from module.base.async_executor import async_executor
 
     def async_add_meow_battle_time(self, instance: str, duration: float):
@@ -1119,10 +1137,12 @@ class Cl1Database:
         return async_executor.submit(self.add_meow_battle_time, instance, duration)
 
     def async_get_meow_stats(self, instance: str, year: int = None, month: int = None, hazard_level: int = None):
+        """异步获取短猫相接月度统计。"""
         from module.base.async_executor import async_executor
         return async_executor.submit(self.get_meow_stats, instance, year, month)
 
     def async_increment_meow_akashi_encounter(self, instance: str, hazard_level: int):
+        """异步增加短猫相接明石遭遇计数。"""
         from module.base.async_executor import async_executor
 
         return async_executor.submit(
@@ -1130,6 +1150,7 @@ class Cl1Database:
         )
 
     def async_add_meow_akashi_ap(self, instance: str, hazard_level: int, amount: int):
+        """异步记录短猫相接明石行动力购买。"""
         from module.base.async_executor import async_executor
 
         return async_executor.submit(
@@ -1740,6 +1761,7 @@ class Cl1Database:
         commission_count: int = 1,
         screenshots: Optional[List[str]] = None,
     ):
+        """异步记录委托收益。"""
         from module.base.async_executor import async_executor
 
         return async_executor.submit(
@@ -1749,6 +1771,7 @@ class Cl1Database:
     def async_get_commission_income(
         self, instance: str, year: int = None, month: int = None
     ):
+        """异步获取委托收益统计。"""
         from module.base.async_executor import async_executor
 
         return async_executor.submit(self.get_commission_income, instance, year, month)

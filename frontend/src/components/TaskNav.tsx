@@ -1,3 +1,7 @@
+/**
+ * @fileoverview 侧边栏任务分组与导航菜单入口组件。
+ */
+
 import { useSyncExternalStore } from 'react'
 import { useApp } from '../app/context'
 import { usesLegacyLayout } from '../app/theme'

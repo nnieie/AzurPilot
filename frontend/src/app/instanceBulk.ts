@@ -1,3 +1,7 @@
+/**
+ * @fileoverview 实例一键批量启停逻辑与目标过滤。
+ */
+
 import type {Instance} from '../api/types'
 
 /** 一键启停的动作，与标签页上那枚单实例启停钮同一套语义。 */

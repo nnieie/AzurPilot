@@ -1,3 +1,7 @@
+/**
+ * @fileoverview 分段选择器控件组件。
+ */
+
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 
 import { useApp } from '../app/context'

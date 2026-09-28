@@ -1,8 +1,7 @@
-"""
-API 客户端模块
-负责与 API 服务器进行所有HTTP交互
-包括Bug日志上报、CL1数据提交和公告获取
-支持主域名(nanoda.work)和备用域名(xf-sama.xyz)的自动故障转移
+"""API 客户端模块。
+
+负责与 API 服务器进行 HTTP 交互，包括 Bug 日志上报、CL1 数据提交和公告获取，
+支持主域名 (nanoda.work) 和备用域名 (nanoda.work) 的自动故障转移。
 """
 import threading
 from typing import Any, Dict, List, Tuple, Optional
@@ -14,7 +13,7 @@ from module.logger import logger
 
 
 class ApiClient:
-    """统一的API客户端，支持双域名故障转移"""
+    """统一的 API 客户端，支持双域名故障转移。"""
     
     # 主域名和备用域名列表
     PRIMARY_DOMAIN = 'https://alas-apiv2.nanoda.work'
@@ -30,14 +29,13 @@ class ApiClient:
     
     @classmethod
     def _get_endpoints(cls, path: str) -> List[str]:
-        """
-        获取指定路径的所有端点URL（主域名+备用域名）
+        """获取指定路径的所有端点 URL（主域名 + 备用域名）。
         
         Args:
-            path: API路径
+            path (str): API 相对路径。
             
         Returns:
-            端点URL列表
+            list[str]: 端点完整 URL 列表。
         """
         return [
             f'{cls.PRIMARY_DOMAIN}{path}',
@@ -46,20 +44,29 @@ class ApiClient:
     
     @classmethod
     def _post_with_fallback(cls, path: str, json_data: Dict[str, Any], timeout: int = 5) -> Tuple[bool, int, str]:
+        """使用故障转移机制发送 POST 请求。
+
+        Args:
+            path (str): API 相对路径。
+            json_data (dict[str, Any]): JSON 载荷数据。
+            timeout (int): 超时秒数。默认为 5 秒。
+
+        Returns:
+            tuple[bool, int, str]: (是否成功, HTTP 状态码, 响应文本或错误信息)。
+        """
         return cls._request_with_fallback('POST', path, json_data=json_data, timeout=timeout)
     
     @classmethod
     def _get_with_fallback(cls, path: str, params: Dict[str, Any] = None, timeout: int = 10) -> Tuple[bool, int, str]:
-        """
-        使用故障转移机制发送GET请求
+        """使用故障转移机制发送 GET 请求。
         
         Args:
-            path: API路径
-            params: URL参数
-            timeout: 超时时间（秒）
+            path (str): API 相对路径。
+            params (dict[str, Any] | None): URL 查询参数。
+            timeout (int): 超时时间（秒）。
             
         Returns:
-            (是否成功, HTTP状态码, 响应文本)
+            tuple[bool, int, str]: (是否成功, HTTP 状态码, 响应文本)。
         """
         return cls._request_with_fallback('GET', path, params=params, timeout=timeout)
 
@@ -67,8 +74,18 @@ class ApiClient:
     def _request_with_fallback(cls, method: str, path: str, params: Dict[str, Any] = None, 
                              json_data: Dict[str, Any] = None, timeout: int = 10,
                              success_codes: List[int] = None) -> Tuple[bool, int, str]:
-        """
-        通用请求方法，支持故障转移
+        """通用请求方法，支持主备域名故障转移。
+
+        Args:
+            method (str): HTTP 方法，如 'GET' 或 'POST'。
+            path (str): API 相对路径。
+            params (dict[str, Any] | None): URL 查询参数。
+            json_data (dict[str, Any] | None): POST JSON 载荷。
+            timeout (int): 请求超时秒数。
+            success_codes (list[int] | None): 视为成功的状态码列表，默认为 [200]。
+
+        Returns:
+            tuple[bool, int, str]: (是否成功, HTTP 状态码, 响应文本或错误信息)。
         """
         if success_codes is None:
             success_codes = [200]
@@ -121,12 +138,13 @@ class ApiClient:
     
     @staticmethod
     def _submit_bug_log(content: str, log_type: str):
-        """
-        内部方法：提交Bug日志
-        注：此方法基本没用了 服务端API废弃
+        """内部方法：提交 Bug 日志。
+        
+        注：服务端 API 若废弃则降级记录警告日志。
+
         Args:
-            content: 日志内容
-            log_type: 日志类型
+            content (str): 日志文本内容。
+            log_type (str): 日志级别/类型。
         """
         try:
             device_id = get_device_id()
@@ -151,13 +169,12 @@ class ApiClient:
     
     @classmethod
     def submit_bug_log(cls, content: str, log_type: str = 'warning', enabled: bool = True):
-        """
-        提交Bug日志（异步）
+        """提交 Bug 日志（异步执行）。
         
         Args:
-            content: 日志内容
-            log_type: 日志类型，默认为'warning'
-            enabled: 是否启用上报，可传入 config.DropRecord_BugReport 配置值
+            content (str): 日志内容。
+            log_type (str): 日志类型，默认为 'warning'。
+            enabled (bool): 是否启用上报，可传入 config.DropRecord_BugReport 配置值。
         """
         if not enabled:
             return
@@ -166,12 +183,11 @@ class ApiClient:
     
     @staticmethod
     def _submit_cl1_data(data: Dict[str, Any], timeout: int):
-        """
-        内部方法：提交CL1数据
+        """内部方法：提交 CL1 统计数据。
         
         Args:
-            data: 数据字典
-            timeout: 超时时间（秒）
+            data (dict[str, Any]): 数据字典。
+            timeout (int): 超时时间（秒）。
         """
         try:
             # 如果没有任何战斗数据,不提交
@@ -200,28 +216,27 @@ class ApiClient:
     
     @classmethod
     def submit_cl1_data(cls, data: Dict[str, Any], timeout: int = 10):
-        """
-        提交CL1统计数据（异步）
-        只包含哈希化的设备ID 不TM包含原始硬件信息 如果你是傻逼，可以认为服务端收集了你的设备信息
-        不喜欢自己关 我TM又没留后门
+        """提交 CL1 统计数据（异步执行）。
+
+        仅上传经过哈希处理的设备 ID 与统计指标，不包含原始硬件敏感信息。
+
         Args:
-            data: 包含device_id和统计数据的字典
-            timeout: 请求超时时间（秒），默认10秒
+            data (dict[str, Any]): 包含 device_id 和统计数据的字典。
+            timeout (int): 请求超时时间（秒），默认 10 秒。
         """
         from module.base.async_executor import async_executor
         async_executor.submit(cls._submit_cl1_data, data, timeout)
 
     @classmethod
     def get_announcement(cls, timeout: int = 1, current_id: int = None) -> Optional[Dict[str, Any]]:
-        """
-        获取公告信息（同步）
+        """获取公告信息（同步）。
         
         Args:
-            timeout: 请求超时时间（秒），默认10秒
-            current_id: 当前公告ID，如果提供，用于增量检查
+            timeout (int): 请求超时时间（秒），默认为 1 秒。
+            current_id (int | None): 当前已知公告 ID，用于增量检查。
             
         Returns:
-            公告数据字典，如果为None表示无更新或获取失败
+            dict[str, Any] | None: 公告数据字典；若无更新或获取失败则返回 None。
         """
         import time
         try:

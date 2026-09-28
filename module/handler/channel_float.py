@@ -52,9 +52,9 @@ def _scale_area(area, width, height):
     """将 1280x720 逻辑坐标区域缩放到实际分辨率。
 
     Args:
-        area: 逻辑坐标区域 (x0, y0, x1, y1)。
-        width: 实际图像宽度。
-        height: 实际图像高度。
+        area (tuple): 逻辑坐标区域 (x0, y0, x1, y1)。
+        width (int): 实际图像宽度。
+        height (int): 实际图像高度。
 
     Returns:
         tuple: 实际分辨率下的区域 (x0, y0, x1, y1)。
@@ -64,7 +64,7 @@ def _scale_area(area, width, height):
 
 
 def channel_float_position(image):
-    """定位悬浮球：返回球中心坐标，未识别到返回 None。
+    """定位悬浮球中心坐标。
 
     悬浮球半透明难以直接识别，但其顶部带有绿色「○○○」标志
     （三个小圆点横排）。在左上识别区内统计绿色像素并排除头像框旁
@@ -76,10 +76,10 @@ def channel_float_position(image):
     标志特征），其次取最靠上的一组，组内按像素加权求质心。
 
     Args:
-        image: 当前截图。
+        image (np.ndarray): 当前截图。
 
     Returns:
-        tuple: 球中心坐标 (x, y)；未识别到时 None。
+        tuple | None: 球中心坐标 (x, y)；未识别到时返回 None。
     """
     height, width = image.shape[:2]
     area = _scale_area(CHANNEL_FLOAT_AREA, width, height)
@@ -133,7 +133,7 @@ def channel_float_position(image):
 
 
 def _find_dialog_white(image):
-    """定位「隐藏悬浮球」对话框的白色主体，返回 (x, y, w, h) 或 None。
+    """定位「隐藏悬浮球」对话框的白色主体。
 
     对话框为屏幕居中的白色大块，但主界面同样存在大面积白色 UI
     （右侧舰队卡片栏、底部面板等），拖拽刚结束、对话框尚未弹出时
@@ -142,10 +142,10 @@ def _find_dialog_white(image):
     距屏幕中心 <15%，且不紧贴屏幕四边（>=30px）。
 
     Args:
-        image: 当前截图。
+        image (np.ndarray): 当前截图。
 
     Returns:
-        tuple: 白区 (x, y, w, h)；未找到时 None。
+        tuple | None: 白色区域边界 (x, y, w, h)；未找到时返回 None。
     """
     height, width = image.shape[:2]
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
@@ -165,7 +165,7 @@ def _find_dialog_white(image):
 
 
 def hide_button(image):
-    """定位「隐藏悬浮球」对话框中的「隐藏」按钮，返回动态构造的 Button。
+    """定位「隐藏悬浮球」对话框中的「隐藏」按钮。
 
     对话框白色主体位置随分辨率/排版变化（1280x720 标定的固定按钮区
     在 1600x900 下完全落空，且对话框非等比缩放），因此改为动态定位：
@@ -179,10 +179,10 @@ def hide_button(image):
        （「隐藏」两字）取质心。
 
     Args:
-        image: 当前截图。
+        image (np.ndarray): 当前截图。
 
     Returns:
-        Button: 「隐藏」按钮（点击热区为绿字质心附近）；未找到时 None。
+        Button | None: 「隐藏」按钮（点击热区为绿字质心附近）；未找到时返回 None。
     """
     box = _find_dialog_white(image)
     if box is None:
@@ -237,14 +237,14 @@ class ChannelFloatHandler(ModuleBase):
     """检测并处理渠道服启动悬浮球。"""
 
     def _enabled(self) -> bool:
-        """渠道服悬浮球处理是否启用。
+        """检查渠道服悬浮球处理是否启用。
 
         仅当游戏为 4399 渠道服（包名 com.bilibili.blhx.m4399 且服务器为
         cn_channel-*）时，开关 Restart.MoveChannelFloat 才生效；
         其他服务器即使开启开关也不会生效。
 
         Returns:
-            bool: True 表示启用。
+            bool: 是否启用悬浮球处理。
         """
         if not bool(deep_get(self.config.data, 'Restart.Restart.MoveChannelFloat', default=False)):
             logger.info('[渠道悬浮球] 未启用：开关 Restart.MoveChannelFloat 未开启')
@@ -267,7 +267,7 @@ class ChannelFloatHandler(ModuleBase):
         失败则点击「取消」强制关闭兜底，保证任务不会被模态框卡死。
 
         Args:
-            ball_pos: 悬浮球中心坐标 (x, y)，由 channel_float_position 动态定位。
+            ball_pos (tuple): 悬浮球中心坐标 (x, y)，由 channel_float_position 动态定位。
 
         Returns:
             bool: 固定返回 True，表示已执行处理。
@@ -309,10 +309,10 @@ class ChannelFloatHandler(ModuleBase):
         """等待「隐藏」按钮出现且位置稳定（连续两帧一致）。
 
         Args:
-            timeout: 等待超时（秒）。
+            timeout (int | float): 等待超时时间（秒）。
 
         Returns:
-            Button: 「隐藏」按钮；超时未稳定出现时 None。
+            Button | None: 「隐藏」按钮；超时未稳定出现时返回 None。
         """
         timer = Timer(timeout).start()
         stable = None
@@ -336,7 +336,7 @@ class ChannelFloatHandler(ModuleBase):
         """等待「隐藏悬浮球」对话框关闭。
 
         Args:
-            timeout: 等待超时（秒）。
+            timeout (int | float): 等待超时时间（秒）。
 
         Returns:
             bool: True 表示对话框已消失；False 表示超时仍在。

@@ -1,3 +1,7 @@
+/**
+ * @fileoverview 基础表单控件封装（密码输入框、复选框与数值步进器等）。
+ */
+
 import { useEffect, useState, type ComponentProps } from 'react'
 import { Check, Eye, EyeOff } from 'lucide-react'
 import { useApp } from '../app/context'

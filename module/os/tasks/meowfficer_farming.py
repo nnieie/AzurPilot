@@ -231,6 +231,11 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
         )
 
     def _meow_handle_traditional_zone(self, zone):
+        """处理传统单一指定海域的耄耋相接搜索流程。
+
+        Args:
+            zone (Zone): 目标海域对象。
+        """
         logger.hr(f'大世界-耄耋相接, zone_id={zone.zone_id}', level=1)
         self.globe_goto(zone, types='SAFE', refresh=True)
         self.fleet_set(self.config.OpsiFleet_Fleet)
@@ -261,6 +266,11 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
             self.config.check_task_switch()
 
     def _meow_handle_stay_in_zone(self, zone):
+        """处理驻留指定海域的连续循环搜索流程。
+
+        Args:
+            zone (Zone): 目标海域对象。
+        """
         logger.hr(f'大世界-耄耋相接（指定海域循环）, zone_id={zone.zone_id}', level=1)
         self.get_current_zone()
         if self.zone.zone_id != zone.zone_id or not self.is_zone_name_hidden:
@@ -396,6 +406,11 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
         return False
         
     def _meow_handle_normal_search(self):
+        """执行普通耄耋相接的随机海域搜索流程。
+
+        Returns:
+            bool | None: 未找到符合条件海域时返回 False，正常完成返回 None。
+        """
         hazard_level = self.config.OpsiMeowfficerFarming_HazardLevel
         zones = self.zone_select(hazard_level=hazard_level) \
             .delete(SelectedGrids([self.zone])) \
@@ -437,7 +452,14 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
         self.run_meowfficer_farming()
 
     def _prepare_meowfficer_farming(self, ap_preserve=None):
-        """准备耄耋相接运行环境。"""
+        """准备耄耋相接的运行环境与配置参数。
+
+        Args:
+            ap_preserve (int | None): 行动力保留值，默认从配置读取。
+
+        Returns:
+            int | None: 解析出的行动力保留阈值，任务被推迟或中止时返回 None。
+        """
         logger.hr(f'大世界-耄耋相接, hazard_level={self.config.OpsiMeowfficerFarming_HazardLevel}', level=1)
 
         if ap_preserve is None and self.is_cl1_mode_enabled and self.config.OpsiMeowfficerFarming_ActionPointPreserve < 500:
@@ -494,7 +516,7 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
         return preserve
 
     def run_meowfficer_farming(self):
-        """执行大世界耄耋相接（猫箱搜寻）任务。"""
+        """执行大世界耄耋相接（指挥喵搜寻）持续循环主任务。"""
         preserve = None
         ap_checked = False
         preserve = self._prepare_meowfficer_farming()

@@ -7,6 +7,15 @@ from module.api.router import Method, Router
 
 
 def typescript(schema, definitions):
+    """将 JSON Schema 定义递归转换为 TypeScript 类型声明字符串。
+
+    Args:
+        schema (dict): 字段或对象的 JSON Schema 字典。
+        definitions (dict): 包含引用定义 ($defs) 的字典。
+
+    Returns:
+        str: TypeScript 类型声明字符串。
+    """
     if '$ref' in schema:
         return typescript(definitions[schema['$ref'].split('/')[-1]], definitions)
     if 'anyOf' in schema:
@@ -28,6 +37,7 @@ def typescript(schema, definitions):
 
 
 def main():
+    """扫描后端路由参数模型并导出 generated.ts 与 contract.json 契约文件。"""
     registry = dict(Router(None, None).methods)
     registry['auth.login'] = Method(AuthParams, lambda _: None)
     registry['events.subscribe'] = Method(SubscribeParams, lambda _: None)
