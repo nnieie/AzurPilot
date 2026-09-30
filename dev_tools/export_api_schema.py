@@ -47,10 +47,19 @@ def main():
         contracts[name] = {'mutates': entry.mutates, 'params': schema}
         lines.append(f'  "{name}": {typescript(schema, schema.get("$defs", {}))}')
     lines.append('}')
+    from module.scheduler.models import (ProgramDocument, CardDefinition, PortDefinition, ResourceObservation,
+                                         TaskInvocation, TaskOutcome, ProgramState)
+    models = {}
+    lines.append('export interface SchedulerModels {')
+    for model in (ProgramDocument, CardDefinition, PortDefinition, ResourceObservation, TaskInvocation, TaskOutcome, ProgramState):
+        schema = model.model_json_schema()
+        models[model.__name__] = schema
+        lines.append(f'  {model.__name__}: {typescript(schema, schema.get("$defs", {}))}')
+    lines.append('}')
     directory = Path(__file__).resolve().parents[1] / 'frontend/src/api'
     directory.mkdir(parents=True, exist_ok=True)
     (directory / 'generated.ts').write_text('\n'.join(lines) + '\n', encoding='utf-8')
-    (directory / 'contract.json').write_text(json.dumps({'version': 1, 'methods': contracts},
+    (directory / 'contract.json').write_text(json.dumps({'version': 1, 'methods': contracts, 'schedulerModels': models},
                                                      ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 
 

@@ -11490,7 +11490,19 @@
       },
       "MinLevel": {
         "type": "input",
-        "value": 50
+        "value": 50,
+        "validate": [
+          0,
+          125
+        ]
+      },
+      "MaxLevel": {
+        "type": "input",
+        "value": 0,
+        "validate": [
+          0,
+          125
+        ]
       }
     },
     "Storage": {

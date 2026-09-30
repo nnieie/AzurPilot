@@ -294,7 +294,8 @@ class ActionPointHandler(UI, MapEventHandler):
             total += box_sum
         oil = box[0]
 
-        LogRes(self.config).Oil = oil
+        if oil > 100:
+            LogRes(self.config).record('Oil', oil, observed=True)
         logger.info(f'[大世界-行动点] 行动点: {current}({total}), 石油: {oil}')
         # 统计口径的总行动力始终包含体力箱，不受 OS_ACTION_POINT_BOX_USE 临时关闭的影响
         # （防止行动力溢出任务会临时关闭该开关，导致统计快照丢箱、图表出现深坑）
@@ -302,7 +303,8 @@ class ActionPointHandler(UI, MapEventHandler):
         self.config._action_point_total_with_box = self._action_point_total_with_box
         # 仪表盘的 Total 同样使用恒含体力箱口径：写入受开关影响的 total 时，
         # 防溢出任务运行期间它会退化成 current，WebUI 的行动力卡片会在整段时间里不显示总行动力
-        LogRes(self.config).ActionPoint = {'Value': current, 'Total': self._action_point_total_with_box}
+        LogRes(self.config).record('ActionPoint', {'Value': current, 'Total': self._action_point_total_with_box},
+                                   observed=0 <= current <= 600 and bool(getattr(OCR_ACTION_POINT_REMAIN, 'last_valid', False)))
         self.config.update()
         self._action_point_current = current
         self._action_point_box = box

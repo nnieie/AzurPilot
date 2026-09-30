@@ -51,6 +51,12 @@ class TestDailySummaryService(unittest.TestCase):
         self.end = datetime(2026, 8, 21, 20)
         self.key = 'cn:2026-08-21:2000'
 
+        # 夹具周期固定在 8 月；真实日期超过 35 天后，后台收尾清理会把
+        # 刚生成的测试结果删掉。固定存储时钟，仍执行真实的过期清理逻辑。
+        clock = patch('module.statistics.daily_summary_store.datetime', wraps=datetime)
+        clock.start().now.return_value = datetime(2026, 8, 22, 0, 10, 2)
+        self.addCleanup(clock.stop)
+
     def tearDown(self):
         self.temporary_directory.cleanup()
 

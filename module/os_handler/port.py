@@ -66,7 +66,8 @@ class PortHandler(OSShop):
         """
         logger.info('退出港口')
         self.ui_back(appear_button=PORT_CHECK, check_button=self.is_in_map,
-                     skip_first_screenshot=skip_first_screenshot)
+                     skip_first_screenshot=skip_first_screenshot,
+                     additional=self.handle_leave_os_popup)
         # 底部按钮有显示动画
         self.wait_os_map_buttons()
 

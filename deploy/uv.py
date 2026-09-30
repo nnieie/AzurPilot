@@ -46,16 +46,10 @@ def project_root() -> Path:
 
 
 def venv_path(root: Path = None) -> Path:
-    """获取虚拟环境目录路径。
-
-    Args:
-        root (Path, optional): 项目根目录。
-
-    Returns:
-        Path: .venv 目录路径。
-    """
+    """与 uv 使用相同的环境路径，允许容器将依赖放在源码目录之外。"""
     root = root or project_root()
-    return root / ".venv"
+    path = Path(os.environ.get("UV_PROJECT_ENVIRONMENT") or ".venv")
+    return path if path.is_absolute() else root / path
 
 
 def venv_bin(root: Path = None) -> Path:
@@ -406,8 +400,10 @@ def _ensure_self_contained_python(
     deadline: float | None = None,
 ):
     env = _uv_python_env(root)
-    if _venv_python_works(root) and _managed_python_executable(root):
-        return
+    if _venv_python_works(root):
+        # 容器解释器由镜像提供，禁止下载时直接复用现有环境。
+        if env.get("UV_PYTHON_DOWNLOADS") == "never" or _managed_python_executable(root):
+            return
 
     managed_python = _managed_python_executable(root)
     if managed_python is None:

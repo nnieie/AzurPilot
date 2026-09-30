@@ -1,18 +1,49 @@
 """AzurPilot TUI 桥接后端与界面挂载单元测试。"""
 
+import tempfile
 import unittest
+from unittest.mock import patch
+
+from tests.test_api import fixture
 
 from module.runtime.setting import State
+from module.runtime.updater import updater
 from module.tui.app import AzurPilotTUI
 from module.tui.backend import TUIBackend
 from module.tui.widgets import ConfigModal, HeaderBar, LogView, ResourceBar, Sidebar, TaskTable
 
 
-class TestTUIBackend(unittest.TestCase):
+class IsolatedTUIFixture:
+    """实例、进程登记和 Manager 都由测试独占，不读取用户运行状态。"""
+
+    def setUp(self):
+        super().setUp()
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.root = fixture(directory.name)
+        patches = [
+            patch('module.runtime.worker_registry.WORKER_REGISTRY_FILE', self.root / 'cache/workers.json'),
+            patch.multiple(State, manager=None, process_registry=None, _init=False,
+                           _clearup=False, _restart_requested=False),
+            patch.object(updater, 'event', None),
+        ]
+        for context in patches:
+            context.start()
+            self.addCleanup(context.stop)
+        self.addCleanup(self.close_manager)
+
+    @staticmethod
+    def close_manager():
+        if State.manager is not None:
+            State.manager.shutdown()
+
+
+class TestTUIBackend(IsolatedTUIFixture, unittest.TestCase):
     """测试 TUIBackend 数据桥接与业务逻辑。"""
 
     def setUp(self) -> None:
-        self.backend = TUIBackend()
+        super().setUp()
+        self.backend = TUIBackend(root=self.root)
 
     def test_state_manager_initialized(self) -> None:
         """测试全局多进程管理器正常就绪，避免子进程启动出现 NoneType Queue。"""
@@ -92,8 +123,14 @@ class TestTUIBackend(unittest.TestCase):
         self.assertIsInstance(entries, list)
 
 
-class TestTUIApp(unittest.IsolatedAsyncioTestCase):
+class TestTUIApp(IsolatedTUIFixture, unittest.IsolatedAsyncioTestCase):
     """测试 Textual TUI 应用生命周期与组件挂载。"""
+
+    def setUp(self):
+        super().setUp()
+        factory = patch('module.tui.app.TUIBackend', side_effect=lambda *args, **kwargs: TUIBackend(root=self.root))
+        factory.start()
+        self.addCleanup(factory.stop)
 
     async def test_app_compose_and_actions(self) -> None:
         """在无头模式下测试 App 挂载与快捷指令。"""
@@ -124,7 +161,7 @@ class TestTUIApp(unittest.IsolatedAsyncioTestCase):
 
     async def test_config_modal_mount(self) -> None:
         """测试配置弹窗挂载与表单控件初始化，确保内部 Select 不会导致表单清空消失。"""
-        backend = TUIBackend()
+        backend = TUIBackend(root=self.root)
         modal = ConfigModal(backend=backend, initial_task="Commission")
         app = AzurPilotTUI()
         async with app.run_test() as pilot:

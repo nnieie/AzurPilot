@@ -151,6 +151,22 @@ class MapEventHandler(EnemySearchingHandler):
         else:
             return False
 
+    def handle_leave_os_popup(self):
+        """处理「需要暂时离开大型作战么?」弹窗，点击右上角 X 留在大型作战。
+
+        点击过快、点到海域地图外时游戏会弹出该确认框，点击确定会退出大型作战。
+        检测到「暂时离开」提示时点击关闭按钮取消，并返回 True 阻止后续弹窗
+        处理器把它当成普通确认框点掉。
+
+        Returns:
+            bool: 弹窗存在返回 True（已点击或处于点击冷却中）。
+        """
+        if self.appear(LEAVE_OS_POPUP_CHECK, offset=(20, 20)):
+            if self.appear_then_click(LEAVE_OS_POPUP_CLOSE, offset=(20, 20), interval=2):
+                logger.info('[大世界处理-事件] 检测到离开大型作战弹窗，点击关闭按钮')
+            return True
+        return False
+
     def handle_map_event(self, drop=None):
         """
         处理大世界地图事件。
