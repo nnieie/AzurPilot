@@ -11,6 +11,7 @@ config/*.yaml
 !config/deploy.*.yaml
 config/*.json
 config/scheduler/
+config/stock-exchange/
 config/*.db
 config/*/config.db*
 config/*/account.destroyed

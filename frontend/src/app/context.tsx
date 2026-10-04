@@ -5,7 +5,6 @@
 import { createContext, useCallback, useMemo, useContext, useEffect, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { api } from '../api/client'
 import type { Instance, Schema } from '../api/types'
-import type { Parameters } from '../api/generated'
 import { resumeEditors } from '../config/editors'
 import { detectLanguage, isLanguage, languages, localeForLanguage, translateUi, type Language, type UiTranslator } from '../i18n'
 import { readDevMode, writeDevMode } from './devMode'
@@ -13,12 +12,6 @@ import { applyTheme, getThemePreference, subscribeTheme, type Theme, type Palett
 import type { ResolvedMode } from './palettes'
 
 export { languages }
-
-type SchemaLanguage = NonNullable<Parameters['schema.get']['language']>
-const _languageCompatibility: Record<Language, SchemaLanguage> = {
-  'zh-CN': 'zh-CN', 'zh-TW': 'zh-TW', 'en-US': 'en-US', 'ja-JP': 'ja-JP', 'zh-MIAO': 'zh-MIAO',
-}
-void _languageCompatibility
 
 export interface AppContextValue {
   instancesLoaded: boolean; instances: Instance[]; schema?: Schema; refresh: () => Promise<void>; t: (key: string) => string; ui: UiTranslator
@@ -35,8 +28,7 @@ export interface AppContextValue {
   language: Language; setLanguage: (language: Language) => void
 }
 export const AppContext = createContext<AppContextValue | null>(null)
-const Context = AppContext
-export const useConnection = () => useSyncExternalStore(api.subscribe, api.getSnapshot)
+export const useConnection = () => useSyncExternalStore(api.subscribe, api.getSnapshot, api.getSnapshot)
 export const useApp = () => useContext(AppContext)!
 
 function initialLanguage(): Language {
@@ -54,7 +46,7 @@ export function AppProvider({children}: {children: ReactNode}) {
   const [schema, setSchema] = useState<Schema>()
   const [previewEnabled, setPreviewEnabled] = useState(false)
   const [devMode, setDevMode] = useState(readDevMode)
-  const {theme, palette, colorMode, resolvedMode, customPalettes, compactRailSide, compactRailWidth, material} = useSyncExternalStore(subscribeTheme, getThemePreference)
+  const {theme, palette, colorMode, resolvedMode, customPalettes, compactRailSide, compactRailWidth, material} = useSyncExternalStore(subscribeTheme, getThemePreference, getThemePreference)
   const [language, setLanguage] = useState<Language>(initialLanguage)
   const [toast, setToast] = useState<{message: string; error: boolean}>()
   /* 这八个 setter 只在调用时读 getThemePreference()，不依赖渲染期的值。 */
@@ -122,8 +114,8 @@ export function AppProvider({children}: {children: ReactNode}) {
   /* value 固定身份：provider 因 toast、连接状态等无关状态重渲染时，消费点不跟着重渲染。 */
   const value = useMemo(() => ({instancesLoaded, instances, schema, refresh, t, ui, notify, previewEnabled, setPreviewEnabled, devMode, setDevMode, theme, setTheme, material, setMaterial, palette, setPalette, colorMode, resolvedMode, setColorMode, customPalettes, saveCustomPalette, deleteCustomPalette, compactRailSide, setCompactRailSide, compactRailWidth, setCompactRailWidth, language, setLanguage}),
     [instancesLoaded, instances, schema, refresh, t, ui, notify, previewEnabled, setPreviewEnabled, devMode, setDevMode, theme, setTheme, material, setMaterial, palette, setPalette, colorMode, resolvedMode, setColorMode, customPalettes, saveCustomPalette, deleteCustomPalette, compactRailSide, setCompactRailSide, compactRailWidth, setCompactRailWidth, language, setLanguage])
-  return <Context.Provider value={value}>
+  return <AppContext.Provider value={value}>
     {children}
     {toast && <div role={toast.error ? 'alert' : 'status'} className={`toast ${toast.error ? 'error' : ''}`} onClick={() => setToast(undefined)}>{toast.message}</div>}
-  </Context.Provider>
+  </AppContext.Provider>
 }

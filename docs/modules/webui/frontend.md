@@ -38,6 +38,7 @@ frontend/
 ├── src/api/                  # client.ts 连接层；generated.ts 与 contract.json 为生成产物
 ├── src/app/                  # 布局、主题系统（theme.ts 按需加载）、连接上下文、任务优先级解析（taskPriority.ts）、各类偏好
 ├── src/pages/                # 页面：Home / Overview / TaskConfig / Statistics / Settings / Updater 等
+├── src/stock/                # 茗喵证券交易终端、开户登录、身份信息与行情图表
 ├── src/components/           # 可复用组件：FormControls、LogPanel、StatisticsChart、TaskPriorityField（任务优先级拖动排序）、实例切换等
 ├── src/config/               # EditQueue 跨页面字段保存队列、草稿恢复、输入校验
 ├── src/styles/               # 设计变量与界面样式（apple / forms / compact / minimal 等 css）
@@ -54,6 +55,12 @@ frontend/
 ## 4. 核心入口
 
 追代码从 `src/main.tsx` 开始：hash 路由表、顶层 ErrorBoundary 与主题加载流程都在这里。
+
+茗交所入口为 `src/pages/StockExchange.tsx`，实例侧栏的「茗喵证券交易所」导航位于「资源统计」下方，由 `src/app/App.tsx` 提供；总览资源卡片设置旁的快捷入口已移除，移动端从导航抽屉进入。交易终端独立顶栏固定在窗口顶部，左侧依次提供返回总览、用户入口与亮暗主题切换按钮，右侧留空。`src/stock/theme.tsx` 管理独立主题，默认暗色，通过 `localStorage` 的 `azurpilot.stock-theme` 记住本机选择，不跟随 WebUI 或系统主题；`src/stock/theme.css` 定义亮色语义配色，图表和验证码使用同一主题上下文，全屏图表的 Portal 显式携带主题属性。切换保留页面、表单与图表缩放范围。开户、登录弹窗提供返回当前实例总览的链接，状态与行情加载期间隐藏返回入口；交互与联调方式见 [前端 README「茗喵证券交易所」](../../../frontend/README.md#茗喵证券交易所)。
+
+行情涨跌幅统一以 `stock.open`（上海时间今日第一条已保存的行动力报价）为基准，市场列表、排序、滚动行情与证券详情保持一致；补传或修正会更新开盘价，跨日重新取值，当日无报价或开盘价为 0 时显示 `—`，切换历史图表不会改用历史开盘价。总行动力低于控制台阈值（默认 500 点）时，每月 5 日起且开赛后本月强制退市：相关挂单撤销、多空持仓按触发报价结算，次月重新判断。股票退市不影响玩家登录、后台上传、排行或交易其他股票；界面显示退市状态并禁止该股票的委托。
+
+茗交所 Mock 还需单独启动相邻交易所仓库的 Go Mock 服务，本仓库 `dev:mock` 只提供模拟 API 与 Vite。代理将上游连接失败归为 `STOCK_UNAVAILABLE` 并提示启动方式，无效 JSON 或响应时间归为 `STOCK_INVALID_RESPONSE`，不再误报为浏览器请求格式错误；修复上游后可在交易页面重试连接。
 
 | 入口 | 用途 |
 | --- | --- |

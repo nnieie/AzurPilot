@@ -640,6 +640,13 @@ class ConfigGenerator:
 class ConfigUpdater:
     # 格式：source, target, (可选) convert_func
     redirection = [
+        ('OpsiScheduling.OpsiSmartExplore.BuyActionPoint', 'OpsiScheduling.OpsiScheduling.BuyActionPoint'),
+        ('OpsiExplore.OpsiExplore.MeowfficerCleanup', 'OpsiExploreCleanup.Scheduler.Enable'),
+        ('OpsiExplore.OpsiFleet', 'OpsiExploreCleanup.OpsiFleet'),
+        ('OpsiExplore.OpsiExplore.MeowfficerCleanupState', 'OpsiExploreCleanup.OpsiExploreCleanup.State',
+         opsi_explore_cleanup_state_redirect),
+        # 保留旧开关的布尔值，关闭后不再保留任何推荐材料中的普通航母。
+        ('General.Enhance.SkipSingleCommonCV', 'General.Enhance.KeepCommonCV'),
         # ('OpsiDaily.OpsiDaily.BuySupply', 'OpsiShop.Scheduler.Enable'),
         # ('OpsiDaily.Scheduler.Enable', 'OpsiDaily.OpsiDaily.DoMission'),
         # ('OpsiShop.Scheduler.Enable', 'OpsiShop.OpsiShop.BuySupply'),
@@ -733,6 +740,9 @@ class ConfigUpdater:
             更新后的配置字典。
         """
         new = {}
+        # 交易玩家身份不是可编辑参数，运行器迁移必须原样保留。
+        if not is_template and '_stockInstance' in old:
+            new['_stockInstance'] = old['_stockInstance']
 
         for keys, data in deep_iter(self.args, depth=3):
             # 跳过非字典项（叶子值，如字符串、数字等）

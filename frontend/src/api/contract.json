@@ -34,6 +34,26 @@
         "type": "object"
       }
     },
+    "search.content": {
+      "mutates": false,
+      "params": {
+        "additionalProperties": false,
+        "description": "侧栏内容检索请求参数模型。",
+        "properties": {
+          "query": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Query",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "SearchContentParams",
+        "type": "object"
+      }
+    },
     "instances.list": {
       "mutates": false,
       "params": {
@@ -313,6 +333,82 @@
           "instance"
         ],
         "title": "InstanceParams",
+        "type": "object"
+      }
+    },
+    "stock.status": {
+      "mutates": false,
+      "params": {
+        "additionalProperties": false,
+        "description": "单实例操作通用入参模型。",
+        "properties": {
+          "instance": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Instance",
+            "type": "string"
+          }
+        },
+        "required": [
+          "instance"
+        ],
+        "title": "InstanceParams",
+        "type": "object"
+      }
+    },
+    "stock.request": {
+      "mutates": true,
+      "params": {
+        "additionalProperties": false,
+        "description": "实例专属交易请求；实例身份和远端凭据由后端补充。",
+        "properties": {
+          "instance": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Instance",
+            "type": "string"
+          },
+          "path": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Path",
+            "type": "string"
+          },
+          "method": {
+            "default": "GET",
+            "enum": [
+              "GET",
+              "POST",
+              "DELETE"
+            ],
+            "title": "Method",
+            "type": "string"
+          },
+          "body": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Body"
+          },
+          "etag": {
+            "default": "",
+            "maxLength": 128,
+            "title": "Etag",
+            "type": "string"
+          }
+        },
+        "required": [
+          "instance",
+          "path"
+        ],
+        "title": "StockRequestParams",
         "type": "object"
       }
     },
@@ -710,6 +806,7 @@
           }
         },
         "additionalProperties": false,
+        "description": "按修订号保存调度程序草稿。",
         "properties": {
           "instance": {
             "maxLength": 64,
@@ -1048,6 +1145,7 @@
           }
         },
         "additionalProperties": false,
+        "description": "调度程序草稿的校验请求。",
         "properties": {
           "instance": {
             "maxLength": 64,
@@ -1391,6 +1489,7 @@
           }
         },
         "additionalProperties": false,
+        "description": "带模拟上下文与步数上限的试运行请求。",
         "properties": {
           "instance": {
             "maxLength": 64,
@@ -1450,6 +1549,7 @@
       "mutates": true,
       "params": {
         "additionalProperties": false,
+        "description": "把草稿应用到运行中的调度器。",
         "properties": {
           "instance": {
             "maxLength": 64,
@@ -1553,6 +1653,92 @@
         "type": "object"
       }
     },
+    "opsi.simulator.status": {
+      "mutates": false,
+      "params": {
+        "additionalProperties": false,
+        "description": "日志获取请求参数模型。",
+        "properties": {
+          "instance": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Instance",
+            "type": "string"
+          },
+          "after": {
+            "default": 0,
+            "minimum": 0,
+            "title": "After",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "instance"
+        ],
+        "title": "LogsParams",
+        "type": "object"
+      }
+    },
+    "opsi.simulator.start": {
+      "mutates": true,
+      "params": {
+        "additionalProperties": false,
+        "description": "单实例操作通用入参模型。",
+        "properties": {
+          "instance": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Instance",
+            "type": "string"
+          }
+        },
+        "required": [
+          "instance"
+        ],
+        "title": "InstanceParams",
+        "type": "object"
+      }
+    },
+    "opsi.simulator.stop": {
+      "mutates": true,
+      "params": {
+        "additionalProperties": false,
+        "description": "单实例操作通用入参模型。",
+        "properties": {
+          "instance": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Instance",
+            "type": "string"
+          }
+        },
+        "required": [
+          "instance"
+        ],
+        "title": "InstanceParams",
+        "type": "object"
+      }
+    },
+    "opsi.simulator.figure": {
+      "mutates": false,
+      "params": {
+        "additionalProperties": false,
+        "description": "单实例操作通用入参模型。",
+        "properties": {
+          "instance": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Instance",
+            "type": "string"
+          }
+        },
+        "required": [
+          "instance"
+        ],
+        "title": "InstanceParams",
+        "type": "object"
+      }
+    },
     "preview.capture": {
       "mutates": false,
       "params": {
@@ -1614,7 +1800,8 @@
               "commission",
               "ships",
               "loot",
-              "research"
+              "research",
+              "storage"
             ],
             "title": "Category",
             "type": "string"

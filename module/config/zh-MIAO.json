@@ -2475,7 +2475,7 @@
       "SkillAutoSwitch": "技能自动切换喵"
     },
     "OpsiScheduling": {
-      "UseSmartSchedulingOperationCoinsPreserve": "智能调度+作战补给凭证保留喵",
+      "UseSmartSchedulingOperationCoinsPreserve": "智能调度作战补给凭证保留喵",
       "OperationCoinsPreserve": "作战补给凭证保留喵",
       "ActionPointPreserve": "行动力保留喵",
       "OperationCoinsReturnThreshold": "作战补给凭证回退阈值喵",

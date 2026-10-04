@@ -48,7 +48,7 @@ module/api/
 ├── socket.py              Gateway（连接准入/认证/退避）+ Session（会话/订阅/背压）
 ├── config_service.py      实例白名单、配置读取与跨进程事务写
 ├── runtime_service.py     实例状态/总览/增量日志/被动截图适配层
-├── statistics_service.py  六类统计报告的聚合
+├── statistics_service.py  分类统计报告的聚合（含只读仓库快照）
 ├── meowfficer_service.py  指挥喵评分报告的只读读取与清理
 ├── update_service.py      Git 快照/提交历史与后台 fetch/apply（模块级单例）
 ├── static.py              FrontendFiles：MIME 修正、SPA 回退、隐藏文件拦截
@@ -56,6 +56,8 @@ module/api/
 ```
 
 配套生成产物与契约：`dev_tools/export_api_schema.py` 从 `protocol.py` + `router.py` 生成 `frontend/src/api/generated.ts`（参数类型）与 `frontend/src/api/contract.json`（机器可审契约）。
+
+仓库报告使用 `statistics.report(category='storage', days=7)` 只读查询最近完整快照及时间窗口内成功扫描的历史序列。序列的可选 `icon` 在逐点与共用时间轴两种格式中保留，物品图标由 `/storage-items/` 静态挂载提供。主动扫描沿用 `tasks.run(task='StorageStatistics')` 与实例运行互斥；页面刷新不启动扫描。
 
 ## 4. 核心入口
 
@@ -109,6 +111,8 @@ module/api/
 ### RuntimeService（runtime_service.py）
 
 把 `ProcessManager` 的进程世界翻译成前端视图：`STATES = {1: running, 2: stopped, 3: error, 4: updating}` 是进程状态与前端枚举的唯一映射；`logs()` 用对象身份匹配 `renderables` 的裁剪重叠区，保证游标单调递增；`capture()` 只读 `preview.hub` 的最新帧，**绝不主动触发截图**。
+
+`overview()` 枚举任务时跳过非字典根节点，例如内部身份 `_stockInstance`。该字段仍由 `ConfigService.read()` 保留，不能当作任务参数组；总览请求、订阅推送以及启停后返回的总览共用这一读取路径。
 
 ## 6. 工作流程
 

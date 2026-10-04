@@ -954,6 +954,10 @@ class ProcessManager:
             with open("./config/reloadalas", mode="r", encoding="utf-8") as f:
                 for line in f.readlines():
                     line = line.strip()
+                    if line and memory_governs(line):
+                        # 开了记忆运行的实例由启动清单按记忆决定，不由这份更新前缓存恢复
+                        logger.info(f'[WebUI-进程管理] [{line}] 已开启记忆运行，交由启动清单恢复')
+                        continue
                     _instances.add(ProcessManager.get_manager(line))
         except FileNotFoundError:
             pass

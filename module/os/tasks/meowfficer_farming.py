@@ -265,18 +265,31 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
             self.on_meow_search_end()
             self.config.check_task_switch()
 
-    def _meow_handle_stay_in_zone(self, zone):
+    def _meow_handle_stay_in_zone(self, zone, fresh_ap=None):
         """处理驻留指定海域的连续循环搜索流程。
 
         Args:
             zone (Zone): 目标海域对象。
+            fresh_ap (tuple[int, int] | None): 调用方刚读到的
+                (总行动力, 当前行动力)，开工检查足够时复用它跳过弹窗。
         """
         logger.hr(f'大世界-耄耋相接（指定海域循环）, zone_id={zone.zone_id}', level=1)
         self.get_current_zone()
         if self.zone.zone_id != zone.zone_id or not self.is_zone_name_hidden:
             self.globe_goto(zone, types='SAFE', refresh=True)
+            # 换海域会消耗行动力，开工检查必须重新读取。
+            fresh_ap = None
 
-        self.action_point_set(cost=120, keep_current_ap=True, check_rest_ap=True)
+        # 智能调度代跑时决策读刚读过行动力：达到开工线时弹窗只会
+        # 读数再关掉，复用它跳过；不足 120 时仍需弹窗开箱/购买。
+        if self.action_point_reusable(fresh_ap, cost=120):
+            _fresh_total, _fresh_current = fresh_ap
+            logger.info(
+                f'[大世界-耄耋相接] 复用刚读到的行动力'
+                f'(当前={_fresh_current}, 总={_fresh_total})，跳过行动点弹窗'
+            )
+        else:
+            self.action_point_set(cost=120, keep_current_ap=True, check_rest_ap=True)
         self.fleet_set(self.config.OpsiFleet_Fleet)
         self.os_order_execute(recon_scan=False, submarine_call=self.config.OpsiFleet_Submarine)
 
@@ -490,7 +503,7 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
                 self.config.task_stop()
 
         if self.is_in_opsi_explore():
-            logger.warning(f'[大世界-耄耋相接] 每月开荒+正在运行，无法执行 {self.config.task.command}')
+            logger.warning(f'[大世界-耄耋相接] 每月开荒正在运行，无法执行 {self.config.task.command}')
             self.delay_opsi_active_task(server_update=True)
             self.config.task_stop()
 
@@ -498,6 +511,7 @@ class OpsiMeowfficerFarming(CoinTaskMixin, OSMap):
             self._meow_target_checked = True
             if self.config.SERVER in ['cn', 'jp']:
                 if hasattr(self, '_os_target'):
+                    self._close_scheduling_action_point()
                     self._os_target()
             else:
                 logger.info(f'服务器 {self.config.SERVER} 暂不支持海域成就，请联系开发者')

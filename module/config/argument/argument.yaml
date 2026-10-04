@@ -208,6 +208,9 @@ Error:
   HandleError: true
   SaveError: true
   StrictRestart: false
+  TaskRestartLimit:
+    value: 3
+    validate: [0, 999]
   SaveErrorRetentionDays:
     value: 30
     validate: [0, 3650]
@@ -419,10 +422,10 @@ YukikazeTaskManager:
       > Commission > Tactical > Research
       > Exercise
       > Dorm > Meowfficer > Guild > Gacha
-      > Reward
+      > Reward > StorageStatistics
       > ShopFrequent > ShopOnce > Shipyard > Freebies
       > PrivateQuarters
-      > OpsiExplore
+      > OpsiExplore > OpsiExploreCleanup
       > OpsiPreventActionPointOverflow
       > Minigame > Awaken
       > OpsiAshBeacon
@@ -452,6 +455,7 @@ Enhance:
     option: [all, favourite]
   Filter:
   CheckPerCategory: 5
+  KeepCommonCV: true
 OldRetire:
   N: true
   R: true
@@ -1177,7 +1181,7 @@ PrivateQuarters:
     TargetInteract: true
     TargetShip:
       value: anchorage
-      option: [ anchorage, noshiro, sirius, new_jersey, taihou, aegir, nakhimov ]
+      option: [ anchorage, noshiro, sirius, new_jersey, taihou, aegir, nakhimov, implacable ]
 # ==================== Daily ====================
 
 Daily:
@@ -1276,6 +1280,11 @@ OpsiGeneral:
   AutoSearchTimeLimit:
     value: 5
     validate: [1, 240]
+  # 计划作战滑动检查跳过：侵蚀一/短猫相接循环刷取同一海域时，打开
+  # 「计划作战」面板后不再滑动检查各选项，直接确认开始。需要面板选项
+  # 已在游戏内配置好（区域模式：重复、遭遇商人/装置：停止、自动提交：开启），
+  # 让任务正常跑过一次或手动配置一次后即可开启。
+  SkipStrategicSearchCheck: false
 OpsiAshBeacon:
   AttackMode:
     value: current
@@ -1305,10 +1314,26 @@ OpsiExplore:
     value: ""
   LastZone: 0
   AllowHazard1Leveling: false
+  MeowfficerCleanup:
+    value: false
+    display: hide
+  MeowfficerCleanupState:
+    type: stored
+    value: null
+    display: hide
   ExploreProgress:
     type: textarea
     display: disabled
     value: ""
+OpsiExploreCleanup:
+  Progress:
+    type: textarea
+    display: disabled
+    value: ""
+  State:
+    type: stored
+    value: null
+    display: hide
 OpsiShop:
   PresetFilter:
     value: max_benefit_meta
@@ -1333,6 +1358,10 @@ OpsiDaily:
   SkipSirenResearchMission: false
   KeepMissionZone: false
   MissionZones:
+    type: stored
+    value: null
+    display: hide
+  DeferredMissions:
     type: stored
     value: null
     display: hide
@@ -1433,6 +1462,7 @@ OpsiFleetAutoChange:
     option: [12, 24, 48, 72]
   LastRun: 2020-01-01 00:00:00
 OpsiScheduling:
+  BuyActionPoint: false
   UseSmartSchedulingOperationCoinsPreserve:
     type: checkbox
     value: true
@@ -1474,6 +1504,15 @@ OpsiScheduling:
   MonthEndShopPurchase:
     value: true
     option: [true, false]
+OpsiSmartExplore:
+  # 智能开荒仅支持默认黄币目标调度，与每月开荒任务互斥。
+  Enable: false
+  EventCleanup: false
+  ForceRun: false
+  Progress:
+    type: textarea
+    display: disabled
+    value: ""
 OpsiPreventActionPointOverflow:
   Task:
     value: OpsiScheduling
@@ -2282,9 +2321,7 @@ OpsiSimulatorParameters:
   InitialCoin: 0
   MeowHazardLevel:
     value: level5
-    option:
-      level3: 3
-      level5: 5
+    option: [level3, level5]
   CrossWeek: true
   BuyAp: true
   Cl1Coin: 170

@@ -44,6 +44,7 @@ dependencies = [
     "mcp==1.23.0",
     "luaparser==4.2.0",
     "textual>=0.80.0",
+    "cryptography>=49.0.0",
 ]
 
 [dependency-groups]

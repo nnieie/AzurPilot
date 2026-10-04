@@ -2,6 +2,7 @@
  * @fileoverview 统计页面单分类内容区组件。
  */
 
+import { normalizeReport } from './statisticsData'
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 
 import { api } from '../api/client'
@@ -10,7 +11,7 @@ import { useConnection } from '../app/context'
 import type { StatisticsCategory } from '../app/statisticsPrefs'
 
 /** 单个页面的取数参数，与该页在布局文档里保存的一致。 */
-export interface CategoryParams {
+interface CategoryParams {
   instance: string
   category: StatisticsCategory
   days: number
@@ -44,14 +45,14 @@ export function CategorySection({params, revision, onState, render}: {
     if (connection !== 'ready') return
     let active = true
     setData(undefined); setError('')
-    void request().then(value => {if (active) setData(value)}).catch(reason => {if (active) setError(reason.message)})
+    void request().then(value => {if (active) setData(normalizeReport(value))}).catch(reason => {if (active) setError(reason.message)})
     return () => {active = false}
   }, [connection, request, revision])
 
   /* 静默更新：后端数据更新推送到前端时平滑更新图表与指标，避免 Loading 闪烁。 */
   const silentRefresh = useCallback(() => {
     if (connection !== 'ready') return
-    void request().then(value => setData(value)).catch(() => {
+    void request().then(value => setData(normalizeReport(value))).catch(() => {
       /* 静默更新失败时不影响当前已展示视图。 */
     })
   }, [connection, request])

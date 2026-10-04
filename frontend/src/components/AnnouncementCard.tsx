@@ -6,14 +6,13 @@ import { Link } from 'react-router-dom'
 import { Megaphone, ExternalLink, Check, ArrowRight } from 'lucide-react'
 import type { Announcement } from '../api/types'
 import { useApp } from '../app/context'
-import { MarkdownView } from './MarkdownView'
+import { LazyMarkdown } from './LazyMarkdown'
 
 interface AnnouncementCardProps {
   announcement: Announcement
   unread?: boolean
   onMarkRead?: () => void
   showFullLink?: boolean
-  compact?: boolean
 }
 
 export function AnnouncementCard({
@@ -21,13 +20,12 @@ export function AnnouncementCard({
   unread = false,
   onMarkRead,
   showFullLink = true,
-  compact = false,
 }: AnnouncementCardProps) {
   const { ui } = useApp()
 
   return (
     <article
-      className={`announcement-card panel ${unread ? 'is-unread' : ''} ${compact ? 'is-compact' : ''}`}
+      className={`announcement-card panel ${unread ? 'is-unread' : ''}`}
       aria-label={ui('announcement.title')}
     >
       <header className="announcement-header">
@@ -67,7 +65,7 @@ export function AnnouncementCard({
 
       {announcement.content && (
         <div className="announcement-body">
-          <MarkdownView content={announcement.content} />
+          <LazyMarkdown content={announcement.content} />
         </div>
       )}
 

@@ -92,7 +92,7 @@ export function markAnnouncementAsRead() {
 
 export function useAnnouncement() {
   const connection = useConnection()
-  const state = useSyncExternalStore(subscribeAnnouncement, getAnnouncementSnapshot)
+  const state = useSyncExternalStore(subscribeAnnouncement, getAnnouncementSnapshot, getAnnouncementSnapshot)
 
   useEffect(() => {
     if (connection !== 'ready') return

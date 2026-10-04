@@ -141,12 +141,14 @@ def record_resource_snapshot(instance: str, resources: Dict[str, Any]) -> bool:
 def get_resource_timeline(
     instance: str = 'default',
     limit: int = 500,
+    since: str = None,
 ) -> List[Dict[str, Any]]:
     """获取资源快照时间序列数据，用于绘制资源变化曲线。
 
     Args:
         instance: 实例名称
         limit: 最大返回条数
+        since: 起始时间（ISO 文本，含）。为空表示不限
 
     Returns:
         list[dict]: 按时间排序的快照列表，每个包含:
@@ -161,11 +163,11 @@ def get_resource_timeline(
             rows = conn.execute(
                 '''
                 SELECT * FROM resource_snapshots
-                WHERE instance = ?
+                WHERE instance = ? AND (? IS NULL OR ts >= ?)
                 ORDER BY id DESC
                 LIMIT ?
                 ''',
-                (instance, limit),
+                (instance, since, since, limit),
             ).fetchall()
             result = [dict(row) for row in rows]
             result.reverse()
