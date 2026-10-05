@@ -45,6 +45,15 @@ _STOP_ACTION_UNSET = object()
 USB_CAPTURE_PREVIEW_SUFFIX = "__usb_capture_preview"
 
 
+def enable_opsi_secure() -> None:
+    """初始化统计运行环境；暂时不可用时由存储入口重试。"""
+    try:
+        from module.statistics.opsi_secure import get_vault
+        get_vault().ensure_ready()
+    except Exception:
+        logger.exception('[统计-运行] 启动时初始化未完成（稍后写入时重试）')
+
+
 class ProcessManager:
     """单个 Alas 配置实例的进程生命周期管理器。
 
@@ -832,6 +841,7 @@ class ProcessManager:
 
         # 初始化日志器
         set_file_logger(name=config_name)
+        enable_opsi_secure()
         if State.electron or os.environ.get("AZURPILOT_TUI") == "1":
             # 运行于 Electron 或 TUI 终端界面时，移除标准输出处理器避免污染终端渲染
             from module.logger import console_hdlr

@@ -211,7 +211,7 @@ INTERNAL_ERROR 不向浏览器返回堆栈；参数校验详情不回显输入�
 
 独立后台日志位于 `cache/stock-exchange/history/<UUID>.sqlite3`，样本、来源游标、上传回执和月份状态全部通过密钥摘要与独立持久检查点认证。每批最多 1024 点，3 秒最短间隔，失败退避但不永久停传。按月增量补传并轮转月份，断网、重启、迟到修正由后台处理；每五分钟重读源历史并校对 count / SHA-256。签名前先验证本地数据，禁止把修改后的仪表盘 JSON 当作新游戏采集记录，也不在数据库损坏或丢失时降级到 JSON。历史上传和月摘要接口只供 AzurPilot 后端调用，不开放给浏览器，不验证行动力真实性。
 
-AzurPilot 后端通过 `STOCK_EXCHANGE_URL` 配置交易所 origin，默认 `https://stock.nanoda.work`，本机开发使用 `http://127.0.0.1:8080`。Turnstile 控制台及 Go 环境变量 `TURNSTILE_HOSTNAMES` 需允许 AzurPilot 页面实际 hostname。
+AzurPilot 后端通过 `STOCK_EXCHANGE_URL` 配置交易所 origin，默认 `https://stock.nanoda.work`，本机开发使用 `http://127.0.0.1:8080`。注册和登录的 `body` 使用 `recaptchaToken`，由当前表单的 Google reCAPTCHA v2 组件生成。脚本、iframe 与 Go Siteverify 使用 `www.recaptcha.net`；私密 secret 只配置在 Go 后端环境变量 `RECAPTCHA_SECRET_KEY`。Google 控制台已停用域名验证，服务端不匹配 hostname 或 action，客户端在切换表单、过期和每次提交后清空旧 token。
 
 身份私钥与 `bindings.json` 使用 AES-256-GCM 和 `SecretKey`，独立游戏密钥保存为 `config/stock-exchange/game.key`，加密实例登记、文件摘要与历史检查点保存为同目录的 `registry.json`。新部署不依赖 `LocalProtector`、DPAPI、machine-id、UID 或项目路径，目录新建为 `0700`、文件为 `0600`，Windows 按部署目录访问控制保护。完整迁移配置与 cache 后保留原身份和绑定；密钥或登记丢失、密文修改及旧文件回放仍阻止使用，保留原数据，不自动重新生成身份。此变更只影响交易游戏数据，实例密码和账号保险库的本机自动解锁策略保持原有语义。
 

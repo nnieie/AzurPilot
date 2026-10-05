@@ -18,6 +18,8 @@ from unittest.mock import patch
 from module.config.config import AzurLaneConfig, Function
 from module.config.redirect_utils.utils import OPSI_RECORD_ARGS
 from module.statistics import azurstats, opsi_drop_stats
+from tests.opsi_test_support import install_vault
+from module.statistics import opsi_secure
 from module.statistics.azurstats import AzurStats, is_opsi_drop_genre
 
 DEVICE = 'test-device'
@@ -196,8 +198,9 @@ class TestCollect(unittest.TestCase):
     """按时间窗口汇总掉落明细（真临时 SQLite）。"""
 
     def setUp(self):
-        self.directory = self.enterContext(tempfile.TemporaryDirectory())
-        AzurStats.LOCAL_DB = str(Path(self.directory) / 'loot.db')
+        self.directory = self.enterContext(tempfile.TemporaryDirectory(ignore_cleanup_errors=True))
+        install_vault(self, self.directory)
+        self.enterContext(patch.object(AzurStats, 'LOCAL_DB', str(Path(self.directory) / 'config' / 'azurstats_local.db')))
         self.enterContext(patch.object(azurstats, 'get_device_id', return_value=DEVICE))
         self.now = datetime.now().replace(microsecond=0)
         self.patch = patch.object(opsi_drop_stats, '_task_names', None)
@@ -363,8 +366,14 @@ class TestCollect(unittest.TestCase):
 
     def test_unknown_month_boss_zone_uses_known_task_type(self):
         self.insert('opsi_month_boss', {'GearDesignPlanT5': 1}, self.now - timedelta(hours=1), 'boss')
-        with closing(sqlite3.connect(AzurStats.LOCAL_DB)) as connection, connection:
-            connection.execute("UPDATE opsi_items SET zone='', zone_type='UNKNOWN', hazard_level=0 WHERE imgid='boss'")
+        with closing(sqlite3.connect(AzurStats.LOCAL_DB)) as connection, opsi_secure.get_vault().transaction(connection, AzurStats.LOCAL_DB):
+            connection.row_factory = sqlite3.Row
+            row = dict(connection.execute("SELECT * FROM opsi_items WHERE imgid='boss'").fetchone())
+            vault = opsi_secure.get_vault()
+            context = opsi_secure.row_context('loot', row)
+            data = vault.open_('loot', row['secure_payload'], context)
+            data.update(zone='', zone_type='UNKNOWN', hazard_level=0)
+            connection.execute("UPDATE opsi_items SET secure_payload=? WHERE imgid='boss'", (vault.seal('loot', data, context),))
         summary = self.collect()
         self.assertEqual(summary['records'][0][2], '月度Boss海域')
         self.assertEqual(summary['total'], 1)
@@ -378,8 +387,9 @@ class TestSchema(unittest.TestCase):
     """明细库的查询直接由那套常量生成，不应在 SQL 里再抄一份任务范围。"""
 
     def test_load_query_excludes_corrosion_one(self):
-        with tempfile.TemporaryDirectory() as directory:
-            AzurStats.LOCAL_DB = str(Path(directory) / 'loot.db')
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as directory:
+            install_vault(self, directory)
+            self.enterContext(patch.object(AzurStats, 'LOCAL_DB', str(Path(directory) / 'config' / 'azurstats_local.db')))
             with patch.object(azurstats, 'get_device_id', return_value=DEVICE):
                 AzurStats._ensure_local_db()
                 AzurStats._insert_local_opsi_items([
@@ -394,8 +404,9 @@ class TestSchema(unittest.TestCase):
 
     def test_database_rows_survive_a_reopen(self):
         """明细写入后能被独立连接读到（提交不是靠连接关闭时的隐式提交）。"""
-        with tempfile.TemporaryDirectory() as directory:
-            AzurStats.LOCAL_DB = str(Path(directory) / 'loot.db')
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as directory:
+            install_vault(self, directory)
+            self.enterContext(patch.object(AzurStats, 'LOCAL_DB', str(Path(directory) / 'config' / 'azurstats_local.db')))
             AzurStats._ensure_local_db()
             AzurStats._insert_local_opsi_items([
                 {'imgid': 'y', 'server': 'cn', 'zone': None, 'zone_type': None,

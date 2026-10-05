@@ -67,7 +67,7 @@ class StockExchangeTests(unittest.TestCase):
         return {'status': 201 if path == '/register' else 200, 'data': data, 'etag': '', 'serverTime': int(time.time())}
 
     def register(self):
-        return self.service.request('test', '/register', 'POST', {'username': '实例测试', 'password': 'strong-password', 'turnstileToken': 'XXXX.DUMMY.TOKEN.XXXX', 'acceptedNotice': '2026-10-03'})
+        return self.service.request('test', '/register', 'POST', {'username': '实例测试', 'password': 'strong-password', 'recaptchaToken': 'recaptcha-test-token', 'acceptedNotice': '2026-10-03'})
 
     def test_new_registration_backfills_whole_month_before_signup(self):
         from module.api.stock_exchange_history import SHANGHAI, history_point
@@ -132,7 +132,7 @@ class StockExchangeTests(unittest.TestCase):
         self.assertTrue(self.service.status('test')['bound'])
         self.assertIn('当月旧统计', self.service.status('test')['message'])
         self.service.request('test', '/logout', 'POST', {})
-        logged = self.service.request('test', '/login', 'POST', {'username': '实例测试', 'password': 'strong-password', 'turnstileToken': 'XXXX.DUMMY.TOKEN.XXXX'})
+        logged = self.service.request('test', '/login', 'POST', {'username': '实例测试', 'password': 'strong-password', 'recaptchaToken': 'recaptcha-test-token'})
         self.assertEqual(200, logged['status'])
         self.row['Dashboard']['ActionPoint'].update(Total=8100, Record=datetime.now().isoformat())
         self.save()
@@ -202,7 +202,7 @@ class StockExchangeTests(unittest.TestCase):
         for field in ('playerId', 'bindingKey', 'uploadToken', 'url'):
             self.assertEqual(original[field], saved[field])
         self.service.request('test', '/logout', 'POST', {})
-        reply = self.service.request('test', '/login', 'POST', {'username': '管理员改名账户', 'password': 'new-password', 'turnstileToken': 'test'})
+        reply = self.service.request('test', '/login', 'POST', {'username': '管理员改名账户', 'password': 'new-password', 'recaptchaToken': 'test'})
         self.assertEqual('instance-session', reply['data']['token'])
         self.assertEqual(original['playerId'], self.service.bindings['test']['playerId'])
         self.assertEqual(original['bindingKey'], self.service.bindings['test']['bindingKey'])

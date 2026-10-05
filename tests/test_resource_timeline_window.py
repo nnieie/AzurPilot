@@ -2,6 +2,8 @@
 import shutil
 import sqlite3
 import tempfile
+import unittest
+from tests.opsi_test_support import install_vault
 from pathlib import Path
 
 from module.statistics import resource_stats
@@ -10,7 +12,9 @@ from module.statistics import resource_stats
 def test_timeline_since_keeps_every_row_in_window():
     # 清理失败即忽略：库文件可能仍被连接占用。
     directory = tempfile.mkdtemp(prefix='azurpilot-resource-')
-    database = Path(directory) / 'azurstats_local.db'
+    case = unittest.TestCase()
+    install_vault(case, directory)
+    database = Path(directory) / 'config' / 'azurstats_local.db'
     original_db, original_ensured = resource_stats._LOCAL_DB, resource_stats._table_ensured
     resource_stats._LOCAL_DB, resource_stats._table_ensured = str(database), False
     try:
@@ -29,4 +33,5 @@ def test_timeline_since_keeps_every_row_in_window():
         assert [row['oil'] for row in window] == [2000, 2030, 2100, 2130, 2200, 2230, 2300, 2330]
     finally:
         resource_stats._LOCAL_DB, resource_stats._table_ensured = original_db, original_ensured
+        case.doCleanups()
         shutil.rmtree(directory, ignore_errors=True)

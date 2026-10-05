@@ -24,4 +24,7 @@
 @media(min-width:741px) and (max-width:1280px){.stock-terminal .ticket>.form-stack{grid-template-columns:repeat(2,minmax(0,1fr))}.stock-terminal .ticket .ticket-calc{grid-column:1/-1;grid-row:auto}.stock-terminal .ticket>.form-stack>.wide{grid-column:1/-1;grid-row:auto}.stock-terminal .ticket .leverage-warning,.stock-terminal .ticket .ticket-warning,.stock-terminal .ticket .ticket-note{grid-column:1/-1}}
 
 .stock-terminal .captcha{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
-.stock-terminal .captcha-widget{display:flex;justify-content:center;width:100%;min-height:65px}
+.stock-terminal .captcha-widget{display:flex;justify-content:center;width:100%;min-height:76px}
+/* Google 卡片为 302×76；裁掉 iframe 右侧和底部多出的 2px 空白。 */
+.stock-terminal .captcha-widget>div{width:302px;height:76px;flex-shrink:0;border-radius:3px;overflow:hidden}
+.stock-terminal .captcha-widget iframe{display:block;border:0}

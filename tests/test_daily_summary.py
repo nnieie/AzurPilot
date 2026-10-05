@@ -3,6 +3,7 @@ import sys
 import tempfile
 import types
 import unittest
+from tests.opsi_test_support import install_vault
 from contextlib import closing
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -165,8 +166,9 @@ class TestDailySummaryWindow(unittest.TestCase):
 class TestDailySummaryStore(unittest.TestCase):
     def setUp(self):
         self.temporary_directory = temporary_directory()
+        install_vault(self, self.temporary_directory.name)
         self.store = DailySummaryStore(
-            Path(self.temporary_directory.name) / 'daily_summary.db'
+            Path(self.temporary_directory.name) / 'config' / 'daily_summary.db'
         )
         self.start = datetime(2026, 8, 20, 20)
         self.end = self.start + timedelta(days=1)
@@ -258,7 +260,8 @@ class TestDailySummaryStore(unittest.TestCase):
 class TestDailySummaryDataIntervals(unittest.TestCase):
     def setUp(self):
         self.temporary_directory = temporary_directory()
-        self.resource_db = Path(self.temporary_directory.name) / 'resources.db'
+        install_vault(self, self.temporary_directory.name)
+        self.resource_db = Path(self.temporary_directory.name) / 'config' / 'azurstats_local.db'
         self.original_resource_db = resource_stats._LOCAL_DB
         self.original_table_ensured = resource_stats._table_ensured
         resource_stats._LOCAL_DB = str(self.resource_db)

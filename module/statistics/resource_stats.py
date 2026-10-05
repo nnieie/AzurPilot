@@ -11,6 +11,7 @@ from datetime import datetime
 from typing import Any, Dict, List
 
 from module.logger import logger
+from module.statistics import opsi_secure
 
 
 _local_lock = threading.Lock()
@@ -72,13 +73,31 @@ def _ensure_table():
                 guild_coin INTEGER,
                 action_point INTEGER,
                 yellow_coin INTEGER,
-                purple_coin INTEGER
+                purple_coin INTEGER,
+                opsi_payload TEXT
             )
         ''')
         conn.execute('CREATE INDEX IF NOT EXISTS idx_res_snap_instance ON resource_snapshots(instance)')
         conn.execute('CREATE INDEX IF NOT EXISTS idx_res_snap_ts ON resource_snapshots(instance, ts)')
+        columns = {row[1] for row in conn.execute('PRAGMA table_info(resource_snapshots)')}
+        if 'opsi_payload' not in columns:
+            # 设置密钥后三个大世界货币列迁到这一列（opsi_secure 的密文）。
+            conn.execute('ALTER TABLE resource_snapshots ADD COLUMN opsi_payload TEXT')
         conn.commit()
     _table_ensured = True
+
+
+def _overlay_opsi_snapshot(row: Dict[str, Any]) -> Dict[str, Any]:
+    """把快照行里的大世界三列从密文载荷还原；锁定或损坏时保持空值。"""
+    blob = row.pop('opsi_payload', None)
+    if not blob:
+        if not opsi_secure.get_vault().legacy_plaintext_readable():
+            row.update({field: None for field in opsi_secure.RES_SECURE_FIELDS})
+        return row
+    payload = opsi_secure.get_vault().open_or_none('res', blob, opsi_secure.row_context('res', row))
+    if payload:
+        row.update(payload)
+    return row
 
 
 def record_resource_snapshot(instance: str, resources: Dict[str, Any]) -> bool:
@@ -114,34 +133,46 @@ def record_resource_snapshot(instance: str, resources: Dict[str, Any]) -> bool:
             'action_point': resources.get('ActionPoint'),
             'yellow_coin': resources.get('YellowCoin'),
             'purple_coin': resources.get('PurpleCoin'),
+            'opsi_payload': None,
         }
 
-        with _local_lock:
-            with _connect() as conn:
-                conn.execute('''
-                    INSERT INTO resource_snapshots (
-                        instance, ts,
-                        oil, coin, gem, pt, cube,
-                        core, medal, merit, guild_coin,
-                        action_point, yellow_coin, purple_coin
-                    ) VALUES (
-                        :instance, :ts,
-                        :oil, :coin, :gem, :pt, :cube,
-                        :core, :medal, :merit, :guild_coin,
-                        :action_point, :yellow_coin, :purple_coin
-                    )
-                ''', row)
-                conn.commit()
+        vault = opsi_secure.get_vault()
+        vault.check_database(_LOCAL_DB)
+        # writer_ready 与写入事务共用同一协调锁持有期：一次写入只做一次校验。
+        with vault.coordinator.lock():
+            if not vault.writer_ready():
+                opsi_secure.record_dropped('res')
+                return False
+            payload = {name: row[name] for name in opsi_secure.RES_SECURE_FIELDS}
+            for name in opsi_secure.RES_SECURE_FIELDS:
+                row[name] = None
+            with _local_lock:
+                with _connect() as conn:
+                    with vault.transaction(conn, _LOCAL_DB):
+                        cursor = conn.execute('''
+                            INSERT INTO resource_snapshots (
+                                instance, ts, oil, coin, gem, pt, cube, core, medal, merit, guild_coin,
+                                action_point, yellow_coin, purple_coin, opsi_payload
+                            ) VALUES (
+                                :instance, :ts, :oil, :coin, :gem, :pt, :cube, :core, :medal, :merit, :guild_coin,
+                                :action_point, :yellow_coin, :purple_coin, :opsi_payload
+                            )
+                        ''', row)
+                        row['id'] = cursor.lastrowid
+                        blob = vault.seal('res', payload, opsi_secure.row_context('res', row))
+                        conn.execute('UPDATE resource_snapshots SET opsi_payload=? WHERE id=?', (blob, row['id']))
         return True
     except Exception as e:
-        logger.warning(f'[统计-资源] 记录资源快照失败: {e}')
+        logger.warning(f'[统计-资源] 记录资源快照失败: {type(e).__name__}')
         return False
 
 
+@opsi_secure.checked_read
 def get_resource_timeline(
     instance: str = 'default',
     limit: int = 500,
     since: str = None,
+    include_opsi: bool = True,
 ) -> List[Dict[str, Any]]:
     """获取资源快照时间序列数据，用于绘制资源变化曲线。
 
@@ -149,6 +180,8 @@ def get_resource_timeline(
         instance: 实例名称
         limit: 最大返回条数
         since: 起始时间（ISO 文本，含）。为空表示不限
+        include_opsi: 是否解密大世界三列（行动力/黄币/紫币）。不需要这些列
+            的调用方（如资源趋势页）传 False，避免对大量行做无谓解密。
 
     Returns:
         list[dict]: 按时间排序的快照列表，每个包含:
@@ -169,11 +202,16 @@ def get_resource_timeline(
                 ''',
                 (instance, since, since, limit),
             ).fetchall()
-            result = [dict(row) for row in rows]
+            if include_opsi:
+                result = [_overlay_opsi_snapshot(dict(row)) for row in rows]
+            else:
+                result = [dict(row) for row in rows]
+                for item in result:
+                    item.pop('opsi_payload', None)
             result.reverse()
             return result
     except Exception as e:
-        logger.warning(f'[统计-资源] 获取资源时间线失败: {e}')
+        logger.warning(f'[统计-资源] 获取资源时间线失败: {type(e).__name__}')
         return []
 
 
@@ -216,6 +254,7 @@ def _parse_snapshot_timestamp(value: Any) -> datetime | None:
     return timestamp
 
 
+@opsi_secure.checked_read
 def get_resource_interval_summary(
     instance: str,
     start: datetime,
@@ -269,7 +308,7 @@ def get_resource_interval_summary(
                 ).fetchall()
 
         for row in rows:
-            row_data = dict(row)
+            row_data = _overlay_opsi_snapshot(dict(row))
             timestamp = _parse_snapshot_timestamp(row_data.get('ts'))
             if timestamp is None or timestamp >= end:
                 continue
@@ -312,7 +351,7 @@ def get_resource_interval_summary(
             'resources': summary,
         }
     except Exception as e:
-        logger.warning(f'[统计-资源] 获取资源区间摘要失败: {e}')
+        logger.warning(f'[统计-资源] 获取资源区间摘要失败: {type(e).__name__}')
         return {
             'instance': instance,
             'start': start.isoformat(),

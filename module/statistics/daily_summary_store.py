@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from module.logger import logger
+from module.statistics import opsi_secure
 
 
 DEFAULT_DAILY_SUMMARY_DB = Path('./config/daily_summary.db')
@@ -19,9 +20,18 @@ DAILY_SUMMARY_RETENTION_DAYS = 35
 class _ClosingConnection(sqlite3.Connection):
     """让事务上下文在提交或回滚后关闭连接，避免 Windows 文件锁残留。"""
 
+    def __enter__(self):
+        self._transaction = opsi_secure.get_vault().transaction(self, self._store_path)
+        try:
+            return self._transaction.__enter__()
+        except BaseException:
+            # 事务进入失败（运行环境不可用）时同样要关闭连接，不能留下文件锁。
+            self.close()
+            raise
+
     def __exit__(self, exc_type, exc_value, traceback):
         try:
-            return super().__exit__(exc_type, exc_value, traceback)
+            return self._transaction.__exit__(exc_type, exc_value, traceback)
         finally:
             self.close()
 
@@ -36,10 +46,16 @@ class DailySummaryStore:
         self._initialized = False
 
     def _connect(self) -> sqlite3.Connection:
+        opsi_secure.get_vault().check_database(self.db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        # 首次启用/迁移在打开连接之前完成（迁移会替换数据库文件）；环境不可用时在此直接失败。
+        if not opsi_secure.get_vault().writer_ready():
+            raise opsi_secure.VaultLocked('统计运行环境暂不可用')
         # 日报不能因为数据库锁竞争阻塞游戏调度；本次记录失败会在后续日报中标为未知。
         connection = sqlite3.connect(self.db_path, timeout=0.05, factory=_ClosingConnection)
         connection.execute('PRAGMA busy_timeout = 50')
+        connection.execute('PRAGMA journal_mode = WAL')
+        connection._store_path = self.db_path
         connection.row_factory = sqlite3.Row
         return connection
 
@@ -48,7 +64,6 @@ class DailySummaryStore:
             if self._initialized:
                 return
             with self._connect() as connection:
-                connection.execute('PRAGMA journal_mode = WAL')
                 connection.execute(
                     '''
                     CREATE TABLE IF NOT EXISTS daily_summary_task_runs (
@@ -75,7 +90,8 @@ class DailySummaryStore:
                         instance TEXT NOT NULL,
                         ts TEXT NOT NULL,
                         duration_seconds REAL NOT NULL,
-                        estimated_exp INTEGER NOT NULL
+                        estimated_exp INTEGER NOT NULL,
+                        secure_payload TEXT
                     )
                     '''
                 )
@@ -136,6 +152,9 @@ class DailySummaryStore:
                     ON daily_summary_collection_gaps (instance, collection, occurred_at)
                     '''
                 )
+                columns = {row[1] for row in connection.execute('PRAGMA table_info(daily_summary_cl1_events)')}
+                if 'secure_payload' not in columns:
+                    connection.execute('ALTER TABLE daily_summary_cl1_events ADD COLUMN secure_payload TEXT')
             self._initialized = True
 
     @staticmethod
@@ -411,19 +430,14 @@ class DailySummaryStore:
                 self._mark_collection_started(
                     connection, instance, 'cl1_tracking_started_at', timestamp
                 )
-                connection.execute(
-                    '''
-                    INSERT INTO daily_summary_cl1_events (
-                        instance, ts, duration_seconds, estimated_exp
-                    ) VALUES (?, ?, ?, ?)
-                    ''',
-                    (
-                        instance,
-                        self._serialize_time(timestamp),
-                        max(0.0, float(duration_seconds)),
-                        max(0, int(estimated_exp)),
-                    ),
-                )
+                cursor = connection.execute(
+                    'INSERT INTO daily_summary_cl1_events(instance,ts,duration_seconds,estimated_exp) VALUES(?,?,0,0)',
+                    (instance, self._serialize_time(timestamp)))
+                row = {'id': cursor.lastrowid, 'instance': instance, 'ts': self._serialize_time(timestamp)}
+                vault = opsi_secure.get_vault()
+                blob = vault.seal('daily', {'duration_seconds': max(0.0, float(duration_seconds)),
+                                          'estimated_exp': max(0, int(estimated_exp))}, opsi_secure.row_context('daily', row))
+                connection.execute('UPDATE daily_summary_cl1_events SET secure_payload=? WHERE id=?', (blob, row['id']))
                 cutoff = self._serialize_time(
                     timestamp - timedelta(days=DAILY_SUMMARY_RETENTION_DAYS)
                 )
@@ -470,23 +484,19 @@ class DailySummaryStore:
                 and tracking_started_at <= self._serialize_time(start)
                 and degraded_at is None
             ):
-                row = connection.execute(
-                    '''
-                    SELECT
-                        COUNT(*) AS battles,
-                        COALESCE(SUM(estimated_exp), 0) AS estimated_exp,
-                        COALESCE(SUM(duration_seconds), 0) AS duration_seconds,
-                        MIN(ts) AS first_observed_at,
-                        MAX(ts) AS last_observed_at
-                    FROM daily_summary_cl1_events
-                    WHERE instance = ? AND ts >= ? AND ts < ?
-                    ''',
-                    (
-                        instance,
-                        self._serialize_time(start),
-                        self._serialize_time(end),
-                    ),
-                ).fetchone()
+                records = connection.execute(
+                    'SELECT * FROM daily_summary_cl1_events WHERE instance=? AND ts>=? AND ts<? ORDER BY ts',
+                    (instance, self._serialize_time(start), self._serialize_time(end))).fetchall()
+                decoded = []
+                for record in records:
+                    item = dict(record)
+                    payload = opsi_secure.get_vault().open_('daily', item['secure_payload'],
+                                                           opsi_secure.row_context('daily', item))
+                    decoded.append(dict(item, **payload))
+                row = {'battles': len(decoded), 'estimated_exp': sum(r['estimated_exp'] for r in decoded),
+                       'duration_seconds': sum(r['duration_seconds'] for r in decoded),
+                       'first_observed_at': decoded[0]['ts'] if decoded else None,
+                       'last_observed_at': decoded[-1]['ts'] if decoded else None}
         self._clear_pending_degradations(persisted)
         if tracking_started_at is None or tracking_started_at > self._serialize_time(start) or degraded_at:
             return {
@@ -627,16 +637,19 @@ class DailySummaryStore:
             'updated_at': self._serialize_time(datetime.now()),
         }
         if report_text is not None:
-            values['report_text'] = report_text
+            values['report_text'] = None
         if llm_attempts is not None:
             values['llm_attempts'] = int(llm_attempts)
         if send_attempts is not None:
             values['send_attempts'] = int(send_attempts)
         if error_kind is not None:
             values['error_kind'] = error_kind
-        assignments = ', '.join(f'{key} = ?' for key in values)
-        parameters = [*values.values(), instance, period_key]
         with self._lock, self._connect() as connection:
+            if report_text is not None:
+                vault = opsi_secure.get_vault()
+                values['report_text'] = vault.seal('reports', {'text': report_text}, vault.report_context(instance, period_key))
+            assignments = ', '.join(f'{key} = ?' for key in values)
+            parameters = [*values.values(), instance, period_key]
             connection.execute(
                 f'''
                 UPDATE daily_summary_periods
@@ -665,7 +678,12 @@ class DailySummaryStore:
                 ''',
                 (instance, period_key),
             ).fetchone()
-        return dict(row) if row is not None else None
+        result = dict(row) if row is not None else None
+        if result and result.get('report_text'):
+            vault = opsi_secure.get_vault()
+            value = vault.open_or_none('reports', result['report_text'], vault.report_context(instance, period_key))
+            result['report_text'] = value.get('text') if value else None
+        return result
 
     def cleanup(self, now: datetime | None = None, keep_days: int = 35) -> None:
         """删除过期的任务事件和日报状态。

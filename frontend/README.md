@@ -166,9 +166,9 @@ npm run test:e2e:mock
 
 行情涨跌幅统一以 `stock.open`（上海时间今日第一条已保存的行动力报价）为基准，市场列表、排序、滚动行情与证券详情保持一致；补传或修正会更新开盘价，跨日重新取值，当日无报价或开盘价为 0 时显示 `—`，切换历史图表不会改用历史开盘价。总行动力低于控制台阈值（默认 500 点）时，每月 5 日起且开赛后本月强制退市：相关挂单撤销、多空持仓按触发报价结算，次月重新判断。股票退市不影响玩家登录、后台上传、排行或交易其他股票；界面显示退市状态并禁止该股票的委托。
 
-公开 Turnstile site key `0x4AAAAAAFMCQstp3hgd939a` 固定在 `src/stock/Auth.tsx`，不从交易所元数据读取；注册和登录均要求完成验证码。私密 secret 与 hostname 校验只在 Go 交易所服务端配置，验证码过期或认证失败后必须重新验证。
+公开 Google reCAPTCHA v2 site key `6Ldu7N4tAAAAABEvkf8KUza3x6rxHGLm1dP5gpMq` 固定在 `src/stock/recaptcha.ts`，不从交易所元数据读取；注册和登录均要求完成验证码，请求字段为 `recaptchaToken`。加载脚本与 iframe 使用 `www.recaptcha.net`，官方静态依赖使用 `www.gstatic.com/recaptcha/`，不用 Google 域名入口。私密 secret 只在 Go 后端环境变量 `RECAPTCHA_SECRET_KEY` 配置。控制台已停用域名验证，后端不匹配 hostname 或 action；切换注册/登录、过期或提交后清空旧 token 并重新验证，卸载组件的延迟回调不会写回当前表单。升级时同步更新交易所 Go 服务及管理前端。
 
-本机联合 Mock：先在相邻 `../AzurPilot_StockExchange` 启动 `npm run dev:mock --prefix frontend`，再在本仓库设置 `STOCK_EXCHANGE_URL=http://127.0.0.1:8080` 并运行 `npm run dev:mock --prefix frontend`。打开 AzurPilot 5173 端口，选中演示实例后点击左侧「茗喵证券交易所」；验证码使用 Cloudflare 官方测试 site key `1x00000000000000000000AA` 及服务端测试接口，须联网，交易使用真实 Go 引擎。主界面支持开户、持仓、委托、排行榜、收益统计和新手教程；首次绑定后不可切换账户。
+本机联合 Mock：先在相邻 `../AzurPilot_StockExchange` 启动 `npm run dev:mock --prefix frontend`，再在本仓库设置 `STOCK_EXCHANGE_URL=http://127.0.0.1:8080` 并运行 `npm run dev:mock --prefix frontend`。打开 AzurPilot 5173 端口，选中演示实例后点击左侧「茗喵证券交易所」；验证码使用 Google reCAPTCHA v2 官方测试 site key `6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI` 及 `www.recaptcha.net` 服务端测试接口，需点击复选框，须联网，交易使用真实 Go 引擎。主界面支持开户、持仓、委托、排行榜、收益统计和新手教程；首次绑定后不可切换账户。
 
 本仓库的 `dev:mock` 只启动 AzurPilot 模拟 API 与页面，不会启动交易所 Go 服务。交易所未启动、端口配置不一致或连接超时时，返回 `STOCK_UNAVAILABLE` 并提示联合 Mock 启动命令；上游返回无效 JSON 或响应时间时，返回 `STOCK_INVALID_RESPONSE`。确认交易所 `/api/meta` 可访问且 `mock` 为 `true` 后，在页面点击「重试连接」。
 

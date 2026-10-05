@@ -1,4 +1,5 @@
 import {expect,test} from '@playwright/test'
+import {completeCaptcha} from './recaptcha'
 
 test('金融图表、股票详情、全屏与平移、杠杆交易、验证码及永久实例绑定',async({page})=>{
   test.setTimeout(90000)
@@ -6,7 +7,7 @@ test('金融图表、股票详情、全屏与平移、杠杆交易、验证码�
   // 暂缓官方脚本加载，先确认未取得验证码 token 时无法提交注册。
   let startCaptcha!:()=>void
   const captchaReady=new Promise<void>(resolve=>{startCaptcha=resolve})
-  await page.route('https://challenges.cloudflare.com/turnstile/v0/api.js**',async route=>{await captchaReady;await route.continue()})
+  await page.route('https://www.recaptcha.net/recaptcha/api.js**',async route=>{await captchaReady;await route.continue()})
   // 分别停在实例状态与行情加载阶段，确认返回入口只在页面就绪后出现。
   let releaseStatus!:()=>void,releaseMarket!:()=>void
   const statusReady=new Promise<void>(resolve=>{releaseStatus=resolve}),marketReady=new Promise<void>(resolve=>{releaseMarket=resolve})
@@ -52,7 +53,7 @@ test('金融图表、股票详情、全屏与平移、杠杆交易、验证码�
   const username=`原生玩家${Date.now()}`
   await dialog.getByLabel('唯一用户名').fill(username);await dialog.getByLabel('密码',{exact:true}).fill('strong-test-password')
   await dialog.getByLabel('我已阅读注意事项').check();await expect(dialog.getByRole('button',{name:'验证并开通交易账户'})).toBeDisabled()
-  startCaptcha();await expect(dialog.locator('input[name="cf-turnstile-response"]')).toHaveValue('XXXX.DUMMY.TOKEN.XXXX',{timeout:20000});await assertCaptchaCentered(page);await page.screenshot({path:'test-results/native-captcha-desktop.png',fullPage:true});await page.setViewportSize({width:390,height:844});await assertCaptchaCentered(page);await page.screenshot({path:'test-results/native-captcha-mobile.png',fullPage:true});await page.setViewportSize({width:1600,height:1080});await expect(dialog.getByRole('button',{name:'验证并开通交易账户'})).toBeEnabled();await dialog.getByRole('button',{name:'验证并开通交易账户'}).click();await expect(dialog).not.toBeVisible({timeout:20000})
+  startCaptcha();await completeCaptcha(page);await assertCaptchaCentered(page);await page.screenshot({path:'test-results/native-captcha-desktop.png',fullPage:true});await page.setViewportSize({width:390,height:844});await assertCaptchaCentered(page);await page.screenshot({path:'test-results/native-captcha-mobile.png',fullPage:true});await page.setViewportSize({width:1600,height:1080});await expect(dialog.getByRole('button',{name:'验证并开通交易账户'})).toBeEnabled();await dialog.getByRole('button',{name:'验证并开通交易账户'}).click();await expect(dialog).not.toBeVisible({timeout:20000})
   await expect(terminal.getByRole('heading',{name:'每一份行动力，都有价值。'})).toBeVisible()
   await expect(terminal.locator('.mmex-breadcrumb,.mmex-topbar .connection')).toHaveCount(0)
   await expect(terminal.getByRole('button',{name:'刷新行情'})).toHaveCount(0)
@@ -124,18 +125,18 @@ test('金融图表、股票详情、全屏与平移、杠杆交易、验证码�
   await page.setViewportSize({width:1600,height:1080});await enter.click();await expect(terminal.locator('.user-name')).toContainText(username);await expect(terminal.getByRole('dialog')).toHaveCount(0)
   await page.goto('/#/i/demo-alt/stock-exchange')
   await terminal.getByRole('button',{name:'已有账户登录'}).click();const wrong=terminal.getByRole('dialog')
-  await assertCaptchaCentered(page);await wrong.getByLabel('唯一用户名').fill(username);await wrong.getByLabel('密码',{exact:true}).fill('strong-test-password');await expect(wrong.locator('input[name="cf-turnstile-response"]')).toHaveValue('XXXX.DUMMY.TOKEN.XXXX',{timeout:20000});await wrong.getByRole('button',{name:'验证并登录',exact:true}).click()
+  await assertCaptchaCentered(page);await wrong.getByLabel('唯一用户名').fill(username);await wrong.getByLabel('密码',{exact:true}).fill('strong-test-password');await completeCaptcha(page);await wrong.getByRole('button',{name:'验证并登录',exact:true}).click()
   await expect(wrong.getByRole('alert')).toContainText('永久绑定其他 AzurPilot 实例',{timeout:20000})
-  await wrong.getByLabel('唯一用户名').fill('海风指挥官');await wrong.getByLabel('密码',{exact:true}).fill('mock-player-password');await expect(wrong.locator('input[name="cf-turnstile-response"]')).toHaveValue('XXXX.DUMMY.TOKEN.XXXX',{timeout:20000});await expect(wrong.getByRole('button',{name:'验证并登录',exact:true})).toBeEnabled();await wrong.getByRole('button',{name:'验证并登录',exact:true}).click();await expect(wrong).not.toBeVisible({timeout:20000})
+  await wrong.getByLabel('唯一用户名').fill('海风指挥官');await wrong.getByLabel('密码',{exact:true}).fill('mock-player-password');await completeCaptcha(page);await expect(wrong.getByRole('button',{name:'验证并登录',exact:true})).toBeEnabled();await wrong.getByRole('button',{name:'验证并登录',exact:true}).click();await expect(wrong).not.toBeVisible({timeout:20000})
   await expect(terminal.locator('.user-name')).toContainText('海风指挥官')
   await terminal.getByRole('button',{name:'查看我的身份识别码'}).click();await expect(identityCard.locator('code')).not.toHaveText(identityCode!);await identityCard.getByRole('button',{name:'关闭身份信息'}).click()
   await page.goto('/#/i/demo-main/stock-exchange');await expect(terminal.locator('.user-name')).toContainText(username)
   await terminal.getByRole('button',{name:'查看我的身份识别码'}).click();await expect(identityCard.locator('code')).toHaveText(identityCode!);await identityCard.getByRole('button',{name:'关闭身份信息'}).click()
-  const admin=await page.request.post('http://127.0.0.1:8088/api/console/login',{data:{password:'mock-admin-password',turnstileToken:'XXXX.DUMMY.TOKEN.XXXX'}});expect(admin.ok()).toBeTruthy();const adminToken=(await admin.json()).token
+  const admin=await page.request.post('http://127.0.0.1:8088/api/console/login',{data:{password:'mock-admin-password',recaptchaToken:'recaptcha-test-token'}});expect(admin.ok()).toBeTruthy();const adminToken=(await admin.json()).token
   const ownStock=(await (await page.request.get('http://127.0.0.1:8088/api/market')).json()).stocks.find((s:{username:string})=>s.username===username),renamed=`改名玩家${Date.now()}`
   const edit=await page.request.put(`http://127.0.0.1:8088/api/console/players/${ownStock.id}`,{headers:{Authorization:`Bearer ${adminToken}`},data:{username:renamed,password:'renamed-player-password'}});expect(edit.ok()).toBeTruthy();expect((await edit.json()).player.identityCode).toBe(identityCode)
   await page.reload();const relogin=terminal.getByRole('dialog',{name:'登录交易账户'});await expect(relogin).toBeVisible({timeout:20000});await expect(relogin.getByLabel('唯一用户名')).toBeEditable()
-  await relogin.getByLabel('唯一用户名').fill(renamed);await relogin.getByLabel('密码',{exact:true}).fill('renamed-player-password');await expect(relogin.locator('input[name="cf-turnstile-response"]')).toHaveValue('XXXX.DUMMY.TOKEN.XXXX',{timeout:20000});await relogin.getByRole('button',{name:'验证并登录',exact:true}).click();await expect(relogin).not.toBeVisible({timeout:20000})
+  await relogin.getByLabel('唯一用户名').fill(renamed);await relogin.getByLabel('密码',{exact:true}).fill('renamed-player-password');await completeCaptcha(page);await relogin.getByRole('button',{name:'验证并登录',exact:true}).click();await expect(relogin).not.toBeVisible({timeout:20000})
   await expect(terminal.locator('.user-name')).toContainText(renamed);await terminal.getByRole('button',{name:'查看我的身份识别码'}).click();await expect(identityCard.locator('code')).toHaveText(identityCode!);await identityCard.getByRole('button',{name:'关闭身份信息'}).click()
   expect(responses.some(s=>s.includes('"uploadToken"')||s.includes('"privateKey"'))).toBeFalsy()
   expect(responses.some(s=>/"token":"(?!instance-session)/.test(s))).toBeFalsy();expect(errors).toEqual([])

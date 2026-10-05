@@ -39,27 +39,41 @@ def get_statistics_fingerprint(instance: str) -> str:
     except OSError:
         parts.append("cfg:none")
 
-    # 3. 大世界与委托记录库 (cl1_record.db)
-    cl1_db = './config/cl1_record.db'
+    # 3. 大世界与委托记录库 (cl1_data.db)
+    cl1_db = './config/cl1_data.db'
     try:
         stat = os.stat(cl1_db)
         parts.append(f"cl1:{stat.st_mtime_ns}")
     except OSError:
         parts.append("cl1:none")
 
-    # 4. 舰船经验统计文件 (log/ship_exp_stats.json)
-    ship_file = './log/ship_exp_stats.json'
+    # 4. 舰船经验统计文件（按实例隔离）
+    ship_file = f'./log/cl1/{instance}/ship_exp_data.json'
     try:
         stat = os.stat(ship_file)
         parts.append(f"ship:{stat.st_mtime_ns}")
     except OSError:
         parts.append("ship:none")
 
+    # 5. 大世界统计加密状态（设置或清空后页面需要刷新）
+    keyring = './config/opsi_secure/keyring.json'
+    try:
+        stat = os.stat(keyring)
+        parts.append(f"secure:{stat.st_mtime_ns}")
+    except OSError:
+        parts.append("secure:none")
+
     try:
         stat = os.stat('./config/storage_statistics.db')
         parts.append(f'storage:{stat.st_mtime_ns}:{stat.st_size}')
     except OSError:
         parts.append('storage:none')
+    for database in ('azurstats_local.db', 'cl1_data.db', 'storage_statistics.db'):
+        try:
+            stat = os.stat('./config/' + database + '-wal')
+            parts.append(f'{database}-wal:{stat.st_mtime_ns}:{stat.st_size}')
+        except OSError:
+            parts.append(database + '-wal:none')
     return ';'.join(parts)
 
 
@@ -223,6 +237,18 @@ def _month_end(moment: datetime) -> datetime:
 
 def report(configs, instance: str, category: str, month: str, days: int, period: str,
            research_series: int = 0, research_scope: str = 'series', loot_task: str = None) -> dict:
+    """同一份受保护报表的读取共用一次校验及协调锁。"""
+    configs.path(instance)
+    reader = _report
+    if category in ('resources', 'action', 'opsi', 'ships', 'loot', 'commission', 'research'):
+        from module.statistics.opsi_secure import checked_read
+        reader = checked_read(reader)
+    return reader(configs, instance, category, month, days, period,
+                  research_series, research_scope, loot_task)
+
+
+def _report(configs, instance: str, category: str, month: str, days: int, period: str,
+            research_series: int = 0, research_scope: str = 'series', loot_task: str = None) -> dict:
     """生成并获取指定维度的统计报表。
 
     支持资源变动趋势、大世界运营、委托收益、舰船经验以及科研和大世界掉落明细。
@@ -244,7 +270,6 @@ def report(configs, instance: str, category: str, month: str, days: int, period:
     Raises:
         ApiError: 月份格式错误或超出有效年份范围 (INVALID_PARAMS)。
     """
-    configs.path(instance)
     now = datetime.now()
     try:
         selected = datetime.strptime(month, '%Y-%m') if month else now.replace(day=1)
@@ -300,7 +325,8 @@ def report(configs, instance: str, category: str, month: str, days: int, period:
         from module.statistics.resource_stats import RESOURCE_COLUMNS, get_resource_timeline
         cutoff = (now - timedelta(days=days)).isoformat(sep=' ')
         # 窗口过滤下推到 SQL，只读窗口内的行。
-        rows = get_resource_timeline(instance, limit=50001, since=cutoff.replace(' ', 'T'))
+        # 该分类展示的序列不含大世界货币，跳过密文解密（它们是资源快照里解密开销最大的一批）。
+        rows = get_resource_timeline(instance, limit=50001, since=cutoff.replace(' ', 'T'), include_opsi=False)
         if len(rows) > 50000:
             result['notes'].append('记录超过 50,000 条，当前展示最近 50,000 条，请缩短时间范围查看细节。')
             rows = rows[-50000:]

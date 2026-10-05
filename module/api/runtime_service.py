@@ -293,7 +293,9 @@ class RuntimeService:
         from module.statistics.resource_stats import get_resource_timeline, RESOURCE_COLUMNS
         key = RESOURCE_COLUMNS[resource]
         cutoff = (datetime.now() - timedelta(days=days)).isoformat(sep=' ')
-        rows = get_resource_timeline(instance=instance, limit=5000)
+        # 只有大世界货币需要解密密文列，其余资源跳过。
+        rows = get_resource_timeline(instance=instance, limit=5000,
+                                     include_opsi=resource in ('ActionPoint', 'YellowCoin', 'PurpleCoin'))
         points = [{'time': row['ts'], 'value': row.get(key)} for row in rows
                   if str(row['ts']).replace('T', ' ') >= cutoff and row.get(key) is not None]
         return {'instance': instance, 'resource': resource, 'points': points,
