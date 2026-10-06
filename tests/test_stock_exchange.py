@@ -1,12 +1,14 @@
 """交易所实例代理测试：隔离配置、身份和网络，不运行真实游戏。"""
 import json
 import hashlib
+import io
 import sqlite3
 import tempfile
 import time
 import unittest
 from datetime import datetime, timedelta
 from contextlib import closing
+from email.message import Message
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
@@ -68,6 +70,36 @@ class StockExchangeTests(unittest.TestCase):
 
     def register(self):
         return self.service.request('test', '/register', 'POST', {'username': '实例测试', 'password': 'strong-password', 'recaptchaToken': 'recaptcha-test-token', 'acceptedNotice': '2026-10-03'})
+
+    def test_new_quotes_upload_without_fixed_interval(self):
+        self.register()
+        observed = self.player['quote']['observedAt'] + 1
+        self.service.last_upload['test'] = 100
+        self.service._remote.reset_mock()
+        with patch('module.api.stock_exchange_service.time.monotonic', return_value=100), \
+                patch.object(self.service, '_read_snapshot', return_value={'instance': 'test', 'observedAt': observed, 'actionPoints': 8100}):
+            self.service._sync_instance('test', False)
+        self.assertEqual(1, self.service._remote.call_count)
+        self.assertEqual('/quotes', self.service._remote.call_args.args[0])
+        self.assertEqual((observed, 8100), self.service.uploaded['test'])
+
+    def test_event_stream_notifies_disconnect_and_recovery_without_credentials(self):
+        def stream(revision):
+            value = io.BytesIO(f'event: stock\ndata: {{"revision":{revision},"serverTime":123}}\n\n'.encode())
+            value.headers = Message()
+            value.headers['Content-Type'] = 'text/event-stream'
+            return value
+        updates = []
+        def receive(data):
+            updates.append(data)
+            if data.get('revision') == 2:
+                self.service.stop.set()
+        self.service.listeners.add(receive)
+        with patch('module.api.stock_exchange_service.urlopen', side_effect=[stream(1), stream(2)]):
+            self.service._listen_events()
+        self.assertEqual([True, False, True], [value['online'] for value in updates])
+        self.assertEqual([1, 2], [value['revision'] for value in updates if 'revision' in value])
+        self.assertNotIn('token', json.dumps(updates))
 
     def test_new_registration_backfills_whole_month_before_signup(self):
         from module.api.stock_exchange_history import SHANGHAI, history_point
@@ -452,7 +484,8 @@ class StockExchangeTests(unittest.TestCase):
         store.observe('testpilot', 'ActionPoint', {'Total': 8000}, datetime.now().isoformat(), 'fixture')
         self.assertNotIn('_stockInstance', configs.export('testpilot'))
         configs.create('copied', source='testpilot')
-        self.assertNotEqual(identity, configs.read('copied')[0]['_stockInstance'])
+        self.assertIsNone(configs.read('copied')[0]['_stockInstance'])
+        self.assertNotEqual(identity, load_identity(root, 'copied')[0])
         updated = configs.patch('testpilot', '', [ConfigChange(path='Alas.Emulator.Serial', value='fixture-emulator')])
         self.assertNotIn('_stockInstance', updated['values'])
         self.assertEqual(identity, configs.read('testpilot')[0]['_stockInstance'])

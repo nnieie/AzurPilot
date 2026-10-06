@@ -62,6 +62,7 @@ class Router:
             'shop_strategy.validate': Method(p.ShopStrategyValidateParams, self.validate_shop_strategy),
             'overview.get': Method(p.InstanceParams, lambda x: runtime.overview(x.instance)),
             'stock.status': Method(p.InstanceParams, lambda x: self.stock_exchange.status(x.instance)),
+            'stock.rebuild': Method(p.StockRebuildParams, lambda x: self.stock_exchange.rebuild(x.instance, x.confirm, x.scope), True),
             'stock.request': Method(p.StockRequestParams, lambda x: self.stock_exchange.request(x.instance, x.path, x.method, x.body, x.etag), True),
             'scheduler.start': Method(p.InstanceParams, lambda x: runtime.start(x.instance), True),
             'scheduler.stop': Method(p.InstanceParams, lambda x: runtime.stop(x.instance), True),
@@ -290,10 +291,8 @@ class Router:
                 raise p.ApiError('SIMULATOR_RUNNING', '请先中断大世界模拟器再删除实例')
             result = self.configs.delete(params.instance, params.revision)
             if self._stock_exchange is not None:
-                try:
-                    self._stock_exchange._refresh()
-                except p.ApiError as error:
-                    self._stock_exchange.storage_error = error
+                # 配置删除只撤销内存会话；交易文件检查留给茗交所自身。
+                with self._stock_exchange.lock:
                     self._stock_exchange.sessions.pop(params.instance, None)
                     self._stock_exchange.monitors.discard(params.instance)
             if self._opsi_simulator is not None:

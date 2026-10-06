@@ -39,7 +39,7 @@ SCHEDULING_DISPATCH_DELAY_MINUTES = 24 * 60
 # 大世界自然行动力上限。
 NATURAL_ACTION_POINT_LIMIT = 200
 
-from module.exception import GameStuckError, GameTooManyClickError, RequestHumanTakeover
+from module.exception import GameStuckError, GameTooManyClickError, RequestHumanTakeover, ScriptError
 from module.logger import logger
 from module.os.map import OSMap
 from module.os.tasks.task_context import TaskDelayRequest, current_opsi_context, opsi_task_context
@@ -84,6 +84,7 @@ class CoinTaskMixin:
     CONFIG_PATH_MONTH_END_CLEANUP_ENABLE = 'OpsiScheduling.OpsiScheduling.MonthEndActionPointCleanupEnable'
     CONFIG_PATH_MONTH_END_CLEANUP_DAYS = 'OpsiScheduling.OpsiScheduling.MonthEndActionPointCleanupDays'
     CONFIG_PATH_MONTH_END_AP_PRESERVE = 'OpsiScheduling.OpsiScheduling.MonthEndActionPointPreserve'
+    CONFIG_PATH_MONTH_END_MEOW_TARGET_ZONE = 'OpsiScheduling.OpsiScheduling.MonthEndMeowTargetZone'
     CONFIG_PATH_MONTH_END_SHOP_PURCHASE = 'OpsiScheduling.OpsiScheduling.MonthEndShopPurchase'
     STATE_KEY_COIN_REPLENISH_START = 'CoinReplenishStart'
     STATE_KEY_AP_REPLENISH_ACTIVE = 'ApReplenishActive'
@@ -1287,13 +1288,15 @@ class OpsiScheduling(SmartExploreMixin, CoinTaskMixin, OSMap):
             int(getattr(self, '_action_point_current', 0) or 0),
         )
 
-    def _run_scheduled_meowfficer_farming(self, ap_preserve, fresh_ap=None):
+    def _run_scheduled_meowfficer_farming(self, ap_preserve, fresh_ap=None, target_zone=None):
         """由智能调度代理执行一轮耄耋相接。
 
         Args:
             ap_preserve (int): 行动力保留阈值。
             fresh_ap (tuple[int, int] | None): 本轮智能调度决策刚读到的
                 (总行动力, 当前行动力)，供短猫开工检查复用。
+            target_zone (Zone | None): 月末清理指定的耄耋相接海域，
+                本轮回退为指定海域作战；None 表示跟随用户配置。
         """
         if not hasattr(self, 'run_meowfficer_farming_once'):
             logger.error('[大世界-智能调度] 当前实例不支持执行耄耋相接')
@@ -1305,6 +1308,9 @@ class OpsiScheduling(SmartExploreMixin, CoinTaskMixin, OSMap):
         with self.config.temporary(
             OS_ACTION_POINT_PRESERVE=self.config.OS_ACTION_POINT_PRESERVE,
         ):
+            # 经实例属性传递指定海域：config 临时覆盖会在子任务 bind() 时
+            # 被配置文件的值刷掉，实例属性随代跑上下文一起清理。
+            self._meow_target_zone_override = target_zone
             try:
                 self._run_with_opsi_task_context(
                     self.TASK_NAME_MEOWFFICER_FARMING,
@@ -1326,6 +1332,8 @@ class OpsiScheduling(SmartExploreMixin, CoinTaskMixin, OSMap):
                     )
                     return
                 raise
+            finally:
+                self._meow_target_zone_override = None
 
     def handle_first_auto_search(self, run):
         """由智能调度决策是否执行 os_init 阶段跳过的首次自律寻敌。
@@ -1417,7 +1425,7 @@ class OpsiScheduling(SmartExploreMixin, CoinTaskMixin, OSMap):
             fresh_ap=fresh_ap,
         )
 
-    def _run_scheduled_coin_task_once(self, task_name, ap_preserve, fresh_ap=None):
+    def _run_scheduled_coin_task_once(self, task_name, ap_preserve, fresh_ap=None, meow_target_zone=None):
         """由智能调度代理执行一轮黄币补充任务。
 
         Args:
@@ -1425,6 +1433,8 @@ class OpsiScheduling(SmartExploreMixin, CoinTaskMixin, OSMap):
             ap_preserve (int): 行动力保留阈值。
             fresh_ap (tuple[int, int] | None): 本轮智能调度决策刚读到的
                 (总行动力, 当前行动力)；仅耄耋相接消费该读数。
+            meow_target_zone (Zone | None): 月末清理指定的耄耋相接海域；
+                仅耄耋相接消费，None 表示跟随耄耋相接自身设置。
         """
         if not hasattr(self, '_smart_scheduling_no_content_task'):
             self._smart_scheduling_no_content_task = None
@@ -1433,7 +1443,9 @@ class OpsiScheduling(SmartExploreMixin, CoinTaskMixin, OSMap):
         task_display = self.TASK_NAMES.get(task_name, task_name)
         logger.info(f'[大世界-智能调度] 代理执行一轮{task_display}')
         if task_name == self.TASK_NAME_MEOWFFICER_FARMING:
-            self._run_scheduled_meowfficer_farming(ap_preserve, fresh_ap=fresh_ap)
+            self._run_scheduled_meowfficer_farming(
+                ap_preserve, fresh_ap=fresh_ap, target_zone=meow_target_zone
+            )
         elif task_name == self.TASK_NAME_OBSCURE:
             if not hasattr(self, 'clear_obscure'):
                 logger.error('[大世界-智能调度] 当前实例不支持执行隐秘海域')
@@ -1906,6 +1918,53 @@ class OpsiScheduling(SmartExploreMixin, CoinTaskMixin, OSMap):
         )
         return final_preserve
 
+    def _get_month_end_meow_target_zone(self):
+        """解析月末清理路由到耄耋相接时使用的指定海域。
+
+        规则：
+            - 未填写或填 0：返回 None，耄耋相接按自身配置执行
+            - 单个有效海域（ID 或名称）：返回该海域实例，本轮仅出击该海域
+            - 多个海域或无效海域（无法识别、港口）：按 0 处理并记录警告
+
+        Returns:
+            Zone | None: 目标海域实例，None 表示跟随耄耋相接自身设置。
+        """
+        raw = self.config.cross_get(
+            keys=self.CONFIG_PATH_MONTH_END_MEOW_TARGET_ZONE,
+            default='0',
+        )
+        if raw is None:
+            return None
+        raw = str(raw).strip()
+        if raw in ('', '0'):
+            return None
+
+        tokens = [token.strip() for token in raw.replace('，', ',').split(',')]
+        if len(tokens) != 1 or not tokens[0]:
+            logger.warning(
+                f'[大世界-月末清理] 耄耋相接指定海域 "{raw}" 不是单个海域，'
+                f'按 0 处理（跟随耄耋相接设置）'
+            )
+            return None
+
+        try:
+            zone = self.name_to_zone(tokens[0])
+        except ScriptError:
+            logger.warning(
+                f'[大世界-月末清理] 无法识别耄耋相接指定海域 "{raw}"，'
+                f'按 0 处理（跟随耄耋相接设置）'
+            )
+            return None
+        if zone.is_port:
+            logger.warning(
+                f'[大世界-月末清理] 耄耋相接指定海域 "{raw}" 是港口海域，'
+                f'按 0 处理（跟随耄耋相接设置）'
+            )
+            return None
+
+        logger.info(f'[大世界-月末清理] 耄耋相接指定海域 zone_id={zone.zone_id}')
+        return zone
+
     def _is_month_end_cleanup_active(self):
         """
         判断当前是否应进入月末清理行动力模式。
@@ -2081,11 +2140,13 @@ class OpsiScheduling(SmartExploreMixin, CoinTaskMixin, OSMap):
                 logger.info('[大世界-月末清理] 深渊坐标执行后已达到行动力保留值，结束清理')
                 break
 
-            # 3. 执行一轮短猫相接
+            # 3. 执行一轮短猫相接，可指定仅出击某个海域
             meow_success = False
             try:
                 meow_success = self._run_scheduled_coin_task_once(
-                    self.TASK_NAME_MEOWFFICER_FARMING, month_end_preserve
+                    self.TASK_NAME_MEOWFFICER_FARMING,
+                    month_end_preserve,
+                    meow_target_zone=self._get_month_end_meow_target_zone(),
                 )
             except ActionPointLimit as e:
                 logger.warning(f'[大世界-月末清理] 短猫相接行动力不足: {e}')

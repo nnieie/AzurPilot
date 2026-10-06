@@ -59,8 +59,7 @@ export function resolveIcon(value: string, resources = true): {src: string, labe
   return icon ? {src: icon, label: value} : undefined
 }
 
-export function StatisticsTable({data, foldControl, editControls, rows: rowsPerPage = DEFAULT_TABLE_ROWS, icons = false, plain = false, exportable = false}: {
-  exportable?: boolean
+export function StatisticsTable({data, foldControl, editControls, rows: rowsPerPage = DEFAULT_TABLE_ROWS, icons = false, plain = false}: {
   data: StatTable
   foldControl?: ReactNode
   /** 编辑模式下的表格设置控件，与其他卡片动作同排。 */
@@ -98,7 +97,7 @@ function numericValue(value: StatTable['rows'][number][number]): number | undefi
   const current = Math.min(page, pages - 1)
   const singleRow = rows.length === 1
   /* 只有一页时不画分页栏：页码恒为 1 / 1，两个翻页钮也点不动。 */
-  return <section className={`statistics-table${singleRow ? ' is-single-row' : ''}`}><div className="panel-heading"><h3>{data.title}</h3><div className="table-search"><Search size={14}/><input aria-label={ui('stats.searchTable', {title: data.title})} value={search} onChange={event => {setSearch(event.target.value); setPage(0)}} placeholder={ui('stats.searchPlaceholder')}/><span>{ui('stats.records', {count: rows.length})}</span></div><div className="stat-card-actions">{editControls}{foldControl}{exportable && <button className="text-button" disabled={!rows.length} onClick={() => downloadCsv(data.title, [data.columns, ...rows])}>{ui('stats.exportDetails')}</button>}</div></div>{data.note && <p className="panel-note">{data.note}</p>}<div className="table-scroll">{plain ? (<div className="table-lines">{rows.slice(current * perPage, (current + 1) * perPage).map((row, index) => (
+  return <section className={`statistics-table${singleRow ? ' is-single-row' : ''}`}><div className="panel-heading"><h3>{data.title}</h3><div className="table-search"><Search size={14}/><input aria-label={ui('stats.searchTable', {title: data.title})} value={search} onChange={event => {setSearch(event.target.value); setPage(0)}} placeholder={ui('stats.searchPlaceholder')}/><span>{ui('stats.records', {count: rows.length})}</span></div><div className="stat-card-actions">{editControls}{foldControl}<button className="text-button" disabled={!rows.length} onClick={() => downloadCsv(data.title, [data.columns, ...rows])}>{ui('stats.exportDetails')}</button></div></div>{data.note && <p className="panel-note">{data.note}</p>}<div className="table-scroll">{plain ? (<div className="table-lines">{rows.slice(current * perPage, (current + 1) * perPage).map((row, index) => (
               <p className="table-line" key={index}>
                 <span className="table-line-first">{cellText(row[0])}：</span>
                 {row.slice(1).map((value, cell) => {const icon = typeof value === 'string' ? resolveIcon(value, false) : undefined

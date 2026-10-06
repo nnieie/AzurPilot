@@ -90,7 +90,11 @@ export function createMockServer({password = '', empty = false} = {}) {
         } else {
           if (!session.authenticated) fail('UNAUTHORIZED', '请先登录')
           result = await state.dispatch(request.method, request.params)
-          if (request.method === 'events.subscribe') {session.topics = result.topics; session.instance = result.instance; session.last.clear()}
+          if (request.method === 'events.subscribe') {
+            session.unsubscribeStock?.();session.unsubscribeStock=undefined
+            session.topics = result.topics; session.instance = result.instance; session.last.clear()
+            if(session.topics.includes('stock'))session.unsubscribeStock=state.subscribeStock(data=>session.event('stock',{...data,instance:session.instance}))
+          }
         }
         send({v: 1, type: 'response', id: request.id, ok: true, result})
         publish()
@@ -98,12 +102,13 @@ export function createMockServer({password = '', empty = false} = {}) {
         send({v: 1, type: 'response', id: request?.id ?? '', ok: false, error: {code: error.code ?? 'INVALID_REQUEST', message: error.code ? error.message : '请求格式无效', details: error.details ?? null}})
       }
     })
-    socket.on('close', () => sessions.delete(session))
+    socket.on('close', () => {session.unsubscribeStock?.();sessions.delete(session)})
   })
   function publish() {
     for (const session of sessions) {
       if (!session.authenticated) continue
       for (const topic of session.topics) {
+        if(topic==='stock')continue
         try {
           if (topic === 'preview' && session.last.has(topic) && Date.now() - (session.previewAt ?? 0) < 3000) continue
           if (topic === 'preview') session.previewAt = Date.now()
@@ -123,6 +128,7 @@ export function createMockServer({password = '', empty = false} = {}) {
   interval.unref()
   const close = () => new Promise(resolve => {
     clearInterval(interval)
+    state.close()
     for (const socket of sockets.clients) socket.terminate()
     sockets.close(() => server.close(resolve))
   })

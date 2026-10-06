@@ -46,7 +46,7 @@ class ActionHistory:
     def __init__(self, root):
         self.root = Path(root).resolve()
         self.protection = GameDataProtector(root)
-        self.directory = self.root / 'cache' / 'stock-exchange' / 'history'
+        self.directory = self.protection.directory / 'history'
         self.connections, self.scanned, self.next_send, self.next_check, self.failures = {}, {}, {}, {}, {}
         self.paths, self.inodes = {}, {}
         self.pending = {}
@@ -201,7 +201,7 @@ class ActionHistory:
                 identity = self.protection.resolve(instance)
                 sealed = self.protection.has_anchor(identity + '/action-point-history')
                 # 接口传入的数据库路径不参与选择，来源始终由当前稳定实例身份确定。
-                with store.connection(instance, write=not sealed, baseline=(row.get('Total'), row.get('Record')) if point and not sealed else None) as source:
+                with store.connection(instance, write=not sealed, baseline=(row.get('Total'), row.get('Record')) if point and not sealed else None, strict_history=True) as source:
                     if source.history_guard is None:
                         source.history_guard = source.history_factory()
                     maximum = source.execute('SELECT COALESCE(MAX(seq),0) FROM action_point_history').fetchone()[0]
@@ -233,7 +233,7 @@ class ActionHistory:
         return [f'{(ordinal - n) // 12:04d}-{(ordinal - n) % 12 + 1:02d}' for n in range(13)]
 
     def synchronize(self, instance, identity, key, binding, remote, accepted, force=False):
-        """每次最多 1024 点、一批一签；失败指数退避但永不永久停传。"""
+        """待传月份完整签名并立即发送；只对网络失败进行退避。"""
         with self.lock, self._transaction(instance) as connection:
             origin = binding['url'] + '\n' + binding['bindingKey']
             saved = connection.execute("SELECT value FROM metadata WHERE name='origin'").fetchone()
@@ -248,7 +248,7 @@ class ActionHistory:
             pending = [row[0] for row in connection.execute(f'SELECT DISTINCT month FROM samples WHERE uploaded=0 AND month IN ({placeholders}) ORDER BY month DESC', months)]
             last_batch = connection.execute("SELECT value FROM metadata WHERE name='batch_month'").fetchone()
             month = next((m for m in pending if not last_batch or m < last_batch[0]), pending[0] if pending else '')
-            rows = connection.execute('SELECT seq,time,total,month FROM samples WHERE uploaded=0 AND month=? ORDER BY seq DESC LIMIT 1024', (month,)).fetchall() if month else []
+            rows = connection.execute('SELECT seq,time,total,month FROM samples WHERE uploaded=0 AND month=? ORDER BY seq DESC', (month,)).fetchall() if month else []
             try:
                 if rows:
                     month = rows[0][3]
@@ -258,7 +258,7 @@ class ActionHistory:
                     connection.executemany('UPDATE samples SET uploaded=1 WHERE seq=? AND time=? AND total=?', [(row[0], row[1], row[2]) for row in batch])
                     connection.execute("INSERT INTO metadata VALUES('dirty_month',?) ON CONFLICT(name) DO UPDATE SET value=excluded.value", (month,))
                     connection.execute("INSERT INTO metadata VALUES('batch_month',?) ON CONFLICT(name) DO UPDATE SET value=excluded.value", (month,))
-                    self.next_send[instance] = time.monotonic() + 3
+                    self.next_send[instance] = 0
                     self.next_check[instance] = 0
                     self.failures[instance] = 0
                     self.pending[instance] = bool(connection.execute(f'SELECT 1 FROM samples WHERE uploaded=0 AND month IN ({placeholders}) LIMIT 1', months).fetchone())
@@ -287,11 +287,11 @@ class ActionHistory:
                     connection.execute("INSERT INTO metadata VALUES('check_month',?) ON CONFLICT(name) DO UPDATE SET value=excluded.value", (month,))
                     connection.execute("DELETE FROM metadata WHERE name='dirty_month'")
                     self.next_check[instance] = time.monotonic() + 300 / len(available)
-                    self.next_send[instance] = time.monotonic() + 3
+                    self.next_send[instance] = 0
                     self.pending[instance] = False
                 self.failures[instance] = 0
             except (ApiError, OSError, ValueError, TypeError, KeyError):
                 failures = min(self.failures.get(instance, 0) + 1, 6)
                 self.failures[instance] = failures
-                self.next_send[instance] = time.monotonic() + min(60, 2 ** failures * 3)
+                self.next_send[instance] = time.monotonic() + min(60, 2 ** failures)
                 raise

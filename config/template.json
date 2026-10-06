@@ -3084,6 +3084,7 @@
       "MonthEndActionPointCleanupEnable": false,
       "MonthEndActionPointCleanupDays": 0,
       "MonthEndActionPointPreserve": 0,
+      "MonthEndMeowTargetZone": 0,
       "MonthEndShopPurchase": true
     },
     "OpsiSmartExplore": {

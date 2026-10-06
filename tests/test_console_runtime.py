@@ -176,13 +176,13 @@ class RuntimeTests(unittest.TestCase):
 
 class StatisticsTests(unittest.TestCase):
     def setUp(self):
-        from tests.opsi_test_support import install_vault
+        from tests.opsi_test_support import install_store
         from module.statistics.cl1_database import Cl1Database
         from module.statistics.ship_exp_stats import ShipExpStats
         from module.statistics.azurstats import AzurStats
         directory = self.enterContext(tempfile.TemporaryDirectory(ignore_cleanup_errors=True))
         self.root = Path(directory)
-        self.vault = install_vault(self, directory)
+        self.vault = install_store(self, directory)
         database = Cl1Database(self.root / 'config/cl1_data.db')
         self.enterContext(patch('module.statistics.cl1_database.db', database))
         self.enterContext(patch('module.statistics.opsi_month.cl1_db', database))

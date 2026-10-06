@@ -15705,6 +15705,11 @@
         "type": "input",
         "value": 0
       },
+      "MonthEndMeowTargetZone": {
+        "type": "input",
+        "value": "0",
+        "mode": "text"
+      },
       "MonthEndShopPurchase": {
         "type": "checkbox",
         "value": true,

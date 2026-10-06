@@ -24,6 +24,7 @@ import { RightRail } from '../components/RightRail'
 import { CompactScrollbars } from '../components/CompactScrollbars'
 import { TaskNav } from '../components/TaskNav'
 import { SidebarTransition } from '../components/SidebarTransition'
+import {StockExchangeFallback} from '../stock/OverviewLink'
 
 import { useIsDesktop } from '../components/TaskNav'
 import { TaskSwitcher } from '../components/TaskSwitcher'
@@ -193,7 +194,7 @@ export function App() {
   useEffect(() => { setMobileOpen(false); setRailOpen(false) }, [location.pathname])
   useEffect(() => {
     if (connection !== 'ready') return
-    void api.request('events.subscribe', {instance: instance ?? null, topics: instance && !stockExchange ? previewEnabled ? ['instances', 'overview', 'logs', 'preview'] : ['instances', 'overview', 'logs'] : ['instances']}).catch(error => notify(error.message, true))
+    void api.request('events.subscribe', {instance: instance ?? null, topics: instance ? stockExchange ? ['instances', 'stock'] : previewEnabled ? ['instances', 'overview', 'logs', 'preview'] : ['instances', 'overview', 'logs'] : ['instances']}).catch(error => notify(error.message, true))
   }, [instance, connection, notify, previewEnabled, stockExchange])
   // 旧版主题下点进实例后，外壳回到「顶栏跨全宽 + 单列侧栏」；主页视图一律沿用新版外壳。
   const legacyShell = usesLegacyShell(theme, instance)
@@ -291,7 +292,7 @@ export function App() {
      隧道远程访问首帧就走 auth，React 会直接抛 #300 崩掉整页。 */
   if (connection === 'auth') return <Login/>
   // 交易终端独占窗口，离开后恢复实例原有的导航与布局偏好。
-  if (stockExchange) return <div className="stock-exchange-shell"><div id="main-content" role="main" tabIndex={-1}>{!schema || !instancesLoaded || !current ? <Loading/> : <Outlet context={update} key={instance}/>}</div></div>
+  if (stockExchange) return <div className="stock-exchange-shell"><div id="main-content" role="main" tabIndex={-1}>{!schema || !instancesLoaded || !current ? <StockExchangeFallback/> : <Outlet context={update} key={instance}/>}</div></div>
   const hasDockedInspector = inspector.open && inspector.docked && !inspector.minimized
   return <div className={`app-shell ${layout.sidebarCollapsed ? 'nav-collapsed' : ''} ${hasDockedInspector ? 'has-docked-inspector' : ''} ${showRail ? 'with-rail' : ''} ${currentTask ? 'task-config-shell' : ''} ${legacyShell ? 'legacy-shell' : ''} ${legacyHomeShell ? 'legacy-shell legacy-home-shell' : ''} ${mobileOpen ? 'mobile-open' : ''} ${railOpen ? 'rail-open' : ''}`}>
     <a className="skip-link" href="#main-content" onClick={event => {event.preventDefault(); document.getElementById('main-content')?.focus()}}>{ui('nav.skipContent')}</a>

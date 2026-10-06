@@ -55,14 +55,7 @@ def get_statistics_fingerprint(instance: str) -> str:
     except OSError:
         parts.append("ship:none")
 
-    # 5. 大世界统计加密状态（设置或清空后页面需要刷新）
-    keyring = './config/opsi_secure/keyring.json'
-    try:
-        stat = os.stat(keyring)
-        parts.append(f"secure:{stat.st_mtime_ns}")
-    except OSError:
-        parts.append("secure:none")
-
+    # 5. 仓库统计库
     try:
         stat = os.stat('./config/storage_statistics.db')
         parts.append(f'storage:{stat.st_mtime_ns}:{stat.st_size}')
@@ -237,14 +230,10 @@ def _month_end(moment: datetime) -> datetime:
 
 def report(configs, instance: str, category: str, month: str, days: int, period: str,
            research_series: int = 0, research_scope: str = 'series', loot_task: str = None) -> dict:
-    """同一份受保护报表的读取共用一次校验及协调锁。"""
+    """生成并获取指定维度的统计报表。"""
     configs.path(instance)
-    reader = _report
-    if category in ('resources', 'action', 'opsi', 'ships', 'loot', 'commission', 'research'):
-        from module.statistics.opsi_secure import checked_read
-        reader = checked_read(reader)
-    return reader(configs, instance, category, month, days, period,
-                  research_series, research_scope, loot_task)
+    return _report(configs, instance, category, month, days, period,
+                   research_series, research_scope, loot_task)
 
 
 def _report(configs, instance: str, category: str, month: str, days: int, period: str,

@@ -3,7 +3,6 @@
 提供数据库和用户配置的每日自动备份、压缩存档与历史备份过期清理功能。
 """
 
-import base64
 import json
 import shutil
 import sqlite3
@@ -12,8 +11,6 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from module.logger import logger
-from module.statistics import opsi_secure
-from contextlib import closing
 
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
@@ -94,19 +91,7 @@ def backup_database(backup_dir):
         target = backup_dir / name
 
         try:
-            vault = opsi_secure.get_vault()
-            if name in ('azurstats_local.db', 'cl1_data.db', 'daily_summary.db'):
-                if not vault.writer_ready():
-                    logger.warning('统计存储暂不可用，跳过本次备份')
-                    continue
-                with vault.reading():
-                    with closing(sqlite3.connect(source.as_uri() + '?mode=ro', uri=True)) as original, \
-                            closing(sqlite3.connect(':memory:')) as snapshot:
-                        original.backup(snapshot)
-                        raw = vault._standalone_image(snapshot.serialize())
-                    vault.write_file('archives', target, {'bytes': base64.b64encode(raw).decode()}, wrapper=True)
-            else:
-                sqlite_backup(source=source, target=target)
+            sqlite_backup(source=source, target=target)
 
             files.append({
                 'name': name,
@@ -179,25 +164,8 @@ def backup_config(backup_dir):
         except Exception as e:
             logger.warning(f'用户配置备份失败：{file.name}，{e}')
 
-    # 描述文件没有本机凭据；它不提供恢复旧统计状态的入口。
-    secure_dir = CONFIG_DIR / 'opsi_secure'
-    if secure_dir.exists():
-        target_dir = backup_dir / 'opsi_secure'
-        target_dir.mkdir(parents=True, exist_ok=True)
-        for file in secure_dir.glob('*.json'):
-            try:
-                target = target_dir / file.name
-                vault = opsi_secure.get_vault()
-                vault.write_file('archives', target, {'bytes': base64.b64encode(file.read_bytes()).decode()}, wrapper=True)
-                files.append({
-                    'name': f'opsi_secure/{file.name}',
-                    'size': target.stat().st_size,
-                })
-                logger.info(f'统计描述文件备份成功：{file.name}')
-            except Exception as e:
-                logger.warning(f'统计描述文件备份失败：{file.name}，{type(e).__name__}')
-
     return files
+
 
 def sqlite_backup(source, target):
     """使用 SQLite 原生 backup() 接口备份数据库。
@@ -264,10 +232,6 @@ def clean_backup(keep_days=BACKUP_KEEP_DAYS):
             continue
 
         try:
-            vault = opsi_secure.get_vault()
-            protected = [path for path in vault.coordinator.archives() if path.is_relative_to(folder)]
-            if protected:
-                vault.remove_files(protected)
             shutil.rmtree(folder)
             logger.info(f'已删除过期备份：{folder.name}')
         except Exception as e:

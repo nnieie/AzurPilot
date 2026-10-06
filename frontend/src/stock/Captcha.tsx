@@ -10,8 +10,11 @@ export function Captcha({meta,purpose,onToken,reset}:{meta:Meta;purpose:string;o
   const [error,setError]=useState(''),[retry,setRetry]=useState(0)
   useEffect(()=>{
     callback.current('');setError('')
+    const container=ref.current!
     const host=document.createElement('div')
-    ref.current!.append(host)
+    container.append(host)
+    const fit=()=>{const scale=Math.min(1,container.clientWidth/302);host.style.transform=scale<1?`scale(${scale})`:'';host.style.transformOrigin='center top'}
+    const observer=new ResizeObserver(fit);observer.observe(container);fit()
     let stopped=false,id:number|undefined,api:Recaptcha|undefined
     void loadRecaptcha().then(loaded=>{
       if(stopped)return
@@ -24,6 +27,7 @@ export function Captcha({meta,purpose,onToken,reset}:{meta:Meta;purpose:string;o
     }).catch((error:Error)=>{if(!stopped){callback.current('');setError(error.message)}})
     return ()=>{
       stopped=true
+      observer.disconnect()
       // 先 reset 再移除 DOM，且 0 也是有效组件 ID；旧回调不能恢复已清空的 token。
       if(id!==undefined)api?.reset(id)
       host.remove()

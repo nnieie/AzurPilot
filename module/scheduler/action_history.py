@@ -11,6 +11,8 @@ GENESIS = '0' * 64
 class HistoryConnection(sqlite3.Connection):
     history_guard = None
     history_factory = None
+    history_strict = False
+    history_disabled = False
 
 
 class ActionPointChain:

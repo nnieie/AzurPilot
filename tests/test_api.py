@@ -578,6 +578,40 @@ class LogCursorTests(unittest.TestCase):
 class ProducerCadenceTests(unittest.IsolatedAsyncioTestCase):
     """日志按到达事件即时推送，重主题继续按各自节奏采样。"""
 
+    async def test_stock_events_wake_immediately_and_unsubscribe_when_leaving(self):
+        from module.api.protocol import SubscribeParams
+        subscribed, delivered, unsubscribed = asyncio.Event(), asyncio.Event(), asyncio.Event()
+        callbacks, updates = [], []
+        def subscribe(listener):
+            callbacks.append(listener)
+            subscribed.set()
+            return unsubscribed.set
+        service = SimpleNamespace(subscribe=subscribe)
+        session = Session(SimpleNamespace(router=SimpleNamespace(stock_exchange=service)), ws=None, local=True)
+        session.subscription = SubscribeParams(instance='testpilot', topics=['stock'])
+        async def event(topic, data):
+            self.assertEqual('stock', topic)
+            updates.append(data)
+            if data.get('revision') == 42:
+                delivered.set()
+        session.event = event
+        task = asyncio.create_task(session.stock_producer())
+        try:
+            session.stock_changed.set()
+            await asyncio.wait_for(subscribed.wait(), 1)
+            await asyncio.to_thread(callbacks[0], {'instance': 'another', 'revision': 41})
+            await asyncio.to_thread(callbacks[0], {'revision': 42, 'online': True})
+            await asyncio.wait_for(delivered.wait(), 1)
+            self.assertEqual({'revision': 42, 'online': True, 'instance': 'testpilot'}, updates[-1])
+            self.assertFalse(any(value.get('revision') == 41 for value in updates))
+            session.subscription = SubscribeParams(topics=[])
+            session.stock_changed.set()
+            await asyncio.wait_for(unsubscribed.wait(), 1)
+        finally:
+            task.cancel()
+            with self.assertRaises(asyncio.CancelledError):
+                await task
+
     async def test_heavy_topics_keep_independent_cadence(self):
         counts = {'overview': 0, 'instances': 0}
         runtime = SimpleNamespace(

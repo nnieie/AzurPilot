@@ -3,7 +3,7 @@ import shutil
 import sqlite3
 import tempfile
 import unittest
-from tests.opsi_test_support import install_vault
+from tests.opsi_test_support import install_store
 from pathlib import Path
 
 from module.statistics import resource_stats
@@ -13,7 +13,7 @@ def test_timeline_since_keeps_every_row_in_window():
     # 清理失败即忽略：库文件可能仍被连接占用。
     directory = tempfile.mkdtemp(prefix='azurpilot-resource-')
     case = unittest.TestCase()
-    install_vault(case, directory)
+    install_store(case, directory)
     database = Path(directory) / 'config' / 'azurstats_local.db'
     original_db, original_ensured = resource_stats._LOCAL_DB, resource_stats._table_ensured
     resource_stats._LOCAL_DB, resource_stats._table_ensured = str(database), False

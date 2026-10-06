@@ -8,7 +8,7 @@ export interface Rank {rank:number;playerId:number;username:string;equity:number
 export interface Market {initialCash?:number;delistThreshold:number;revision:number;serverTime:number;season:Season;rules:Rules;open:boolean;reason:string;stocks:Stock[];rankings:Rank[];lifetimeRevenue:Fees;participants:number}
 export interface Position {stockId:number;quantity:number;cost:number;lots:{quantity:number;availableAt:number}[];borrowAt:number;loan?:number;marginPPM?:number;financingAt?:number}
 export interface Order {id:number;clientId:string;stockId:number;side:string;kind:string;tif:string;quantity:number;limit:number;leverage?:number;status:string;price:number;fees:Fees;createdAt:number;executedAt:number;reason:string;reserved:number;rules:Rules}
-export interface Player {id:number;username:string;identityCode:string;joinedAt:number;cash:number;initialCash?:number;quote:Quote;positions:Record<string,Position>;orders:Order[];realized:number;fees:Fees;disabled:boolean;delisted:boolean}
+export interface Player {id:number;username:string;identityCode:string;joinedAt:number;cash:number;initialCash?:number;quote:Quote;positions:Record<string,Position>;orders:Order[];realized:number;fees:Fees;disabled:boolean;delisted:boolean;watchlist?:number[]}
 export interface Account {player:Player;equity:number;available:number;frozen:number;shortLiability:number;initialMargin:number;maintenanceMargin:number;unsettled:number;borrowAccrued:number;financingDebt?:number;financingAccrued?:number;longMargin?:number}
 export interface Meta {name:string;domain:string;mock:boolean;allowedOrigins:string[];initialCash:number;noticeVersion:string}
 export interface QuotePoint {time:number;price:number}

@@ -12,7 +12,7 @@ from types import MethodType, SimpleNamespace
 from unittest.mock import MagicMock, Mock, patch
 
 from module.statistics import cl1_database as database
-from tests.opsi_test_support import install_vault
+from tests.opsi_test_support import install_store
 
 
 NOW = datetime(2026, 1, 1, 12)
@@ -32,7 +32,7 @@ class TestCommissionSettlement(unittest.TestCase):
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         self.addCleanup(self.directory.cleanup)
-        install_vault(self, self.directory.name)
+        install_store(self, self.directory.name)
         with patch.object(database.Cl1Database, "_get_legacy_decryption_keys", return_value=[]):
             self.db = database.Cl1Database(Path(self.directory.name) / "config" / "cl1_data.db")
         fixed = patch.object(database, "datetime", FixedDatetime)
@@ -48,8 +48,7 @@ class TestCommissionSettlement(unittest.TestCase):
             return conn.execute("SELECT month, data_json, encrypted_blob FROM cl1_data ORDER BY month").fetchall()
 
     def fail_current_month(self):
-        self.assertTrue(database.opsi_secure.get_vault().writer_ready())
-        with closing(sqlite3.connect(self.db.db_path)) as conn, database.opsi_secure.get_vault().transaction(conn, self.db.db_path):
+        with closing(sqlite3.connect(self.db.db_path)) as conn, conn:
             conn.execute("""
                 CREATE TRIGGER reject_archive BEFORE INSERT ON cl1_data
                 WHEN NEW.month = '2026-01'
@@ -124,7 +123,7 @@ class TestCommissionSettlement(unittest.TestCase):
     def test_sqlite_commit_failure_rolls_back_and_propagates(self):
         self.seed("2025-12", [commission()])
         before = self.rows()
-        with closing(sqlite3.connect(self.db.db_path)) as conn, database.opsi_secure.get_vault().transaction(conn, self.db.db_path):
+        with closing(sqlite3.connect(self.db.db_path)) as conn, conn:
             conn.execute("CREATE TABLE guard_parent (id INTEGER PRIMARY KEY)")
             conn.execute("CREATE TABLE guard_child (parent_id INTEGER REFERENCES guard_parent(id) DEFERRABLE INITIALLY DEFERRED)")
             conn.execute("CREATE TRIGGER fail_commit BEFORE INSERT ON cl1_data WHEN NEW.month = '2026-01' BEGIN INSERT INTO guard_child VALUES (1); END")
@@ -220,8 +219,9 @@ class TestCommissionSettlement(unittest.TestCase):
             conn.execute("INSERT INTO cl1_data (instance, month, data_json, encrypted_blob) "
                          "VALUES (?, ?, NULL, ?)", ("test", "2025-12", b"legacy"))
         decoded = {"battle_count": 12}
+        # 旧记录可在读取侧还原、但落盘维护失败时，返回已解出的数据而不是空快照。
         with patch.object(self.db, "_decrypt", return_value=decoded), \
-                patch.object(self.db, "save_stats", side_effect=sqlite3.OperationalError("readonly")):
+                patch.object(self.db, "_save_stats_in_connection", side_effect=sqlite3.OperationalError("readonly")):
             self.assertEqual(self.db.get_stats("test", "2025-12"), decoded)
 
 

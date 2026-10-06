@@ -20,6 +20,7 @@ import { RemoteAccess } from './pages/RemoteAccess'
 import { Settings } from './pages/Settings'
 import { DevControls } from './pages/DevControls'
 import { ConfigManager } from './pages/ConfigManager'
+import {StockExchangeBoundary,StockExchangeFallback} from './stock/OverviewLink'
 import { translateCurrentUi } from './i18n'
 
 /* 顶层兜底与路由级兜底共用同一页：路由渲染出错时 React Router 会先接住，
@@ -43,7 +44,7 @@ const router = createHashRouter([
   {path: '/i/:instance', element: <App/>, errorElement: <ErrorPage/>, children: [
     {index: true, element: <Navigate to="overview" replace/>},
     {path: 'overview', element: <Overview/>}, {path: 'task/:task', element: <TaskConfig/>},
-    {path: 'stock-exchange', element: <Suspense fallback={<div>{translateCurrentUi('common.loading')}</div>}><StockExchange/></Suspense>},
+    {path: 'stock-exchange', element: <StockExchangeBoundary><Suspense fallback={<StockExchangeFallback/>}><StockExchange/></Suspense></StockExchangeBoundary>},
     {path: 'logs', element: <Navigate to="../overview" replace/>}, {path: 'statistics', element: <Statistics/>}, {path: 'scheduler', element: <Navigate to="../task/SchedulerProgram" replace/>}, {path: 'settings', element: <Navigate to="/settings" replace/>},
     {path: 'task/SchedulerProgram', element: <Suspense fallback={<div>{translateCurrentUi('common.loading')}</div>}><SchedulerProgram/></Suspense>},
   ]},

@@ -356,6 +356,40 @@
         "type": "object"
       }
     },
+    "stock.rebuild": {
+      "mutates": true,
+      "params": {
+        "additionalProperties": false,
+        "description": "先返回实际重建范围，用户确认后才重建本地交易账户。",
+        "properties": {
+          "instance": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Instance",
+            "type": "string"
+          },
+          "confirm": {
+            "default": false,
+            "title": "Confirm",
+            "type": "boolean"
+          },
+          "scope": {
+            "default": "instance",
+            "enum": [
+              "instance",
+              "all"
+            ],
+            "title": "Scope",
+            "type": "string"
+          }
+        },
+        "required": [
+          "instance"
+        ],
+        "title": "StockRebuildParams",
+        "type": "object"
+      }
+    },
     "stock.request": {
       "mutates": true,
       "params": {
@@ -2362,11 +2396,12 @@
                 "instances",
                 "overview",
                 "logs",
-                "preview"
+                "preview",
+                "stock"
               ],
               "type": "string"
             },
-            "maxItems": 4,
+            "maxItems": 5,
             "title": "Topics",
             "type": "array"
           }

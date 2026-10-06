@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch
 
 from module.statistics import cl1_database as database
 from module.statistics import opsi_runtime
-from tests.opsi_test_support import install_vault
+from tests.opsi_test_support import install_store
 from module.os.tasks.meowfficer_farming import OpsiMeowfficerFarming
 
 
@@ -18,7 +18,7 @@ class TestAkashiAsyncPersistence(unittest.TestCase):
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         self.addCleanup(self.directory.cleanup)
-        install_vault(self, self.directory.name)
+        install_store(self, self.directory.name)
         self.db = database.Cl1Database(db_path=Path(self.directory.name) / 'config' / 'cl1_data.db')
         self.config = SimpleNamespace(config_name='test')
 

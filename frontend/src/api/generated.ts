@@ -14,6 +14,7 @@ export interface Parameters {
   "shop_strategy.validate": { instance: string; task: "EventShop" | "ShopFrequent" | "ShopOnce" | "PrivateQuarters" | "OpsiShop" | "OpsiVoucher"; script: string }
   "overview.get": { instance: string }
   "stock.status": { instance: string }
+  "stock.rebuild": { instance: string; confirm?: boolean; scope?: "instance" | "all" }
   "stock.request": { instance: string; path: string; method?: "GET" | "POST" | "DELETE"; body?: Record<string, unknown> | null; etag?: string }
   "scheduler.start": { instance: string }
   "scheduler.stop": { instance: string }
@@ -55,7 +56,7 @@ export interface Parameters {
   "background.gallery.remove": { id: string }
   "background.gallery.open": Record<string, never>
   "auth.login": { password?: string }
-  "events.subscribe": { instance?: string | null; topics: Array<"instances" | "overview" | "logs" | "preview"> }
+  "events.subscribe": { instance?: string | null; topics: Array<"instances" | "overview" | "logs" | "preview" | "stock"> }
 }
 export interface SchedulerModels {
   ProgramDocument: { entry: string; nodes: Array<{ id: string; type: string; label?: string; comment?: string; params?: Record<string, unknown>; position?: Record<string, unknown> }>; edges?: Array<{ id: string; source: string; sourcePort: string; target: string; targetPort?: string; kind?: "control" | "data" }>; schemaVersion?: number; name?: string; subgraphs?: Array<{ entry: string; nodes: Array<{ id: string; type: string; label?: string; comment?: string; params?: Record<string, unknown>; position?: Record<string, unknown> }>; edges?: Array<{ id: string; source: string; sourcePort: string; target: string; targetPort?: string; kind?: "control" | "data" }>; id: string; name: string; pure?: boolean; inputs?: Array<{ name: string; type?: "any" | "number" | "boolean" | "string" | "time" | "duration" | "resource" | "task" | "tasks" | "result" | "list" | "object"; required?: boolean }>; outputs?: Array<{ name: string; type?: "any" | "number" | "boolean" | "string" | "time" | "duration" | "resource" | "task" | "tasks" | "result" | "list" | "object"; required?: boolean }> }>; variables?: Array<{ name: string; type?: "any" | "number" | "boolean" | "string" | "time" | "duration" | "resource" | "task" | "tasks" | "result" | "list" | "object"; initial?: unknown; persistent?: boolean }>; viewport?: Record<string, unknown> }

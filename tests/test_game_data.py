@@ -1,5 +1,6 @@
 """茗交所跨部署密钥与旧版迁移回归；只使用临时文件和隔离身份。"""
 import base64
+import errno
 import hashlib
 import json
 import os
@@ -16,6 +17,14 @@ from module.api.protocol import ApiError
 from module.api.stock_exchange_identity import binding_key, load_identity
 from module.runtime.account_local import LocalProtector
 from module.runtime.game_data import GameDataProtector, canonical
+
+
+def make_directory_link(link, target):
+    """建立目录链接：Windows 用 junction（免管理员权限），其余平台用符号链接。"""
+    if os.name == 'nt':
+        subprocess.run(['cmd', '/c', 'mklink', '/J', str(link), str(target)], check=True, capture_output=True)
+    else:
+        Path(link).symlink_to(target, target_is_directory=True)
 
 
 class GameDataTests(unittest.TestCase):
@@ -114,15 +123,14 @@ class GameDataTests(unittest.TestCase):
         self.assertEqual(original, self.protection.key_path.read_bytes())
         self.assertFalse(self.protection.state_path.exists())
 
-    def test_config_and_cache_mounts_survive_new_process_and_project_path(self):
+    def test_config_mount_survives_new_process_and_project_path(self):
         identity, key = load_identity(self.root, 'test')
         self.protection.write_file('bindings.json', {'fixture': '原玩家绑定'})
         self.protection.anchor('fixture/history', [3, 4, 'a' * 64], prepare=True)
         self.protection.anchor('fixture/history', [3, 4, 'a' * 64])
-        # 只携带部署的两个数据目录，不携带 HOME、本机目录或旧项目路径。
+        # 只携带配置目录，不携带 cache、HOME、本机目录或旧项目路径。
         moved = Path(self.temp.name) / 'new-installation'
-        for name in ('config', 'cache'):
-            shutil.copytree(self.root / name, moved / name)
+        shutil.copytree(self.root / 'config', moved / 'config')
         script = '''
 import sys
 from unittest.mock import patch
@@ -139,6 +147,58 @@ with patch.object(LocalProtector, 'host_identity', side_effect=AssertionError('�
         result = subprocess.run([sys.executable, '-c', script, str(moved), binding_key(identity, key)],
                                 capture_output=True, text=True, encoding='utf-8', timeout=30)
         self.assertEqual(0, result.returncode, result.stderr)
+
+    def test_cache_migration_moves_files_before_any_format_validation(self):
+        cache = self.root / 'cache' / 'stock-exchange'
+        (cache / 'identities').mkdir(parents=True)
+        (cache / 'bindings.json').write_bytes(b'{broken-binding')
+        (cache / 'identities' / 'fixture.json').write_bytes(b'old-player-data')
+        self.protection.migrate_cache()
+        self.assertFalse(cache.exists())
+        self.assertEqual(b'{broken-binding', self.protection.file_path('bindings.json').read_bytes())
+        self.assertEqual(b'old-player-data', self.protection.file_path('identities/fixture.json').read_bytes())
+        self.assertFalse(self.protection.state_path.exists())
+        self.assertFalse(self.protection.key_path.exists())
+
+    def test_cache_conflicts_silently_keep_default_config_data(self):
+        cache = self.root / 'cache' / 'stock-exchange'
+        (cache / 'identities').mkdir(parents=True)
+        self.protection.directory.mkdir()
+        (self.protection.directory / 'identities').mkdir()
+        (cache / 'bindings.json').write_bytes(b'cache-bindings')
+        (cache / 'identities' / 'fixture.json').write_bytes(b'cache-identity')
+        (cache / 'identities' / 'other.json').write_bytes(b'unique-identity')
+        self.protection.file_path('bindings.json').write_bytes(b'config-bindings')
+        self.protection.file_path('identities/fixture.json').write_bytes(b'config-identity')
+        self.protection.migrate_cache()
+        self.assertFalse(cache.exists())
+        self.assertEqual(b'config-bindings', self.protection.file_path('bindings.json').read_bytes())
+        self.assertEqual(b'config-identity', self.protection.file_path('identities/fixture.json').read_bytes())
+        self.assertEqual(b'unique-identity', self.protection.file_path('identities/other.json').read_bytes())
+
+    def test_cache_protected_files_use_normal_config_loading(self):
+        identity, key = load_identity(self.root, 'test')
+        self.protection.write_file('bindings.json', {'fixture': '保留原绑定'})
+        cache = self.root / 'cache' / 'stock-exchange'
+        cache.mkdir(parents=True)
+        for name in ('identities', 'bindings.json', 'protected-v2'):
+            (self.protection.directory / name).replace(cache / name)
+        again, same = load_identity(self.root, 'test')
+        self.assertFalse(cache.exists())
+        self.assertEqual(identity, again)
+        self.assertEqual(binding_key(identity, key), binding_key(again, same))
+        self.assertEqual({'fixture': '保留原绑定'}, self.protection.read_file('bindings.json'))
+
+    def test_cache_migration_supports_separate_mounts(self):
+        cache = self.root / 'cache' / 'stock-exchange'
+        (cache / 'history').mkdir(parents=True)
+        (cache / 'bindings.json').write_bytes(b'fixture-bindings')
+        (cache / 'history' / 'fixture.sqlite3').write_bytes(b'fixture-history')
+        with patch('shutil.os.rename', side_effect=OSError(errno.EXDEV, '隔离跨盘迁移夹具')):
+            self.protection.migrate_cache()
+        self.assertFalse(cache.exists())
+        self.assertEqual(b'fixture-bindings', self.protection.file_path('bindings.json').read_bytes())
+        self.assertEqual(b'fixture-history', self.protection.file_path('history/fixture.sqlite3').read_bytes())
 
     def test_parallel_initialization_keeps_one_identity_and_key(self):
         script = '''
@@ -273,6 +333,20 @@ with patch.object(LocalProtector, 'key_directory', return_value=Path(sys.argv[2]
         self.assertEqual(0o700, stat.S_IMODE(self.protection.state_path.parent.stat().st_mode))
         self.assertEqual(0o600, stat.S_IMODE(self.protection.key_path.stat().st_mode))
         self.assertEqual(0o600, stat.S_IMODE(self.protection.state_path.stat().st_mode))
+
+    def test_path_alias_above_root_is_not_a_link(self):
+        """root 之上的路径别名（macOS 的 /var、Windows junction）不参与链接判定；root 之内的链接仍被拒绝。"""
+        alias = Path(self.temp.name) / 'alias'
+        inside = self.root / 'cache' / 'stock-exchange'
+        try:
+            make_directory_link(alias, Path(self.temp.name))
+            inside.mkdir(parents=True)
+            make_directory_link(inside / 'linked', self.root / 'config')
+        except (OSError, subprocess.CalledProcessError):
+            self.skipTest('本机不允许创建目录链接')
+        self.protection._safe(alias / 'project' / 'cache' / 'stock-exchange' / 'cl1_data.db')
+        with self.assertRaises(ApiError):
+            self.protection._safe(inside / 'linked' / 'cl1_data.db')
 
 
 @unittest.skipUnless(sys.platform == 'darwin', '需要原生 macOS，跨平台模拟由通用测试覆盖')

@@ -45,13 +45,13 @@ _STOP_ACTION_UNSET = object()
 USB_CAPTURE_PREVIEW_SUFFIX = "__usb_capture_preview"
 
 
-def enable_opsi_secure() -> None:
-    """初始化统计运行环境；暂时不可用时由存储入口重试。"""
+def prepare_statistics() -> None:
+    """初始化统计数据环境（旧加密数据自动解密；有界等待，异常环境不阻塞启动）。"""
     try:
-        from module.statistics.opsi_secure import get_vault
-        get_vault().ensure_ready()
+        from module.statistics.opsi_secure import initialize
+        initialize()
     except Exception:
-        logger.exception('[统计-运行] 启动时初始化未完成（稍后写入时重试）')
+        logger.exception('[统计-运行] 启动时初始化未完成（稍后自动重试）')
 
 
 class ProcessManager:
@@ -841,7 +841,7 @@ class ProcessManager:
 
         # 初始化日志器
         set_file_logger(name=config_name)
-        enable_opsi_secure()
+        prepare_statistics()
         if State.electron or os.environ.get("AZURPILOT_TUI") == "1":
             # 运行于 Electron 或 TUI 终端界面时，移除标准输出处理器避免污染终端渲染
             from module.logger import console_hdlr

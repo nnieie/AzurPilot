@@ -2507,10 +2507,10 @@ if __name__ == '__main__':
         exit(2)
 
     alas = AzurLaneAutoScript(config_name=config_name)
-    # 先初始化统计运行环境，再启动业务任务。
+    # 先完成统计数据准备（旧加密数据自动解密，有界等待，异常环境不阻塞启动），再启动业务任务。
     try:
-        from module.statistics.opsi_secure import get_vault
-        get_vault().ensure_ready()
+        from module.statistics.opsi_secure import initialize
+        initialize()
     except Exception:
-        logger.exception('[统计-运行] 启动时初始化未完成（稍后写入时重试）')
+        logger.exception('[统计-运行] 启动时初始化未完成（稍后自动重试）')
     alas.loop()

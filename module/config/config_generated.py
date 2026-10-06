@@ -783,6 +783,7 @@ class GeneratedConfig:
     OpsiScheduling_MonthEndActionPointCleanupEnable = False  # True, False
     OpsiScheduling_MonthEndActionPointCleanupDays = 0
     OpsiScheduling_MonthEndActionPointPreserve = 0
+    OpsiScheduling_MonthEndMeowTargetZone = 0
     OpsiScheduling_MonthEndShopPurchase = True  # True, False
 
     # 配置组 `OpsiSmartExplore`

@@ -47,13 +47,13 @@ AzurPilot 在执行任务时天然经过大量战斗结算与资源画面。这�
 
 - 战斗/搜索结算截图的保存（`DropRecord_SaveFolder`）与本地解析入库（SQLite `config/azurstats_local.db`）
 - 物品识别原语：`Item`/`ItemGrid`/`AmountOcr`（模板匹配 + 带上限验证的数量 OCR）——商店、委托、仓库等模块都复用这一层
-- CL1 月度统计库（`config/cl1_data.db`）的读写与旧加密数据迁移
+- CL1 月度统计库（`config/cl1_data.db`）的读写与旧数据迁移
 - 侵蚀 1 遥测提交（`Cl1DataSubmitter` → `ApiClient`）
 - 日报运行时事件采集、周期去重、LLM 文案生成与推送
 - 资源快照记录（`resource_stats`）与资源变动入口（`LogRes`）
 - 掉落截图按保留天数清理，过期后删除或备份到 `bak/`（`drop_cleanup`）
 - 大世界运行期统计事件的统一落库入口（`opsi_runtime`）
-- 大世界统计数据文件加密、旧明文迁移与防篡改清空（`opsi_secure`）
+- 大世界统计数据的本地存储与旧加密数据的一次性解密（`opsi_secure`）
 - 离线批量掉落分析工具（`DropStatistics`，独立运行）
 
 ### 不负责
@@ -83,7 +83,7 @@ module/statistics/
 ├── opsi_month.py             # OpsiMonthStats：月度大世界汇总与时间线
 ├── opsi_runtime.py           # 大世界运行期事件 → 落库的集中入口
 ├── opsi_drop_stats.py        # 大世界掉落聚合（部件、图纸、材料、计划及突破部件）
-├── opsi_secure.py            # 大世界统计数据文件级加密（密钥、迁移、防篡改清空）
+├── opsi_secure.py            # 大世界统计载荷的明文编解码与旧加密数据自动解密
 ├── drop_statistics.py        # 离线批量掉落分析（可独立运行）
 ├── drop_cleanup.py           # 掉落截图保留天数清理与备份
 ├── get_items.py / item.py / battle_status.py / campaign_bonus.py
@@ -163,13 +163,15 @@ module/log_res/
 
 统计页仍按金菜（部件 T4）与彩图纸（研发图纸 T5，包括通用装备研发图纸）展示。独立或共用掉落开关的任务始终可筛选；任务次数取完整时间窗口，筛选仅影响收获明细。窗口内没有这两类物品的奖励不显示在掉落记录表。`/opsi-items/` 先查 `opsi_reward_items`，缺图时回退到 `opsi_items` 同名模板；`/research-items/` 先查 `research_items`，再查 `stats_basic`。图标回退只影响展示，不改变识别模板选择。
 
-### 大世界统计 V2 存储（opsi_secure.py）
+### 大世界统计存储（opsi_secure.py）
 
-大世界载荷使用 OPSIV2.XCHACHA20-POLY1305（256 位密钥、192 位随机 nonce），根凭据与 generation/认证根存于 OS 安全服务或宿主 Broker；安装、数据集、实例、记录和周期均绑定到载荷。SQLite 的公共字段与路由元数据保留。WebUI 原有历史展示不变，不提供大世界明文文件导出、恢复或重封工具。日志数值与 CL1 遥测按当前约定保留。
+大世界统计自 2026-10 起不再加密：载荷以明文 JSON 存放在既有列位（`cl1_data.secure_json`、`opsi_items.secure_payload`、`resource_snapshots.opsi_payload`、`daily_summary_cl1_events.secure_payload` 存 JSON 文本，`daily_summary_periods.report_text` 存正文），日志文件为普通 JSON/CSV。公共字段列与路由元数据不变；WebUI 历史展示不受影响。
 
-V1 的 DPAPI 与 MAC 合法读取后，在内存转 V2、逐条回读，再通过受保护 journal 与安全服务阶段原子发布。失败恢复 V1；只在完整迁移成功后启用确认篡改/回滚清空。正常源码升级不参与状态认证，不会因为文件哈希变化清空历史。SQLite 锁、文件占用、临时 I/O、provider/Broker 离线不会 wipe，且禁止降级写普通格式。
+旧版加密数据（`OPSIV1.`/`OPSIV2.` 前缀）由启动钩子 `initialize()` 自动解密：有界等待，超时转后台；按描述文件恢复当时的本机凭据（安装目录被移动时按安装标识找回），逐库、逐文件、含备份归档一并转成明文，并移除加密时代的触发器与辅助表。只有确认本机不再有任何密文后才删除描述文件并撤销密钥；密钥暂不可用或个别行解不开时按原样保留，读取路径按行兼容解密，后续启动自动重试，绝不丢数据。
 
-资源趋势等只使用非大世界列的查询保留远程 `include_opsi=False` 优化，跳过载荷解封；仍通过协调读取校验认证状态。平台细节、Docker secret 挂载、提交恢复、安全边界及测试见 [大世界统计 V2 存储](opsi-secure.md)。停掉全部旧版本统计写者后再升级，不能让旧代码与新版混写。
+补救与回退：若某条旧载荷**确认本机无法解密**（密钥可用但记录解不开，或凭据干净的未命中，如跨机器迁移），对应写入不再被永久冻结——原载荷原样另存到 `config/opsi_secure/unreadable-<时间戳>.json` 旁路备份后，按现状继续写入；凭据服务报错的暂时性不可用仍保持原样等待重试，不会替换还能救回的数据。
+
+资源趋势等只使用非大世界列的查询保留 `include_opsi=False` 优化，跳过载荷解析。解密失败的行在读取时表现为缺失（显示降级），写回路径保留原载荷而不是用空值覆盖。
 
 ### CL1 月度库（cl1_database.py）
 
@@ -186,7 +188,7 @@ V1 的 DPAPI 与 MAC 合法读取后，在内存转 V2、逐条回读，再通�
 | `commission_income_entries` / `running_gem_commissions` | 委托收益明细（上限 5000）与运行中钻石委托（跨月合并） |
 | `research_drop_entries` | 科研掉落明细：项目代号、期数、物品（上限 5000，imgid 去重） |
 
-关键机制：`_stats_transaction()` 用 `BEGIN IMMEDIATE` 取写锁，跨线程/进程串行化整个「读-改-写」，避免并发覆盖；`save_stats` 只做整体替换，增量修改必须走事务内方法。旧版 device_id 派生密钥的历史行与 V1 载荷由 Vault 合法读取，在内存中直接转换为最终 XChaCha20-Poly1305 格式，回读验证后发布；失败保留旧格式原件。
+关键机制：`_stats_transaction()` 用 `BEGIN IMMEDIATE` 取写锁，跨线程/进程串行化整个「读-改-写」，避免并发覆盖；`save_stats` 只做整体替换，增量修改必须走事务内方法。旧版 device_id 派生密钥的历史行在读取时解码，并在下一次写入时就地转换为载荷列明文；`OPSIV1.`/`OPSIV2.` 遗留密文由启动时的一次性解密处理。
 
 证券历史的旧数据来源由 `cl1_legacy.read_ap_snapshots()` 在只读连接中提供，复用 CL1 的旧密钥派生和 AES-GCM 解码格式，不创建、删除或改写统计库。原实例首次升级时仅导入上海时区当月 `ap_snapshots` 中带 `ap_total` 的实际记录，再与中央认证历史合并进入持久补传队列；上月及更早月份不读取，注册时间不作为截断条件。已开户账户同样补传，数量不设 2000 条上限。同毫秒冲突以中央来源为准。当月旧统计读取失败时保留原件与重试资格，状态消息说明原因，每五分钟重试，不回滚中央历史、不阻断注册、登录及新记录同步；中央来源或补传队列的认证失败仍停止同步。迁移完成状态由实例身份和补传检查点认证，重命名保留原统计来源，复制及重建实例不继承；完成后不再读取旧库修改。没有总量的 `ap` 只表示当前行动力，不能当作证券股价。
 
@@ -365,15 +367,15 @@ stateDiagram-v2
 | 存储 | 内容 | 写入时机 | 清理 |
 | --- | --- | --- | --- |
 | `config/azurstats_local.db` | `opsi_items` 掉落明细 + `resource_snapshots` 资源快照 | 每次 commit / LogRes 资源变化 | 不自动清理明细 |
-| `config/opsi_secure/keyring.json` | V2 版本、installation_id、provider 描述，无 Root Key | 首次写入大世界数据时自动创建 | 随密钥失效或防篡改清空删除；纳入每日备份 |
+| `config/opsi_secure/` | 旧加密环境的描述文件与凭据状态 | 仅历史版本产生 | 全部旧密文解密成功后自动移除 |
 | `config/cl1_data.db` | CL1 月度统计（instance×month） | 各 `async_*` 方法即时写 | 快照列表内部截断（500/5000 条） |
 | `config/storage_statistics.db` | 按实例保存完整仓库物品快照 | `StorageStatistics` 两次完整扫描一致后原子提交 | 保留已完成扫描 |
 | `config/daily_summary.db` | 日报任务事件、周期状态、采集缺口 | 任务前后、战斗结束、日报流程 | `cleanup()` 保留 35 天 |
-| `log/azurstat_meowofficer_farming.csv` | farming 受保护汇总（只在内部读取还原） | 每次本地解析成功后重算 | 覆写 |
+| `log/azurstat_meowofficer_farming.csv` | farming 汇总 | 每次本地解析成功后重算 | 覆写 |
 | `log/cl1/<instance>/ship_exp_data.json` | 战斗耗时样本、每日经验、升级进度 | 每场战斗结束 | 样本 100 条 / 日统计 30 天 |
 | `screenshots/<genre>/`、`log/commission_rewards/<instance>/<月份>/` | 掉落与委托截图 | commit / 委托结算 | `DropRecord_RetentionDays` 天数清理（节流 1 小时），过期后按 `DropRecord_BackUpMethod` 删除 / 拷贝备份 / 压缩备份到 `bak/` |
 
-CL1 库的兼容性迁移是自动的：启动时把旧位置 `log/cl1/cl1_data.db` 移入 `config/`，旧行与 JSON 由版本化统计运行服务在内存转换为 OPSIV2；旧 JSON 和 `.bak` 原路径保存受保护载荷，不生成普通格式归档。
+CL1 库的兼容性迁移是自动的：启动时把旧位置 `log/cl1/cl1_data.db` 移入 `config/`；旧 JSON 与 `.bak` 在原路径保存明文载荷。每日备份对四个数据库做普通 SQLite 复制，备份是可直接打开的明文库。
 
 ## 14. 生命周期
 
@@ -393,7 +395,7 @@ CL1 库的兼容性迁移是自动的：启动时把旧位置 `log/cl1/cl1_data.
 ## 16. 修改注意事项
 
 - **不要在任务代码里直接写 `cl1_db`**。大世界事件的落库口径（侵蚀等级折算、轮次闭合、来源判定）集中在 `opsi_runtime.py`，绕过它会产生口径分裂的统计。
-- **正常代码升级不得清空统计**：Root 与认证状态由 OS/Broker 保存，不以源码哈希判断篡改。新增保护字段、变更身份或格式必须先实现兼容迁移；未完成迁移或普通故障绝不能进入 wipe，不能提供通用 reseal 绕过入口。
+- **正常代码升级不得清空统计**：新增保护字段、变更身份或格式必须先实现兼容迁移；未完成迁移或普通故障绝不能删除数据；唯一允许的自动删除是「旧密文已全部解密成功」后的描述文件清理。
 - **`ItemGrid` 是被多处共享的单例状态**（`get_items.ITEM_GROUP` 是模块级实例）：`GetItemsStatistics`、`CampaignBonusStatistics`、`azur_stats.GetItems`、商店与仓库都改它的 `grids/item_class/similarity`。新增使用方时必须在使用前完整设置这些属性，如同 `_stats_get_items_load` 所做的那样，否则会带着上一场景的网格布局去匹配。数量侧同理：`amount_area` / `amount_area_rules` / `amount_ocr` / `amount_max` 都是按场景设置的，`azur_stats.GetItems` 会把前三个一起设好。
 - **删除是不可逆的**：`drop_cleanup` 只处理文件名匹配 `^\d{13}(_.+)?\.png$` 的文件，配置异常时按 0 处理（不清理）；`bak/` 内的备份不参与扫描（拷贝备份保留原修改时间，只看时间会被反复处理），压缩或拷贝失败时保留原文件。改清理逻辑时保持这些保守默认。
 - **日报的 `period_key` 含服务器与时区信息**，改动 `get_daily_summary_window` 的窗口语义会让已存在库里的 period_key 失配，导致重复推送。
@@ -440,7 +442,7 @@ record_siren_research_device(self)          # opsi_runtime 内部决定来源与
 
 ## 19. 调试方法
 
-- 日志前缀：`[统计-物品]`（识别修正）、`[统计-资源]`、`[统计-经验]`、`[统计-大世界]`（运行期事件）、`[日报]`（日报全链路）、`[掉落记录]`（清理）、`[基础-API]`（遥测提交）。`logger.attr('CL1单轮耗时', ...)` 等属性行适合 grep 单轮耗时。
+- 日志前缀：`[统计-物品]`（识别修正）、`[统计-资源]`、`[统计-经验]`、`[统计-大世界]`（运行期事件）、`[统计-解密]`（旧加密数据自动解密）、`[日报]`（日报全链路）、`[掉落记录]`（清理）、`[基础-API]`（遥测提交）。`logger.attr('CL1单轮耗时', ...)` 等属性行适合 grep 单轮耗时。
 - 本地调试服务：`ALAS_DEBUG_SERVER=1` 启动调度器后，`module/debug/commission_debug.py` 可以不开游戏注入伪造委托收益并触发推送，验证统计口径与推送链路。
 - 测试：`tests/test_statistics_amount_digits.py` / `test_item_amount_area.py`（真实数量切片、严格上限、裁剪边界与单格失败保留其余物品）、`tests/test_statistics_transactions.py`（CL1 事务与并发）、`tests/test_daily_summary*.py`（日报窗口与聚合）、`tests/test_drop_cleanup.py`（清理与 `AzurStats.new` 节流）、`tests/test_archive.py`（删除/拷贝/压缩三种过期处理方式）、`tests/test_commission_settlement.py`、`tests/test_research_stats.py` / `test_research_drop.py` / `test_research_drop_repair.py`（科研口径、角标识别与记录订正）。
 - 数据核查入口：直接用 sqlite3 打开 `config/cl1_data.db`（明文 JSON）、`config/azurstats_local.db`、`config/daily_summary.db`； farming 汇总看 `log/azurstat_meowofficer_farming.csv`。科研记录里出现「当前 `assets/stats/research_items/` 与名称表都没有的模板名」基本就是模板改名残留，用 `dev_tools/research_drop_repair.py` 拿原截图重放订正。

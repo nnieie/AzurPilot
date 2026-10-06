@@ -81,20 +81,18 @@ def _ensure_table():
         conn.execute('CREATE INDEX IF NOT EXISTS idx_res_snap_ts ON resource_snapshots(instance, ts)')
         columns = {row[1] for row in conn.execute('PRAGMA table_info(resource_snapshots)')}
         if 'opsi_payload' not in columns:
-            # 设置密钥后三个大世界货币列迁到这一列（opsi_secure 的密文）。
+            # 三个大世界货币列存放在这一列（JSON 文本）。
             conn.execute('ALTER TABLE resource_snapshots ADD COLUMN opsi_payload TEXT')
         conn.commit()
     _table_ensured = True
 
 
 def _overlay_opsi_snapshot(row: Dict[str, Any]) -> Dict[str, Any]:
-    """把快照行里的大世界三列从密文载荷还原；锁定或损坏时保持空值。"""
-    blob = row.pop('opsi_payload', None)
-    if not blob:
-        if not opsi_secure.get_vault().legacy_plaintext_readable():
-            row.update({field: None for field in opsi_secure.RES_SECURE_FIELDS})
+    """把快照行里的大世界三列从载荷列还原；旧密文暂不可读时保持空值。"""
+    value = row.pop('opsi_payload', None)
+    if not value:
         return row
-    payload = opsi_secure.get_vault().open_or_none('res', blob, opsi_secure.row_context('res', row))
+    payload = opsi_secure.decode_record('res', value, opsi_secure.row_context('res', row))
     if payload:
         row.update(payload)
     return row
@@ -136,38 +134,28 @@ def record_resource_snapshot(instance: str, resources: Dict[str, Any]) -> bool:
             'opsi_payload': None,
         }
 
-        vault = opsi_secure.get_vault()
-        vault.check_database(_LOCAL_DB)
-        # writer_ready 与写入事务共用同一协调锁持有期：一次写入只做一次校验。
-        with vault.coordinator.lock():
-            if not vault.writer_ready():
-                opsi_secure.record_dropped('res')
-                return False
-            payload = {name: row[name] for name in opsi_secure.RES_SECURE_FIELDS}
-            for name in opsi_secure.RES_SECURE_FIELDS:
-                row[name] = None
-            with _local_lock:
-                with _connect() as conn:
-                    with vault.transaction(conn, _LOCAL_DB):
-                        cursor = conn.execute('''
-                            INSERT INTO resource_snapshots (
-                                instance, ts, oil, coin, gem, pt, cube, core, medal, merit, guild_coin,
-                                action_point, yellow_coin, purple_coin, opsi_payload
-                            ) VALUES (
-                                :instance, :ts, :oil, :coin, :gem, :pt, :cube, :core, :medal, :merit, :guild_coin,
-                                :action_point, :yellow_coin, :purple_coin, :opsi_payload
-                            )
-                        ''', row)
-                        row['id'] = cursor.lastrowid
-                        blob = vault.seal('res', payload, opsi_secure.row_context('res', row))
-                        conn.execute('UPDATE resource_snapshots SET opsi_payload=? WHERE id=?', (blob, row['id']))
+        # 大世界三列仍存放在载荷列（JSON 文本），保持既有列形不变。
+        row['opsi_payload'] = opsi_secure.serialize_obj({name: row[name] for name in opsi_secure.RES_SECURE_FIELDS})
+        for name in opsi_secure.RES_SECURE_FIELDS:
+            row[name] = None
+        with _local_lock:
+            with _connect() as conn:
+                with opsi_secure.immediate_transaction(conn):
+                    conn.execute('''
+                        INSERT INTO resource_snapshots (
+                            instance, ts, oil, coin, gem, pt, cube, core, medal, merit, guild_coin,
+                            action_point, yellow_coin, purple_coin, opsi_payload
+                        ) VALUES (
+                            :instance, :ts, :oil, :coin, :gem, :pt, :cube, :core, :medal, :merit, :guild_coin,
+                            :action_point, :yellow_coin, :purple_coin, :opsi_payload
+                        )
+                    ''', row)
         return True
     except Exception as e:
         logger.warning(f'[统计-资源] 记录资源快照失败: {type(e).__name__}')
         return False
 
 
-@opsi_secure.checked_read
 def get_resource_timeline(
     instance: str = 'default',
     limit: int = 500,
@@ -254,7 +242,6 @@ def _parse_snapshot_timestamp(value: Any) -> datetime | None:
     return timestamp
 
 
-@opsi_secure.checked_read
 def get_resource_interval_summary(
     instance: str,
     start: datetime,

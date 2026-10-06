@@ -133,6 +133,7 @@ export interface BackgroundGalleryEntry {
 
 export interface Results {
   'stock.status': StockExchangeStatus
+  'stock.rebuild': StockExchangeRebuild
   'stock.request': {status:number;data:unknown;etag:string;serverTime:number}
   'opsi.simulator.status': OpsiSimulatorStatus
   'opsi.simulator.start': OpsiSimulatorStatus
@@ -191,6 +192,7 @@ export interface Results {
 }
 
 export interface StockExchangeStatus {url: string; instance:string; instanceId:string; bindingKey:string; bound: boolean; boundUsername:string; authenticated:boolean; message: string; lastObservedAt: number; snapshot: {instance: string; actionPoints: number; observedAt: number} | null}
+export interface StockExchangeRebuild {instance:string;scope:'instance'|'all';affectedInstances:string[];rebuilt:boolean}
 
 export interface AccountStatus {
   destroyed?: boolean

@@ -1,4 +1,4 @@
-"""最终格式、设备对象及普通后端故障的隔离验证。"""
+"""最终格式的解密向量、设备对象及普通后端故障的隔离验证。"""
 import base64
 import ctypes
 import json
@@ -12,11 +12,12 @@ from unittest.mock import Mock, patch
 
 from module.statistics import opsi_secure, opsi_keys
 from module.statistics.opsi_device_keys import WindowsTPM, MacOSEnclave, pack_reference
-from tests.test_opsi_secure import MemoryProvider, make_cl1_db
+from tests.test_opsi_secure import seal_v2
 
 
-class FinalFormatTests(unittest.TestCase):
+class DecryptFormatTests(unittest.TestCase):
     def test_draft_xchacha_a31_vector_through_runtime_codec(self):
+        """运行时解密必须通过 RFC 向量（写入方向已删除，向量冻结在校验解密）。"""
         key = bytes(range(0x80, 0xA0))
         nonce = bytes(range(0x40, 0x58))
         aad = bytes.fromhex('50515253c0c1c2c3c4c5c6c7')
@@ -28,53 +29,51 @@ class FinalFormatTests(unittest.TestCase):
             '2f8c9ba40db5d945b11b69b982c1bb9e3f3fac2bc369488f76b2383565d3fff9'
             '21f9664c97637da9768812f615c68b13b52e'
             'c0875924c1c7987947deafd8780acf49')
-        with patch.object(opsi_secure, 'canonical', return_value=aad), \
-                patch.object(opsi_secure.os, 'urandom', return_value=nonce) as random:
-            token = opsi_secure._encrypt(key, raw, {})
-            random.assert_called_once_with(24)
-            self.assertEqual(base64.b64decode(token), nonce + expected)
+        token = base64.b64encode(nonce + expected).decode()
+        with patch.object(opsi_secure, 'canonical', return_value=aad):
             self.assertEqual(opsi_secure._decrypt(key, token, {}), raw)
 
-    def test_random_192_bit_nonce_and_256_bit_key(self):
+    def test_wrong_key_length_and_tampered_fields_are_rejected(self):
         key = os.urandom(32)
-        tokens = [base64.b64decode(opsi_secure._encrypt(key, b'body', {'id': 1})) for _ in range(32)]
-        self.assertEqual(len({token[:24] for token in tokens}), 32)
-        self.assertTrue(all(len(token) == 24 + 4 + 16 for token in tokens))
+        token = seal_v2(key, 'loot', {'a': 1}, {'dataset': 'loot'}, 'inst')
         for length in (16, 24, 31, 33):
             with self.subTest(length=length), self.assertRaises(ValueError):
-                opsi_secure._encrypt(bytes(length), b'body', {})
-
-    def test_nonce_payload_tag_and_wrong_key_are_rejected(self):
-        key = os.urandom(32)
-        token = opsi_secure._encrypt(key, b'body', {'id': 1})
-        raw = base64.b64decode(token)
+                opsi_secure._decrypt(bytes(length), token[len(opsi_secure.BLOB_PREFIX):], {})
+        raw = base64.b64decode(token[len(opsi_secure.BLOB_PREFIX):])
         for index in (0, 23, 24, -1):
             changed = bytearray(raw)
             changed[index] ^= 1
-            with self.subTest(index=index), self.assertRaises(opsi_secure.IntegrityFailure):
-                opsi_secure._decrypt(key, base64.b64encode(changed).decode(), {'id': 1})
-        with self.assertRaises(opsi_secure.IntegrityFailure):
-            opsi_secure._decrypt(os.urandom(32), token, {'id': 1})
+            with self.subTest(index=index), self.assertRaises(ValueError):
+                opsi_secure._decrypt(key, base64.b64encode(changed).decode(), {})
+        with self.assertRaises(ValueError):
+            opsi_secure._decrypt(os.urandom(32), token[len(opsi_secure.BLOB_PREFIX):],
+                                 {'dataset': 'loot', 'installation_id': 'inst', 'schema': 2,
+                                  'algorithm': opsi_secure.ALGORITHM})
 
-    def test_format_and_state_identify_only_the_final_algorithm(self):
-        with tempfile.TemporaryDirectory() as folder:
-            root = Path(folder)
-            (root / 'config').mkdir()
-            make_cl1_db(root / 'config' / 'cl1_data.db')
-            provider = MemoryProvider()
-            vault = opsi_secure.Vault(root, provider=provider)
-            self.assertTrue(vault.ensure_ready())
-            context = vault.context('cl1', 'inst', 'identity', '2026-09')
-            blob = vault.seal('cl1', {'battle_count': 8}, context)
-            self.assertTrue(blob.startswith('OPSIV2.XCHACHA20-POLY1305.'))
-            self.assertEqual(provider.load(vault.slot)['algorithm'], opsi_secure.ALGORITHM)
-            self.assertEqual(json.loads(vault.keyring_path.read_bytes())['algorithm'], opsi_secure.ALGORITHM)
-            before = vault.cl1_db.read_bytes()
-            state = provider.load(vault.slot)
-            provider.save(vault.slot, dict(state, algorithm='AES-GCM'))
-            self.assertFalse(opsi_secure.Vault(root, provider=provider).ensure_ready())
-            self.assertEqual(vault.cl1_db.read_bytes(), before)
-            self.assertFalse(vault.wipe_path.exists())
+    def test_records_only_decode_for_the_matching_installation(self):
+        key = os.urandom(32)
+        directory = Path(tempfile.mkdtemp())
+        self.addCleanup(lambda: __import__('shutil').rmtree(directory, ignore_errors=True))
+        secure_dir = directory / 'config' / 'opsi_secure'
+        secure_dir.mkdir(parents=True)
+        (secure_dir / 'keyring.json').write_bytes(json.dumps(
+            {'version': 2, 'algorithm': opsi_secure.ALGORITHM, 'installation_id': 'mine',
+             'provider': 'container-file'}).encode())
+        (secure_dir / 'state.json').write_bytes(json.dumps({'slot': 'x', 'state': {
+            'phase': 'ready', 'key': base64.b64encode(key).decode(), 'installation_id': 'mine'}}).encode())
+        previous = opsi_secure._STORE
+        opsi_secure.set_store(opsi_secure.StatsStore(directory))
+        self.addCleanup(opsi_secure.set_store, previous)
+        context = {'dataset': 'loot', 'instance': 'i', 'identity': '1', 'period': '2026-09'}
+        good = seal_v2(key, 'loot', {'a': 1}, context, 'mine')
+        self.assertEqual(opsi_secure.decode_record('loot', good, context), {'a': 1})
+        # 身份不一致（别的安装环境）的记录不可解码。
+        foreign = seal_v2(key, 'loot', {'a': 1}, context, 'other')
+        self.assertIsNone(opsi_secure.decode_record('loot', foreign, context))
+        # 上下文不一致（AAD 不匹配）不可解码。
+        self.assertIsNone(opsi_secure.decode_record('loot', good, dict(context, instance='j')))
+        # 未知算法版本（V1 前缀以外的变体）不被当作密文处理。
+        self.assertIsNone(opsi_secure.decode_record('loot', 'OPSIV3.abc', context))
 
 
 class DeviceRootTests(unittest.TestCase):
@@ -145,6 +144,14 @@ class DeviceRootTests(unittest.TestCase):
         with self.assertRaises(opsi_keys.ProviderUnavailable):
             self.provider.load('slot')
 
+    def test_state_lookup_by_installation_id_recovers_moved_install(self):
+        slot = 'current-slot'
+        state = {'phase': 'ready', 'key': self.token, 'installation_id': 'install-1'}
+        with patch.object(self.provider, '_enumerate_states',
+                          return_value=[{'phase': 'ready', 'key': 'x', 'installation_id': 'install-2'}, state]):
+            self.assertEqual(self.provider.load_any(slot, 'install-1'), state)
+            self.assertIsNone(self.provider.load_any(slot, 'install-3'))
+
     def test_wiping_revokes_root_before_hardware_cleanup_and_retry(self):
         self.provider.save('slot', {'key': self.token, 'phase': 'ready', 'root': 'original'})
         self.device.delete.side_effect = opsi_keys.ProviderUnavailable('offline')
@@ -157,22 +164,6 @@ class DeviceRootTests(unittest.TestCase):
         self.provider.delete('slot')
         self.assertNotIn('slot', self.states)
         self.device.delete.assert_called_with(self.reference)
-
-    def test_tpm_offline_preserves_ready_vault_and_records(self):
-        with tempfile.TemporaryDirectory() as folder:
-            root = Path(folder)
-            (root / 'config').mkdir()
-            make_cl1_db(root / 'config' / 'cl1_data.db')
-            vault = opsi_secure.Vault(root, provider=self.provider)
-            self.assertTrue(vault.ensure_ready())
-            before = vault.cl1_db.read_bytes(), vault.keyring_path.read_bytes()
-            self.device.check.side_effect = opsi_keys.ProviderUnavailable('offline')
-            self.assertFalse(vault.ensure_ready())
-            self.assertEqual((vault.cl1_db.read_bytes(), vault.keyring_path.read_bytes()), before)
-            self.assertFalse(vault.wipe_path.exists())
-            self.assertEqual(self.states[vault.slot]['phase'], 'ready')
-            self.device.check.side_effect = None
-            self.assertTrue(vault.ensure_ready())
 
     def test_macos_enclave_opt_in_and_existing_binding_is_enforced(self):
         provider = opsi_keys.MacOSProvider()
@@ -216,17 +207,39 @@ class DeviceRootTests(unittest.TestCase):
             self.assertEqual(run.call_args.kwargs['input'], self.key)
             self.assertNotIn(self.key, command)
 
-    def test_windows_tbs_not_found_and_transient_error_are_distinct(self):
-        library = Mock()
-        with patch.object(ctypes, 'WinDLL', return_value=library, create=True):
-            library.Tbsi_GetDeviceInfo.return_value = 0x8028400F
+    def test_windows_tpm_probe_never_raises_and_fails_closed(self):
+        """设备探针任何失败都只回 False（绝不抛错），由调用方回退账户级凭据。"""
+        self.addCleanup(WindowsTPM.available.cache_clear)
+        WindowsTPM.available.cache_clear()
+        with patch.object(WindowsTPM, '_api', side_effect=opsi_keys.ProviderUnavailable('no device')):
             self.assertFalse(WindowsTPM.available())
-            library.Tbsi_GetDeviceInfo.return_value = 0x80284008
-            with self.assertRaises(opsi_keys.ProviderUnavailable):
-                WindowsTPM.available()
+        WindowsTPM.available.cache_clear()
+        api = Mock()
+        api.NCryptOpenStorageProvider.return_value = 0x80090035  # 设备未就绪
+        with patch.object(WindowsTPM, '_api', return_value=api):
+            self.assertFalse(WindowsTPM.available())
+        WindowsTPM.available.cache_clear()
+        api = Mock()
+        api.NCryptOpenStorageProvider.return_value = 0
+        api.NCryptCreatePersistedKey.return_value = 0
+        api.NCryptSetProperty.return_value = 0
+        api.NCryptFinalizeKey.return_value = 0x80090030  # 落盘时设备不存在
+        with patch.object(WindowsTPM, '_api', return_value=api):
+            self.assertFalse(WindowsTPM.available())
+        WindowsTPM.available.cache_clear()
+        api = Mock()
+        api.NCryptOpenStorageProvider.return_value = 0
+        api.NCryptCreatePersistedKey.return_value = 0
+        api.NCryptSetProperty.return_value = 0
+        api.NCryptFinalizeKey.return_value = 0
+        with patch.object(WindowsTPM, '_api', return_value=api):
+            self.assertTrue(WindowsTPM.available())
+        self.assertTrue(api.NCryptDeleteKey.called)  # 临时密钥随即删除
+        WindowsTPM.available.cache_clear()
 
     @unittest.skipUnless(sys.platform == 'win32', '需要 Windows CNG')
     def test_native_cng_non_exportable_restart_and_wrong_object(self):
+        WindowsTPM.available.cache_clear()
         if not WindowsTPM.available():
             self.skipTest('本机没有 TPM2')
         hardware = WindowsTPM()
@@ -253,3 +266,7 @@ class DeviceRootTests(unittest.TestCase):
         with self.assertRaises(opsi_keys.ProviderUnavailable):
             WindowsTPM().unwrap(token)
         hardware.delete(reference)
+
+
+if __name__ == '__main__':
+    unittest.main()

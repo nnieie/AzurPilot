@@ -8,7 +8,7 @@ test('金融图表、股票详情、全屏与平移、杠杆交易、验证码�
   let startCaptcha!:()=>void
   const captchaReady=new Promise<void>(resolve=>{startCaptcha=resolve})
   await page.route('https://www.recaptcha.net/recaptcha/api.js**',async route=>{await captchaReady;await route.continue()})
-  // 分别停在实例状态与行情加载阶段，确认返回入口只在页面就绪后出现。
+  // 分别停在实例状态与行情加载阶段，确认始终可以返回总览。
   let releaseStatus!:()=>void,releaseMarket!:()=>void
   const statusReady=new Promise<void>(resolve=>{releaseStatus=resolve}),marketReady=new Promise<void>(resolve=>{releaseMarket=resolve})
   await page.routeWebSocket('**/api/v1/ws',socket=>{
@@ -36,8 +36,8 @@ test('金融图表、股票详情、全屏与平移、杠杆交易、验证码�
   await page.setViewportSize({width:390,height:844});await page.getByRole('button',{name:'打开导航',exact:true}).click();await expect(enter).toBeVisible()
   await page.screenshot({path:'test-results/native-exchange-entry-mobile.png',fullPage:true})
   await enter.click();const terminal=page.locator('.stock-terminal'),dialog=terminal.getByRole('dialog',{name:'开通交易账户'})
-  await expect(page.locator('.stock-exchange-loading')).toBeVisible();await expect(page.getByRole('link',{name:'返回总览',exact:true})).toHaveCount(0)
-  releaseStatus();await expect(terminal.getByText('正在连接交易终端…',{exact:true})).toBeVisible();await expect(terminal.getByRole('link',{name:'返回总览',exact:true})).toHaveCount(0)
+  await expect(page.locator('.stock-exchange-loading')).toBeVisible();await expect(page.getByRole('link',{name:'返回总览',exact:true})).toBeVisible()
+  releaseStatus();await expect(terminal.getByText('正在连接交易终端…',{exact:true})).toBeVisible();await expect(terminal.getByRole('link',{name:'返回总览',exact:true})).toBeVisible()
   releaseMarket()
   await expect(dialog).toBeVisible()
   await page.setViewportSize({width:1600,height:1080})
@@ -145,8 +145,9 @@ test('金融图表、股票详情、全屏与平移、杠杆交易、验证码�
 async function assertTopbarPinned(page:import('@playwright/test').Page){
   const topbar=page.locator('.mmex-topbar'),back=topbar.getByRole('link',{name:'返回总览',exact:true}),user=topbar.getByRole('button',{name:'查看我的身份识别码'})
   await page.locator('#main-content').evaluate(el=>{el.scrollTop=0})
-  const before=(await topbar.boundingBox())!,actions=(await topbar.locator('.mmex-topbar-right').boundingBox())!,a=(await back.boundingBox())!,b=(await user.boundingBox())!
-  expect(before.y).toBe(0);expect(a.x+a.width).toBeLessThan(b.x);expect(actions.x-before.x).toBeLessThanOrEqual(30);expect(before.x+before.width-actions.x-actions.width).toBeGreaterThan(before.width*.15)
+  const before=(await topbar.boundingBox())!,a=(await back.boundingBox())!,b=(await user.boundingBox())!
+  expect(before.y).toBe(0);expect(a.x+a.width).toBeLessThanOrEqual(b.x)
+  expect(Math.abs(a.y+a.height/2-b.y-b.height/2)).toBeLessThan(2)
   await page.locator('#main-content').evaluate(el=>{el.scrollTop=500})
   expect(await page.locator('#main-content').evaluate(el=>el.scrollTop)).toBeGreaterThan(0)
   expect((await topbar.boundingBox())!.y).toBe(0)

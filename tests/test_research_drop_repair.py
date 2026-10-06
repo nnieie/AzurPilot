@@ -16,7 +16,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from module.statistics import cl1_database as database
-from tests.opsi_test_support import install_vault
+from tests.opsi_test_support import install_store
 from dev_tools.research_drop_repair import load_instance_entries
 
 
@@ -24,7 +24,7 @@ class TestResearchDropRepair(unittest.TestCase):
     def setUp(self):
         directory = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         self.addCleanup(directory.cleanup)
-        install_vault(self, directory.name)
+        install_store(self, directory.name)
         self.path = Path(directory.name) / 'config' / 'cl1_data.db'
         with patch.object(database.Cl1Database, '_get_legacy_decryption_keys', return_value=[]):
             self.db = database.Cl1Database(self.path)

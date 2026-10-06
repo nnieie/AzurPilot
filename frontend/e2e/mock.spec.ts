@@ -1104,7 +1104,7 @@ test('材质细节四层接线：逐层可调，重复值不落盘', async ({pag
 
 
 for (const category of ['opsi', 'action', 'ships', 'loot', 'resources']) {
-  test(`统计 ${category} 保持展示且没有文件导出入口`, async ({page}) => {
+  test(`统计 ${category} 保持展示并提供文件导出入口`, async ({page}) => {
     await page.emulateMedia({reducedMotion: 'reduce'})
     await page.addInitScript(category => {
       localStorage.setItem('azurpilot.theme', 'light')
@@ -1112,7 +1112,7 @@ for (const category of ['opsi', 'action', 'ships', 'loot', 'resources']) {
     }, category)
     await page.goto('/#/i/demo-main/statistics')
     await expect(page.getByRole('button', {name: '刷新统计', exact: true}).first()).toBeVisible()
-    await expect(page.getByRole('button', {name: /导出/})).toHaveCount(0)
+    await expect(page.getByRole('button', {name: /导出/}).first()).toBeVisible()
     await expect(page.locator('.statistics-metrics, .statistics-table, .statistics-chart').first()).toBeVisible()
     if (category === 'opsi') await page.screenshot({path: test.info().outputPath('opsi-v2-page.png'), fullPage: true})
   })

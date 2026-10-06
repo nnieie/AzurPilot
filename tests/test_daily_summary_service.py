@@ -3,7 +3,7 @@ import tempfile
 import threading
 import types
 import unittest
-from tests.opsi_test_support import install_vault
+from tests.opsi_test_support import install_store
 import json
 import time
 from datetime import datetime, timedelta
@@ -44,7 +44,7 @@ class TestDailySummaryService(unittest.TestCase):
         self.temporary_directory = tempfile.TemporaryDirectory(
             ignore_cleanup_errors=True
         )
-        install_vault(self, self.temporary_directory.name)
+        install_store(self, self.temporary_directory.name)
         self.store = DailySummaryStore(
             Path(self.temporary_directory.name) / 'config' / 'daily_summary.db'
         )

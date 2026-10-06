@@ -619,6 +619,7 @@ export function createMockState({ empty = false } = {}) {
       }
       case 'overview.get': return overview(name)
       case 'stock.status': return stock.status(name)
+      case 'stock.rebuild': return stock.rebuild(name,params)
       case 'stock.request': return stock.request(name,params)
       case 'scheduler.start': case 'tasks.run':
         if (get(name).status === 'running') fail('INSTANCE_RUNNING', '实例已在运行')
@@ -1082,5 +1083,5 @@ export function createMockState({ empty = false } = {}) {
       log(name, '模拟任务正在运行，等待下一轮调度。')
     }
   }
-  return { dispatch, tick, setUpdateScenario }
+  return { dispatch, tick, setUpdateScenario, subscribeStock:stock.subscribe, close:stock.close }
 }

@@ -71,8 +71,7 @@ function getChartIcon(series: StatSeries): string | undefined {
 
 /** 图表主体。紧凑主题把标题行与「放大查看」上提到页面工具栏（`heading=false`），
     并把报表附带的表格并进同一面板，避免同一页出现两个顶层区域。 */
-export function StatisticsChart({series, heading = true, expanded = false, onToggleExpanded, title, initialMode, category = 'resources', foldControl, plotFoldControl, compact = false, compactControl, showPicker = true, pickerControl, pickerMuted = false, stackedRise = false, stackedControl, zeroBase = false, zeroBaseControl, filtered = [], onToggleFilter, exportable = false}: {
-  exportable?: boolean
+export function StatisticsChart({series, heading = true, expanded = false, onToggleExpanded, title, initialMode, category = 'resources', foldControl, plotFoldControl, compact = false, compactControl, showPicker = true, pickerControl, pickerMuted = false, stackedRise = false, stackedControl, zeroBase = false, zeroBaseControl, filtered = [], onToggleFilter}: {
   series: StatSeries[]
   heading?: boolean
   foldControl?: ReactNode
@@ -370,7 +369,7 @@ export function StatisticsChart({series, heading = true, expanded = false, onTog
           feature: {
             dataZoom: {yAxisIndex: 'none', title: {zoom: ui('stats.toolboxZoom'), back: ui('stats.toolboxBack')}},
             restore: {title: ui('stats.toolboxRestore')},
-            ...(exportable ? {saveAsImage: {title: ui('stats.toolboxSave'), name: shownData.map(item => item.series.label).join('-'), pixelRatio: 2}} : {}),
+            saveAsImage: {title: ui('stats.toolboxSave'), name: shownData.map(item => item.series.label).join('-'), pixelRatio: 2},
           },
         },
         xAxis: isCandlestick ? {type: 'category', data: categoryTimes, axisLabel: {hideOverlap: true}} : {type: 'time', axisLabel: {hideOverlap: true}},
@@ -409,7 +408,7 @@ export function StatisticsChart({series, heading = true, expanded = false, onTog
       observer.disconnect()
       themeObserver.disconnect()
     }
-  }, [exportable, shownData, hasPoints, isCandlestick, axisMode, isSingle, categoryTimes, category, language, ui, theme, stackedRise, zeroBase])
+  }, [shownData, hasPoints, isCandlestick, axisMode, isSingle, categoryTimes, category, language, ui, theme, stackedRise, zeroBase])
 
 
   /* 图表设置（类型、坐标轴、采样粒度、时间范围）排在图表下方：先看数据，再决定怎么画。 */

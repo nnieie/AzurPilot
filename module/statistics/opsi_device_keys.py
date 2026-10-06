@@ -4,8 +4,10 @@ from __future__ import annotations
 import base64
 import ctypes
 import json
+import os
 import uuid
 from contextlib import contextmanager
+from functools import lru_cache
 
 from module.statistics.opsi_keys import ProviderUnavailable
 
@@ -32,22 +34,44 @@ class WindowsTPM:
     missing = (0x80090016, 0x80090011)
 
     @staticmethod
-    def available():
+    @lru_cache(maxsize=1)
+    def available() -> bool:
+        """本机是否真能执行 TPM 硬件密钥操作（功能探针，永不抛错）。
+
+        接口存在不代表可用：部分机器上没有 TPM 时探测接口依旧应答，误判会让
+        统计环境在设备封装上反复失败。判据是完整走一遍密钥生成——建一把临时
+        2048 位密钥、完成落盘、随即删除；任何一步失败或不完整都视为无设备，
+        调用方回退账户级凭据，统计功能不受影响。结果按进程缓存（单次约 1 秒）。
+        """
+        if os.name != 'nt':
+            return False
         try:
-            class DeviceInfo(ctypes.Structure):
-                _fields_ = [(name, ctypes.c_uint32) for name in ('version', 'tpm', 'interface', 'revision')]
-            api = ctypes.WinDLL('tbs')
-            api.Tbsi_GetDeviceInfo.argtypes = [ctypes.c_uint32, ctypes.c_void_p]
-            api.Tbsi_GetDeviceInfo.restype = ctypes.c_uint32
-            info = DeviceInfo(version=2)
-            result = api.Tbsi_GetDeviceInfo(ctypes.sizeof(info), ctypes.byref(info))
-            if result == 0x8028400F:
+            api = WindowsTPM._api()
+        except ProviderUnavailable:
+            return False
+        provider = ctypes.c_size_t()
+        try:
+            if api.NCryptOpenStorageProvider(ctypes.byref(provider), 'Microsoft Platform Crypto Provider', 0):
                 return False
-            if result:
-                raise ProviderUnavailable('本机设备服务暂不可用')
-            return info.tpm == 2
-        except (OSError, AttributeError) as exc:
-            raise ProviderUnavailable('本机设备服务暂不可用') from exc
+            try:
+                key = ctypes.c_size_t()
+                name = 'AzurPilot.Probe.' + uuid.uuid4().hex
+                if api.NCryptCreatePersistedKey(provider, ctypes.byref(key), 'RSA', name, 0, 0):
+                    return False
+                try:
+                    value = ctypes.c_uint32(2048)
+                    if api.NCryptSetProperty(key, 'Length', ctypes.byref(value), 4, 0):
+                        return False
+                    if api.NCryptFinalizeKey(key, WindowsTPM.silent):
+                        return False
+                    return True
+                finally:
+                    api.NCryptDeleteKey(key, 0)
+                    api.NCryptFreeObject(key)
+            finally:
+                api.NCryptFreeObject(provider)
+        except Exception:
+            return False
 
     @staticmethod
     def _api():
@@ -143,8 +167,7 @@ class WindowsTPM:
 
     def check(self, token):
         reference, _ = unpack_reference(token, self.prefix)
-        if not self.available():
-            raise ProviderUnavailable('本机设备服务暂不可用')
+        # 不再单独探测：能否打开设备密钥本身就是判据（探测另有一次建键开销）。
         with self._provider() as (api, provider):
             key = ctypes.c_size_t()
             self._check(api.NCryptOpenKey(provider, ctypes.byref(key), self._name(reference), 0, self.silent))

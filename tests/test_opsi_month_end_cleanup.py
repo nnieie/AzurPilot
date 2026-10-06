@@ -2,11 +2,12 @@
 
 import unittest
 from datetime import datetime
-from unittest.mock import Mock, call, patch
+from unittest.mock import MagicMock, Mock, call, patch
 
 from module.config.config import TaskEnd
 from module.config.deep import deep_get, deep_set
-from module.exception import GameStuckError, GameTooManyClickError, RequestHumanTakeover
+from module.exception import GameStuckError, GameTooManyClickError, RequestHumanTakeover, ScriptError
+from module.os.tasks.meowfficer_farming import MeowfficerTargetZoneMixin
 from module.os.tasks.scheduling import OpsiScheduling
 
 
@@ -67,9 +68,24 @@ class TestMonthEndCleanupActionPoint(unittest.TestCase):
             call('OpsiStronghold', self.PRESERVE),
             call('OpsiObscure', self.PRESERVE),
             call('OpsiAbyssal', self.PRESERVE),
-            call('OpsiMeowfficerFarming', self.PRESERVE),
+            call('OpsiMeowfficerFarming', self.PRESERVE, meow_target_zone=None),
         ])
         scheduling._run_month_end_shop_purchase.assert_called_once()
+
+    def test_passes_month_end_meow_target_zone_to_meowfficer(self):
+        zone = Mock()
+        zone.zone_id = 45
+        scheduling = self.make_scheduling([
+            (900, 100), (800, 100), (700, 100), (200, 100), (200, 100),
+        ])
+        scheduling._get_month_end_meow_target_zone = Mock(return_value=zone)
+
+        self.run_cleanup(scheduling)
+
+        self.assertIn(
+            call('OpsiMeowfficerFarming', self.PRESERVE, meow_target_zone=zone),
+            scheduling._run_scheduled_coin_task_once.call_args_list,
+        )
 
     def test_stops_after_stronghold_reaches_preserve(self):
         scheduling = self.make_scheduling([(200, 100), (200, 100)])
@@ -115,6 +131,137 @@ class TestMonthEndCleanupActionPoint(unittest.TestCase):
                 self.assertIs(raised.exception, error)
                 scheduling.notify_push.assert_not_called()
                 scheduling._delay_smart_scheduling_to_server_update.assert_not_called()
+
+
+class TestMonthEndMeowTargetZoneParsing(unittest.TestCase):
+    """月末清理耄耋相接指定海域的解析：非单个有效海域一律按 0 处理。"""
+
+    def make_scheduling(self, raw):
+        scheduling = OpsiScheduling.__new__(OpsiScheduling)
+        scheduling.config = MonthEndCleanupConfig()
+        scheduling.config.cross_get = Mock(return_value=raw)
+        scheduling.name_to_zone = Mock()
+        return scheduling
+
+    @staticmethod
+    def make_zone(zone_id=45, is_port=False):
+        zone = Mock()
+        zone.zone_id = zone_id
+        zone.is_port = is_port
+        return zone
+
+    def test_unset_values_return_none(self):
+        for raw in ('0', 0, '', '  ', None):
+            with self.subTest(raw=raw):
+                scheduling = self.make_scheduling(raw)
+
+                self.assertIsNone(scheduling._get_month_end_meow_target_zone())
+                scheduling.name_to_zone.assert_not_called()
+
+    def test_single_zone_id_is_resolved(self):
+        zone = self.make_zone(45)
+        scheduling = self.make_scheduling('45')
+        scheduling.name_to_zone.return_value = zone
+
+        self.assertIs(scheduling._get_month_end_meow_target_zone(), zone)
+        scheduling.name_to_zone.assert_called_once_with('45')
+
+    def test_zone_name_is_resolved(self):
+        zone = self.make_zone(44)
+        scheduling = self.make_scheduling('NA海域东南E')
+        scheduling.name_to_zone.return_value = zone
+
+        self.assertIs(scheduling._get_month_end_meow_target_zone(), zone)
+
+    def test_multiple_tokens_return_none(self):
+        for raw in ('44,45', '44，45', '44, 45', '44,'):
+            with self.subTest(raw=raw):
+                scheduling = self.make_scheduling(raw)
+
+                self.assertIsNone(scheduling._get_month_end_meow_target_zone())
+                scheduling.name_to_zone.assert_not_called()
+
+    def test_unknown_zone_returns_none(self):
+        scheduling = self.make_scheduling('999')
+        scheduling.name_to_zone.side_effect = ScriptError('Unable to find OS globe zone: 999')
+
+        self.assertIsNone(scheduling._get_month_end_meow_target_zone())
+
+    def test_port_zone_returns_none(self):
+        scheduling = self.make_scheduling('5')
+        scheduling.name_to_zone.return_value = self.make_zone(5, is_port=True)
+
+        self.assertIsNone(scheduling._get_month_end_meow_target_zone())
+
+
+class TestScheduledMeowTargetZoneOverride(unittest.TestCase):
+    """指定海域经实例属性传入短猫代跑，代跑结束后清理。"""
+
+    def make_scheduling(self, runner):
+        scheduling = OpsiScheduling.__new__(OpsiScheduling)
+        scheduling.config = MagicMock()
+        scheduling.config.OS_ACTION_POINT_PRESERVE = 0
+        scheduling.run_meowfficer_farming_once = Mock()
+        scheduling._run_with_opsi_task_context = runner
+        return scheduling
+
+    def test_override_visible_during_delegation_and_cleared_after(self):
+        zone = Mock()
+        seen = []
+
+        def runner(task_name, func, **kwargs):
+            seen.append(scheduling._meow_target_zone_override)
+            return True
+
+        scheduling = self.make_scheduling(runner)
+
+        scheduling._run_scheduled_meowfficer_farming(100, target_zone=zone)
+
+        self.assertEqual(seen, [zone])
+        self.assertIsNone(scheduling._meow_target_zone_override)
+
+    def test_override_cleared_when_delegation_raises(self):
+        def runner(task_name, func, **kwargs):
+            raise RuntimeError('boom')
+
+        scheduling = self.make_scheduling(runner)
+
+        with self.assertRaises(RuntimeError):
+            scheduling._run_scheduled_meowfficer_farming(100, target_zone=Mock())
+
+        self.assertIsNone(scheduling._meow_target_zone_override)
+
+
+class TestMeowTargetZoneOverrideTokens(unittest.TestCase):
+    """月末清理指定海域覆盖短猫自身的指定海域输入。"""
+
+    def make_meow(self, configured, override=None):
+        meow = MeowfficerTargetZoneMixin()
+        meow.config = Mock()
+        meow.config.OpsiMeowfficerFarming_TargetZone = configured
+        if override is not None:
+            meow._meow_target_zone_override = override
+        return meow
+
+    def test_override_replaces_user_input(self):
+        zone = Mock()
+        zone.zone_id = 45
+        meow = self.make_meow('42,55', override=zone)
+
+        self.assertEqual(meow._meow_target_zone_tokens(), [45])
+
+    def test_without_override_user_input_is_used(self):
+        meow = self.make_meow('42,55')
+
+        self.assertEqual(meow._meow_target_zone_tokens(), ['42', '55'])
+
+    def test_cleared_override_returns_to_user_input(self):
+        zone = Mock()
+        zone.zone_id = 45
+        meow = self.make_meow('42', override=zone)
+        meow._meow_target_zone_override = None
+
+        self.assertEqual(meow._meow_target_zone_tokens(), ['42'])
 
 
 class TestMonthEndCleanupCycle(unittest.TestCase):

@@ -4055,6 +4055,10 @@
       "name": "Month-end action point preserve",
       "help": "Action Point preserve value in month-end cleanup mode. If the cross-month daily task is enabled, at least 200 Action Points are reserved. When this value is larger than the minimum reserve, this value is used."
     },
+    "MonthEndMeowTargetZone": {
+      "name": "Month-end meowfficer target zone",
+      "help": "When month-end cleanup delegates to Meowfficer farming, only sortie into the designated sea zone. Supports zone IDs and names. Use 0 or leave empty to follow the Meowfficer farming settings. Multiple zones or an invalid zone fall back to 0; whether the task keeps cycling in that zone follows the \"Planned operation in target zone\" option of Meowfficer farming."
+    },
     "MonthEndShopPurchase": {
       "name": "Month-end shop purchase",
       "help": "Whether to buy from the Operation Siren shop during month-end Action Point cleanup. When disabled, the cleanup loop skips the shop purchase step.",

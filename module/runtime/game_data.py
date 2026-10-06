@@ -5,6 +5,7 @@ import hmac
 import json
 import os
 import re
+import shutil
 import sqlite3
 import stat
 import uuid
@@ -35,24 +36,61 @@ class GameDataProtector:
 
     def __init__(self, root):
         self.root = Path(root).resolve()
-        self.directory = self.root / 'cache' / 'stock-exchange'
-        self.state_path = self.root / 'config' / 'stock-exchange' / 'registry.json'
+        self.directory = self.root / 'config' / 'stock-exchange'
+        self.state_path = self.directory / 'registry.json'
         self.key_path = self.state_path.with_name('game.key')
         self.context = None
         self.marker = self.directory / 'protected-v2'
         self.legacy_marker = self.directory / 'protected-v1'
 
-    @staticmethod
-    def _safe(path):
+    def _safe(self, path):
+        """校验游戏数据目录之内的每一级路径都不是链接；root 以上的系统目录不参与判定。"""
         for parent in (path, *path.parents):
             if parent.is_symlink() or parent.is_junction():
                 raise damaged('交易游戏文件路径包含链接，已停止使用')
+            if parent == self.root or parent.resolve() == self.root:
+                break
 
     def initialized(self):
+        self.migrate_cache()
         if any(path.exists() for path in (self.marker, self.legacy_marker, self.state_path, self.key_path)):
             return True
         legacy = self._legacy_location()
         return legacy is not None and legacy[1].exists()
+
+    def migrate_cache(self):
+        """旧 cache 只搬文件；格式升级和认证统一由目标目录的读取流程处理。"""
+        source = self.root / 'cache' / 'stock-exchange'
+        if not source.exists():
+            return
+        self._safe(source)
+        self._safe(self.directory)
+        with config_transaction(self.directory):
+            if not source.exists():
+                return
+            def move(old, new):
+                self._safe(old)
+                self._safe(new)
+                if not new.exists():
+                    new.parent.mkdir(parents=True, mode=0o700, exist_ok=True)
+                    shutil.move(old, new)
+                elif old.is_dir() and new.is_dir():
+                    for child in old.iterdir():
+                        move(child, new / child.name)
+                    old.rmdir()
+                else:
+                    # 默认读取 config；冲突时静默丢弃旧 cache 副本。
+                    if old.is_dir():
+                        for child in old.rglob('*'):
+                            self._safe(child)
+                        shutil.rmtree(old)
+                    else:
+                        old.unlink()
+
+            try:
+                move(source, self.directory)
+            except OSError:
+                raise damaged('旧玩家数据无法移入 config/stock-exchange/，请检查目录读写权限') from None
 
     def _legacy_location(self):
         """只为升级查找旧登记；新部署不依赖本机保护能力。"""
@@ -149,7 +187,7 @@ class GameDataProtector:
             if self.key_path.exists():
                 # 首次初始化先保存密钥再保存空登记；中断时尚未登记身份或游戏文件。
                 if (any(identity is not None for identity in self._configs().values())
-                        or any(path.is_symlink() or path.is_file() and not path.name.endswith('.lock')
+                        or any(path.is_symlink() or path.is_file() and path != self.key_path and not path.name.endswith('.lock')
                                for path in self.directory.rglob('*'))):
                     raise damaged('交易游戏保护登记丢失，请恢复 config/stock-exchange/ 完整备份')
                 key = self._load_key(self.key_path)
@@ -181,6 +219,7 @@ class GameDataProtector:
     @contextmanager
     def transaction(self):
         """登记与检查点跨进程串行更新；每次重新解封，缓存不能绕过密钥丢失。"""
+        self.migrate_cache()
         self._safe(self.state_path)
         self._safe(self.key_path)
         self._safe(self.marker)
@@ -210,7 +249,7 @@ class GameDataProtector:
                 yield data, key
                 if canonical(data) != before:
                     self._save_state(data, key)
-            except (OSError, ValueError, TypeError, KeyError, sqlite3.Error):
+            except (OSError, ValueError, TypeError, KeyError, AttributeError, sqlite3.Error):
                 raise damaged() from None
             finally:
                 if key is not None:
@@ -306,7 +345,7 @@ class GameDataProtector:
                     try:
                         previous = json.loads(legacy_path.read_bytes())
                         identity = str(uuid.UUID(previous['instanceId']))
-                    except (OSError, ValueError, TypeError, KeyError):
+                    except (OSError, ValueError, TypeError, KeyError, AttributeError):
                         raise damaged('旧实例身份损坏，请恢复身份备份') from None
                     if identity in data['instances']:
                         raise damaged('旧实例身份已登记，不能再次迁移')
@@ -431,8 +470,10 @@ class GameDataProtector:
                             with closing(sqlite3.connect(backup)) as outgoing:
                                 db.backup(outgoing)
                     if owner and owner[0] == predecessor:
-                        for suffix in ('', '-wal', '-shm'):
-                            target.with_name(target.name + suffix).unlink(missing_ok=True)
+                        # 只撤销旧交易历史，不能因交易身份变化清空普通调度和资源数据。
+                        with closing(sqlite3.connect(target)) as db, db:
+                            for table in ('action_point_history', 'action_point_chain', 'action_point_chain_owner'):
+                                db.execute(f'DROP TABLE IF EXISTS {table}')
                 with self.transaction() as (data, _):
                     data['instances'][identity]['predecessor'] = None
             return
