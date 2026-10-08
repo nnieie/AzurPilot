@@ -36,6 +36,10 @@
       "name": "舰队管理喵",
       "help": ""
     },
+    "RunParams": {
+      "name": "运行参数",
+      "help": ""
+    },
     "Tool": {
       "name": "雪风的工具箱",
       "help": "里面装满了雪风的私房道具喵，别乱翻！(｀皿´＃)"
@@ -56,19 +60,19 @@
     },
     "Main": {
       "name": "主线图-1出击喵！",
-      "help": "主线剧情第一章喵，新指挥官起步之地 (｀・ω・´)"
+      "help": "主线剧情第一章喵，新指挥官起步之地 (｀・ω・´)\n启用此任务需解锁至少四只舰队编队喵，可以开「跳过编队检测」临时满足喵~"
     },
     "Main2": {
       "name": "主线图-2进发喵",
-      "help": "第二章海域，敌人有点点厉害了喵，注意安全 (；・∀・)"
+      "help": "第二章海域，敌人有点点厉害了喵，注意安全 (；・∀・)\n启用此任务需解锁至少四只舰队编队喵，可以开「跳过编队检测」临时满足喵~"
     },
     "Main3": {
       "name": "主线图-3冲锋喵！",
-      "help": "第三章挑战，雪风会保护大家的喵！( •̀ ω •́ )✧"
+      "help": "第三章挑战，雪风会保护大家的喵！( •̀ ω •́ )✧\n启用此任务需解锁至少四只舰队编队喵，可以开「跳过编队检测」临时满足喵~"
     },
     "GemsFarming": {
       "name": "紧急委托喵赚！",
-      "help": "通过紧急委托攒点零花钱喵，钻石亮闪闪 ✧٩(ˊωˋ*)و✧"
+      "help": "通过紧急委托攒点零花钱喵，钻石亮闪闪 ✧٩(ˊωˋ*)و✧\n紧急委托和三油低耗只能开一个喵~"
     },
     "ThreeOilLowCost": {
       "name": "三油低耗散步喵",
@@ -84,15 +88,15 @@
     },
     "Event": {
       "name": "活动图-1突入喵！",
-      "help": "活动海域第一弹，全力全开喵！(｀・ω・´)ゞ"
+      "help": "活动海域第一弹，全力全开喵！(｀・ω・´)ゞ\n这个功能是给常规活动用的喵，共斗类活动一般有自己的设置页喵~"
     },
     "Event2": {
       "name": "活动图-2追击喵",
-      "help": "活动海域第二弹，别让敌人跑了喵~ (｀ω´)ノ"
+      "help": "活动海域第二弹，别让敌人跑了喵~ (｀ω´)ノ\n这个功能是给常规活动用的喵，共斗类活动一般有自己的设置页喵~"
     },
     "Event3": {
       "name": "活动图-3决胜喵！",
-      "help": "活动图压轴关，拿到所有奖励喵！٩(◕‿◕)۶"
+      "help": "活动图压轴关，拿到所有奖励喵！٩(◕‿◕)۶\n这个功能是给常规活动用的喵，共斗类活动一般有自己的设置页喵~"
     },
     "Raid": {
       "name": "共斗活动出击喵",
@@ -168,7 +172,7 @@
     },
     "StorageStatistics": {
       "name": "仓库统计喵",
-      "help": "扫描材料仓库并复核两遍喵，完成后更新统计页面。默认关闭，可以手动运行喵；不会消耗物品。仅支持已验证的国服模板。"
+      "help": "每页三行读取材料仓库中的金色/彩色指定物品，完整单遍扫描及同页核对通过后更新统计页面喵。默认关闭，启用后按运行间隔自动执行（默认 7 天），也可手动运行；不使用或消耗物品喵。仅支持已验证的国服模板。"
     },
     "Dorm": {
       "name": "后宅打理喵",
@@ -300,7 +304,7 @@
     },
     "OpsiScheduling": {
       "name": "智能调度喵",
-      "help": "大世界智能调度，协调侵蚀1练级与黄币补充任务自动切换，并推送通知喵~ (´・ω・`)"
+      "help": "大世界智能调度喵~ 能接管这些任务：侵蚀1练级（默认开）、短猫相接、隐秘海域、深渊海域、塞壬要塞喵；\n接管后除了本页设置，其它都跟对应任务页走喵；\n*没特别需要、又不太懂 Azurpilot 怎么跑的话，别让智能调度和子任务一起跑喵~"
     },
     "OpsiPreventActionPointOverflow": {
       "name": "防止行动力溢出喵",
@@ -364,7 +368,7 @@
     },
     "IslandAirDrop": {
       "name": "每日补给喵",
-      "help": "仅支持minitouch喵。领取每日补给~ (=^･ω･^=)"
+      "help": "移动仅支持 minitouch / MaaTouch / uiautomator2 / azurpilot_android 控制方式喵。领取每日补给~ (=^･ω･^=)"
     },
     "IslandCargoPreparation": {
       "name": "货物筹备喵",
@@ -376,15 +380,19 @@
     },
     "IslandDailyInteract": {
       "name": "每日/周任务喵",
-      "help": "仅支持minitouch喵。处理岛屿摸猫、JUU速运、商区外送服务与每周照相任务喵。相关按钮资源生成后可启用。"
+      "help": "移动仅支持 minitouch / MaaTouch / uiautomator2 / azurpilot_android 控制方式喵。处理岛屿摸猫、JUU速运、商区外送服务与每周照相任务喵。相关按钮资源生成后可启用。"
     },
     "IslandPearlSell": {
       "name": "每周珍珠采购与售卖喵",
-      "help": "仅支持minitouch喵。每周二 01:00 自动处理珍珠喵：先买本周珍珠，再卖已有珍珠。金币一定要够购买200x220个这是最低要求能一次买光本周珍珠, 否则可能会报错喵。(´;ω;`)"
+      "help": "移动仅支持 minitouch / MaaTouch / uiautomator2 / azurpilot_android 控制方式喵。每周二 01:00 自动处理珍珠喵：先买本周珍珠，再卖已有珍珠。金币一定要够购买200x220个这是最低要求能一次买光本周珍珠, 否则可能会报错喵。(´;ω;`)"
     },
     "FleetInfo": {
       "name": "舰队信息喵",
       "help": "查看最近一次舰队扫描结果喵"
+    },
+    "RunParams": {
+      "name": "运行参数",
+      "help": "调度器、运行监护、设备还有各个功能等待节奏的参数喵～平时保持默认就好喵。"
     },
     "FleetScan": {
       "name": "舰队扫描喵",
@@ -518,11 +526,11 @@
     },
     "Serial": {
       "name": "模拟器 Serial",
-      "help": "模拟器连接串，常见的下面有列表喵。填 \"auto\" 自动检测，但多开或部分模拟器需手动填喵~ 蓝叠: 127.0.0.1:5555 蓝叠4 Hyper-v: \"bluestacks4-hyperv\" 多开 \"bluestacks4-hyperv-2\"... 蓝叠5 Hyper-v: \"bluestacks5-hyperv\" 多开 \"bluestacks5-hyperv-1\"... 夜神: 127.0.0.1:62001 夜神64: 127.0.0.1:59865 MuMu/MuMuX: 127.0.0.1:7555 MuMu12: 127.0.0.1:16384 MuMu Pro : 127.0.0.1:16384 多开依次 16416, 16448 ... 逍遥: 127.0.0.1:21503 雷电: emulator-5554 或 127.0.0.1:5555 多开时用 `adb devices` 查或看官方教程喵~"
+      "help": "*AP 监听的模拟器端口喵，必填~\n常见模拟器 Serial 看下面列表喵。不懂就填 \"auto\" 自动检测喵；不过同时开多个模拟器、或者模拟器不支持自动检测时不能用 \"auto\"，得手填喵。\n\n模拟器默认 Serial 喵：\n- 蓝叠模拟器 127.0.0.1:5555\n- 蓝叠模拟器4 Hyper-v版，填 \"bluestacks4-hyperv\" 自动连，多开填 \"bluestacks4-hyperv-2\" 喵\n- 蓝叠模拟器5 Hyper-v版，填 \"bluestacks5-hyperv\" 自动连，多开填 \"bluestacks5-hyperv-1\" 喵\n- 夜神模拟器 127.0.0.1:62001\n- 夜神模拟器64位 127.0.0.1:59865\n- MuMu模拟器/MuMu模拟器X 127.0.0.1:7555\n- MuMu模拟器12 127.0.0.1:16384\n- MuMu Pro (macOS) 127.0.0.1:16384，多开依次 127.0.0.1:16416, 127.0.0.1:16448 ...\n- 逍遥模拟器 127.0.0.1:21503\n- 雷电模拟器 emulator-5554 或 127.0.0.1:5555\n用了多开的话 Serial 不是默认值喵，可以在 console.bat 里跑 `adb devices` 查，或者照模拟器官方的教程填喵~"
     },
     "PackageName": {
       "name": "游戏服务器选择",
-      "help": "装多个客户端时选对应服务器喵~ (´・ω・`)",
+      "help": "装多个客户端时要自己选服务器喵（B服、渠道服等……）\n*这项不是必填的喵~",
       "auto": "自动探测",
       "com.bilibili.azurlane": "国服舰B喵",
       "com.YoStarEN.AzurLane": "国际服喵",
@@ -548,7 +556,7 @@
     },
     "ServerName": {
       "name": "游戏内服务器选择",
-      "help": "选游戏内所在服以启用服务器状态检测，维护或掉线时挂起恢复喵~ (´・ω・`)",
+      "help": "选游戏内所在服来开服务器状态检测喵；\n维护或掉线时会自动挂起等恢复，免得维护时 Azurpilot 一直重启模拟器喵。\n*这项不是必填喵。检测服务器状态的 api 连不上就关掉它喵~",
       "disabled": "不使用检测",
       "cn_android-0": "[国服] 莱茵演习",
       "cn_android-1": "[国服] 巴巴罗萨",
@@ -630,7 +638,7 @@
     },
     "ScreenshotMethod": {
       "name": "模拟器截图法术 ∩",
-      "help": "自动选择执行性能测试并换最快方案喵。通常 DroidCast_raw > aScreenCap_nc > ADB_nc > ... 运行工具-性能测试寻找最优！(´・ω・`)",
+      "help": "自动选择会跑一次性能测试、然后换成最快的截图方案喵；\n一般速度：DroidCast_raw >> aScreenCap_nc > ADB_nc >>> aScreenCap > uiautomator2 ~= ADB；\nMuMu、雷电有专用方案：nemu_ipc、ldopengl 喵；\nAzurPilot for Android 的用户必须用安卓虚拟屏喵；\n跑「工具 - 性能测试」找最快方案喵；\n*有些方案过不了自动性能测试，那就手动指定喵~",
       "auto": "自动选择最快喵",
       "ADB": "ADB仔喵",
       "ADB_nc": "ADB_nc喵",
@@ -738,7 +746,7 @@
     },
     "Emulator": {
       "name": "模拟器品种",
-      "help": "",
+      "help": "一般自动检测就好喵，多个模拟器要手填喵~",
       "auto": "自动检测",
       "NoxPlayer": "夜神模拟器喵",
       "NoxPlayer64": "夜神64位喵",
@@ -760,7 +768,7 @@
     },
     "name": {
       "name": "模拟器实例小名",
-      "help": ""
+      "help": "*留空会自动抓喵；实例名和路径填对了，自动重启模拟器才能正常用喵~"
     },
     "path": {
       "name": "模拟器安装路径",
@@ -812,7 +820,7 @@
     },
     "StrictRestart": {
       "name": "敏感任务出错禁止重启",
-      "help": "隐秘、深渊、跨月每日出错时停止AzurPilot而不是重启喵，避免损失。"
+      "help": "隐秘海域、深渊海域、跨月每日这类敏感任务出错时，停止 AzurPilot 而不是重启喵，避免白跑；\n敏感任务可以在各个任务的设置页里开喵~"
     },
     "TaskRestartLimit": {
       "name": "同一任务连续重启上限喵",
@@ -872,12 +880,12 @@
       "help": "连续多少次触发重启喵。"
     },
     "WatchdogEnable": {
-      "name": "启用看门狗总开关喵",
-      "help": "看门狗总开关喵。关掉之后，所有看门狗检测都不生效；开启后，还要单独打开下面的子开关喵。默认关闭。"
+      "name": "启用运行监护总开关喵",
+      "help": "运行监护总开关喵。关掉之后，所有运行监护检测都不生效；开启后，还要单独打开下面的子开关喵。默认关闭。"
     },
     "WatchdogTaskEnable": {
       "name": "任务跑太久自动重启喵",
-      "help": "开了之后喵，如果某个任务跑得太久（比如卡在剧情跳不过去、地图走不动了），就会自动重启模拟器把它打断。\n得先开上面的「看门狗总开关」才管用喵。默认关。"
+      "help": "开了之后喵，如果某个任务跑得太久（比如卡在剧情跳不过去、地图走不动了），就会自动重启模拟器把它打断。\n得先开上面的「运行监护总开关」才管用喵。默认关。"
     },
     "WatchdogTaskTimeout": {
       "name": "任务卡死保护超时喵（分钟）",
@@ -906,6 +914,206 @@
     "LlmModel": {
       "name": "LLM 模型选择 ∩",
       "help": "填写已购买服务支持的模型名称，请以 https://platform.deepseek.com/ 或 https://platform.xiaomimimo.com/ 平台展示为准喵。"
+    }
+  },
+  "Watchdog": {
+    "_info": {
+      "name": "调度与运行监护",
+      "help": "运行监护和后台定时线程的检查节奏喵。"
+    },
+    "CheckInterval": {
+      "name": "运行监护检查间隔（秒）喵",
+      "help": "守护线程每隔多少秒看一眼任务跑得怎么样喵，任务超时的检测精度就看它喵。值越小反应越快、开销略增喵。\n默认 30 秒喵。"
+    },
+    "DailySummaryCheckInterval": {
+      "name": "日报检查间隔（秒）喵",
+      "help": "日报定时线程每隔多少秒核对一次触发时刻喵。值越小触发越准、开销略增喵。\n默认 1 秒喵。"
+    }
+  },
+  "Reboot": {
+    "_info": {
+      "name": "登录与重启",
+      "help": "游戏重启的尝试次数、等待和观察节奏喵。"
+    },
+    "Tries": {
+      "name": "重启尝试次数喵",
+      "help": "游戏启动失败后自动重试的次数喵。连续失败这么多次后就进入观察阶段，观察还没恢复就触发模拟器重启喵。\n默认 3 次喵。"
+    },
+    "FirstTryWaitSeconds": {
+      "name": "首次失败等待（秒）喵",
+      "help": "第一次启动失败后等多少秒再试一次喵。\n默认 30 秒喵。"
+    },
+    "SubsequentTryWaitSeconds": {
+      "name": "后续失败等待（秒）喵",
+      "help": "第二次开始的启动失败后等多少秒再试喵。\n默认 20 秒喵。"
+    },
+    "ObserveSeconds": {
+      "name": "观察阶段时长（秒）喵",
+      "help": "连败后进入观察阶段等应用自己恢复的时长喵，超时就触发模拟器重启喵。\n默认 180 秒喵。"
+    },
+    "ObserveInterval": {
+      "name": "观察检查间隔（秒）喵",
+      "help": "观察阶段每隔多少秒看一眼应用有没有恢复喵。\n默认 15 秒喵。"
+    }
+  },
+  "Device": {
+    "_info": {
+      "name": "设备与模拟器",
+      "help": "模拟器启动监视和 MuMu12 状态等待的节奏喵。"
+    },
+    "EmulatorStartProgressInterval": {
+      "name": "启动进度打印间隔（秒）喵",
+      "help": "模拟器启动监视期间每隔多少秒喊一声进度喵，免得长时间没声音像卡死了喵。\n默认 30 秒喵。"
+    },
+    "EmulatorStartDialogCheckInterval": {
+      "name": "错误对话框检查间隔（秒）喵",
+      "help": "启动监视期间每隔多少秒看一眼 MuMu 错误对话框喵。看窗口挺费力的，别设太小喵。\n默认 2 秒喵。"
+    },
+    "Mumu12StatePollInterval": {
+      "name": "MuMu12 状态轮询间隔（秒）喵",
+      "help": "查询 MuMu12 实例状态的轮询间隔喵。\n默认 2 秒喵。"
+    },
+    "Mumu12StopWaitTimeout": {
+      "name": "MuMu12 关闭确认等待（秒）喵",
+      "help": "发出关闭命令后等实例真正退出的最长时间喵，等不到就急着启动会失败的喵。\n默认 60 秒喵。"
+    },
+    "Mumu12DeepWaitTimeout": {
+      "name": "MuMu12 深度重启等待（秒）喵",
+      "help": "深度重启后等全部 MuMu 进程退出的最长时间喵（实测 5 秒内就干净了喵）。\n默认 30 秒喵。"
+    }
+  },
+  "ScreenRecord": {
+    "_info": {
+      "name": "录屏调试",
+      "help": "录屏录制和转码的等待节奏喵。"
+    },
+    "StartTimeout": {
+      "name": "启动确认等待（秒）喵",
+      "help": "启动 screenrecord 后等录制进程确认还活着的最长时间喵，马上就退出说明设备端跑不起来喵。\n默认 0.6 秒喵。"
+    },
+    "StopTimeout": {
+      "name": "停止确认等待（秒）喵",
+      "help": "发出停止信号后等录制进程把文件写完退出的最长时间喵，超时的话录像可能不完整喵。\n默认 6 秒喵。"
+    },
+    "PollInterval": {
+      "name": "状态轮询间隔（秒）喵",
+      "help": "轮询录制进程有没有退出的间隔喵。\n默认 0.2 秒喵。"
+    },
+    "TranscodeBaseTimeout": {
+      "name": "转码基础超时（秒）喵",
+      "help": "收尾转码的基础超时，实际会按片段时长放宽喵（基础 + 时长×2）喵。\n默认 60 秒喵。"
+    },
+    "TranscodeMaxTimeout": {
+      "name": "转码最大超时（秒）喵",
+      "help": "转码超时的硬上限喵。\n默认 600 秒喵。"
+    }
+  },
+  "UiWait": {
+    "_info": {
+      "name": "界面等待",
+      "help": "各个功能界面交互的等待和重试节奏喵～慢设备或云手机可以放宽一点喵。"
+    },
+    "IslandMapConfirmWait": {
+      "name": "岛屿地图确认等待（秒）喵",
+      "help": "岛屿地图弹窗里确认按钮出现前的等待预算喵。\n默认 3 秒喵。"
+    },
+    "IslandMapDestinationWait": {
+      "name": "岛屿目的地加载上限（秒）喵",
+      "help": "从岛屿地图跳到目的地时等场景加载的上限喵，慢设备可以放宽喵。\n默认 45 秒喵。"
+    },
+    "IslandMapConfirmRetryWait": {
+      "name": "目的地确认补点间隔（秒）喵",
+      "help": "目的地确认弹窗补点的最小间隔喵，免得反复点同一个按钮触发点击保护喵。\n默认 10 秒喵。"
+    },
+    "IslandCharacterConfirmRetryWait": {
+      "name": "角色确认补点间隔（秒）喵",
+      "help": "选人页确认按钮补点的最小间隔喵，要比云手机页面切换还慢才行喵，不然会误点选餐页喵。\n默认 3 秒喵。"
+    },
+    "IslandEntryRetryWait": {
+      "name": "岛屿入口点击间隔（秒）喵",
+      "help": "进岛屿管理页的入口按钮两次点击的最小间隔喵，要等场景切换喵。\n默认 3 秒喵。"
+    },
+    "PqInteractButtonTimeout": {
+      "name": "互动按钮等待（秒）喵",
+      "help": "私人小屋等互动按钮出现的超时喵；今天精力用完的话按钮不会出现的喵。\n默认 24 秒喵。"
+    },
+    "PqInteractClickWait": {
+      "name": "互动点击间隔（秒）喵",
+      "help": "私人小屋互动循环里两次点击的最小间隔喵。\n默认 8 秒喵。"
+    },
+    "PqInteractStartTimeout": {
+      "name": "互动开始等待（秒）喵",
+      "help": "点了互动之后等互动画面开始的超时喵。\n默认 24 秒喵。"
+    },
+    "PqInteractEndTimeout": {
+      "name": "互动结束等待（秒）喵",
+      "help": "等一轮互动结束（互动按钮重新出现）的超时喵。\n默认 40 秒喵。"
+    },
+    "PqInteractExitTimeout": {
+      "name": "互动退出等待（秒）喵",
+      "help": "退出舰船房间互动画面的超时喵。\n默认 24 秒喵。"
+    },
+    "GachaPrepSubmitWait": {
+      "name": "建造提交重击间隔（秒）喵",
+      "help": "点了开始建造之后再点的最小间隔喵，太快会把面板点关掉的喵。\n默认 10 秒喵。"
+    },
+    "GachaPrepTimeout": {
+      "name": "建造面板超时（秒）喵",
+      "help": "等建造数量面板出现（+/- 按钮）的超时喵。\n默认 90 秒喵。"
+    },
+    "ChannelFloatHoldDuration": {
+      "name": "悬浮球按住时长（秒）喵",
+      "help": "把渠道服悬浮球拖到终点后按住停留的时长喵，停一下再松手才能触发隐藏喵。\n默认 0.2 秒喵。"
+    },
+    "ChannelFloatMaxAttempts": {
+      "name": "悬浮球尝试次数喵",
+      "help": "处理渠道服悬浮球的最大尝试次数喵，超过就跳过喵。\n默认 4 次喵。"
+    },
+    "GuildSupplyMaxRetry": {
+      "name": "补给重试次数喵",
+      "help": "大舰队补给点了没反应时的重试上限喵，超过就跳过喵。\n默认 2 次喵。"
+    },
+    "GuildExchangeBugRetry": {
+      "name": "兑换无响应判定次数喵",
+      "help": "大舰队兑换连续多少次没反应就判定游戏出 Bug 喵。\n默认 5 次喵。"
+    },
+    "BuyFurnitureCheckIntervalDays": {
+      "name": "家具店检查间隔（天）喵",
+      "help": "家具店购买任务每多少天检查一次喵。\n默认 6 天喵。"
+    },
+    "AutoEquipAfterEquipWait": {
+      "name": "换装后等待（秒）喵",
+      "help": "自动装备完成后固定等一下下喵，让画面先变一变喵。\n默认 3 秒喵。"
+    },
+    "CommissionSkipTimeout": {
+      "name": "单个委托超时（秒）喵",
+      "help": "单个委托收发的绝对超时喵，超时就放弃这个委托喵。\n默认 90 秒喵。"
+    },
+    "CommissionRewardScreenshotKeep": {
+      "name": "委托截图保留张数喵",
+      "help": "委托收益截图最多留多少张喵，只在按天数清理关闭时生效喵。\n默认 50 张喵。"
+    }
+  },
+  "Handover": {
+    "_info": {
+      "name": "作战交接",
+      "help": "作战委托和停服维护的交接节奏喵。"
+    },
+    "ConsumeRetryMinutes": {
+      "name": "一键消耗重试间隔（分）喵",
+      "help": "一键消耗委托书今天还没触发时隔多久再试喵。每次都要重新进游戏喵，别太短喵。\n默认 30 分钟喵。"
+    },
+    "MaintainLeadMinutes": {
+      "name": "维护前提前运行（分）喵",
+      "help": "停服维护前多少分钟跑最后一次作战委托喵（作战次数拉满）喵。\n默认 10 分钟喵。"
+    },
+    "MaintainCheckMinutes": {
+      "name": "维护核对间隔（分）喵",
+      "help": "只等维护时没查到公告，隔多久再查一次喵。\n默认 120 分钟喵。"
+    },
+    "ConflictRetryMinutes": {
+      "name": "功能冲突重试间隔（分）喵",
+      "help": "读不到作战委托结束时间时推迟多久重试喵。\n默认 15 分钟喵。"
     }
   },
   "DailySummary": {
@@ -1450,18 +1658,18 @@
       "event_20240425_cn": "Heart-Linking Harmony",
       "event_20240521_cn": "Light of the Martyrium Rerun",
       "event_20240725_cn": "Interlude of Illusions",
-      "event_20240815_cn": "Windborne Steel Wings",
+      "event_20240815_cn": "Windborne Steel Wings Rerun",
       "event_20240829_cn": "Whence Flowers Bear No Fruit",
-      "event_20240912_cn": "Ode of Everblooming Crimson",
+      "event_20240912_cn": "Ode of Everblooming Crimson Rerun",
       "event_20241024_cn": "Tempesta and the Sleeping Sea",
       "event_20241121_cn": "Dangerous Inventions Incoming",
-      "event_20241219_cn": "Substellar Crepuscule",
-      "event_20250227_cn": "Paradiso of Shackled Light",
+      "event_20241219_cn": "Substellar Crepuscule Rerun",
+      "event_20250227_cn": "Paradiso of Shackled Light Rerun",
       "event_20250424_cn": "Toward Tulipa’s Seas Rerun",
-      "event_20250520_cn": "A Rose on the High Tower",
+      "event_20250520_cn": "A Rose on the High Tower Rerun",
       "event_20250724_cn": "The Alchemist and the Tower of Horizons",
-      "event_20250814_cn": "Secrets of the Abyss",
-      "event_20250912_cn": "A Dance for Amahara Above",
+      "event_20250814_cn": "Secrets of the Abyss Rerun",
+      "event_20250912_cn": "A Dance for Amahara Above Rerun",
       "event_20251023_cn": "Tempesta and Islas de Libertád",
       "event_20251218_cn": "A Note Through the Firmament",
       "event_20260226_cn": "Springtide Inn Online",
@@ -1847,7 +2055,7 @@
     },
     "Mode": {
       "name": "心情处理模式",
-      "help": "",
+      "help": "Azurpilot 用的是内置心情计算器喵，不会用 OCR 实时读心情，所以心情设置要填对喵~",
       "calculate": "计算心情消耗喵",
       "ignore": "无视红脸警告喵",
       "calculate_ignore": "计算+无视喵"
@@ -2311,22 +2519,6 @@
       "help": "需将过滤器设为自定义。阅读文档，乱设出问题别叫喵→ https://github.com/LmeSzinc/AzurLaneAutoScript/wiki/filter_string_cn"
     }
   },
-  "ShopAdvanced": {
-    "_info": {
-      "name": "高级商店策略",
-      "help": "使用受限 Lua 风格规则生成商店购买计划。"
-    },
-    "Mode": {
-      "name": "策略模式",
-      "help": "简单模式继续使用现有过滤器；高级模式使用下方策略脚本。",
-      "legacy": "简单模式",
-      "advanced": "高级模式"
-    },
-    "Script": {
-      "name": "策略脚本",
-      "help": "仅支持受限 Lua 规则语法。校验失败时本轮不会购买任何物品。"
-    }
-  },
   "Commission": {
     "_info": {
       "name": "委托派遣策略",
@@ -2406,6 +2598,30 @@
       "today": "今日喵",
       "week": "本周喵",
       "month": "本月喵"
+    },
+    "AutoPickShip": {
+      "name": "委托通用选船兜底喵（按稀有度/等级）",
+      "help": "船不够时会自动选锁定船喵；先按委托的等级要求选一艘达标的喵，其余按下面的偏好选喵；没有可用船时，按「没有空闲的船」处理喵~"
+    },
+    "PickMinRarity": {
+      "name": "└ 选船兜底 · 派船的最低品质喵",
+      "help": "勾选「委托通用选船兜底」后生效喵~",
+      "common": "白色（普通）及以上喵",
+      "rare": "蓝色（稀有）及以上喵",
+      "elite": "紫色（精英）及以上喵",
+      "super_rare": "金色（超稀有）及以上喵"
+    },
+    "PickLevelOrder": {
+      "name": "└ 选船兜底 · 同品质内按等级喵",
+      "help": "勾选「委托通用选船兜底」后生效喵~",
+      "low_first": "等级低的优先喵",
+      "high_first": "等级高的优先喵"
+    },
+    "NoFreeShipPolicy": {
+      "name": "没有空闲的船时喵",
+      "help": "",
+      "skip": "跳过该委托喵",
+      "use_fleet": "用舰队中的船喵"
     }
   },
   "Tactical": {
@@ -2479,6 +2695,16 @@
     "MaxLevel": {
       "name": "仅添加等级 <= X 的角色",
       "help": "0 表示不限制喵；与最低等级冲突时两个都按 0（关闭）处理喵"
+    }
+  },
+  "StorageStatistics": {
+    "_info": {
+      "name": "仓库统计喵",
+      "help": ""
+    },
+    "RunIntervalDays": {
+      "name": "运行间隔（天）喵",
+      "help": "成功完成后，间隔指定天数再运行，默认 7 天，可设为 1–3650 天喵。失败仍按失败间隔重试；启用任务后自动运行，也可手动运行喵。"
     }
   },
   "Research": {
@@ -2556,6 +2782,20 @@
     "CustomFilter": {
       "name": "自定义科研过滤器",
       "help": "需将过滤器设为自定义并读文档。乱设出问题别叫喵→ https://github.com/LmeSzinc/AzurLaneAutoScript/wiki/filter_string_cn"
+    }
+  },
+  "OilControl": {
+    "_info": {
+      "name": "石油自动控制喵",
+      "help": "仅原调度生效，随现有任务检查喵。优先运行已启用且已到期的图，冷却时后宅购粮；清油临时优先于委托等任务喵。"
+    },
+    "Enable": {
+      "name": "启用石油自动控制喵",
+      "help": "独立于后宅喂食和收取开关，不定时唤醒游戏喵。"
+    },
+    "Target": {
+      "name": "石油控制线喵",
+      "help": "石油超过此值时清理，低于此值时结束喵。默认 24000，给 25000 上限留出 1000 空间；范围 1000–24999 喵。"
     }
   },
   "Dorm": {
@@ -3129,7 +3369,7 @@
     },
     "UseTicket": {
       "name": "使用单次建造券喵",
-      "help": "开启后支持建造券的池优先用券，无券及一般池仍用魔方喵。 (´・ω・`)"
+      "help": "开启后优先去活动卡池使用单次建造券，不受卡池类型设置限制喵。活动池无可用券或券不足时，剩余次数按设定卡池使用魔方和物资建造喵。 (´・ω・`)"
     },
     "UseDrill": {
       "name": "使用钻头完成建造",
@@ -5454,7 +5694,7 @@
   "IslandAirDrop": {
     "_info": {
       "name": "每日补给喵",
-      "help": ""
+      "help": "移动仅支持 minitouch / MaaTouch / uiautomator2 / azurpilot_android 控制方式喵。每日收取本岛空中补给，还可以去其他玩家岛屿拿补给喵。"
     },
     "LastSteal": {
       "name": "上次运行时间喵",
@@ -5486,7 +5726,7 @@
   "IslandDailyInteract": {
     "_info": {
       "name": "每日/周任务喵",
-      "help": "仅支持minitouch喵。控制岛屿每日与每周互动任务，包含晨露农场摸猫、开发计划中的 JUU 速运、商区外送服务和每周照相任务喵。 (=^･ω･^=)"
+      "help": "移动仅支持 minitouch / MaaTouch / uiautomator2 / azurpilot_android 控制方式喵。控制岛屿每日与每周互动任务，包含晨露农场摸猫、开发计划中的 JUU 速运、商区外送服务和每周照相任务喵。 (=^･ω･^=)"
     },
     "WeeklyPhoto": {
       "name": "每周照相任务喵",
@@ -5498,7 +5738,7 @@
   "IslandPearlSell": {
     "_info": {
       "name": "每周珍珠采购与售卖喵",
-      "help": "仅支持minitouch喵。每周二 01:00 自动处理珍珠喵：先按最高采购价买本周珍珠，再按最低售卖价卖已有珍珠。其他没完成的流程会延迟到次日 01:00 重试。金币一定要够购买200x220个这是最低要求能一次买光本周珍珠, 否则可能会报错喵。 (´・ω・`)"
+      "help": "移动仅支持 minitouch / MaaTouch / uiautomator2 / azurpilot_android 控制方式喵。每周二 01:00 自动处理珍珠喵：先按最高采购价买本周珍珠，再按最低售卖价卖已有珍珠。其他没完成的流程会延迟到次日 01:00 重试。金币一定要够购买200x220个这是最低要求能一次买光本周珍珠, 否则可能会报错喵。 (´・ω・`)"
     },
     "BuyPrice": {
       "name": "最高采购价格喵",

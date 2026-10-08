@@ -13,6 +13,10 @@ import numpy as np
 from module.base.base import ModuleBase
 from module.base.button import Button
 from module.base.utils import crop
+from module.base.runtime_params import (
+    CHANNEL_FLOAT_HOLD_DURATION, CHANNEL_FLOAT_MAX_ATTEMPTS,
+)
+from module.config.utils import read_run_param
 from module.base.timer import Timer
 from module.config.deep import deep_get
 from module.handler.assets import LOGIN_CHECK
@@ -35,10 +39,8 @@ CHANNEL_FLOAT_BALL_CENTER_OFFSET_Y = 30
 # 「隐藏悬浮球」对话框的触发区域位于屏幕下方，实测终点需压到
 # y=680 附近才能稳定触发（660 仍偏浅，松手后悬浮球弹回原位）
 CHANNEL_FLOAT_SWIPE_END = (640, 680)
-# 拖到终点后按住停留时长：悬浮球需停留片刻再松手才会触发「隐藏悬浮球」
-# 对话框，立即松手会被判定为甩动；drag 后端另有约 0.28s 的内置停顿
-CHANNEL_FLOAT_HOLD_DURATION = 0.2
-CHANNEL_FLOAT_MAX_ATTEMPTS = 4
+# 按住停留时长与最大尝试次数走 WebUI「运行参数」页（RunParams.UiWait），
+# 默认值集中在 module/base/runtime_params.py（界面等待域）。
 # 对话框白色主体占屏幕面积的最小比例（实测 1280x720 为 18.6%、1600x900 为 11.7%）
 CHANNEL_FLOAT_DIALOG_WHITE_RATIO = 0.04
 # 「隐藏」绿字连通域的最小像素数（实测两分辨率下每字约 300px）
@@ -275,13 +277,16 @@ class ChannelFloatHandler(ModuleBase):
         height, width = self.device.image.shape[:2]
         swipe_end = (int(CHANNEL_FLOAT_SWIPE_END[0] * width / 1280),
                      int(CHANNEL_FLOAT_SWIPE_END[1] * height / 720))
+        hold_seconds = read_run_param(
+            self.config, 'UiWait_ChannelFloatHoldDuration',
+            CHANNEL_FLOAT_HOLD_DURATION, 0.05, 5)
         logger.info(
             f'[渠道悬浮球] 拖拽 {ball_pos} -> {swipe_end}, '
-            f'终点停留 {CHANNEL_FLOAT_HOLD_DURATION}s')
+            f'终点停留 {hold_seconds}s')
         start = time.monotonic()
         self.device.drag(
             ball_pos, swipe_end,
-            point_random=(0, 0, 0, 0), hold_duration=CHANNEL_FLOAT_HOLD_DURATION,
+            point_random=(0, 0, 0, 0), hold_duration=hold_seconds,
             name='CHANNEL_FLOAT_DRAG')
         logger.info(f'[渠道悬浮球] 拖拽完成，耗时 {time.monotonic() - start:.2f}s')
         # 等待对话框弹出且按钮位置稳定（连续两帧一致）
@@ -411,16 +416,19 @@ class ChannelFloatHandler(ModuleBase):
                 logger.info('[渠道悬浮球] 等待主界面超时，跳过本会话')
                 return True
         logger.attr('检测区域', CHANNEL_FLOAT_AREA)
-        for attempt in range(CHANNEL_FLOAT_MAX_ATTEMPTS):
+        max_attempts = int(read_run_param(
+            self.config, 'UiWait_ChannelFloatMaxAttempts',
+            CHANNEL_FLOAT_MAX_ATTEMPTS, 1, 20))
+        for attempt in range(max_attempts):
             self.device.screenshot()
             ball_pos = channel_float_position(self.device.image)
             if ball_pos is None:
                 logger.info(
-                    f'[渠道悬浮球] 第 {attempt + 1}/{CHANNEL_FLOAT_MAX_ATTEMPTS} 次：'
+                    f'[渠道悬浮球] 第 {attempt + 1}/{max_attempts} 次：'
                     '未识别到悬浮球，跳过')
                 return True
             logger.info(
-                f'[渠道悬浮球] 第 {attempt + 1}/{CHANNEL_FLOAT_MAX_ATTEMPTS} 次：'
+                f'[渠道悬浮球] 第 {attempt + 1}/{max_attempts} 次：'
                 '识别到悬浮球，开始处理')
             self.handle_channel_float(ball_pos)
         logger.info('[渠道悬浮球] 多次处理仍未消失，跳过本回合')

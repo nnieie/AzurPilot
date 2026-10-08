@@ -647,7 +647,7 @@ class Retirement(Enhancement, QuickRetireSettingHandler):
             if not total:
                 logger.critical('[退役] 甚至没船能退役，你这设置是认真的吗？')
                 logger.critical('[退役] 既然你想让脚本停，我也挺支持的，毕竟这设置简直不可思议。')
-                logger.critical('[退役] 未退役任何船只，如果你眼瞎没开对应稀有度，请去 Alas 设置打开。')
+                logger.critical('[退役] 未退役任何船只，如果你眼瞎没开对应稀有度，请去 AzurPilot 设置打开。')
                 raise RequestHumanTakeover
         else:
             raise ScriptError(

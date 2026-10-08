@@ -3,6 +3,7 @@
 包括异步命令执行、WebSocket 连接管理、
 本地请求判断等底层支持功能。
 """
+from module.base.runtime_params import COMMAND_TIMEOUT, CONNECTION_EXPIRE
 import asyncio
 import json
 import sys
@@ -13,8 +14,6 @@ from typing import Any
 from module.logger import logger
 
 LOCAL_HOSTS = {"127.0.0.1", "::1", "localhost"}
-COMMAND_TIMEOUT = 10
-CONNECTION_EXPIRE = 45
 
 
 def is_windows() -> bool:

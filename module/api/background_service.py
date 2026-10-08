@@ -9,6 +9,7 @@
 - **SSRF 防护**：只允许 http/https，逐跳（含每一跳重定向、以及 DNS 解析出的每个地址）
   拒绝内网、回环、链路本地、保留与组播地址；限制跳数、超时与体积；只接受图片/视频内容类型。
 """
+from module.base.runtime_params import DOWNLOAD_TIMEOUT
 import ipaddress
 import json
 import os
@@ -31,7 +32,6 @@ LIBRARY_DIR = PROJECT_ROOT / 'cache' / 'background' / 'library'
 INDEX_FILE = LIBRARY_DIR / 'index.json'
 
 MAX_REDIRECTS = 5
-TIMEOUT = 10
 MAX_BYTES = 20 * 1024 * 1024
 IMAGE_SUFFIX = ('.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.avif')
 VIDEO_SUFFIX = ('.mp4', '.webm', '.mov')
@@ -137,7 +137,7 @@ def fetch_once(url: str, *, allow_json: bool) -> Dict[str, str]:
     for _ in range(MAX_REDIRECTS + 1):
         try:
             response = requests.get(
-                current, timeout=TIMEOUT, stream=True, allow_redirects=False, headers={'User-Agent': USER_AGENT}
+                current, timeout=DOWNLOAD_TIMEOUT, stream=True, allow_redirects=False, headers={'User-Agent': USER_AGENT}
             )
         except requests.RequestException as error:
             raise BackgroundError(f'抓取失败：{type(error).__name__}') from error
@@ -241,7 +241,7 @@ def proxy_fetch(url: str) -> tuple:
     if cached.exists():
         return cached.read_bytes(), meta['content_type']
     try:
-        response = requests.get(meta['final_url'], timeout=TIMEOUT, stream=True, headers={'User-Agent': USER_AGENT})
+        response = requests.get(meta['final_url'], timeout=DOWNLOAD_TIMEOUT, stream=True, headers={'User-Agent': USER_AGENT})
     except requests.RequestException as error:
         raise BackgroundError(f'抓取失败：{type(error).__name__}') from error
     chunks = []
@@ -291,7 +291,7 @@ def gallery_add(url: str, name: str = '') -> Dict[str, Any]:
     LIBRARY_DIR.mkdir(parents=True, exist_ok=True)
     target = LIBRARY_DIR / identifier
     try:
-        response = requests.get(meta['final_url'], timeout=TIMEOUT, stream=True, headers={'User-Agent': USER_AGENT})
+        response = requests.get(meta['final_url'], timeout=DOWNLOAD_TIMEOUT, stream=True, headers={'User-Agent': USER_AGENT})
     except requests.RequestException as error:
         raise BackgroundError(f'抓取失败：{type(error).__name__}') from error
     written = 0

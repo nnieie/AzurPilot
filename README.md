@@ -192,7 +192,13 @@ AzurPilot 提供 MCP 服务，可供支持 MCP 的客户端或工具调用，方
 <div align="center">
   <img src="doc/loading.png" alt="loading" width="500" />
   <p>启动加载界面</p>
-  <img src="doc/GUI.png" alt="GUI" width="500" />
+  <table align="center">
+    <tr>
+      <td align="center"><img src="doc/GUI.png" alt="新版" width="260"><br>新版</td>
+      <td align="center"><img src="doc/GUI-legacy.webp" alt="旧版" width="260"><br>旧版</td>
+      <td align="center"><img src="doc/GUI-minimal.png" alt="简约" width="260"><br>简约</td>
+    </tr>
+  </table>
   <p>Windows 客户端界面</p>
   <img src="doc/macGUI.png" alt="macGUI" width="500" />
   <p>Mac 客户端界面</p>

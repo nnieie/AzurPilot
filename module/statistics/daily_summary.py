@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from module.base.runtime_params import DAILY_SUMMARY_KEEP_DAYS, DAILY_SUMMARY_LLM_ATTEMPTS, DAILY_SUMMARY_NOTIFY_ATTEMPTS
 import json
 import re
 import threading
@@ -21,9 +22,6 @@ from module.statistics.daily_summary_text import DAILY_SUMMARY_SYSTEM_PROMPT
 
 
 DAILY_SUMMARY_TITLE = 'AzurPilot <{config_name}> 每日总结'
-DAILY_SUMMARY_KEEP_DAYS = 35
-DAILY_SUMMARY_LLM_ATTEMPTS = 3
-DAILY_SUMMARY_NOTIFY_ATTEMPTS = 3
 DAILY_SUMMARY_TRIGGER_GRACE = timedelta(minutes=5)
 
 SERVER_TIMEZONE_LABELS = {

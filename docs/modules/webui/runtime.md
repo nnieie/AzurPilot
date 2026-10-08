@@ -54,8 +54,8 @@ module/runtime/
 ├── remote_access.py       # SSH / WebRTC 远程访问 provider
 ├── mcp_auth.py            # MCP 鉴权：凭据提取、常数时间比对、会话表、日志脱敏
 ├── password_utils.py      # 密码生成/校验、本机判定、远程访问标记头
-├── launcher.py            # LauncherControl：外部启动器命令通道（当前未接线）
-├── launcher_trust.py      # 启动器信任免密令牌（当前未接线）
+├── launcher.py            # LauncherControl：外部启动器命令通道
+├── launcher_trust.py      # 启动器信任免密令牌
 ├── discord_presence.py    # Discord Rich Presence（pypresence 异步客户端）
 └── event_calculator.py    # Wiki 活动计算器数据服务（当前无前端消费者）
 ```
@@ -376,6 +376,8 @@ macOS 同样使用该游戏密钥方案，无需账号保险库的本机提供�
 
 配置创建和删除不调用交易保护登记；新配置的 `_stockInstance` 为空占位，后续采集或交易使用时登记身份。普通 `ProgramStore` 读取跳过交易历史校验，采集行动力时尽力维护认证链，认证失败或交易历史表损坏仍提交正常资源记录和调度事务。交易历史采集显式使用 `strict_history=True`，继续拒绝损坏、回滚和跨实例历史。`stock_exchange_recovery.StockExchangeRecovery` 先返回重建范围，再在确认后保留 `config/backup/stock-rebuild-*/` 快照并重建；身份或单实例历史问题只重建当前实例，共享密钥、登记或绑定不可读时须确认所有本地账户。重建与代理请求、后台同步互斥，清除旧本地会话及补传历史，保留调度程序、变量和最新资源观察。
 
+交易所存储只约束交易所自身：`ProgramStore.connection` 默认按尽力记账处理，保护存储不可用时回滚可选历史认证步骤，实例的调度存储、普通资源观测与实例创建/删除继续执行；交易所自身的读取路径传入 `strict_history=True`，损坏仍按 `STOCK_STORAGE_DAMAGED` 失败。交易所页面可通过 `stock.rebuild` 先预览范围，再确认备份与重建。因此 `config/stock-exchange/` 与 `cache/stock-exchange/` 的丢失或损坏只中断交易所页面与后台同步，不再阻断实例运行。
+
 ## 14. 生命周期
 
 - **创建**：`gui.py` 父监督器 spawn 服务子进程 → uvicorn 加载 `create_app` → lifespan 启动（`manage_runtime=True`）。
@@ -409,7 +411,7 @@ macOS 同样使用该游戏密钥方案，无需账号保险库的本机提供�
 
 ## 17. 已知限制
 
-- **`launcher.py`、`launcher_trust.py`、`event_calculator.py` 当前没有生产消费者**（截至 2026-09）：三者自旧 PyWebIO 前端迁移而来，逻辑与单测完整，但新 React 前端尚未实现启动器命令通道（`/api/launcher/*` 端点已随旧前端移除）、启动器免密令牌签发（无生产代码调用 `configure`/`issue_token`）与活动计算器页面。它们是预留能力，接线前不会生效。
+- **`event_calculator.py` 当前没有生产消费者**（截至 2026-09）：自旧 PyWebIO 前端迁移而来，逻辑与单测完整，但新 React 前端尚未实现活动计算器页面。它是预留能力，接线前不会生效。启动器命令通道与免密令牌已由 `module/api/launcher_api.py` 接入 `create_app`。
 - worker 的更新退出依赖任务边界轮询（`wait_until` 每 5 秒、任务间每次循环），**正在执行的长任务会推迟更新等待**，因此事务里有 10 分钟超时强停兜底；强停可能让该实例下次启动时状态不完整。
 - `alive` 在登记不可验证时保守返回 False，配合 `start()` 的二次验证避免重复启动；但这意味着登记文件损坏期间（自愈前）实例可能显示为已停止。
 - 远程访问线程是非 daemon 线程，其退出依赖 `stop_event` 或「进程内唯一线程」检测；极端情况下（其他线程意外全部退出）可能延迟进程退出。

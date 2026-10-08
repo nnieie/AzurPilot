@@ -10,6 +10,7 @@ HTTP 上，而 WebUI 的密码校验发生在 PyWebIO 会话内部，管不到�
 本模块只依赖标准库：既能独立单元测试，也避免把 WebUI/OCR 的依赖链带进
 独立运行的 MCP 进程。所有判定集中在 :func:`authorize`，ASGI 层只做转发。
 """
+from module.base.runtime_params import SESSION_DISCONNECT_GRACE_SECONDS, SESSION_MAX_ENTRIES, SESSION_TTL_SECONDS
 import logging
 import re
 import secrets
@@ -23,12 +24,6 @@ from module.runtime.password_utils import is_webui_password_set
 QUERY_KEY_NAMES = ("key", "api_key", "token")
 #: MCP 的 SSE 与消息端点及其允许的方法
 ROUTE_METHODS = {"/sse": "GET", "/messages": "POST"}
-#: 已鉴权 SSE 会话的有效期（秒），每次成功 POST 滑动续期
-SESSION_TTL_SECONDS = 12 * 3600
-#: SSE 断开后的宽限期（秒），避免客户端最后一帧 POST 被误拒
-SESSION_DISCONNECT_GRACE_SECONDS = 60
-#: 会话登记表容量上限，超出按插入顺序淘汰
-SESSION_MAX_ENTRIES = 512
 
 #: 各种凭据在日志中的出现形式及对应的脱敏结果
 _SENSITIVE_PATTERNS = (

@@ -118,13 +118,6 @@ class TaskParams(InstanceParams):
     task: StrictStr = Field(min_length=1, max_length=80)
 
 
-class ShopStrategyValidateParams(InstanceParams):
-    """高级商店策略的只读语法校验请求。"""
-
-    task: Literal['EventShop', 'ShopFrequent', 'ShopOnce', 'PrivateQuarters', 'OpsiShop', 'OpsiVoucher']
-    script: StrictStr = Field(max_length=20000)
-
-
 class ProgramValidateParams(InstanceParams):
     """调度程序草稿的校验请求。"""
 
@@ -201,6 +194,18 @@ class StatisticsReportParams(InstanceParams):
     scope: Literal['series', 'consumable'] = 'series'
     # 大世界掉落专用：只看某个大世界任务（任务名转下划线，如 opsi_abyssal）；空表示全部
     task: StrictStr | None = Field(default=None, pattern=r'^[a-z][a-z0-9_]{0,40}$')
+
+
+class ResourceFlowsParams(InstanceParams):
+    """资源管理只读区间与明细分页，不触发设备操作。"""
+    days: StrictInt = Field(default=7, ge=1, le=365)
+    start: StrictStr | None = Field(default=None, max_length=32)
+    end: StrictStr | None = Field(default=None, max_length=32)
+    resource: StrictStr | None = Field(default=None, pattern=r'^[A-Za-z][A-Za-z0-9_]{0,100}$')
+    task: StrictStr | None = Field(default=None, pattern=r'^[A-Za-z][A-Za-z0-9_]{0,100}$')
+    offset: StrictInt = Field(default=0, ge=0)
+    limit: StrictInt = Field(default=100, ge=1, le=1000)
+    through_id: StrictInt | None = Field(default=None, ge=0)
 
 
 class MeowfficerScoreReportParams(InstanceParams):

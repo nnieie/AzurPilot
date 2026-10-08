@@ -66,8 +66,8 @@ class PrivateQuarters(PQInteract, PQShop):
     not_supported_filter = {
         'cn': (),
         'en': (),
-        'jp': ('nakhimov', 'implacable'),
-        'tw': ('taihou', 'nakhimov', 'implacable'),
+        'jp': (),
+        'tw': ('implacable'),
     }
 
     def _pq_get_daily_count(self, retry=3):
@@ -215,7 +215,7 @@ class PrivateQuarters(PQInteract, PQShop):
                     f'目标舰娘={target_title}')
 
         # 进入商店购买每周物品
-        if self.shop_filter or self.shop_strategy_enabled():
+        if self.shop_filter:
             if server.server not in ['tw']:
                 self.pq_shop_weekly_items()
             else:

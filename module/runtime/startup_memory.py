@@ -3,6 +3,7 @@
 开关与上次记录都是运行态，存放在部署配置同目录的 startup_memory.json（该路径在 .gitignore 内）；
 更新触发重启时落的标记放在应用 root 的 cache/ 下，不混进部署配置目录。
 """
+from module.base.runtime_params import UPDATE_RESTART_TTL
 import json
 import time
 from pathlib import Path
@@ -16,7 +17,6 @@ MEMORY_NAME = 'startup_memory.json'
 
 # 更新触发重启时落这个标记，新进程据此只按记忆恢复，不套用启动时自动运行清单。
 UPDATE_RESTART_NAME = 'webui-update-restart-pending'
-UPDATE_RESTART_TTL = 1800
 
 
 def memory_path() -> Path:
