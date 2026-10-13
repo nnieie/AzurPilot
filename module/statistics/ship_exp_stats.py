@@ -7,7 +7,7 @@
 - 记录每次战斗的经验获取量和战斗时间
 - 计算每日经验效率（经验/小时）
 - 预估达到目标等级所需时间
-- 持久化统计数据到 JSON 文件
+- 持久化统计数据到普通业务总库
 
 继承自 LIST_SHIP_EXP 数据，复用经验数据定义。
 """
@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import math
 import time
-import json
+import sqlite3
 from pathlib import Path
 from datetime import datetime, date
 from typing import Dict, Any, Optional, List
@@ -27,7 +27,6 @@ from typing import Dict, Any, Optional, List
 from module.os.ship_exp_data import LIST_SHIP_EXP
 from module.logger import logger
 from module.config.time_source import now as current_time
-from module.statistics import opsi_secure
 
 
 class ShipExpStats:
@@ -53,8 +52,9 @@ class ShipExpStats:
             instance_dir = instance_name or "default"
             self._path = project_root / "log" / "cl1" / instance_dir / "ship_exp_data.json"
         else:
-            self._path = Path(path)
-        self._instance_name = instance_name or "default"
+            self.store = store or get_database()
+            self._instance_name = instance_name or 'default'
+        self._path = self.store.path
         self.data = self._load()
 
         # 当前战斗的开始时间
@@ -87,13 +87,14 @@ class ShipExpStats:
             return {}
 
     def _save(self) -> None:
-        """保存数据文件到本地（普通 JSON，原子替换）。"""
+        """用总库事务替换当前实例经验快照，失败完整回滚。"""
+        from module.persistence.snapshots import save_ship
         try:
-            if self._locked:
-                return
-            opsi_secure.write_file('ships', self._path, self.data)
-        except Exception as e:
-            logger.warning(f'[统计-经验] 保存舰船经验数据失败: {type(e).__name__}')
+            with self.store.transaction() as connection:
+                save_ship(connection, self._instance_name, self.data)
+        except (OSError, ValueError, TypeError, sqlite3.Error) as error:
+            logger.warning(f'[统计-经验] 保存舰船经验失败: {type(error).__name__}')
+
 
     # ========== 战斗时间记录 ==========
 
@@ -426,7 +427,8 @@ _stats_instances: Dict[str, ShipExpStats] = {}
 def get_ship_exp_stats(instance_name: Optional[str] = None) -> ShipExpStats:
     """获取 ShipExpStats 实例"""
     global _stats_instances
-    key = instance_name or "default"
+    from module.persistence.database import get_database
+    key = (str(get_database().directory), instance_name or "default")
     if key not in _stats_instances:
         _stats_instances[key] = ShipExpStats(instance_name=instance_name)
     else:

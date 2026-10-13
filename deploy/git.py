@@ -3,7 +3,7 @@ import shutil
 
 import requests
 
-from deploy.config import DeployConfig, ExecutionError
+from deploy.config import GIT_OVER_CDN_FALLBACK_REPOSITORIES, DeployConfig, ExecutionError
 from deploy.git_over_cdn.client import GitOverCdnClient
 from deploy.git_over_cdn.endpoints import CLOUDFLARE_UPDATE_URLS, FALLBACK_UPDATE_URLS
 from deploy.logger import logger

@@ -23,7 +23,7 @@ detect_owner_home() {
     printf '%s\n' "${HOME}"
 }
 
-REPOSITORY="${REPOSITORY:-https://gitcode.com/ddl2/AzurLaneAutoScript}"
+REPOSITORY="${REPOSITORY:-https://gitcode.com/ddl2/AzurPilot}"
 IMAGE="${IMAGE:-crpi-gukwnnx8iuh9qpez.cn-shanghai.personal.cr.aliyuncs.com/hajiming/ap:latest}"
 OWNER_HOME="${OWNER_HOME:-$(detect_owner_home)}"
 APP_DIR="${APP_DIR:-${OWNER_HOME}/AP}"

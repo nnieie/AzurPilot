@@ -51,6 +51,10 @@ Reward:
 
 # ==================== DailyMission ====================
 
+LimitChallenge:
+  Scheduler:
+    Enable: false
+
 # ==================== Opsi ====================
 OpsiCrossMonth:
   Scheduler:
