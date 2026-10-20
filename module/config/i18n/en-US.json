@@ -406,6 +406,10 @@
       "name": "Cognitive chip dock scan",
       "help": "Scan a CN dock at 1280×720 and review results in the cognitive chip calculator. Keeps old data until completion; resets dock filters."
     },
+    "FleetTechScan": {
+      "name": "Fleet technology scan",
+      "help": "Record ship identities and levels independently of cognitive chip exclusions."
+    },
     "Daemon": {
       "name": "Semi-Auto Click",
       "help": ""
@@ -1545,7 +1549,7 @@
     },
     "TelemetryReport": {
       "name": "Telemetry data reporting",
-      "help": "After being enabled, CL1 statistics (anonymous data such as the number of battles and Akashi encounter probability) will be reported anonymously to the server on a regular basis. For details on ID generation, please see the source code. For statistical information https://alas.nanoda.work/"
+      "help": "After being enabled, CL1 statistics (anonymous data such as the number of battles and Akashi encounter probability) will be reported anonymously to the server on a regular basis. For details on ID generation, please see the source code. For statistical information https://azurpilot.com/"
     },
     "BugReport": {
       "name": "Bug log reporting",
@@ -2217,6 +2221,14 @@
     "IgnoreShipwreck": {
       "name": "Ignore shipwreck morale penalty",
       "help": "When enabled, the extra 10 morale penalty for sinking ships in battle (non-S rating) is no longer counted. Only effective when the morale mode includes \"Calculate morale consumption\"."
+    },
+    "MinReserve": {
+      "name": "Minimum morale reserve",
+      "help": "0 disables this setting; range: 0–150. Applies only to modes that calculate morale consumption. When morale cannot cover the next sortie while staying above the control threshold, delay the task until morale recovers to this value. After recovery, keep running with the original control threshold. For example, reserve 150 with threshold 30 waits for 150 when the next sortie cannot maintain 30. The reserve is capped at the current recovery maximum; a higher sortie requirement takes precedence."
+    },
+    "RecoveryWait": {
+      "name": "Morale reserve recovery state",
+      "help": ""
     },
     "Fleet1Value": {
       "name": "Fleet 1 morale value",
@@ -2977,6 +2989,14 @@
       "name": "Feed filter",
       "help": "Generally no modification is required"
     },
+    "ReserveFood": {
+      "name": "Keep one food item for the next day",
+      "help": "Keep one item across all six food types. Days reset at server midnight. No exemption on the first enabled day. On each following day's first eligible feeding, a single remaining item may be used; more than one item cancels that day's exemption. Keep one item from food obtained later that day."
+    },
+    "FeedReserveState": {
+      "name": "Food reserve state",
+      "help": "Automatically records the server date of the first eligible feeding check to prevent repeated exemptions after restarting."
+    },
     "BuyFood": {
       "name": "Automatically purchase food",
       "help": "For status display only. Disable setting. Do not ask anything about this switch."
@@ -3516,8 +3536,8 @@
       "wishing_well": "Wishing Well"
     },
     "Amount": {
-      "name": "Build X times daily",
-      "help": "",
+      "name": "Build at least X ships daily",
+      "help": "Builds paid with permits count toward this minimum. Complete any remaining builds in the selected pool, subject to available Coins and Cubes.",
       "1": "1",
       "2": "2",
       "3": "3",
@@ -3531,7 +3551,29 @@
     },
     "UseTicket": {
       "name": "Use single build permit",
-      "help": "When enabled, first visit the event pool to use single build permits, regardless of the selected pool type. If the event pool has no available permits or not enough for the requested amount, complete the remaining builds in the selected pool using Cubes and Coins."
+      "help": "First visit the event pool to use the configured daily number of single build permits, regardless of the selected pool. Complete any remaining builds toward the daily minimum in the selected pool."
+    },
+    "TicketAmount": {
+      "name": "Use X single build permits daily",
+      "help": "Requires single build permits to be enabled. Use all remaining permits if fewer are available; this amount may exceed the daily build minimum. When the event pool is selected, also use remaining permits to meet the minimum.",
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8",
+      "9": "9",
+      "10": "10"
+    },
+    "ClearTicket": {
+      "name": "Use all permits on the last event day",
+      "help": "Requires single build permits to be enabled. Event date recognition currently supports CN only. Use all permits in batches on the event end date once the configured time is reached. With more than 10 permits, force Quick Finishers for intermediate batches; the final batch follows the Quick Finisher setting. Still complete the daily build minimum afterward."
+    },
+    "ClearTicketTime": {
+      "name": "Time to use all build permits",
+      "help": "Enter a time in the game server's time zone (HH:MM), default 09:30. Requires single build permits and last-day permit clearing to be enabled. Before this time on the last event day, postpone the build task until the configured time."
     },
     "UseDrill": {
       "name": "Use quick finisher to complete build",
@@ -3968,10 +4010,6 @@
     "AutoSearchTimeLimit": {
       "name": "Auto-search time limit",
       "help": "Unit: minutes. During auto search, the script will assume the game is stuck if no event is detected for this period."
-    },
-    "SkipStrategicSearchCheck": {
-      "name": "Skip plan battle option checks",
-      "help": "When looping a single zone (Corrosion 1 leveling / Meowfficer farming), open the plan battle panel and confirm directly without scroll-checking every option. The panel options must already be configured in-game (zone mode: repeat, stop on merchant/device, auto-submit missions); let the task run once normally, or configure them manually first."
     }
   },
   "OpsiAshBeacon": {
@@ -4326,6 +4364,14 @@
       "True": "Enabled",
       "False": "Disabled"
     },
+    "ActionPointCheckInterval": {
+      "name": "Routine AP check interval (minutes)",
+      "help": "0 disables scheduled checks. Read AP only for resupply, when the interval expires, or for the first confirmation after recovery. Otherwise skip screenshots and OCR. Applies to CL1, smart scheduling and Meowfficer farming."
+    },
+    "SkipStrategicSearchCheck": {
+      "name": "Skip plan battle option checks",
+      "help": "When looping a single zone (Corrosion 1 leveling / Meowfficer farming), open the plan battle panel and confirm directly without scroll-checking every option. The panel options must already be configured in-game (zone mode: repeat, stop on merchant/device, auto-submit missions); let the task run once normally, or configure them manually first."
+    },
     "Cl1Filter": {
       "name": "Akashi purchase filter",
       "help": "By default, only Action Points are purchased. If you want to also buy purple coins, set it to \"ActionPoint > PurpleCoins\""
@@ -4335,10 +4381,16 @@
       "help": "When enabled, AP acquisition data from all sources (such as Akashi shop purchases) will be recorded. When disabled, AP data will only be recorded during Corrosion 1 Leveling tasks, ignoring AP gained during other tasks or manual operations."
     },
     "RecordSeaMiles": {
-      "name": "Sea miles recording",
-      "help": "Record sea miles to statistics after each Corrosion 1 leveling cycle",
-      "True": "Enabled",
-      "False": "Disabled"
+      "name": "Sea miles check interval (days)",
+      "help": "-1: disabled (default); 0: check and record sea miles every Hazard 1 leveling round; positive integer: check once every specified number of days. The first check is immediate. The interval starts after the last successful check and survives restarts."
+    },
+    "SeaMilesLastRecord": {
+      "name": "Last sea miles check",
+      "help": "Internal timestamp of the last successful sea miles check, used to calculate the check interval."
+    },
+    "PendingMapEvent": {
+      "name": "Pending map event",
+      "help": "Internal record of a map event that has already been spotted but not finished (Akashi / scanning device / Siren research device). Used to resume it after a stuck restart. No need to edit manually."
     },
     "DebugClip": {
       "name": "Post-battle debug recording",
@@ -6800,6 +6852,28 @@
     "Result": {
       "name": "Ship scan results",
       "help": "Stores ships, levels and review states per instance."
+    },
+    "FleetTechRecord": {
+      "name": "Fleet technology records",
+      "help": "Stores cumulative scan evidence, manual overrides and faction technology levels per instance."
+    }
+  },
+  "FleetTech": {
+    "_info": {
+      "name": "Technology scan",
+      "help": "Defaults to 95–125. Only a complete unfiltered 1–125 scan can confirm absence."
+    },
+    "MinLevel": {
+      "name": "Minimum level",
+      "help": "Inclusive; preserve existing records outside the range."
+    },
+    "MaxLevel": {
+      "name": "Maximum level",
+      "help": "Inclusive, up to level 125."
+    },
+    "Record": {
+      "name": "Fleet technology records",
+      "help": "Store groups, manual corrections, level toggle history and scan coverage per instance."
     }
   },
   "FleetInfo": {
@@ -7448,9 +7522,11 @@
       "DiscordRichPresence": "Discord Rich Presence",
       "DiscordRichPresenceHelp": "Show AzurPilot status in Discord.",
       "EnableRemoteAccess": "Enable Remote Access",
-      "EnableRemoteAccessHelp": "Expose WebUI through an SSH reverse tunnel. Set a password before public access.",
+      "EnableRemoteAccessHelp": "Expose the WebUI through the selected remote mode. Set a password before public access.",
       "RemoteAccessMode": "Remote Access Mode",
-      "RemoteAccessModeHelp": "auto prefers P2P/TURN and falls back to SSH; webrtc prefers P2P; ssh uses legacy SSH forwarding only.",
+      "RemoteAccessModeHelp": "cloudflare uses Quick Tunnel with a stable URL; auto prefers P2P/TURN with SSH fallback; webrtc prefers P2P; ssh uses SSH only.",
+      "CloudflareRegistry": "Stable entry server",
+      "CloudflareRegistryHelp": "HTTPS service for Quick Tunnel registration, lease renewal and pairing.",
       "SSHUser": "SSH User",
       "SSHUserHelp": "Remote access login username. Leave empty to generate one on startup.",
       "SSHServer": "SSH Server",

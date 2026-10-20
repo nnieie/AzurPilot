@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <strong><a href="https://alas.nanoda.work/">AzurPilot 공식 웹사이트</a></strong> ｜ 아즈란 레인 자동화 스크립트 · 대세계 침식 루프 · 멀티 플랫폼 지원
+  <strong><a href="https://azurpilot.com/">AzurPilot 공식 웹사이트</a></strong> ｜ 아즈란 레인 자동화 스크립트 · 대세계 침식 루프 · 멀티 플랫폼 지원
 </p>
 
 <p align="center">
@@ -42,7 +42,7 @@
 </p>
 
 <div align="center">
-  <a href="https://alas.nanoda.work/">
+  <a href="https://azurpilot.com/">
     <img src="https://img.shields.io/badge/Web-다운로드-blue?style=for-the-badge&logo=google-chrome&logoColor=white" />
   </a>
   &nbsp;&nbsp;&nbsp;&nbsp;
@@ -57,7 +57,7 @@ AzurPilot은 [AzurLaneAutoScript](https://github.com/LmeSzinc/AzurLaneAutoScript
 
 > **주의**: 이 프로젝트의 코드는 대부분 AI에 의해 생성·보조되었으며, 불확실성이 크므로 [Pull Request](https://github.com/wess09/AzurPilot/pulls)를 통한 수정을 환영합니다.
 
-**[AzurPilot 공식 웹사이트](https://alas.nanoda.work/)**에서 기능에 대한 자세한 내용을 확인하거나, **[다운로드 페이지](https://alas.nanoda.work/download.html)**에서 최신 버전을 받으세요.
+**[AzurPilot 공식 웹사이트](https://azurpilot.com/)**에서 기능에 대한 자세한 내용을 확인하거나, **[다운로드 페이지](https://azurpilot.com/download.html)**에서 최신 버전을 받으세요.
 
 ## GUI 미리보기
 
@@ -67,12 +67,12 @@ AzurPilot은 [AzurLaneAutoScript](https://github.com/LmeSzinc/AzurLaneAutoScript
 
 ## 빠른 시작
 
-> 💡 **권장**: [AzurPilot 다운로드 페이지](https://alas.nanoda.work/download.html)에서 해당 플랫폼의 런처를 다운로드하세요. Python 환경이 포함되어 있어 바로 사용할 수 있습니다.
+> 💡 **권장**: [AzurPilot 다운로드 페이지](https://azurpilot.com/download.html)에서 해당 플랫폼의 런처를 다운로드하세요. Python 환경이 포함되어 있어 바로 사용할 수 있습니다.
 
 ### Linux 원클릭 배포
 
 ```shell
-curl -fsSL https://alas.nanoda.work/install/deploy-image.sh | sudo -E bash
+curl -fsSL https://azurpilot.com/install/deploy-image.sh | sudo -E bash
 ```
 
 ### 소스 코드 실행
@@ -211,7 +211,7 @@ URL만 입력할 수 있고 요청 헤더를 설정할 수 없는 클라이언�
 
 ## 멀티 플랫폼 런처
 
-> 📥 [AzurPilot 공식 웹사이트](https://alas.nanoda.work/download.html)에서 Windows / macOS / Linux 런처 다운로드
+> 📥 [AzurPilot 공식 웹사이트](https://azurpilot.com/download.html)에서 Windows / macOS / Linux 런처 다운로드
 
 <div align="center">
   <img src="doc/loading.png" alt="loading" width="500" />
@@ -262,8 +262,8 @@ URL만 입력할 수 있고 요청 헤더를 설정할 수 없는 클라이언�
 
 ## 관련 링크
 
-- [AzurPilot 공식 웹사이트](https://alas.nanoda.work/) — 프로젝트 소개, 기능 상세, 아즈란 레인 자동화 솔루션
-- [AzurPilot 다운로드 페이지](https://alas.nanoda.work/download.html) — Windows / macOS / Linux용 아즈란 레인 스크립트 도구 다운로드
+- [AzurPilot 공식 웹사이트](https://azurpilot.com/) — 프로젝트 소개, 기능 상세, 아즈란 레인 자동화 솔루션
+- [AzurPilot 다운로드 페이지](https://azurpilot.com/download.html) — Windows / macOS / Linux용 아즈란 레인 스크립트 도구 다운로드
 - [GitHub 저장소](https://github.com/wess09/AzurPilot) — 소스 코드, Issue, Pull Request
 - [QQ 커뮤니티](https://join.nanoda.work/#/) — 아즈란 레인 자동화 커뮤니티
 - [AzurLaneAutoScript 업스트림 프로젝트](https://github.com/LmeSzinc/AzurLaneAutoScript) — ALAS 오리지널

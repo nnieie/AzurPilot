@@ -1,5 +1,9 @@
 # API 服务（module/api）
 
+Quick Tunnel 配对新增 `remote.pair.create`、`remote.pair.status`、`remote.clients` 与
+`remote.revoke`，均沿用认证后的 `/api/v1/ws`，参数契约由生成器维护。
+独立配对凭据支持 `auth.login`；撤销在下一次请求或心跳生效，见 [远程访问](remote-access.md)。
+
 > WebUI 的后端服务：一个 Starlette ASGI 应用把 React 静态资源、同源 WebSocket 业务通道与 MCP SSE 子应用组装进同一进程；业务数据全部经 v1 信封走单一 WebSocket，HTTP 只保留静态资源、健康检查与一份自包含报告页。
 
 ## 1. 模块概述

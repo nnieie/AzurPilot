@@ -5,8 +5,36 @@ import types
 import unittest
 from unittest.mock import Mock, patch
 
+from deploy.git import GitManager
 from module.runtime.setting import State
 from module.runtime.updater import Updater
+
+
+class TestGitInstall(unittest.TestCase):
+    def test_source_update_uses_cdn_and_git_without_cloud_control(self):
+        for use_cdn, cdn_success in ((False, False), (True, True), (True, False)):
+            with self.subTest(use_cdn=use_cdn, cdn_success=cdn_success):
+                manager = Mock(spec=GitManager)
+                manager.GitOverCdn = use_cdn
+                manager.goc_client.update.return_value = cdn_success
+                with patch('deploy.git.requests.get') as request:
+                    GitManager.git_install(manager)
+
+                request.assert_not_called()
+                if use_cdn:
+                    manager.goc_client.update.assert_called_once_with()
+                else:
+                    manager.goc_client.update.assert_not_called()
+                if use_cdn and cdn_success:
+                    manager.git_repository_init.assert_not_called()
+                else:
+                    manager.git_repository_init.assert_called_once_with(
+                        repo=manager.Repository,
+                        source='origin',
+                        branch=manager.Branch,
+                        proxy=manager.GitProxy,
+                        ssl_verify=manager.SSLVerify,
+                    )
 
 
 class TestUpdaterReload(unittest.TestCase):
@@ -364,6 +392,23 @@ class TestUpdaterForceUpdate(unittest.TestCase):
         updater._force_update_checking = False
         return updater
 
+    def test_force_control_failure_does_not_block_version_check(self):
+        updater = self._updater()
+        updater.force_update = True
+        updater._check_cloud_force_update = Mock(return_value=None)
+        client = Mock()
+        client.get_status.return_value = 'behind'
+
+        with (
+            patch.object(State, 'deploy_config', types.SimpleNamespace(GitOverCdn=True)),
+            patch.object(Updater, 'goc_client', new=property(lambda self: client)),
+        ):
+            self.assertTrue(updater._check_update())
+
+        self.assertFalse(updater.force_update)
+        updater._check_cloud_force_update.assert_called_once_with()
+        client.get_status.assert_called_once_with()
+
     def test_detected_update_starts_immediately_when_force_update_is_enabled(self):
         updater = self._updater()
         updater.force_update = True
@@ -387,7 +432,6 @@ class TestUpdaterForceUpdate(unittest.TestCase):
 
     def test_existing_update_starts_when_force_update_is_later_enabled(self):
         updater = self._updater()
-        updater._check_cloud_update = Mock(return_value=True)
         updater._check_cloud_force_update = Mock(return_value=True)
         updater.run_update = Mock()
 

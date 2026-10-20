@@ -39,6 +39,7 @@ class ErrorBoundary extends Component<{children: ReactNode}, {failed: boolean}> 
 const SchedulerProgram = lazy(() => import('./pages/SchedulerProgram').then(module => ({default: module.SchedulerProgram})))
 const StockExchange = lazy(() => import('./pages/StockExchange').then(module => ({default: module.StockExchange})))
 const MindCalculator = lazy(() => import('./pages/MindCalculator').then(module => ({default: module.MindCalculator})))
+const FleetTechnology = lazy(() => import('./pages/FleetTechnology').then(module => ({default: module.FleetTechnology})))
 
 const router = createHashRouter([
   {path: '/', element: <App/>, errorElement: <ErrorPage/>, children: [{index: true, element: <Home/>}, {path: 'announcement', element: <Announcement/>}, {path: 'interface', element: <InterfaceSettings/>}, {path: 'remote', element: <RemoteAccess/>}, {path: 'settings', element: <Settings/>}, {path: 'updater', element: <Updater/>}, {path: 'configs', element: <ConfigManager/>}, {path: 'dev', element: <DevControls/>}]},
@@ -51,6 +52,7 @@ const router = createHashRouter([
     {path: 'logs', element: <Navigate to="../overview" replace/>}, {path: 'statistics', element: <Statistics/>}, {path: 'scheduler', element: <Navigate to="../task/SchedulerProgram" replace/>}, {path: 'settings', element: <Navigate to="/settings" replace/>},
     {path: 'task/SchedulerProgram', element: <Suspense fallback={<div>{translateCurrentUi('common.loading')}</div>}><SchedulerProgram/></Suspense>},
     {path: 'task/MindCalculator', element: <Suspense fallback={<div>{translateCurrentUi('common.loading')}</div>}><MindCalculator/></Suspense>},
+    {path: 'task/FleetTechnology', element: <Suspense fallback={<div>{translateCurrentUi('common.loading')}</div>}><FleetTechnology/></Suspense>},
   ]},
   {path: '*', element: <Navigate to="/" replace/>},
 ])

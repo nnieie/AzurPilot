@@ -10,11 +10,12 @@ import { DeployGroups } from '../components/DeployGroups'
 import { useDeploySettings } from '../app/useDeploySettings'
 import { remoteStatus } from '../app/remoteStatus'
 import { REMOTE_ACCESS_GROUPS } from '../app/settingsGroups'
+import {PairingPanel} from '../remote/PairingPanel'
 
 /** 远程访问页：顶部是当前可直接打开的地址，下面是远程访问与 WebUI 设置。 */
 export function RemoteAccess() {
   const {ui} = useApp()
-  const {data, error, edits, queue} = useDeploySettings()
+  const {data, error, edits, queue} = useDeploySettings(true)
   const [copied, setCopied] = useState(false)
   const addressRef = useRef<HTMLElement>(null)
 
@@ -71,6 +72,7 @@ export function RemoteAccess() {
         {data?.remote?.error && <p className="remote-hint muted">{data.remote.error}</p>}
         <p className="remote-hint muted">{ui('remote.passwordHint')}</p>
       </section>
+      <PairingPanel ready={!!address && data?.remote?.state === 'cloudflare_ready'}/>
       {!data ? <Loading/> : (
         <DeployGroups data={data} only={REMOTE_ACCESS_GROUPS} edits={edits} queue={queue} />
       )}

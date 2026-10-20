@@ -126,14 +126,6 @@ class Updater(DeployConfig, GitManager):
         else:
             return logs
 
-    def _check_cloud_update(self) -> bool:
-        """检查云端更新开关。
-
-        Returns:
-            若允许更新返回 True，否则返回 False 或 None。
-        """
-        return self.cloud_auto_update_enabled()
-
     def _check_cloud_force_update(self) -> bool:
         """检查云端强制更新开关。
 
@@ -149,15 +141,6 @@ class Updater(DeployConfig, GitManager):
             若有可用更新返回 True (或 1)，否则返回 False (或 0)。
         """
         self.state = "checking"
-
-        cloud_update = self._check_cloud_update()
-        if cloud_update is None:
-            self.cloud_update_access_failed(fatal=False)
-            return False
-        if not cloud_update:
-            self.force_update = False
-            logger.info("云更新标志为false，跳过更新检查")
-            return False
 
         force_update = self._check_cloud_force_update()
         self.force_update = force_update is True
@@ -292,11 +275,6 @@ class Updater(DeployConfig, GitManager):
     def _check_force_update_thread(self):
         """已有更新时，在后台线程仅检查强制更新开关以保留前端状态。"""
         try:
-            cloud_update = self._check_cloud_update()
-            if cloud_update is not True:
-                self.force_update = False
-                return
-
             force_update = self._check_cloud_force_update()
             self.force_update = force_update is True
             if self.force_update:

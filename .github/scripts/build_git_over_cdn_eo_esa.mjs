@@ -9,8 +9,8 @@ import yazl from "yazl";
 const env = process.env;
 // Cloudflare Worker 单文件上限 25MB，24MB 留出余量
 const MAX_PACK_BYTES = 24 * 1024 * 1024;
-const MAIN_SITE_URL = "https://alas.nanoda.work/";
-const MAIN_SITE_HOST = "alas.nanoda.work";
+const MAIN_SITE_URL = "https://azurpilot.com/";
+const MAIN_SITE_HOST = "azurpilot.com";
 const CDN_SITE_URLS = [
   "https://ap-update-cdn-cloudflare.3463343.xyz/",
   "https://ap-update-cdn-cloudflare-a3.haiteluo.com/",
@@ -25,7 +25,7 @@ const CDN_SITE_URLS = [
 ];
 const DEFAULT_SITE_URL = CDN_SITE_URLS[0];
 const SEO_TITLE = "AzurPilot 更新 CDN - 碧蓝航线自动化更新镜像";
-const SEO_DESCRIPTION = "AzurPilot 更新 CDN 提供 Git over CDN 静态更新文件、latest.json、更新包状态与最近提交信息，主站为 https://alas.nanoda.work/。";
+const SEO_DESCRIPTION = "AzurPilot 更新 CDN 提供 Git over CDN 静态更新文件、latest.json、更新包状态与最近提交信息，主站为 https://azurpilot.com/。";
 
 function printHelp() {
   console.log(`构建 EO/ESA/Pages 可用的 git-over-cdn 静态更新文件。

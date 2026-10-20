@@ -54,15 +54,14 @@ class StatisticsReadingTests(unittest.TestCase):
 
     def test_fingerprint_tracks_wal_changes_without_overview_events(self):
         original = get_statistics_fingerprint('inst', self.root / 'config')
-        from module.api import statistics_service
-        stat = statistics_service.os.stat
+        stat = Path.stat
 
         def changed(path, **kwargs):
             if str(path).endswith('azurpilot.db-wal'):
                 return SimpleNamespace(st_mtime_ns=987654321, st_size=4096)
             return stat(path, **kwargs)
 
-        with patch.object(statistics_service.os, 'stat', side_effect=changed):
+        with patch.object(Path, 'stat', new=changed):
             self.assertNotEqual(get_statistics_fingerprint('inst', self.root / 'config'), original)
 
 

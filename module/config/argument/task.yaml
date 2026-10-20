@@ -498,6 +498,8 @@ Tool:
     FleetScan: []
     MindCalculatorScan:
       - MindCalculator
+    FleetTechScan:
+      - FleetTech
     Daemon:
       - Daemon
     OpsiDaemon:

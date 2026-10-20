@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <strong><a href="https://alas.nanoda.work/">AzurPilot Official Website</a></strong> ｜ Azur Lane Automation Script · OS Erosion Cycle · Multi-Platform Support
+  <strong><a href="https://azurpilot.com/">AzurPilot Official Website</a></strong> ｜ Azur Lane Automation Script · OS Erosion Cycle · Multi-Platform Support
 </p>
 
 <p align="center">
@@ -42,7 +42,7 @@
 </p>
 
 <div align="center">
-  <a href="https://alas.nanoda.work/">
+  <a href="https://azurpilot.com/">
     <img src="https://img.shields.io/badge/Web-Download-blue?style=for-the-badge&logo=google-chrome&logoColor=white" />
   </a>
   &nbsp;&nbsp;&nbsp;&nbsp;
@@ -57,7 +57,7 @@ AzurPilot is an Azur Lane automation assistant modified from [AzurLaneAutoScript
 
 > **Note**: The code of this project is largely generated and assisted by AI, so there may be significant uncertainty. Pull requests to fix issues are welcome at [AzurPilot Pull Requests](https://github.com/wess09/AzurPilot/pulls).
 
-Visit the **[AzurPilot Official Website](https://alas.nanoda.work/)** for more feature details, or go to the **[Download Page](https://alas.nanoda.work/download.html)** to get the latest version.
+Visit the **[AzurPilot Official Website](https://azurpilot.com/)** for more feature details, or go to the **[Download Page](https://azurpilot.com/download.html)** to get the latest version.
 
 ## GUI Preview
 
@@ -67,12 +67,12 @@ Visit the **[AzurPilot Official Website](https://alas.nanoda.work/)** for more f
 
 ## Quick Start
 
-> 💡 **Recommended**: Download the launcher for your platform from the [AzurPilot download page](https://alas.nanoda.work/download.html). It bundles a Python environment and is ready to use out of the box.
+> 💡 **Recommended**: Download the launcher for your platform from the [AzurPilot download page](https://azurpilot.com/download.html). It bundles a Python environment and is ready to use out of the box.
 
 ### Linux One-Click Deployment
 
 ```shell
-curl -fsSL https://alas.nanoda.work/install/deploy-image.sh | sudo -E bash
+curl -fsSL https://azurpilot.com/install/deploy-image.sh | sudo -E bash
 ```
 
 ### Running from Source
@@ -211,7 +211,7 @@ After changing the password, restart the WebUI so that MCP picks it up.
 
 ## Multi-Platform Launcher
 
-> 📥 Download the Windows / macOS / Linux launchers from the [AzurPilot Official Website](https://alas.nanoda.work/download.html)
+> 📥 Download the Windows / macOS / Linux launchers from the [AzurPilot Official Website](https://azurpilot.com/download.html)
 
 <div align="center">
   <img src="doc/loading.png" alt="loading" width="500" />
@@ -262,8 +262,8 @@ Since this project continues development based on AzurLaneAutoScript and its com
 
 ## Related Links
 
-- [AzurPilot Official Website](https://alas.nanoda.work/) — Project introduction, feature details, Azur Lane automation solutions
-- [AzurPilot Download Page](https://alas.nanoda.work/download.html) — Download the Azur Lane script tool for Windows / macOS / Linux
+- [AzurPilot Official Website](https://azurpilot.com/) — Project introduction, feature details, Azur Lane automation solutions
+- [AzurPilot Download Page](https://azurpilot.com/download.html) — Download the Azur Lane script tool for Windows / macOS / Linux
 - [GitHub Repository](https://github.com/wess09/AzurPilot) — Source code, Issues, Pull Requests
 - [QQ Community Group](https://join.nanoda.work/#/) — Azur Lane automation community
 - [AzurLaneAutoScript Upstream](https://github.com/LmeSzinc/AzurLaneAutoScript) — The original ALAS

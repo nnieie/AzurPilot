@@ -107,6 +107,8 @@ Deploy:
     # [SSH] ssh (legacy SSH reverse tunnel only)
     # [WebRTC] webrtc (prefer P2P and keep SSH fallback)
     RemoteAccessMode: auto
+    CloudflareRegistry: https://remote.azurpilot.com
+    CloudflareDeviceId: ""
     # Username when login into ssh server
     # [Default] null (will generate a random one when startup)
     SSHUser: null

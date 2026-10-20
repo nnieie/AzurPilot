@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <strong><a href="https://alas.nanoda.work/">AzurPilot 官網</a></strong> ｜ 碧藍航線自動化腳本 · 大型作戰侵蝕循環 · 多平台支援
+  <strong><a href="https://azurpilot.com/">AzurPilot 官網</a></strong> ｜ 碧藍航線自動化腳本 · 大型作戰侵蝕循環 · 多平台支援
 </p>
 
 <p align="center">
@@ -42,7 +42,7 @@
 </p>
 
 <div align="center">
-  <a href="https://alas.nanoda.work/">
+  <a href="https://azurpilot.com/">
     <img src="https://img.shields.io/badge/Web-下載-blue?style=for-the-badge&logo=google-chrome&logoColor=white" />
   </a>
   &nbsp;&nbsp;&nbsp;&nbsp;
@@ -57,7 +57,7 @@ AzurPilot 是基於 [AzurLaneAutoScript](https://github.com/LmeSzinc/AzurLaneAut
 
 > **請注意**：本專案程式碼基本上由 AI 產生並輔助編寫，存在較大的不確定性，歡迎提交 [Pull Request](https://github.com/wess09/AzurPilot/pulls) 修正。
 
-前往 **[AzurPilot 官網](https://alas.nanoda.work/)** 了解更完整的功能說明，或前往 **[下載頁面](https://alas.nanoda.work/download.html)** 取得最新版本。
+前往 **[AzurPilot 官網](https://azurpilot.com/)** 了解更完整的功能說明，或前往 **[下載頁面](https://azurpilot.com/download.html)** 取得最新版本。
 
 ## GUI 預覽
 
@@ -67,12 +67,12 @@ AzurPilot 是基於 [AzurLaneAutoScript](https://github.com/LmeSzinc/AzurLaneAut
 
 ## 快速開始
 
-> 💡 **建議方式**：直接從 [AzurPilot 官網下載頁](https://alas.nanoda.work/download.html) 下載對應平台的啟動器，內建 Python 環境，開箱即用。
+> 💡 **建議方式**：直接從 [AzurPilot 官網下載頁](https://azurpilot.com/download.html) 下載對應平台的啟動器，內建 Python 環境，開箱即用。
 
 ### Linux 一鍵部署
 
 ```shell
-curl -fsSL https://alas.nanoda.work/install/deploy-image.sh | sudo -E bash
+curl -fsSL https://azurpilot.com/install/deploy-image.sh | sudo -E bash
 ```
 
 ### 原始碼執行
@@ -211,7 +211,7 @@ MCP 沿用 WebUI 的密碼（`--key` / `config/deploy.yaml` 的 `Password`），
 
 ## 多平台啟動器
 
-> 📥 從 [AzurPilot 官網](https://alas.nanoda.work/download.html) 下載 Windows / macOS / Linux 啟動器
+> 📥 從 [AzurPilot 官網](https://azurpilot.com/download.html) 下載 Windows / macOS / Linux 啟動器
 
 <div align="center">
   <img src="doc/loading.png" alt="loading" width="500" />
@@ -262,8 +262,8 @@ MCP 沿用 WebUI 的密碼（`--key` / `config/deploy.yaml` 的 `Password`），
 
 ## 相關連結
 
-- [AzurPilot 官網](https://alas.nanoda.work/) — 專案介紹、功能說明、碧藍航線自動化解決方案
-- [AzurPilot 下載頁](https://alas.nanoda.work/download.html) — 下載 Windows / macOS / Linux 版本的碧藍航線腳本工具
+- [AzurPilot 官網](https://azurpilot.com/) — 專案介紹、功能說明、碧藍航線自動化解決方案
+- [AzurPilot 下載頁](https://azurpilot.com/download.html) — 下載 Windows / macOS / Linux 版本的碧藍航線腳本工具
 - [GitHub 儲存庫](https://github.com/wess09/AzurPilot) — 原始碼、Issue、Pull Request
 - [QQ 交流群](https://join.nanoda.work/#/) — 碧藍航線自動化社群交流
 - [AzurLaneAutoScript 上游專案](https://github.com/LmeSzinc/AzurLaneAutoScript) — ALAS 原版

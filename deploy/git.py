@@ -10,7 +10,6 @@ from deploy.logger import logger
 from deploy.utils import *
 
 
-CLOUD_UPDATE_CONTROL_URL = 'https://alas-apiv2.nanoda.work/api/updata'
 CLOUD_FORCE_UPDATE_CONTROL_URL = 'https://alas-apiv2.nanoda.work/api/force_update'
 
 
@@ -210,37 +209,6 @@ class GitManager(DeployConfig):
         return url
 
     @staticmethod
-    def cloud_auto_update_enabled():
-        """检查云端自动更新开关是否启用。
-
-        Returns:
-            bool | None: True 启用，False 禁用，网络异常返回 None。
-        """
-        logger.info(f'Check cloud update control: {CLOUD_UPDATE_CONTROL_URL}')
-        try:
-            resp = requests.get(CLOUD_UPDATE_CONTROL_URL, timeout=5, headers={'User-Agent': 'alas AzurPilot'})
-            resp.raise_for_status()
-        except Exception as e:
-            logger.warning(f'Failed to check cloud update control: {e}')
-            return None
-
-        text = resp.text.strip()
-        try:
-            data = resp.json()
-        except ValueError:
-            data = text
-
-        if data is True or (isinstance(data, str) and data.lower() in ('true', 'ture')):
-            logger.info('Cloud update control is enabled')
-            return True
-        if data is False or (isinstance(data, str) and data.lower() in ('false', 'fales')):
-            logger.info('Cloud update control is disabled')
-            return False
-
-        logger.info(f'Cloud update control is inaccessible: {text}')
-        return None
-
-    @staticmethod
     def cloud_force_update_enabled():
         """检查云端强制更新开关是否启用。
 
@@ -275,32 +243,9 @@ class GitManager(DeployConfig):
         logger.info(f'Cloud update control is inaccessible: {text}')
         return None
 
-    def cloud_update_access_failed(self, fatal=True):
-        """处理云端更新控制接口访问失败的情形。
-
-        Args:
-            fatal (bool): 是否视为致命错误并终止启动。
-
-        Raises:
-            ExecutionError: 当 fatal 为 True 时抛出。
-        """
-        logger.hr('Cloud Update Control Failed', 0)
-        if fatal:
-            logger.warning('Failed to access cloud update control, stopping startup')
-            raise ExecutionError
-        else:
-            logger.warning('Failed to access cloud update control, skip update check')
-
     def git_install(self):
-        """根据云端状态与本地配置执行 Git 源码拉取与更新。"""
+        """根据本地配置执行 Git 源码拉取与更新。"""
         logger.hr('Update AzurPilot', 0)
-
-        cloud_update = self.cloud_auto_update_enabled()
-        if cloud_update is None:
-            self.cloud_update_access_failed()
-        if not cloud_update:
-            logger.info('Cloud update control disabled, skip')
-            return
 
         if self.GitOverCdn:
             if self.goc_client.update(keep_changes=self.KeepLocalChanges):

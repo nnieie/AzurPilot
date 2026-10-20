@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <strong><a href="https://alas.nanoda.work/">AzurPilot 公式サイト</a></strong> ｜ アズールレーン自動化スクリプト・大世界侵蝕ループ・マルチプラットフォーム対応
+  <strong><a href="https://azurpilot.com/">AzurPilot 公式サイト</a></strong> ｜ アズールレーン自動化スクリプト・大世界侵蝕ループ・マルチプラットフォーム対応
 </p>
 
 <p align="center">
@@ -42,7 +42,7 @@
 </p>
 
 <div align="center">
-  <a href="https://alas.nanoda.work/">
+  <a href="https://azurpilot.com/">
     <img src="https://img.shields.io/badge/Web-ダウンロード-blue?style=for-the-badge&logo=google-chrome&logoColor=white" />
   </a>
   &nbsp;&nbsp;&nbsp;&nbsp;
@@ -57,7 +57,7 @@ AzurPilot は [AzurLaneAutoScript](https://github.com/LmeSzinc/AzurLaneAutoScrip
 
 > **ご注意**: 本プロジェクトのコードはほぼ AI によって生成・補助されています。不確実性が高いため、修正の [Pull Request](https://github.com/wess09/AzurPilot/pulls) を歓迎します。
 
-**[AzurPilot 公式サイト](https://alas.nanoda.work/)** で機能の詳細をご確認いただくか、**[ダウンロードページ](https://alas.nanoda.work/download.html)** から最新版を入手してください。
+**[AzurPilot 公式サイト](https://azurpilot.com/)** で機能の詳細をご確認いただくか、**[ダウンロードページ](https://azurpilot.com/download.html)** から最新版を入手してください。
 
 ## GUI プレビュー
 
@@ -67,12 +67,12 @@ AzurPilot は [AzurLaneAutoScript](https://github.com/LmeSzinc/AzurLaneAutoScrip
 
 ## クイックスタート
 
-> 💡 **推奨**: [AzurPilot ダウンロードページ](https://alas.nanoda.work/download.html) からお使いのプラットフォームのランチャーを入手してください。Python 環境を同梱しており、すぐに利用できます。
+> 💡 **推奨**: [AzurPilot ダウンロードページ](https://azurpilot.com/download.html) からお使いのプラットフォームのランチャーを入手してください。Python 環境を同梱しており、すぐに利用できます。
 
 ### Linux ワンクリック導入
 
 ```shell
-curl -fsSL https://alas.nanoda.work/install/deploy-image.sh | sudo -E bash
+curl -fsSL https://azurpilot.com/install/deploy-image.sh | sudo -E bash
 ```
 
 ### ソースコードからの実行
@@ -211,7 +211,7 @@ URL しか指定できずリクエストヘッダーを設定できないクラ�
 
 ## マルチプラットフォームランチャー
 
-> 📥 [AzurPilot 公式サイト](https://alas.nanoda.work/download.html) から Windows / macOS / Linux ランチャーをダウンロード
+> 📥 [AzurPilot 公式サイト](https://azurpilot.com/download.html) から Windows / macOS / Linux ランチャーをダウンロード
 
 <div align="center">
   <img src="doc/loading.png" alt="loading" width="500" />
@@ -262,8 +262,8 @@ URL しか指定できずリクエストヘッダーを設定できないクラ�
 
 ## 関連リンク
 
-- [AzurPilot 公式サイト](https://alas.nanoda.work/) — プロジェクト紹介、機能詳細、アズールレーン自動化ソリューション
-- [AzurPilot ダウンロードページ](https://alas.nanoda.work/download.html) — Windows / macOS / Linux 版のアズールレーンスクリプトツールをダウンロード
+- [AzurPilot 公式サイト](https://azurpilot.com/) — プロジェクト紹介、機能詳細、アズールレーン自動化ソリューション
+- [AzurPilot ダウンロードページ](https://azurpilot.com/download.html) — Windows / macOS / Linux 版のアズールレーンスクリプトツールをダウンロード
 - [GitHub リポジトリ](https://github.com/wess09/AzurPilot) — ソースコード、Issue、Pull Request
 - [QQ 交流群](https://join.nanoda.work/#/) — アズールレーン自動化コミュニティ
 - [AzurLaneAutoScript 上流プロジェクト](https://github.com/LmeSzinc/AzurLaneAutoScript) — ALAS オリジナル版

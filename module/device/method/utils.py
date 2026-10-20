@@ -154,8 +154,8 @@ class PatchedIniter(u2.init.Initer):
             raise Exception(
                 "arch(%s) need to be supported yet, please report an issue in github"
                 % self.abis)
-        return u2.init.GITHUB_BASEURL + '/atx-agent/releases/download/%s/%s' % (
-            u2.version.__atx_agent_version__, name.format(v=u2.version.__atx_agent_version__))
+        return 'https://atx.azurpilot.com/%s' % (
+            name.format(v=u2.version.__atx_agent_version__))
 
     @property
     def minicap_urls(self):

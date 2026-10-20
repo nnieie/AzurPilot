@@ -5,6 +5,7 @@ import json
 import secrets
 import time
 from collections import OrderedDict
+from pathlib import Path
 from urllib.parse import urlsplit
 
 import anyio
@@ -106,13 +107,23 @@ class Gateway:
         count, until = self.failures.get(peer, (0, 0))
         if until > now:
             raise ApiError('RATE_LIMITED', '登录尝试过于频繁，请稍后重试')
-        if not secrets.compare_digest(password.encode(), self.password.encode()):
+        from module.runtime.remote_cloudflare import RemoteIdentity
+        directory = getattr(getattr(self.router, 'configs', None), 'directory', None)
+        paired = RemoteIdentity(directory).accepts(password) if isinstance(directory, Path) else False
+        if not paired and not secrets.compare_digest(password.encode(), self.password.encode()):
             count += 1
             self.failures[peer] = (count, now + min(60, count * 2))
             if len(self.failures) > 1024:
                 self.failures.popitem(last=False)
             raise ApiError('UNAUTHORIZED', '访问密码不正确')
         self.failures.pop(peer, None)
+        return paired
+
+    def paired_authorized(self, token: str) -> bool:
+        """在后续请求与心跳时重新检查配对，阻止已撤销会话继续操作。"""
+        from module.runtime.remote_cloudflare import RemoteIdentity
+        directory = getattr(getattr(self.router, 'configs', None), 'directory', None)
+        return RemoteIdentity(directory).accepts(token) if isinstance(directory, Path) else False
 
 
 class Session:
@@ -149,6 +160,7 @@ class Session:
         """
         self.gateway, self.ws = gateway, ws
         self.authorized = local or not bool(gateway.password)
+        self.paired_token = ''
         self.queue = asyncio.Queue(maxsize=32)
         self.subscription = SubscribeParams(topics=[])
         self.sequence = 0
@@ -271,9 +283,14 @@ class Session:
                 if request.method == 'auth.login':
                     params = AuthParams.model_validate(request.params)
                     peer = self.ws.client.host if self.ws.client else 'unknown'
-                    self.gateway.authenticate(peer, params.password)
+                    paired = self.gateway.authenticate(peer, params.password)
+                    self.paired_token = params.password if paired else ''
                     self.authorized = True
                     result = {'authenticated': True}
+                elif self.paired_token and not self.gateway.paired_authorized(self.paired_token):
+                    self.authorized = False
+                    self.paired_token = ''
+                    raise ApiError('UNAUTHORIZED', '配对已撤销，请重新配对')
                 elif not self.authorized:
                     raise ApiError('UNAUTHORIZED', '请先登录')
                 elif request.method == 'events.subscribe':

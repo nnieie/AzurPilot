@@ -153,6 +153,7 @@
     "tasks": [
       "FleetScan",
       "MindCalculatorScan",
+      "FleetTechScan",
       "Daemon",
       "OpsiDaemon",
       "EventStory",

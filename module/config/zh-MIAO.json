@@ -489,7 +489,7 @@
     },
     "TelemetryReport": {
       "name": "遥测数据上报喵",
-      "help": "启用后将定期向服务器匿名上报CL1统计数据喵（战斗次数、明石遇见概率等匿名数据）ID生成详见源码喵，统计信息 https://alas.nanoda.work/"
+      "help": "启用后将定期向服务器匿名上报CL1统计数据喵（战斗次数、明石遇见概率等匿名数据）ID生成详见源码喵，统计信息 https://azurpilot.com/"
     },
     "BugReport": {
       "name": "Bug 日志上报喵",

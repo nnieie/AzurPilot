@@ -17,7 +17,7 @@ THEME_OPTIONS = [
     "advanced_material",
     "dark_advanced_material",
 ]
-REMOTE_ACCESS_MODE_OPTIONS = ["auto", "webrtc", "ssh"]
+REMOTE_ACCESS_MODE_OPTIONS = ["auto", "webrtc", "ssh", "cloudflare"]
 TURN_CREDENTIAL_MODE_OPTIONS = ["static", "ephemeral"]
 INVALID_INSTANCE_CHARS = set(".\\/:*?\"'<>|")
 
@@ -97,6 +97,7 @@ DEPLOY_GROUPS: tuple[tuple[str, tuple[DeployField, ...]], ...] = (
         (
             DeployField("EnableRemoteAccess", "bool"),
             DeployField("RemoteAccessMode", "select", tuple(REMOTE_ACCESS_MODE_OPTIONS)),
+            DeployField("CloudflareRegistry"),
             DeployField("SSHUser", "nullable_string"),
             DeployField("SSHServer", "nullable_string"),
             DeployField("SSHExecutable", "nullable_string"),

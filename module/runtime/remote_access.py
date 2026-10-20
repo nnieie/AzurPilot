@@ -1,7 +1,7 @@
 """远程访问服务。
 
 默认使用 localshare 的 P2P bootstrap：优先 WebRTC 直连/TURN 中继，失败后回到
-localshare 现有 SSH 反向隧道。`RemoteAccessMode=ssh` 时保持旧行为。
+localshare SSH 反向隧道。`cloudflare` 模式使用 Quick Tunnel 与设备固定入口。
 """
 from module.base.runtime_params import P2P_SETUP_TIMEOUT, SSH_RECONNECT_DELAY, SSH_RECONNECT_MAX_DELAY
 import asyncio
@@ -206,11 +206,11 @@ def _remote_mode() -> str:
     """获取配置的远程访问模式。
 
     Returns:
-        str: 'ssh', 'webrtc' 或 'auto'。
+        str: 'ssh'、'webrtc'、'auto' 或 'cloudflare'。
     """
     mode = getattr(State.deploy_config, "RemoteAccessMode", "auto")
     mode = str(mode or "auto").strip().lower()
-    if mode not in ("ssh", "webrtc", "auto"):
+    if mode not in ("ssh", "webrtc", "auto", "cloudflare"):
         logger.warning(f"[WebUI] 未知远程访问模式 [{mode}]，回退到 auto")
         return "auto"
     return mode
@@ -1319,7 +1319,7 @@ class WebRTCRemoteAccessProvider(RemoteAccessProvider):
 
 
 class AutoRemoteAccessProvider(RemoteAccessProvider):
-    """根据部署配置自动选取最佳协议（SSH 或 WebRTC）的聚合提供者。
+    """根据部署配置选择 SSH、WebRTC 或 Cloudflare 的聚合提供者。
 
     Attributes:
         ssh: SSH 协议提供者。
@@ -1330,6 +1330,8 @@ class AutoRemoteAccessProvider(RemoteAccessProvider):
         """初始化自动远程访问聚合服务。"""
         self.ssh = SSHRemoteAccessProvider()
         self.webrtc = WebRTCRemoteAccessProvider(self.ssh)
+        from module.runtime.remote_cloudflare import cloudflare
+        self.cloudflare = cloudflare
 
     def active(self) -> RemoteAccessProvider:
         """根据当前配置模式返回活跃的提供者实例。
@@ -1338,6 +1340,8 @@ class AutoRemoteAccessProvider(RemoteAccessProvider):
             RemoteAccessProvider: 选中的提供者对象。
         """
         mode = _remote_mode()
+        if mode == "cloudflare":
+            return self.cloudflare
         return self.ssh if mode == "ssh" else self.webrtc
 
     def start(self) -> None:
@@ -1348,6 +1352,7 @@ class AutoRemoteAccessProvider(RemoteAccessProvider):
         """停止所有远程访问提供者。"""
         self.webrtc.stop()
         self.ssh.stop()
+        self.cloudflare.stop()
 
     def is_alive(self) -> bool:
         """检查当前活跃提供者是否存活。"""

@@ -39,6 +39,16 @@ class Params(BaseModel):
     model_config = ConfigDict(extra='forbid', strict=True)
 
 
+class RemotePairingParams(Params):
+    """服务器生成的配对会话标识。"""
+    id: StrictStr = Field(pattern=r'^[a-f0-9]{64}$')
+
+
+class RemoteClientParams(Params):
+    """本机生成的配对客户端标识。"""
+    id: StrictStr = Field(pattern=r'^[a-f0-9]{32}$')
+
+
 class MindShip(Params):
     """可编辑的舰船字段，核对状态与排除状态独立保存。"""
     name: StrictStr = Field(min_length=1, max_length=100)
@@ -94,6 +104,31 @@ class BackgroundGalleryRemoveParams(Params):
 class InstanceParams(Params):
     """单实例操作通用入参模型。"""
     instance: StrictStr = Field(min_length=1, max_length=64)
+
+
+def _partial_update_schema(schema):
+    """局部更新的缺失字段必须保持缺失，禁止客户端填入默认 null。"""
+    for field in schema.get('properties', {}).values():
+        field.pop('default', None)
+
+
+class FleetTechChange(Params):
+    """只修改明确提供的人工字段；恢复自动记录使用独立标记。"""
+    model_config = ConfigDict(extra='forbid', strict=True, json_schema_extra=_partial_update_schema)
+    group_type: StrictInt = Field(ge=1)
+    owned: StrictBool | None = None
+    full_star: StrictBool | None = None
+    lv120: StrictBool | None = None
+    level: StrictInt | None = Field(default=None, ge=1, le=125)
+    restore: StrictBool = False
+    toggle: Literal['owned', 'complete', 'star'] | None = None
+    target: StrictBool | None = None
+
+
+class FleetTechPatchParams(InstanceParams):
+    revision: StrictStr = Field(min_length=64, max_length=64)
+    changes: list[FleetTechChange] = Field(default_factory=list, max_length=1000)
+    nations: dict[str, StrictInt | None] = Field(default_factory=dict, max_length=4)
 
 
 class MindCalculateParams(InstanceParams):

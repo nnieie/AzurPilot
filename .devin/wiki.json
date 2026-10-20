@@ -7,7 +7,7 @@
       "content": "事实来源与时效性：以当前分支的实际源码为最高优先级。README、frontend/README.md、frontend/API.md、AGENTS.md、CLAUDE.md、.agent/*.md、docs/ 与 README/ 可作为上下文和导航，但若文档与源码冲突，必须以源码为准并指出差异。尤其注意 2026-09 前端已迁移到 frontend/（React + TypeScript + Vite），业务通信位于 module/api/ 的 WebSocket API v1，运行服务主要位于 module/runtime/；不要把历史 PyWebIO/webapp/module/webui 架构描述成当前主架构。module/webui/ 仅在确有现存代码时按其实际职责说明。"
     },
     {
-      "content": "项目定位：AzurPilot 是面向《碧蓝航线》的自动化框架，核心由 alas.py 调度任务，通过 module/device/ 控制 Android 模拟器/设备，通过截图、模板匹配和 OCR 感知游戏 UI，并由 module/ui/、module/handler/、module/combat/、module/map/、module/campaign/ 以及各业务模块执行自动化流程。支持 CN/EN/JP/TW 等服务器资源和配置差异。Wiki 应强调模块边界、数据流、控制流、失败恢复和 7×24h 长期运行设计，而不只罗列文件。"
+      "content": "项目定位与官方资源：AzurPilot 是面向《碧蓝航线》的自动化框架，核心由 alas.py 调度任务，通过 module/device/ 控制 Android 模拟器/设备，通过截图、模板匹配和 OCR 感知游戏 UI，并由 module/ui/、module/handler/、module/combat/、module/map/、module/campaign/ 以及各业务模块执行自动化流程。支持 CN/EN/JP/TW 等服务器资源和配置差异。官方网站为 https://azurpilot.com/，提供项目介绍、功能特性、各平台启动器下载（https://azurpilot.com/download.html）与社区入口。Wiki 应强调模块边界、数据流、控制流、失败恢复和 7×24h 长期运行设计，而不只罗列文件。"
     },
     {
       "content": "Web 与运行架构：gui.py 是 Web 控制台启动/监督入口；frontend/ 是当前 React 控制台；module/api/ 提供严格白名单的 WebSocket v1 API、认证、配置服务、统计与更新服务；module/runtime/ 提供进程管理、任务处理、预览、更新器、启动器、远程访问和认证等与 UI 解耦的运行服务。配置写入涉及 module/config/transaction.py 等跨进程事务机制。描述这些部分时必须明确前端、API、Runtime、核心调度器之间的进程边界和调用方向。"
@@ -26,7 +26,7 @@
       "parent": null,
       "page_notes": [
         {
-          "content": "以 README.md、pyproject.toml、alas.py、gui.py、frontend/README.md 和当前目录结构为主要依据。加入一张端到端总览图：用户/浏览器 → Web/API/Runtime → Scheduler → Device/Vision → 游戏。明确 AzurPilot 与历史名称 AzurLaneAutoScript/ALAS 的关系，但不要让历史架构掩盖当前实现。"
+          "content": "以 README.md、pyproject.toml、alas.py、gui.py、frontend/README.md 和当前目录结构为主要依据。加入一张端到端总览图：用户/浏览器 → Web/API/Runtime → Scheduler → Device/Vision → 游戏。明确 AzurPilot 与历史名称 AzurLaneAutoScript/ALAS 的关系，但不要让历史架构掩盖当前实现。介绍官方网站（https://azurpilot.com/）及其下载页（https://azurpilot.com/download.html），说明官网作为产品门户、多平台启动器分发与用户文档入口的角色。"
         }
       ]
     },
@@ -46,7 +46,7 @@
       "parent": "项目概览 / Project Overview",
       "page_notes": [
         {
-          "content": "以 pyproject.toml、uv.lock、frontend/package.json、frontend/README.md、gui.py、alas.py、mcp_server_sse.py、Dockerfile 为准。给出 Windows/通用命令时优先采用仓库实际使用的 uv 与 npm 工作流。说明默认 WebUI 端口来源及源码构建/静态产物关系，但不要写死无法从代码确认的环境假设。"
+          "content": "以 pyproject.toml、uv.lock、frontend/package.json、frontend/README.md、gui.py、alas.py、mcp_server_sse.py、Dockerfile 为准。给出 Windows/通用命令时优先采用仓库实际使用的 uv 与 npm 工作流。说明普通用户推荐从官网下载页（https://azurpilot.com/download.html）直接获取开箱即用的多平台启动器，开发者则通过 uv sync 与 npm 进行源码运行；说明默认 WebUI 端口来源及源码构建/静态产物关系，但不要写死无法从代码确认的环境假设。"
         }
       ]
     },

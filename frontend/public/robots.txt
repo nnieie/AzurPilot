@@ -1,0 +1,5 @@
+# AzurPilot WebUI - Private Control Console
+# Official Website: https://azurpilot.com/
+
+User-agent: *
+Disallow: /

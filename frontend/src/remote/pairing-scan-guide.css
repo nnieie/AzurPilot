@@ -1,0 +1,73 @@
+/* 操作区优先，扫码图为辅助说明；沿用主题色与 16/24/32px 间距。 */
+.pairing-stage:has(> .pairing-scan-guide) {
+  display: grid;
+  grid-template-columns: 272px minmax(0, 1fr) 208px;
+  gap: 32px;
+  max-width: 960px;
+}
+
+.pairing-scan-guide {
+  --pairing-scan-duration: 6s;
+  margin: 0;
+  color: var(--text);
+  text-align: center;
+}
+
+.pairing-scan-scene {display: block; width: 208px; height: auto}
+.pairing-scan-source, .pairing-scan-screen {fill: var(--surface); stroke: var(--border); stroke-width: 1.5}
+.pairing-scan-phone-body {fill: var(--text)}
+.pairing-scan-viewfinder {fill: var(--accent-soft)}
+.pairing-scan-corners {fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round}
+.pairing-scan-line {fill: var(--accent); opacity: 0}
+.pairing-scan-check {opacity: 0}
+
+/* 六秒演示依次为对准、扫描、识别反馈；仅改变 transform 和 opacity。 */
+.pairing-scan-phone {
+  transform-origin: 163px 99px;
+  animation: pairing-phone-align var(--pairing-scan-duration) var(--ease-standard) infinite;
+}
+.pairing-scan-line {animation: pairing-phone-sweep var(--pairing-scan-duration) linear infinite}
+.pairing-scan-target {animation: pairing-phone-target var(--pairing-scan-duration) linear infinite}
+.pairing-scan-check {animation: pairing-phone-check var(--pairing-scan-duration) linear infinite}
+.pairing-scan-phone, .pairing-scan-line, .pairing-scan-target, .pairing-scan-check {animation-play-state: paused}
+.pairing-scan-guide[data-playing='true'] :is(.pairing-scan-phone, .pairing-scan-line, .pairing-scan-target, .pairing-scan-check) {animation-play-state: running}
+
+@keyframes pairing-phone-align {
+  0%, 100% {transform: translate(10px, 4px) rotate(8deg)}
+  20%, 85% {transform: translate(0, 0) rotate(0)}
+}
+@keyframes pairing-phone-sweep {
+  0%, 22% {opacity: 0; transform: translateY(0)}
+  26% {opacity: 1; transform: translateY(0)}
+  58% {opacity: 1; transform: translateY(58px)}
+  62%, 100% {opacity: 0; transform: translateY(58px)}
+}
+@keyframes pairing-phone-target {
+  0%, 58%, 94%, 100% {opacity: 1}
+  64%, 86% {opacity: .12}
+}
+@keyframes pairing-phone-check {
+  0%, 60%, 94%, 100% {opacity: 0; transform: scale(.95)}
+  66%, 86% {opacity: 1; transform: scale(1)}
+}
+.pairing-scan-check {transform-origin: 163px 96px}
+
+@media (max-width: 1100px) {
+  .pairing-stage:has(> .pairing-scan-guide) {grid-template-columns: 272px minmax(0, 1fr)}
+  .pairing-scan-guide {grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 24px}
+  .pairing-scan-scene {width: 160px; flex-shrink: 0}
+}
+
+@media (max-width: 768px) {
+  .pairing-stage:has(> .pairing-scan-guide) {grid-template-columns: minmax(0, 1fr); gap: 24px}
+  .pairing-scan-guide {gap: 16px}
+  .pairing-scan-scene {width: 128px}
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pairing-scan-phone, .pairing-scan-line, .pairing-scan-target, .pairing-scan-check {animation: none}
+  .pairing-scan-phone {transform: none}
+  .pairing-scan-line {opacity: .6; transform: translateY(29px)}
+  .pairing-scan-target {opacity: 1}
+  .pairing-scan-check {opacity: 0}
+}
