@@ -532,7 +532,7 @@ class Emotion:
             self.config.task_delay(target=recovered)
             raise ScriptEnd('[情绪-延迟] 情绪控制')
 
-    def check_fleet(self, fleet_index):
+    def check_fleet(self, fleet_index, after_restart=False):
         """自律恢复前检查实际接替舰队，不按原编队的待命设置跳过校准。
 
         检查下一场的基础消耗，不等待、不扣减心情。心情不足沿用任务延迟，
@@ -540,17 +540,22 @@ class Emotion:
 
         Args:
             fleet_index (int): 接替舰队的画面编号（1 或 2）。
+            after_restart (bool): 是否为异常重启续接预检，供专用心情策略区分。
         """
         if not self.is_calculate:
             return
+        recovered = self._check_fleet(fleet_index)
+        if recovered > current_time():
+            self.config.task_delay(target=recovered)
+            raise ScriptEnd('[情绪-延迟] 接替舰队情绪控制')
+
+    def _check_fleet(self, fleet_index):
+        """按实际舰队计算下一场出击时间，由任务选择等待或换船策略。"""
         self.update()
         self.record()
         self.show()
         fleet = self.public_fleet if self.using_public else self.fleets[fleet_index - 1]
-        recovered = self._get_recovered(fleet, self.reduce_per_battle)
-        if recovered > current_time():
-            self.config.task_delay(target=recovered)
-            raise ScriptEnd('[情绪-延迟] 接替舰队情绪控制')
+        return self._get_recovered(fleet, self.reduce_per_battle)
 
     def wait(self, fleet_index):
         """等待指定舰队满足出击需求及已触发的预留恢复。应在进入任何战斗之前调用。

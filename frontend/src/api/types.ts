@@ -41,7 +41,7 @@ export interface Schema {
   args: Record<string, Record<string, Record<string, Field>>>
   translations: Record<string, unknown>
 }
-export interface Config { instance: string; revision: string; values: Values }
+export interface Config { instance: string; revision: string; values: Values; options?: Record<string, Value[]> }
 export interface OpsiSimulatorResult {
   cl1Count: number; meowCount: number; crashedProbability: number
   cl1Time: number; meowTime: number; ap: number; coin: number

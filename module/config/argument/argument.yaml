@@ -716,6 +716,7 @@ Campaign:
   UseClearMode: true
   UseFleetLock: true
   UseAutoSearch: true
+  ContinueAfterRestart: false
   Use2xBook: false
   AmbushEvade: true
   UseRecommendFleet: false
@@ -1534,6 +1535,7 @@ Hard:
   HardFleet:
     value: 1
     option: [1, 2]
+  RunAt18: false
 Exercise:
   DelayUntilHoursBeforeNextUpdate:
     value: 12

@@ -154,7 +154,28 @@ export function createMockState({ empty = false } = {}) {
     }
   }
   const get = name => instances.get(name) ?? fail('NOT_FOUND', '实例不存在')
-  const snapshot = name => ({ instance: name, revision: revision(get(name).values), values: structuredClone(get(name).values) })
+  const campaignOptions = values => {
+    const server = region(values.Alas.Emulator.PackageName) ?? 'cn'
+    return Object.fromEntries(Object.entries(args).flatMap(([task, groups]) => {
+      const candidates = groups.Campaign?.Event?.[`option_${server}`]
+      return candidates ? [[`${task}.Campaign.Event`, candidates]] : []
+    }))
+  }
+  const refreshCampaigns = (values, options) => {
+    for (const [path, candidates] of Object.entries(options)) {
+      const [task] = path.split('.')
+      const current = values[task]?.Campaign?.Event ?? 'campaign_main'
+      if (candidates.length && (task !== 'WarArchives' || current === 'campaign_main') && !candidates.includes(current)) {
+        values[task].Campaign.Event = candidates[0]
+      }
+    }
+  }
+  const snapshot = name => {
+    const values = structuredClone(get(name).values)
+    const options = campaignOptions(values)
+    refreshCampaigns(values, options)
+    return { instance: name, revision: revision(get(name).values), values, options }
+  }
   // 日志时间与真实后端一致使用本地时区（timestamp() 供调度比较，保持 UTC）。
   const logTime = date => [date.getHours(), date.getMinutes(), date.getSeconds()].map(n => String(n).padStart(2, '0')).join(':')
     + '.' + String(date.getMilliseconds()).padStart(3, '0')
@@ -518,6 +539,12 @@ export function createMockState({ empty = false } = {}) {
           data.values[task] ??= {}; data.values[task][group] ??= {}
           data.values[task][group][arg] = value
         }
+        const options = campaignOptions(data.values)
+        for (const [path, candidates] of Object.entries(options)) {
+          const [task] = path.split('.')
+          if (candidates.length && seen.has(path) && !candidates.includes(data.values[task].Campaign.Event)) fail('INVALID_PARAMS', '请选择当前服务器的活动')
+        }
+        refreshCampaigns(data.values, options)
         get(name).values = data.values
         log(name, `已保存 ${params.changes.length} 项配置。`)
         return snapshot(name)

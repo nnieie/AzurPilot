@@ -1837,6 +1837,7 @@
       "event_20260625_cn": "Miracle by Midnight",
       "event_20260813_cn": "Depths of the Astrarium",
       "event_20260908_cn": "Tales of the Paranormal",
+      "event_20261022_cn": "Tempesta and the Corridor of Mist",
       "raid_20200624": "Air Raid Drills with Essex Rerun",
       "raid_20210708": "Cross Wave rerun",
       "raid_20220127": "Mystery Investigation",
@@ -1915,6 +1916,10 @@
     "UseAutoSearch": {
       "name": "Use auto-search",
       "help": ""
+    },
+    "ContinueAfterRestart": {
+      "name": "Continue battle after restart",
+      "help": "Available for main and event map tasks, including daily event stages, SP, urgent commissions and three-oil farming; off by default. Requires clearing mode and auto search. After an abnormal restart returns to the original map, enable auto search and account for morale normally in each subsequent battle. Does not resume a pre-restart battle or settlement. Map context exists only in this scheduler process; changed settings or exhausted retries fall back to the existing flow."
     },
     "Use2xBook": {
       "name": "Use high-efficiency combat manual",
@@ -3854,6 +3859,10 @@
       "help": "",
       "1": "1",
       "2": "2"
+    },
+    "RunAt18": {
+      "name": "Run at 18:00",
+      "help": "Disabled by default. When enabled, daily runs move from midnight to 18:00 server time. Runs due before 18:00 are postponed."
     }
   },
   "Exercise": {

@@ -1837,6 +1837,7 @@
       "event_20260625_cn": "Miracle by Midnight",
       "event_20260813_cn": "Depths of the Astrarium",
       "event_20260908_cn": "Tales of the Paranormal",
+      "event_20261022_cn": "Tempesta and the Corridor of Mist",
       "raid_20200624": "Air Raid Drills with Essex Rerun",
       "raid_20210708": "Cross Wave rerun",
       "raid_20220127": "Mystery Investigation",
@@ -1915,6 +1916,10 @@
     "UseAutoSearch": {
       "name": "使用自律寻敌喵",
       "help": ""
+    },
+    "ContinueAfterRestart": {
+      "name": "重启后继续战斗喵",
+      "help": "主线图和活动图任务可用，包括活动每日、SP、紧急委托和三油低耗，默认关闭喵。需同时启用周回与自律寻敌。异常重启回到原关卡地图后开启自律，后续每场正常计算心情，不接管旧战斗或旧结算。地图上下文只保留在本次调度进程内；配置改变或恢复达到上限时回退原流程喵。"
     },
     "Use2xBook": {
       "name": "使用高效作战指令书",
@@ -3854,6 +3859,10 @@
       "help": "",
       "1": "1喵",
       "2": "2喵"
+    },
+    "RunAt18": {
+      "name": "18点运行喵",
+      "help": "默认关闭喵。开启后每日调度由服务器时间零点改为18:00，18:00前到期会延后执行喵。"
     }
   },
   "Exercise": {

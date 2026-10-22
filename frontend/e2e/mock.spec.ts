@@ -1,4 +1,46 @@
 import { expect, test } from '@playwright/test'
+import { readFileSync } from 'node:fs'
+
+for (const [server, packageName, language] of [
+  ['cn', 'com.bilibili.azurlane', 'zh-CN'],
+  ['en', 'com.YoStarEN.AzurLane', 'en-US'],
+  ['jp', 'com.YoStarJP.AzurLane', 'ja-JP'],
+  ['tw', 'com.hkmanjuu.azurlane.gp', 'zh-TW'],
+]) {
+  test(`活动候选只显示当前服务器并使用有效选择：${server}`, async ({page}) => {
+    await page.addInitScript(language => {
+      localStorage.setItem('azurpilot.language', language)
+      localStorage.setItem('azurpilot.theme', 'light')
+    }, language)
+    await page.goto('/#/i/demo-main/task/Event')
+    // 仅修改内存模拟实例，通过真实 WebSocket 确认保存后重新加载页面。
+    await page.evaluate(packageName => new Promise<void>((resolve, reject) => {
+      const socket = new WebSocket(`ws://${location.host}/api/v1/ws`)
+      const send = (id: string, method: string, params: object) => socket.send(JSON.stringify({v: 1, type: 'request', id, method, params}))
+      socket.onopen = () => send('login', 'auth.login', {password: ''})
+      socket.onerror = () => {socket.close(); reject(new Error('模拟 WebSocket 连接失败'))}
+      socket.onmessage = event => {
+        const response = JSON.parse(String(event.data))
+        if (response.type !== 'response') return
+        if (!response.ok) {socket.close(); reject(new Error(response.error?.message)); return}
+        if (response.id === 'login') send('save', 'config.patch', {instance: 'demo-main', changes: [
+          {path: 'Alas.Emulator.PackageName', value: packageName},
+        ]})
+        if (response.id === 'save') {socket.close(); resolve()}
+      }
+    }), packageName)
+    await page.reload()
+    const args = JSON.parse(readFileSync(new URL('../../module/config/argument/args.json', import.meta.url), 'utf8'))
+    const translations = JSON.parse(readFileSync(new URL(`../../module/config/i18n/${language}.json`, import.meta.url), 'utf8'))
+    const candidates: string[] = args.Event.Campaign.Event[`option_${server}`]
+    const labels = candidates.map(value => translations.Campaign.Event[value])
+    const control = page.locator('[id="Event.Campaign.Event"]')
+    await expect(control).toContainText(labels[0])
+    await control.click()
+    await expect(page.getByRole('listbox').getByRole('option')).toHaveText(labels)
+    await page.screenshot({path: test.info().outputPath(`event-options-${server}.png`), animations: 'disabled'})
+  })
+}
 
 test('侵蚀一资源检查配置位于献祭流下方且通用页不再显示', async ({page}) => {
   await page.addInitScript(() => localStorage.setItem('azurpilot.theme', 'light'))

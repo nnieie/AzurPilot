@@ -206,6 +206,10 @@ flowchart TD
 
 ### 自律寻敌战斗（AutoSearchCombat）
 
+异常 Restart 的可选续接只负责返回原地图后恢复自律，不接管重启前的战斗、加载或结算。清理旧场 `CombatResult` 后，仍由普通 `auto_search_moving()` 与 `auto_search_combat()` 完成后续出击；每场在确认进入战斗后正常扣基础心情，真实结算和战败继续走原有处理器。重启前已保存的心情不回滚，旧场扣减标记也不用于免掉重启后新出击的消耗。默认关闭、地图归属与失败边界见 [战役执行](campaign.md#异常重启后续接原关卡)。
+
+恢复心情对象时保留其实际类型。`Emotion._check_fleet()` 统一计算当前实际舰队的下一场出击时间；普通任务据此延后。续接调用显式传入 `after_restart=True`，此时 `GemsEmotion.check_fleet()` 标记低心情，先撤退并交回紧急委托／三油低耗的换船编排；普通自动换队的原有延迟行为不变。
+
 游戏自己移动舰队、自己开战，脚本退居「监工」：
 
 - `auto_search_moving()`：等待期间监视石油/物资 OCR（触发 `auto_search_oil/coin_limit_triggered`）与舰队等级，处理退役、低情绪弹窗；自动搜索菜单出现则抛 `CampaignEnd`。
