@@ -1290,5 +1290,10 @@ class GeneratedConfig:
     OpsiSimulatorParameters_Meow5Time = 0
     OpsiSimulatorParameters_Deterministic = False
 
+    # 配置组 `Equipment`
+    Equipment_Enable = False
+    Equipment_ClearBeforeApply = True
+    Equipment_Config = 'flagship:\n  before: null\n  after: null\nup:\n  before: null\n  after: null\ndown:\n  before: null\n  after: null\nhead:\n  before: null\n  after: null\nmiddle:\n  before: null\n  after: null\ntail:\n  before: null\n  after: null'
+
     # 配置组 `Storage`
     Storage_Storage = {}

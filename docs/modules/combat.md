@@ -8,17 +8,18 @@ S 经验结算由 `Combat.handle_exp_info()` 保留确定按钮兜底点击，�
 
 `module/combat` 回答的问题是：当几十个上层任务（主线、活动、大世界、演习、每日、raid、大舰队战……）都需要「打一场战斗」时，如何把这场战斗拆成可复用、可独立验证的能力，而不是一个几千行的上帝类。
 
-答案是**职责 mixin 组合**。`Combat` 主类通过多重继承把七个正交能力拼在一起：
+答案是**职责 mixin 组合**。`Combat` 主类通过多重继承组合各项能力：
 
 - `Level`——等级 OCR 与等级停止条件；
 - `HPBalancer`——血量读取、战前换位、低血量撤退判断；
 - `Retirement`——船坞满时的退役/强化（继承自 `module/retire`）；
+- `EquipmentConfigHandler`——演习与 META 的任务装备方案（继承自 `module/equipment`）；
 - `SubmarineCall`——战斗内的潜艇呼叫；
 - `CombatAuto`——自动/手动模式检测与切换；
 - `CombatManual`——手动模式下的预设走位；
 - `AutoSearchHandler`——自律寻敌状态检测（继承自 `module/handler`）。
 
-每个 mixin 只处理战斗的一个切面，各自只依赖 `ModuleBase` 提供的截图/点击/识别原语，因此可以单独实例化测试（潜艇进阶规则 `SubmarineAdvancedConfig` 即有独立单测 `tests/test_submarine_advanced.py`）。`Combat` 本体只保留**编排**职责：把「准备 → 执行 → 结算」三个阶段串起来，并在正确的时机调用各 mixin 的处理器。这种设计让大世界战斗（`module/os_combat`）可以重写 `combat_appear()` 但复用全部结算逻辑，让演习模块只借用 `combat_ui` 资源而不引入整个战斗流程，让潜艇规则引擎可以脱离屏幕操作单独跑测试。
+每个 mixin 只处理战斗的一个切面，复用 `ModuleBase` 提供的截图/点击/识别原语，因此可以单独实例化测试（潜艇进阶规则 `SubmarineAdvancedConfig` 即有独立单测 `tests/test_submarine_advanced.py`）。`Combat` 本体只保留**编排**职责：把「准备 → 执行 → 结算」三个阶段串起来，并在正确的时机调用各 mixin 的处理器。这种设计让大世界战斗（`module/os_combat`）可以重写 `combat_appear()` 但复用全部结算逻辑，让演习通过继承 `Combat` 复用准备与换装、同时保留自己的执行及结算循环，让潜艇规则引擎可以脱离屏幕操作单独跑测试。
 
 模块支持两种并存的战斗范式：
 
@@ -84,7 +85,7 @@ tests/test_submarine_advanced.py   # 潜艇进阶规则单测
 | `assets.py` | `module/combat` 界面的按钮/模板资源，由 `dev_tools.button_extract` 生成 |
 | `module/combat_ui/assets.py` | 战斗执行界面（暂停/退出按钮）资源，独立成包供演习等只需战斗 UI 资源的场景引用 |
 
-`module/combat_ui` 与 `module/combat` 的拆分是刻意的：战斗执行界面的暂停按钮皮肤资源被演习（`module/exercise`）与战斗流程共同使用，若放入 `combat` 会让演习被迫继承整套战斗逻辑；拆开后两边只共享生成产物。
+`module/combat_ui` 单独维护暂停/退出按钮等战斗执行界面资源。演习的血量监控可独立引用这些资源；`ExerciseCombat` 当前继承 `Combat` 复用准备及换装，同时自行实现执行和结算循环。
 
 ## 4. 核心入口
 
@@ -113,12 +114,15 @@ tests/test_submarine_advanced.py   # 潜艇进阶规则单测
 | `Level` | 等级 OCR、等级触发 | `_lv`、`_lv_before_battle`（6 位置，-1 为未检测） |
 | `HPBalancer` | HP 读取、换位、撤退判断 | `_hp`、`_hp_has_ship`（按 `fleet_current_index` 分舰队缓存） |
 | `Retirement` | 船坞满退役/强化 | `_unable_to_enhance`（强化失败转退役） |
+| `EquipmentConfigHandler` | 首次出击前应用站位装备码，任务收尾恢复 | `equipment_config`、`equipment_handle_before_flag` |
 | `SubmarineCall` | 战斗内潜艇呼叫 | `submarine_call_flag`、`submarine_advanced`（进阶规则状态） |
 | `CombatAuto` | 自动/手动切换 | `auto_mode_checked`、`auto_mode_switched` |
 | `CombatManual` | 手动预设走位 | `manual_executed` |
 | `AutoSearchHandler` | 自律寻敌识别与开关 | 来自 `module/handler/auto_search.py` |
 
 注意 `CombatAuto` 与 `CombatManual` 共用 `auto_mode_checked`/`auto_mode_switched` 字段：手动走位必须在「自动模式检查完成」之后才执行，两者是同一场战斗中的协作状态，而非各自独立。
+
+`handle_battle_preparation()` 在首次换装完成后返回 `True`，由外层获取新截图再识别和点击出击；未启用任务装备方案时沿用原点击流程。方案预检、命名装备接口兼容与保存标志的约定见 [退役与装备](game/retire-equipment.md)。
 
 ### Emotion / FleetEmotion（emotion.py)
 

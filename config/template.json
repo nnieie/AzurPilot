@@ -1495,7 +1495,7 @@
     },
     "Campaign": {
       "Name": "D3",
-      "Event": "war_archives_20240725_cn",
+      "Event": "war_archives_20251023_cn",
       "Mode": "normal",
       "UseClearMode": true,
       "UseFleetLock": true,
@@ -2586,6 +2586,11 @@
       "OpponentRefreshValue": 0,
       "OpponentRefreshRecord": "2020-01-01 00:00:00"
     },
+    "Equipment": {
+      "Enable": false,
+      "ClearBeforeApply": true,
+      "Config": "flagship:\n  before: null\n  after: null\nup:\n  before: null\n  after: null\ndown:\n  before: null\n  after: null\nhead:\n  before: null\n  after: null\nmiddle:\n  before: null\n  after: null\ntail:\n  before: null\n  after: null"
+    },
     "Storage": {
       "Storage": {}
     }
@@ -2835,6 +2840,11 @@
       "EnsureFullyCollected": true,
       "AutoCollectShip": true
     },
+    "Equipment": {
+      "Enable": false,
+      "ClearBeforeApply": true,
+      "Config": "flagship:\n  before: null\n  after: null\nup:\n  before: null\n  after: null\ndown:\n  before: null\n  after: null\nhead:\n  before: null\n  after: null\nmiddle:\n  before: null\n  after: null\ntail:\n  before: null\n  after: null"
+    },
     "Storage": {
       "Storage": {}
     }
@@ -2853,6 +2863,11 @@
     },
     "OpsiAshAssist": {
       "Tier": 15
+    },
+    "Equipment": {
+      "Enable": false,
+      "ClearBeforeApply": true,
+      "Config": "flagship:\n  before: null\n  after: null\nup:\n  before: null\n  after: null\ndown:\n  before: null\n  after: null\nhead:\n  before: null\n  after: null\nmiddle:\n  before: null\n  after: null\ntail:\n  before: null\n  after: null"
     },
     "Storage": {
       "Storage": {}

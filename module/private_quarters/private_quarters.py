@@ -67,7 +67,7 @@ class PrivateQuarters(PQInteract, PQShop):
         'cn': (),
         'en': (),
         'jp': (),
-        'tw': ('implacable'),
+        'tw': ('implacable',),
     }
 
     def _pq_get_daily_count(self, retry=3):

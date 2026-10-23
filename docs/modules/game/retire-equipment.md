@@ -7,7 +7,7 @@
 四个子模块共同覆盖「船坞与装备仓库」这一游戏界面的自动化操作，但分工不同：
 
 - `module/retire`：退役与强化。核心类 `Retirement` 是 `Combat` 的 mixin（`module/combat/combat.py` 中 `Combat(Level, HPBalancer, Retirement, ...)`），因为「船坞已满」弹窗会在出击准备、战斗结算、地图行走等任意战斗流程中随机出现，以 mixin 挂入后所有战斗类无需额外接线即可处理。它同时是 `GemsFarming`/`Ambush11` 等换船任务的基座（保留普通航母、退役废弃旗舰）。
-- `module/equipment`：装备管理。舰船详情页的装备装卸、按图像模板在仓库中找回装备、Base64 装备码（配装码）的导出与导入。被 `GemsFarming`（换旗舰时装回原配装）、演习（`EXERCISE_FLEET_EQUIPMENT`）等复用。
+- `module/equipment`：装备管理。舰船详情页的装备装卸、按图像模板在仓库中找回装备、Base64 装备码（配装码）的导出与导入。被 `GemsFarming`（换旗舰时装回原配装）、演习与 META 作战（`Equipment.Config`）等复用。
 - `module/auto_equip`：独立任务「自动换装」（`AutoEquip`）。遍历船坞，为每艘舰船的空装备槽从仓库填充装备，与 `module/equipment` 互不依赖（只共享 `Dock` 与滑动常量）。
 - `module/storage`：装备仓库。开装备箱、拆解装备、处理「装备仓库已满」弹窗。`StorageHandler` 同时被科研模块（E 系列科研需先拆装备）和装备码处理器继承，因此任意装备操作遇到仓库满弹窗都能自动拆解腾位。
 
@@ -76,7 +76,7 @@ module/storage/
 | `AutoEquip.run()` | `AutoEquip` 独立任务（alas.py `auto_equip`，亦列于 submodule 可用功能） |
 | `FleetManagement.run()` | `FleetScan` 独立任务 |
 | `FleetTechScan.run()` | 科技页面的独立船坞扫描；共享滚动识别基础设施，按稳定群组保留同名舰及无科技舰 |
-| `Equipment.equipment_take_on/off()` | 演习、困难模式等按 `fleet` 记录装卸装备的底层入口 |
+| `Equipment.equipment_take_on/off()` | 按 `fleet` 记录装卸装备的底层入口，困难模式等继续复用 |
 | `EquipmentCodeHandler.code_apply()` / `code_clear()` | GemsFarming/Ambush11 换船时回装/卸下配装 |
 
 ### 舰队信息扫描
@@ -161,7 +161,18 @@ flowchart TD
 
 ### 装备（module/equipment）
 
-`Equipment.equipment_take_on/off(enter, out, fleet)` 用 `'9'.join` 把舰队记录 `[3,1,1,1,1,1]` 编码为槽位序列：`9` 表示滑动到下一艘船，其余数字表示在预设栏穿/脱第 N 套。`EquipmentChange` 走另一条路：先把舰船当前装备截为模板（`ship_equipment_record_image`），再在仓库页滚动做模板匹配找回并穿上，适合「原装备可能已被换下」的场景。`EquipmentCodeHandler` 处理 Base64 装备码：导出走剪贴板（先 ADB `cmd clipboard`，失败再 uiautomator2），输入优先 ADB `input text`（需 FastInputIME），失败回退 u2 `send_keys`；应用前先清空预览，仓库满时调 `handle_storage_full()`。装备码存放在任务配置的 YAML 文本字段（如 `GemsFarming.GemsFarming.EquipmentCode`），`GemsEquipmentHandler` 通过覆写 `equipment_code_config_key` 把存储位置指向该键。
+`Equipment.equipment_take_on/off(enter, out, fleet)` 用 `'9'.join` 把舰队记录 `[3,1,1,1,1,1]` 编码为槽位序列：`9` 表示滑动到下一艘船，其余数字表示在预设栏穿/脱第 N 套。`EquipmentChange` 走另一条路：先把舰船当前装备截为模板（`ship_equipment_record_image`），再在仓库页滚动做模板匹配找回并穿上，适合「原装备可能已被换下」的场景。`EquipmentCodeHandler` 处理 Base64 装备码：导出走剪贴板（先 ADB `cmd clipboard`，失败再 uiautomator2），输入优先 ADB `input text`（需 FastInputIME），失败回退 u2 `send_keys`；应用前先清空预览，仓库满时调 `handle_storage_full()`。装备码存放在任务配置的 YAML 文本字段（如 `GemsFarming.GemsFarming.EquipmentCode`），`GemsEquipmentHandler` 通过覆写 `equipment_code_config_key` 把存储位置指向该键。`EquipmentConfigHandler` 作为 `Combat` 基类，在 `BATTLE_PREPARATION` 界面点击 `FLEET_REORGANIZE` 进入整编，按 `Equipment.Config`（六个舰船站位的 `before`/`after` 装备码）在首次出击前执行 `equipment_handle_before()`，并在演习、余烬信标与信标协助任务收尾时执行 `equipment_handle_after()`。
+
+任务换装的配置与恢复约定：
+
+- 仅启用任务的 `Equipment.Enable` 且存在非空 `before` 时执行；省略的站位或阶段按空值处理，字符串去除首尾空白。`before` 为空的站位不处理；`before` 非空且 `after` 为空时，战后卸下该舰船的全部装备。未知站位、未知阶段、非字符串装备码及格式错误在进入整编、卸装之前统一拒绝，战后方案也同时预检。
+- 控制方式沿用 `EquipmentCodeHandler.equipment_code_supported()` 的能力判定，不支持时在导航前抛 `RequestHumanTakeover`。启用 `Equipment.ClearBeforeApply` 时，先清空所有目标舰船，再依次应用方案，以便共用装备在舰船间转移；关闭时仍保留 `after` 为空就卸装的语义。
+- 站位方案使用私有 `_equipment_config_apply/clear()`，不覆盖通用 `code_apply(name)` / `code_clear(name)`，因此命名方案、导出备份和 `last_code` 交接保持原语义。
+- 整编与保存操作采用 2 秒点击间隔，以 10 秒双重计时器适配慢截图；退出以目标按钮正向出现为准，超时抛 `GameStuckError`。首次换装完成后先获取新截图，再决定是否点击出击。
+- `_equipment_handle_before_flag` 只在战前方案保存成功后置位，战后方案保存成功后清除；失败不提前清除待恢复状态。它是当前处理器的内存状态，不保证进程中断后自动恢复。
+- META 普通信标结束后若显示「模拟战斗」，恢复流程会点击该入口并确认弹窗，进入战斗准备页应用战后方案后返回。协助任务也可借用此入口，恢复后回到协助页；档案独立编队不参与恢复。入口选择与超时语义见[大世界辅助模块](../os/auxiliary.md)。
+
+离线回归：`uv run python -m unittest tests.test_equipment_config tests.test_meta_beacon tests.test_equipment_transfer tests.test_equipment_clear_failure`，覆盖预检、命名接口兼容、跨舰卸装顺序、保存失败和 META 借用入口的恢复路径，不连接真实账号。
 
 ### 自动换装（module/auto_equip）
 

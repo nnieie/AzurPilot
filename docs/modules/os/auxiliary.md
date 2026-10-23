@@ -104,10 +104,14 @@ module/os_simulator/
 | --- | --- |
 | `AshCombat(Combat)` | META 战斗中的战斗状态、战前检查及完成信号处理 |
 | `OSAsh(UI, MapEventHandler)` | 地图侧读取信标持有量与每日进度；`AshDigitCounter` 核对持有量的计数格式、范围和完整字形数量，`DailyDigitCounter` 裁掉每日进度左侧文字 |
-| `Meta(UI, MapEventHandler)` | META 页面基类；`MetaState` 枚举（INIT/ATTACKING/COMPLETE/UNDEFINED）驱动页面状态机 |
+| `Meta(UI, MapEventHandler)` | META 页面基类；`MetaState` 枚举（INIT/ATTACKING/COMPLETE/UNDEFINED）驱动页面状态机；复用 `ash_combat` 保持本轮装备状态，收尾或挂起前通过 `handle_ash_equipment_after()` 借用普通信标/协助的战斗准备入口恢复，协助任务退出后仍返回协助页 |
 | `OpsiAshBeacon(Meta)` | 信标攻击任务：`ui_ensure(page_reward)` → 攻击 → `MetaReward` 领奖 → `task_delay(server_update=True)` → **必须 `ui_goto_main`**（MetaReward 停在 META 页，不回主界面会让下一个任务页面识别失败） |
 | `AshBeaconAssist(Meta)` | 协助好友信标：成功领奖延迟到服务器刷新，失败 `task_delay(minute=(10, 20))` 重试 |
 | `handle_ash_beacon_attack()` | 在大世界战斗链路中调用：持有量通过字形校验、≥100 且可调度时 `task_call('OpsiAshBeacon')`；读数不可信时不覆盖 META 排期。`AttackMode=current_dossier_only`（只打档案）时不触发——该模式下信标数据永不消耗，触发条件会永久成立并反复打断智能调度 |
+
+META 战后换装只借用普通信标编队：最后一场即使是档案战斗，也按待恢复标志处理，先退出档案页再进入普通信标；档案的独立编队不应用普通信标方案。自己的信标页右下角显示「模拟战斗」（`ASH_SIMULATE`）时，优先点击并通过通用确认弹窗进入同一编队，看到战斗准备页后再恢复装备；按钮冷却和弹窗过渡期间继续截图识别。只有识别到信标领奖/解析入口且没有模拟战斗入口、协助列表为空，或协助出击入口已显示且次数耗尽时才切换备用入口；加载中的暂时缺图不触发切换。恢复后仅点击返回，不点击真正的战斗准备出击按钮。信标领奖后的任务切换仍保留原 `TaskEnd` 信号，但交接前先尝试恢复；档案自动攻击挂起前也会处理遗留装备。
+
+普通信标和协助两侧均没有可用准备入口，或进入准备页超时（含模拟确认框未能识别），会记录警告并返回 `False`，保留当前处理器的待恢复标志；该标志没有跨进程持久化，不能把这一路径当作已恢复。相关离线回归见 `tests/test_meta_beacon.py`，其中模拟入口和确认框使用 `tests/fixtures/meta_equipment/` 的 CN 1280×720 截图调用正式识别器；其他语言的模拟按钮素材尚未验收。
 
 地图持有量不能只信任 OCR 文本：两位数若被补出百位，会反复召回数据不足的 META 任务，并中断正在执行的自动搜索。`AshDigitCounter` 用同一原生字图的完整连通字形数核对文字长度，拒绝不一致或越界结果，不截掉首位猜数；下一张地图截图可重新识别。持有量无效时仍独立读取每日进度，已达每日上限的状态继续用于侵蚀一行动力保留判断。离线回归与匿名原生字图见 `tests/test_opsi_ash_status.py`、`tests/fixtures/opsi_beacon/`。
 

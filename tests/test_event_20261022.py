@@ -1,15 +1,15 @@
-"""飓风与雾霭回廊的跨服导航、关卡接入与固定 SP 敌人回归。"""
+"""飓风与雾霭回廊的跨服导航、关卡接入与上游 SP 模板回归。"""
 
-import copy
 import importlib
 import json
 import unittest
 from pathlib import Path
-from unittest.mock import Mock, call
+from unittest.mock import Mock, call, patch
 
 from campaign.event_20261022_cn import sp, t1
+from module.campaign.campaign_base import CampaignBase
 from module.config.config import AzurLaneConfig
-from module.exception import CampaignNameError
+from module.template import assets as template_assets
 
 
 EVENT = 'event_20261022_cn'
@@ -69,27 +69,26 @@ class WindFogCorridorTests(unittest.TestCase):
                 self.assertTrue(campaign.config.MAP_IS_ONE_TIME_STAGE)
                 self.assertFalse(campaign.config.MAP_HAS_MODE_SWITCH)
 
-    def test_invalid_t_stage_does_not_navigate(self):
+    def test_other_chapters_delegate_to_shared_navigation(self):
         campaign = make_campaign()
-        with self.assertRaises(CampaignNameError):
-            campaign.campaign_set_chapter('t7')
-        campaign.navigation.assert_not_called()
+        with patch.object(CampaignBase, 'campaign_set_chapter_20241219', return_value=False) as shared:
+            self.assertFalse(campaign.campaign_set_chapter_20241219('main', '1', 'story'))
+        shared.assert_called_once_with('main', '1', 'story')
         self.assertEqual(campaign.navigation.mock_calls, [])
         campaign.device.click.assert_not_called()
 
-    def test_sp_initialization_restores_only_fixed_sirens_each_sortie(self):
+    def test_sp_siren_template_is_registered_and_decodes(self):
         campaign = make_campaign(sp)
-        campaign.map_is_clear_mode = False
-        map_ = copy.deepcopy(sp.MAP)
-        expected = {(3, 1), (2, 2), (1, 3)}
-        for _ in range(2):
-            campaign.map_data_init(map_)
-            self.assertEqual({grid.location for grid in map_.select(is_siren=True)}, expected)
-            for grid in map_.select(is_siren=True):
-                grid.wipe_out()
         self.assertFalse(campaign.config.MAP_HAS_MOVABLE_ENEMY)
+        self.assertFalse(campaign.config.MAP_HAS_FLEET_STEP)
         self.assertFalse(campaign.config.MAP_SIREN_HAS_BOSS_ICON_SMALL)
-        self.assertEqual(campaign.config.MAP_SIREN_TEMPLATE, [])
+        self.assertEqual(campaign.config.MAP_SIREN_TEMPLATE, ['TempestaGhostBoss02'])
+        for name in campaign.config.MAP_SIREN_TEMPLATE:
+            template = getattr(template_assets, f'TEMPLATE_SIREN_{name}')
+            self.assertTrue(template.is_gif)
+            self.assertTrue(template.image)
+            for frame in template.image:
+                self.assertGreater(frame.size, 0)
 
     def test_registered_event_uses_shared_directory_for_cn_en_jp(self):
         args = json.loads((ROOT / 'module/config/argument/args.json').read_text(encoding='utf-8'))
@@ -101,7 +100,7 @@ class WindFogCorridorTests(unittest.TestCase):
     def test_localized_event_names_survive_config_generation(self):
         for language, expected in (
             ('zh-CN', '飓风与雾霭回廊'),
-            ('en-US', 'Tempesta and the Corridor of Mist'),
+            ('en-US', 'Tempesta and the Corridor of Fog'),
             ('ja-JP', 'テンペスタと霧靄回廊'),
         ):
             with self.subTest(language=language):

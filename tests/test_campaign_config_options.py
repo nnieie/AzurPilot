@@ -70,7 +70,8 @@ class CampaignConfigOptionsTests(unittest.TestCase):
         self.assertEqual(before, path.read_bytes())
 
     def test_batch_uses_final_package_regardless_of_field_order(self):
-        taiwan = self.configs.args['Event']['Campaign']['Event']['option_tw'][0]
+        taiwan_options = self.configs.args['Event']['Campaign']['Event']['option_tw']
+        taiwan = taiwan_options[0]
         package = ConfigChange(path='Alas.Emulator.PackageName', value='com.hkmanjuu.azurlane.gp')
         event = ConfigChange(path='Event.Campaign.Event', value=taiwan)
         for changes in ([event, package], [package, event]):
@@ -78,7 +79,7 @@ class CampaignConfigOptionsTests(unittest.TestCase):
                 self.legacy()
                 current = self.configs.patch('testpilot', None, changes)
                 self.assertEqual(taiwan, current['values']['Event']['Campaign']['Event'])
-                self.assertEqual([taiwan], current['options']['Event.Campaign.Event'])
+                self.assertEqual(taiwan_options, current['options']['Event.Campaign.Event'])
 
     def test_package_change_refreshes_options_and_other_instances_stay_isolated(self):
         self.legacy()

@@ -428,6 +428,7 @@ class CampaignRun(CampaignEvent, ShopStatus):
 
             # 日志
             logger.hr(name, level=1)
+            logger.info(f'Campaign run: event="{folder}", name={name}')
             if self.config.StopCondition_RunCount > 0:
                 logger.info(f'[战役-运行] 剩余次数: {self.config.StopCondition_RunCount}')
             else:

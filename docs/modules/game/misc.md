@@ -31,7 +31,7 @@
 
 ```
 module/
-├── exercise/         # 演习 PvP：exercise.py 主任务，combat/opponent 战斗与对手选择，hp_daemon 血量监控，equipment 装备编辑
+├── exercise/         # 演习 PvP：exercise.py 主任务，combat/opponent 战斗与对手选择，hp_daemon 血量监控
 ├── gacha/            # 建造：gacha_reward.py 主任务，ui.py 建造页导航
 ├── daily/            # 每日任务：daily.py 单文件（含关卡/舰队映射与执行）
 ├── limit_challenge/  # 限界挑战：月度顺序挑战与出击去重
@@ -90,7 +90,7 @@ module/
 
 ### 演习（module/exercise）
 
-`Exercise(ExerciseCombat)` 组合对手选择（`OpponentChoose`）、血量监控（`HpDaemon`）与装备编辑（`ExerciseEquipment`）。OCR 识别剩余次数与赛季倒计时（`DatedDuration` 专修 `10d 01:30:30` 格式）。消耗策略：`aggressive` 不保留次数；其余策略保留 5 次，并在剩余时间落入将军试炼区间（`ADMIRAL_TRIAL_HOUR_INTERVAL`）或不足 6 小时时清空保留。对手刷新每日最多 5 次，计数经 `Exercise_OpponentRefreshValue/Record` 跨天持久化；选择策略含 `max_exp / easiest / easiest_else_exp / leftmost`，`easiest_else_exp` 在刷新耗尽后放弃保胜率改为冲经验。
+`Exercise(ExerciseCombat)` 组合对手选择（`OpponentChoose`）、血量监控（`HpDaemon`）与 `Combat`，复用其 `EquipmentConfigHandler` 执行 `Equipment.Config` 战前/战后装备方案。仅首次出击前换装，连续尝试沿用同一方案，任务收尾时重新选择对手进入准备页恢复装备，再返回演习页。OCR 识别剩余次数与赛季倒计时（`DatedDuration` 专修 `10d 01:30:30` 格式）。消耗策略：`aggressive` 不保留次数；其余策略保留 5 次，并在剩余时间落入将军试炼区间（`ADMIRAL_TRIAL_HOUR_INTERVAL`）或不足 6 小时时清空保留。对手刷新每日最多 5 次，计数经 `Exercise_OpponentRefreshValue/Record` 跨天持久化；选择策略含 `max_exp / easiest / easiest_else_exp / leftmost`，`easiest_else_exp` 在刷新耗尽后放弃保胜率改为冲经验。
 
 ### 建造（module/gacha）
 
@@ -141,6 +141,8 @@ module/
 ### 活动剧情（module/eventstory）
 
 `EventStory(CampaignUI, Combat, LoginHandler)` 循环推进活动剧情：导航至剧情入口（个别活动在 `page_sp` 或有专属弹窗按钮），按首段/末段/中段/战斗中段按钮推进；遇到剧情内战斗时直接重启游戏跳过（比打完快）。完成后回主界面再进入一次以清掉残留奖励弹窗。个别活动经特判跳过（如剧情入口在小游戏内的活动）。
+
+入口页面按 `Event.Campaign.Event` 选择：`event_20251023_cn`、`event_20261022_cn` 使用 `page_sp`，其余常规活动使用 `page_event`；到达对应活动页后，通过左下角的 20241219 模式开关切换至剧情模式。SP 活动页的左上角标识为 `S.P.`，不能将其作为 `page_event` 导航，否则会反复返回主线页再点击活动入口。
 
 ### 医院活动（module/event_hospital）
 
@@ -205,7 +207,7 @@ module/
 无独立调度任务，是被组合的能力层：
 
 - `Equipment(EquipmentCodeHandler)`：装备页导航、舰船视图滑动、装备中过滤器、按预设记录穿/卸装备（记录以 `'9'` 分隔各舰索引）。
-- `EquipmentChange`：经强化页记录舰船当前装备图标，再逐槽换装（演习、困难各自派生 `ExerciseEquipment`/`HardEquipment` 适配入口按钮）。
+- `EquipmentChange`：经强化页记录舰船当前装备图标，再逐槽换装；`HardEquipment(Equipment)` 适配困难模式预设入口，演习与 META 则通过 `EquipmentConfigHandler` 应用站位装备码。
 - `FleetEquipment`：在编队页按舰队批量穿/卸，被 `FleetSelectionMixin`（主线、宝石收割等）使用。
 - `EquipmentCodeHandler`：读取/应用游戏内 Base64 配装码，经模拟器剪贴板交换，仅支持 uiautomator2 系控制方式；可导出到配置，宝石收割（`GemsEquipmentHandler`）据此在换装舰娘时保住原装备。
 

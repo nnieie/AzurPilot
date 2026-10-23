@@ -2689,3 +2689,28 @@ OpsiSimulatorParameters:
   Meow3Time: 0
   Meow5Time: 0
   Deterministic: false
+Equipment:
+  Enable: false
+  ClearBeforeApply: true
+  Config:
+    type: textarea
+    mode: yaml
+    value: |
+      flagship:
+        before: null
+        after: null
+      up:
+        before: null
+        after: null
+      down:
+        before: null
+        after: null
+      head:
+        before: null
+        after: null
+      middle:
+        before: null
+        after: null
+      tail:
+        before: null
+        after: null

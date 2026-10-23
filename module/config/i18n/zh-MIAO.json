@@ -1837,7 +1837,7 @@
       "event_20260625_cn": "Miracle by Midnight",
       "event_20260813_cn": "Depths of the Astrarium",
       "event_20260908_cn": "Tales of the Paranormal",
-      "event_20261022_cn": "Tempesta and the Corridor of Mist",
+      "event_20261022_cn": "Tempesta and the Corridor of Fog",
       "raid_20200624": "Air Raid Drills with Essex Rerun",
       "raid_20210708": "Cross Wave rerun",
       "raid_20220127": "Mystery Investigation",
@@ -1897,7 +1897,9 @@
       "war_archives_20230525_cn": "archives Confluence of Nothingness",
       "war_archives_20230803_cn": "archives Anthem of Remembrance",
       "war_archives_20231026_cn": "archives Tempesta and the Fountain of Youth",
-      "war_archives_20240725_cn": "archives Interlude of Illusions"
+      "war_archives_20240725_cn": "archives Interlude of Illusions",
+      "war_archives_20241024_cn": "archives Tempesta and the Sleeping Sea",
+      "war_archives_20251023_cn": "archives Tempesta and Islas de Libertád"
     },
     "Mode": {
       "name": "关卡模式喵",
@@ -7224,6 +7226,24 @@
     "Deterministic": {
       "name": "取消随机性",
       "help": "一般不开喵。 (´・ω・`)"
+    }
+  },
+  "Equipment": {
+    "_info": {
+      "name": "自动换装备喵",
+      "help": "用于演习、余烬信标和信标协助，档案编队不自动换装喵。"
+    },
+    "Enable": {
+      "name": "启用喵",
+      "help": "首次出击前应用战前方案，任务收尾时恢复战后方案，需要支持装备码输入的控制方式喵。"
+    },
+    "ClearBeforeApply": {
+      "name": "应用装备码前清空装备喵",
+      "help": "战前和战后均先清空所有目标舰船，再依次应用装备码，方便在舰船间转移共用装备喵。"
+    },
+    "Config": {
+      "name": "装备码配置喵",
+      "help": "YAML 格式：before 为战前装备码，after 为战后装备码，换装前会校验整份配置喵。\nbefore 为空就跳过该位置；before 非空但 after 为空，战后会卸下该舰船的全部装备。未使用的站位或阶段可以省略，空白字符串视为空值喵。\nflagship：旗舰；up：上僚舰；down：下僚舰；head：先锋领舰；middle：先锋中间；tail：先锋尾舰。"
     }
   },
   "Storage": {
