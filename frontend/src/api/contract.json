@@ -1,6 +1,55 @@
 {
   "version": 1,
   "methods": {
+    "launcher.status": {
+      "mutates": false,
+      "params": {
+        "additionalProperties": false,
+        "description": "API 入参基础模型，禁止额外字段并启用严格类型校验。",
+        "properties": {},
+        "title": "Params",
+        "type": "object"
+      },
+      "localOnly": true
+    },
+    "launcher.autostart.set": {
+      "mutates": true,
+      "params": {
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "title": "LauncherAutostartParams",
+        "type": "object"
+      },
+      "localOnly": true
+    },
+    "launcher.command.get": {
+      "mutates": false,
+      "params": {
+        "additionalProperties": false,
+        "properties": {
+          "commandId": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Commandid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "commandId"
+        ],
+        "title": "LauncherCommandParams",
+        "type": "object"
+      },
+      "localOnly": true
+    },
     "system.ping": {
       "mutates": false,
       "params": {
@@ -3039,6 +3088,26 @@
         "type": "object"
       }
     },
+    "auth.launcher": {
+      "mutates": false,
+      "params": {
+        "additionalProperties": false,
+        "properties": {
+          "ticket": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Ticket",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ticket"
+        ],
+        "title": "LauncherTicketParams",
+        "type": "object"
+      },
+      "localOnly": true
+    },
     "events.subscribe": {
       "mutates": false,
       "params": {
@@ -3065,11 +3134,12 @@
                 "logs",
                 "preview",
                 "stock",
-                "notifications"
+                "notifications",
+                "launcher"
               ],
               "type": "string"
             },
-            "maxItems": 6,
+            "maxItems": 7,
             "title": "Topics",
             "type": "array"
           }
@@ -3855,6 +3925,447 @@
         }
       },
       "title": "ProgramState",
+      "type": "object"
+    }
+  },
+  "launcher": {
+    "version": 2,
+    "path": "/api/v2/launcher/ws",
+    "incoming": {
+      "session.hello": {
+        "$defs": {
+          "AutostartState": {
+            "additionalProperties": false,
+            "properties": {
+              "supported": {
+                "title": "Supported",
+                "type": "boolean"
+              },
+              "enabled": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Enabled"
+              }
+            },
+            "required": [
+              "supported"
+            ],
+            "title": "AutostartState",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "protocolVersion": {
+            "const": 2,
+            "title": "Protocolversion",
+            "type": "integer"
+          },
+          "launcherVersion": {
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Launcherversion",
+            "type": "string"
+          },
+          "platform": {
+            "enum": [
+              "win32",
+              "darwin",
+              "linux"
+            ],
+            "title": "Platform",
+            "type": "string"
+          },
+          "capabilities": {
+            "items": {
+              "enum": [
+                "autostart",
+                "notifications",
+                "login"
+              ],
+              "type": "string"
+            },
+            "maxItems": 3,
+            "title": "Capabilities",
+            "type": "array"
+          },
+          "autostart": {
+            "$ref": "#/$defs/AutostartState"
+          }
+        },
+        "required": [
+          "protocolVersion",
+          "launcherVersion",
+          "platform",
+          "capabilities",
+          "autostart"
+        ],
+        "title": "HelloParams",
+        "type": "object"
+      },
+      "state.report": {
+        "$defs": {
+          "AutostartState": {
+            "additionalProperties": false,
+            "properties": {
+              "supported": {
+                "title": "Supported",
+                "type": "boolean"
+              },
+              "enabled": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Enabled"
+              }
+            },
+            "required": [
+              "supported"
+            ],
+            "title": "AutostartState",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "autostart": {
+            "$ref": "#/$defs/AutostartState"
+          }
+        },
+        "required": [
+          "autostart"
+        ],
+        "title": "StateParams",
+        "type": "object"
+      },
+      "notifications.ack": {
+        "additionalProperties": false,
+        "properties": {
+          "ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "ids"
+        ],
+        "title": "AckParams",
+        "type": "object"
+      },
+      "login.issue": {
+        "additionalProperties": false,
+        "description": "API 入参基础模型，禁止额外字段并启用严格类型校验。",
+        "properties": {},
+        "title": "Params",
+        "type": "object"
+      },
+      "system.ping": {
+        "additionalProperties": false,
+        "description": "API 入参基础模型，禁止额外字段并启用严格类型校验。",
+        "properties": {},
+        "title": "Params",
+        "type": "object"
+      }
+    },
+    "outgoing": {
+      "autostart.get": {
+        "params": {},
+        "result": {
+          "additionalProperties": false,
+          "properties": {
+            "supported": {
+              "title": "Supported",
+              "type": "boolean"
+            },
+            "enabled": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Enabled"
+            }
+          },
+          "required": [
+            "supported"
+          ],
+          "title": "AutostartState",
+          "type": "object"
+        }
+      },
+      "autostart.set": {
+        "params": {
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "title": "Enabled",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled"
+          ],
+          "title": "LauncherAutostartParams",
+          "type": "object"
+        },
+        "result": {
+          "additionalProperties": false,
+          "properties": {
+            "supported": {
+              "title": "Supported",
+              "type": "boolean"
+            },
+            "enabled": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Enabled"
+            }
+          },
+          "required": [
+            "supported"
+          ],
+          "title": "AutostartState",
+          "type": "object"
+        }
+      }
+    },
+    "request": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "request",
+          "title": "Type",
+          "type": "string"
+        },
+        "id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "method": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Method",
+          "type": "string"
+        },
+        "params": {
+          "additionalProperties": true,
+          "title": "Params",
+          "type": "object"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "method"
+      ],
+      "title": "LauncherRequest",
+      "type": "object"
+    },
+    "response": {
+      "$defs": {
+        "LauncherError": {
+          "additionalProperties": false,
+          "properties": {
+            "code": {
+              "maxLength": 64,
+              "minLength": 1,
+              "title": "Code",
+              "type": "string"
+            },
+            "message": {
+              "maxLength": 256,
+              "title": "Message",
+              "type": "string"
+            }
+          },
+          "required": [
+            "code",
+            "message"
+          ],
+          "title": "LauncherError",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "response",
+          "title": "Type",
+          "type": "string"
+        },
+        "id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "ok": {
+          "title": "Ok",
+          "type": "boolean"
+        },
+        "result": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Result"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LauncherError"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "ok"
+      ],
+      "title": "LauncherResponse",
+      "type": "object"
+    },
+    "command": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "request",
+          "title": "Type",
+          "type": "string"
+        },
+        "id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "method": {
+          "enum": [
+            "autostart.get",
+            "autostart.set"
+          ],
+          "title": "Method",
+          "type": "string"
+        },
+        "params": {
+          "additionalProperties": true,
+          "title": "Params",
+          "type": "object"
+        },
+        "deadline": {
+          "exclusiveMinimum": 0,
+          "title": "Deadline",
+          "type": "number"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "method",
+        "deadline"
+      ],
+      "title": "LauncherCommand",
+      "type": "object"
+    },
+    "event": {
+      "$defs": {
+        "NotificationParams": {
+          "additionalProperties": false,
+          "properties": {
+            "instance": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Instance",
+              "type": "string"
+            },
+            "title": {
+              "default": "",
+              "maxLength": 512,
+              "title": "Title",
+              "type": "string"
+            },
+            "content": {
+              "default": "",
+              "maxLength": 8192,
+              "title": "Content",
+              "type": "string"
+            }
+          },
+          "title": "NotificationParams",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "event",
+          "title": "Type",
+          "type": "string"
+        },
+        "id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "topic": {
+          "const": "notification",
+          "title": "Topic",
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/$defs/NotificationParams"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "topic",
+        "data"
+      ],
+      "title": "LauncherEvent",
       "type": "object"
     }
   }

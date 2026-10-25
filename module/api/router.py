@@ -21,10 +21,12 @@ class Method:
         params: 参数校验模型类型。
         handler: 请求处理函数或方法。
         mutates: 是否会修改系统状态或运行任务。
+        local_only: 是否要求本机直连来源上下文。
     """
     params: type[p.Params]
     handler: Callable
     mutates: bool = False
+    local_only: bool = False
 
 
 class Router:
@@ -41,6 +43,9 @@ class Router:
             runtime: 运行时管理服务实例。
         """
         self.configs, self.runtime = configs, runtime
+        from module.runtime.launcher import LauncherService
+        from module.runtime.launcher_trust import TRUST_SECRET_ENV
+        self.launcher = LauncherService(os.environ.get(TRUST_SECRET_ENV))
         self._accounts = None
         self._scheduler_programs = None
         self._opsi_simulator = None
@@ -50,6 +55,11 @@ class Router:
         self.access_password = ''
         self.background_token = secrets.token_urlsafe(32)
         self.methods = {
+            'launcher.status': Method(p.Params, lambda _: self.launcher.status(), local_only=True),
+            'launcher.autostart.set': Method(p.LauncherAutostartParams,
+                                            lambda x: self.launcher.set_autostart(x.enabled), True, True),
+            'launcher.command.get': Method(p.LauncherCommandParams,
+                                          lambda x: self.launcher.command(x.commandId), local_only=True),
             'system.ping': Method(p.Params, lambda _: {'pong': True}),
             'schema.get': Method(p.SchemaParams, lambda x: configs.schema(x.language)),
             'search.content': Method(p.SearchContentParams, lambda x: search.search_content(x.query)),
@@ -264,7 +274,7 @@ class Router:
         return clear(self.configs, params.instance)
 
     @configured_database
-    def dispatch(self, method: str, params: dict):
+    def dispatch(self, method: str, params: dict, *, local=False):
         """分发并执行指定的 API 方法。
 
         Args:
@@ -281,6 +291,8 @@ class Router:
         entry = self.methods.get(method)
         if entry is None:
             raise p.ApiError('METHOD_NOT_FOUND', '未知 API 方法')
+        if entry.local_only and not local:
+            raise p.ApiError('LOCAL_ONLY', '启动器控制只允许本机直连')
         validated = entry.params.model_validate(params)
         if entry.mutates and os.environ.get('DEMO') == '1':
             raise p.ApiError('READ_ONLY', '演示模式下禁止修改配置或运行任务')

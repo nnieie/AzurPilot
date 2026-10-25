@@ -198,7 +198,8 @@ export function App() {
   useEffect(() => {
     if (connection !== 'ready') return
     /* notifications 与当前实例无关：任何工作区都要订，任务出错时才能弹系统通知。 */
-    void api.request('events.subscribe', {instance: instance ?? null, topics: instance ? stockExchange ? ['notifications', 'instances', 'stock'] : previewEnabled ? ['notifications', 'instances', 'overview', 'logs', 'preview'] : ['notifications', 'instances', 'overview', 'logs'] : ['notifications', 'instances']}).catch(error => notify(error.message, true))
+    const launcherTopics = ['127.0.0.1', 'localhost', '[::1]'].includes(window.location.hostname) ? ['launcher'] as const : []
+    void api.request('events.subscribe', {instance: instance ?? null, topics: instance ? stockExchange ? ['notifications', 'instances', ...launcherTopics, 'stock'] : previewEnabled ? ['notifications', 'instances', ...launcherTopics, 'overview', 'logs', 'preview'] : ['notifications', 'instances', ...launcherTopics, 'overview', 'logs'] : ['notifications', 'instances', ...launcherTopics]}).catch(error => notify(error.message, true))
   }, [instance, connection, notify, previewEnabled, stockExchange])
   // 旧版主题下点进实例后，外壳回到「顶栏跨全宽 + 单列侧栏」；主页视图一律沿用新版外壳。
   const legacyShell = usesLegacyShell(theme, instance)

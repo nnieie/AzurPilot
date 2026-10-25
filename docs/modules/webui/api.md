@@ -410,8 +410,8 @@ ws.send_json({'v':1,'type':'request','id':'2','method':'events.subscribe',
 ## 19. 调试方法
 
 - **健康检查**：`GET /healthz` 应返回 `{'status': 'ok', 'protocolVersion': 1}`；`GET /` 返回 503 说明前端未构建（在 `frontend/` 执行 `npm ci && npm run build`）。
-- **启动器通道**：`/api/launcher/{status,startup,stream,report,trusted-login}` 与 `/launcher-login` 只服务外部启动器，全部限定本机回环，非本机一律 403（控制台的启动器卡片读同一组端点，远端访问时即显示「只能在本机 WebUI 中设置」）。
-- **任务通知通道**：`/api/notify`（POST，仅本机，且要求 `application/json`——浏览器跨站请求发不出该类型，据此阻断恶意网页伪造推送）收到后兵分两路：经 `notify_hub` 以 `notifications` 主题广播给 WS 订阅者（前端 Notification API 弹 Windows 原生通知；授权框必须由用户手势触发，首条通知到达后等用户点击页面时申请；跨实例推送、未订阅即错过），同时进队列（上限 100，满时丢弃最旧）供 `/api/notify_stream`（SSE）给外部启动器订阅。路径与报文格式沿自旧版 WebUI，属启动器写死的对接面，改名即断连；`notifications` 与 `instances` 一样是全局主题，订阅时不绑定工作区实例。
+- **启动器通道**：启动器主动连接本机后端的 `/api/v2/launcher/ws`，用独立信任密钥完成握手；同一条连接承载命令、通知、状态和一次性登录票据。页面通过现有业务 WS 的 `launcher.*` 方法与 `launcher` 全局主题访问后端，仅允许本机直连。完整格式见 [启动器 WS v2](launcher-protocol-v2.md)。
+- **任务通知**：本机任务 POST `/api/v2/internal/notifications`，后端同时广播到浏览器 notifications 主题和启动器 WS；启动器通知有界缓存并按 ID 确认。旧启动器 HTTP/SSE 路径明确返回 404。
 - **单测夹具**：`create_app(root=临时目录, password='...', manage_runtime=False, mount_mcp=False)` 是标准隔离模式，见 `tests/test_api.py` 的 `fixture()`。相关模块：`tests.test_api`（协议/认证/配置事务）、`tests.test_api_lifecycle`（真实 Manager 生命周期）、`tests.test_api_mcp_integration`（MCP 挂载与关闭顺序）、`tests.test_frontend_static`（MIME 与 SPA 回退）。
 - **契约差异**：前端类型对不上时先跑 `uv run python -m dev_tools.export_api_schema` 看 diff，再查是不是手改了生成物。
 - **日志**：业务异常在服务日志中带 `WebSocket API 执行失败` 标题（含完整堆栈）；订阅异常有 `订阅数据读取失败`。客户端只会看到无堆栈的 `INTERNAL_ERROR`。

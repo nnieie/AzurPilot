@@ -1,80 +1,39 @@
-"""launcher_trust（启动器信任免密登录）纯逻辑单元测试。"""
-
+"""启动器票据按应用隔离，并且只能原子消费一次。"""
+import concurrent.futures
+import time
 import unittest
-
-from module.runtime import launcher_trust
-
-
-class TestLauncherTrust(unittest.TestCase):
-    def setUp(self):
-        launcher_trust._reset()
-
-    def tearDown(self):
-        launcher_trust._reset()
-
-    def test_default_disabled(self):
-        self.assertFalse(launcher_trust.enabled())
-        self.assertIsNone(launcher_trust.issue_token())
-        self.assertFalse(launcher_trust.validate_token("anything"))
-        self.assertFalse(launcher_trust.check_secret("anything"))
-
-    def test_enabled_only_when_secret_and_key(self):
-        launcher_trust.configure("secret", "key")
-        self.assertTrue(launcher_trust.enabled())
-        self.assertEqual(launcher_trust.webui_key(), "key")
-
-        launcher_trust.configure("secret", None)
-        self.assertFalse(launcher_trust.enabled())
-
-        launcher_trust.configure(None, "key")
-        self.assertFalse(launcher_trust.enabled())
-
-        launcher_trust.configure("secret", "   ")
-        self.assertFalse(launcher_trust.enabled())
-
-    def test_check_secret(self):
-        launcher_trust.configure("s3cret", "key")
-        self.assertTrue(launcher_trust.check_secret("s3cret"))
-        self.assertFalse(launcher_trust.check_secret("wrong"))
-        self.assertFalse(launcher_trust.check_secret(None))
-        # 未配置时任何候选都不匹配
-        launcher_trust.configure(None, None)
-        self.assertFalse(launcher_trust.check_secret("s3cret"))
-
-    def test_token_issue_and_validate(self):
-        launcher_trust.configure("s3cret", "key")
-        token = launcher_trust.issue_token()
-        self.assertIsInstance(token, str)
-        self.assertTrue(token)
-        self.assertTrue(launcher_trust.validate_token(token))
-
-        # 错误令牌 / 空令牌一律无效
-        self.assertFalse(launcher_trust.validate_token("forged"))
-        self.assertFalse(launcher_trust.validate_token(""))
-        self.assertFalse(launcher_trust.validate_token(None))
-
-    def test_token_expired(self):
-        launcher_trust.configure("s3cret", "key")
-        token = launcher_trust.issue_token()
-        self.assertTrue(launcher_trust.validate_token(token))
-
-        # 直接让令牌过期，验证会被拒绝并清理
-        launcher_trust._tokens[token] = 0.0
-        self.assertFalse(launcher_trust.validate_token(token))
-        self.assertNotIn(token, launcher_trust._tokens)
-
-    def test_reconfigure_invalidates_old_tokens(self):
-        launcher_trust.configure("s3cret-a", "key")
-        token = launcher_trust.issue_token()
-        self.assertTrue(launcher_trust.validate_token(token))
-
-        launcher_trust.configure("s3cret-b", "key")
-        self.assertFalse(launcher_trust.validate_token(token))
-
-    def test_issue_token_disabled(self):
-        launcher_trust.configure(None, "key")
-        self.assertIsNone(launcher_trust.issue_token())
+from module.runtime.launcher_trust import LauncherTrust
 
 
-if __name__ == "__main__":
-    unittest.main()
+class LauncherTrustTests(unittest.TestCase):
+    def test_secret_and_ticket_are_independent_of_webui_password(self):
+        trust = LauncherTrust('secret')
+        self.assertTrue(trust.check_secret('secret'))
+        self.assertFalse(trust.check_secret('wrong'))
+        self.assertFalse(LauncherTrust().check_secret(''))
+        ticket = trust.issue()['ticket']
+        self.assertTrue(trust.consume(ticket))
+        self.assertFalse(trust.consume(ticket))
+
+    def test_ticket_cannot_cross_applications_or_survive_expiry(self):
+        first, second = LauncherTrust('same'), LauncherTrust('same')
+        ticket = first.issue()['ticket']
+        self.assertFalse(second.consume(ticket))
+        first.tokens[ticket] = time.monotonic() - 1
+        self.assertFalse(first.consume(ticket))
+
+    def test_concurrent_consumers_have_only_one_winner(self):
+        trust = LauncherTrust('secret')
+        ticket = trust.issue()['ticket']
+        with concurrent.futures.ThreadPoolExecutor(8) as executor:
+            results = list(executor.map(lambda _: trust.consume(ticket), range(16)))
+        self.assertEqual(sum(results), 1)
+
+    def test_storage_is_bounded_and_clear_revokes_all_tickets(self):
+        trust = LauncherTrust('secret')
+        for _ in range(150):
+            trust.issue()
+        self.assertEqual(len(trust.tokens), 128)
+        ticket = trust.issue()['ticket']
+        trust.clear()
+        self.assertFalse(trust.consume(ticket))

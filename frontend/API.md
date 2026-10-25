@@ -230,3 +230,9 @@ AzurPilot 后端通过 `STOCK_EXCHANGE_URL` 配置交易所 origin，默认 `htt
 `POST /watchlist` 接受 `{stockId,selected}` 并返回 `{watchlist}`，属于本人接口。自选跨重启、赛季及设备保留；列表默认过滤退市，筛选可组合上市状态、报价、涨跌方向、价格/涨跌幅区间、归属及更新时间，范围可切换全部、自选和持仓。`GET /orders` 返回完整持久委托回执，包括旧版本已从账户快照截断的记录；界面不截断委托、成交或公开挂单。
 
 持仓总浮动盈亏为所有多头 `(现价×股数−成本)` 与空头 `(成本−现价×空头股数)` 的合计，账面成本已包含开仓交易费用；融资利息与借券费不重复扣入浮盈亏。注册、确认与身份弹窗统一通过 portal 放到页面顶层，内容滚动且头尾按钮固定，支持焦点限制与恢复，验证码可随窄屏缩放，提示消息不拦截操作。
+
+## 本地启动器 WS v2
+
+Python 后端提供独立的 `/api/v2/launcher/ws`，启动器主动连接；控制命令、通知与登录票据共用一条连接。页面仍通过业务 WS 调用 `launcher.status`、`launcher.autostart.set` 和 `launcher.command.get`，订阅全局 `launcher` 主题。`auth.launcher` 消费 60 秒一次性票据，不传输或存储访问密码。以上操作与主题限定本机直连，写操作遵循 DEMO 只读保护。
+
+任务通知入口为 `POST /api/v2/internal/notifications`。旧启动器 HTTP/SSE 路径已移除，完整格式与恢复约定见 [启动器协议 v2](../docs/modules/webui/launcher-protocol-v2.md)。

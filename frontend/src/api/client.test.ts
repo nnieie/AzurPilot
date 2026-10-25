@@ -84,4 +84,22 @@ describe('WebSocket 客户端', () => {
     expect(client.getSnapshot()).toBe('auth')
     expect(values.size).toBe(0)
   })
+  it('启动器票据只认证当前连接，立即清除地址中的票据且不保存访问密码', async () => {
+    client.disconnect()
+    const replaceState = vi.fn()
+    const setItem = vi.fn()
+    vi.stubGlobal('window', {
+      location: {href: 'http://localhost:5173/?launcherTicket=opaque_ticket&view=settings', protocol: 'http:'},
+      history: {replaceState}, localStorage: {getItem: () => null, setItem},
+    })
+    client = new ApiClient(); client.connect()
+    expect(replaceState).toHaveBeenCalledWith(null, '', 'http://localhost:5173/?view=settings')
+    FakeSocket.latest.emit({v: 1, type: 'event', topic: 'session', seq: 1, data: {authRequired: true}})
+    const request = FakeSocket.latest.sent.at(-1)!
+    expect(request).toMatchObject({method: 'auth.launcher', params: {ticket: 'opaque_ticket'}})
+    FakeSocket.latest.emit({v: 1, type: 'response', id: request.id, ok: true, result: {authenticated: true}})
+    await vi.advanceTimersByTimeAsync(0)
+    expect(client.getSnapshot()).toBe('ready')
+    expect(setItem).not.toHaveBeenCalled()
+  })
 })

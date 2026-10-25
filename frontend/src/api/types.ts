@@ -133,7 +133,20 @@ export interface BackgroundGalleryEntry {
   source?: string
 }
 
+export interface LauncherCommand {
+  id: string; status: 'pending' | 'succeeded' | 'failed' | 'expired'; deadline: number
+  result?: {supported: boolean; enabled: boolean | null}; error?: {code: string; message: string}
+}
+export interface LauncherStatus {
+  connected: boolean; platform: string; version: string; capabilities: string[]
+  autostart: {supported: boolean; enabled: boolean | null}; commands: LauncherCommand[]
+}
+
 export interface Results {
+  'launcher.status': LauncherStatus
+  'launcher.autostart.set': {commandId: string; status: 'pending'}
+  'launcher.command.get': LauncherCommand
+  'auth.launcher': {authenticated: boolean}
   'mind.catalog': MindCatalog
   'fleetTech.catalog': FleetTechCatalog
   'fleetTech.report': FleetTechReport

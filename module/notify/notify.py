@@ -145,12 +145,12 @@ def notify_webui(instance: str, title: str, content: str, **kwargs) -> bool:
         port = 25548
     try:
         payload = {"instance": instance, "title": title, "content": content}
-        payload.update(kwargs)
-        requests.post(
-            f"http://127.0.0.1:{port}/api/notify",
+        # IPC 的通知协议只接收这三个字段；第三方推送参数不进入本机通道。
+        response = requests.post(
+            f"http://127.0.0.1:{port}/api/v2/internal/notifications",
             json=payload,
             timeout=2,
         )
-        return True
+        return response.ok
     except Exception:
         return False

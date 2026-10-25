@@ -12,12 +12,13 @@ import anyio
 from pydantic import ValidationError
 from starlette.websockets import WebSocket, WebSocketDisconnect
 
-from module.api.protocol import ApiError, AuthParams, Request, SubscribeParams, failure, response
+from module.api.protocol import ApiError, AuthParams, LauncherTicketParams, Request, SubscribeParams, failure, response
 from module.logger import logger
 from module.runtime.password_utils import REMOTE_ACCESS_HEADER, is_local_client
+from module.runtime.launcher import is_local_request
 
 # 重主题仍按各自节奏采样；日志由 worker 队列逐条到达事件直接唤醒。
-TOPIC_INTERVAL = {'overview': 1, 'instances': 2}
+TOPIC_INTERVAL = {'overview': 1, 'instances': 2, 'launcher': 1}
 TICK = min(TOPIC_INTERVAL.values())
 
 
@@ -280,7 +281,13 @@ class Session:
                     raise ApiError('TLS_REQUIRED', '远程账号操作必须通过 HTTPS/WSS 连接')
                 if request_id in self.responses:
                     raise ApiError('DUPLICATE_REQUEST', '请求 ID 已使用，请检查状态后使用新 ID')
-                if request.method == 'auth.login':
+                if request.method == 'auth.launcher':
+                    params = LauncherTicketParams.model_validate(request.params)
+                    if not is_local_request(self.ws) or not self.gateway.router.launcher.trust.consume(params.ticket):
+                        raise ApiError('UNAUTHORIZED', '启动器登录票据无效或已使用')
+                    self.authorized = True
+                    result = {'authenticated': True}
+                elif request.method == 'auth.login':
                     params = AuthParams.model_validate(request.params)
                     peer = self.ws.client.host if self.ws.client else 'unknown'
                     paired = self.gateway.authenticate(peer, params.password)
@@ -295,7 +302,9 @@ class Session:
                     raise ApiError('UNAUTHORIZED', '请先登录')
                 elif request.method == 'events.subscribe':
                     subscription = SubscribeParams.model_validate(request.params)
-                    if any(topic not in ('instances', 'notifications') for topic in subscription.topics):
+                    if 'launcher' in subscription.topics and not is_local_request(self.ws):
+                        raise ApiError('LOCAL_ONLY', '启动器状态只允许本机读取')
+                    if any(topic not in ('instances', 'notifications', 'launcher') for topic in subscription.topics):
                         self.gateway.router.configs.path(subscription.instance)
                     self.subscription = subscription
                     self.cache.clear()
@@ -308,7 +317,8 @@ class Session:
                     result = {'topics': subscription.topics, 'instance': subscription.instance}
                 else:
                     async with self.gateway.workers:
-                        result = await asyncio.to_thread(self.gateway.router.dispatch, request.method, request.params)
+                        result = await asyncio.to_thread(self.gateway.router.dispatch, request.method, request.params,
+                                                         local=is_local_request(self.ws))
                 reply = response(request_id, result)
             except ValidationError as exc:
                 # 错误详情不包含输入，避免密码或私有配置被回显。
@@ -347,6 +357,8 @@ class Session:
                     self.topic_seen[topic] = now
                     if topic == 'instances':
                         action = runtime.instances
+                    elif topic == 'launcher':
+                        action = self.gateway.router.launcher.status
                     elif topic == 'overview':
                         action = lambda: runtime.overview(subscription.instance)
                     async with self.gateway.workers:

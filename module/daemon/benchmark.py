@@ -9,7 +9,6 @@ import typing as t
 
 import cv2
 import numpy as np
-import uiautomator2 as u2
 from rich.table import Table
 from rich.text import Text
 
@@ -20,6 +19,9 @@ from module.campaign.campaign_ui import CampaignUI
 from module.daemon.daemon_base import DaemonBase
 from module.exception import RequestHumanTakeover
 from module.logger import logger
+
+# 框架入口先加载 Device 并注册 pkg_resources 兼容层，随后才能加载 u2/adbutils。
+import uiautomator2 as u2
 
 
 def float2str(n, decimal=3):

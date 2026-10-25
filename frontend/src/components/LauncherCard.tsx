@@ -2,27 +2,12 @@
  * @fileoverview 启动器卡片：展示启动器连接状态，并切换 Windows 开机自启动。
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useApp } from '../app/context'
-
-/** 启动器端点的响应：状态查询与开关请求共用。 */
-type LauncherStatus = {
-  success?: boolean
-  launcher_connected?: boolean
-  autostart_supported?: boolean
-  autostart_enabled?: boolean | null
-  error?: string
-}
+import { useApp, useConnection } from '../app/context'
+import { api, ApiError } from '../api/client'
+import type { LauncherStatus } from '../api/types'
 
 /** 状态行取值：面板状态机。 */
 export type Phase = 'loading' | 'remote' | 'unsupported' | 'disconnected' | 'ready' | 'setting' | 'failed'
-
-/** 空闲时的状态轮询间隔：启动器随时可能与页面连上或断开。 */
-const POLL_INTERVAL_MS = 5000
-
-/** 同源相对路径；远程访问隧道挂在子路径下时同样打到本机后端。 */
-function launcherUrl(path: string) {
-  return new URL(path, document.baseURI).toString()
-}
 
 /** 状态行文案：状态机 + 后端字段 → 界面用语。 */
 export function launcherStatusText(phase: Phase, state: {enabled: boolean; pending: boolean; detail: string}, t: (key: string) => string) {
@@ -38,6 +23,8 @@ export function launcherStatusText(phase: Phase, state: {enabled: boolean; pendi
 
 export function LauncherCard() {
   const {t} = useApp()
+  const connection = useConnection()
+  const command = useRef<string | undefined>(undefined)
   const [phase, setPhase] = useState<Phase>('loading')
   const [enabled, setEnabled] = useState(false)
   // 已连上启动器但还没拿到自启状态：状态行显示「已连接 · 正在读取」。
@@ -45,68 +32,52 @@ export function LauncherCard() {
   const [detail, setDetail] = useState('')
   const busy = useRef(false)
 
-  /** 读取启动器状态；本机限定端点对非本机访问返回 403，据此提示只能在本机设置。 */
-  const read = useCallback(async () => {
-    if (busy.current) return
-    busy.current = true
-    try {
-      const response = await fetch(launcherUrl('api/launcher/status'), {cache: 'no-store'})
-      if (response.status === 403 || response.status === 404) {
-        setPhase('remote')
-        return
-      }
-      if (!response.ok) throw new Error(`HTTP ${response.status}`)
-      const data = await response.json() as LauncherStatus
-      if (!data.autostart_supported) {
-        setPhase('unsupported')
-        return
-      }
-      if (!data.launcher_connected) {
-        setPhase('disconnected')
-        return
-      }
-      setEnabled(data.autostart_enabled === true)
-      setPending(data.autostart_enabled === null || data.autostart_enabled === undefined)
-      setPhase('ready')
-    } catch (error) {
-      setDetail(error instanceof Error ? error.message : String(error))
+  const applyState = useCallback((data: LauncherStatus) => {
+    if (!data.connected) { command.current = undefined; setPhase('disconnected'); return }
+    if (!data.autostart.supported) { setPhase('unsupported'); return }
+    const current = command.current ? data.commands.find(item => item.id === command.current) : undefined
+    if (current?.status === 'pending') { setPhase('setting'); return }
+    command.current = undefined
+    setEnabled(data.autostart.enabled === true)
+    setPending(data.autostart.enabled === null)
+    if (current?.status === 'failed' || current?.status === 'expired') {
+      setDetail(current.error?.message ?? current.status)
       setPhase('failed')
-    } finally {
-      busy.current = false
-    }
+    } else { setPhase('ready') }
   }, [])
 
-  /** 请求启动器开关开机自启：先动开关，失败回滚并给出原因。 */
+  const read = useCallback(async () => {
+    try { applyState(await api.request('launcher.status', {})) }
+    catch (error) {
+      if (error instanceof ApiError && error.code === 'LOCAL_ONLY') { setPhase('remote'); return }
+      setDetail(error instanceof Error ? error.message : String(error))
+      setPhase('failed')
+    }
+  }, [applyState])
+
   const toggle = useCallback(async () => {
-    if (busy.current) return
-    const target = !enabled
+    if (busy.current || command.current) return
     busy.current = true
-    setEnabled(target)
-    setPhase('setting')
+    const target = !enabled
+    setEnabled(target); setPhase('setting')
     try {
-      const response = await fetch(launcherUrl('api/launcher/startup'), {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({enabled: target}),
-      })
-      const result = await response.json().catch(() => null) as LauncherStatus | null
-      if (!response.ok || !result?.success) throw new Error(result?.error || `HTTP ${response.status}`)
+      const result = await api.request('launcher.autostart.set', {enabled: target})
+      command.current = result.commandId
+      await read()
     } catch (error) {
       setEnabled(!target)
       setDetail(error instanceof Error ? error.message : String(error))
       setPhase('failed')
-      return
-    } finally {
-      busy.current = false
-    }
-    await read()
+    } finally { busy.current = false }
   }, [enabled, read])
 
   useEffect(() => {
-    void read()
-    const timer = window.setInterval(() => { void read() }, POLL_INTERVAL_MS)
-    return () => window.clearInterval(timer)
-  }, [read])
+    if (connection === 'ready') void read()
+    else { command.current = undefined; setPhase('loading') }
+  }, [connection, read])
+  useEffect(() => api.onEvent(event => {
+    if (event.topic === 'launcher') applyState(event.data as LauncherStatus)
+  }), [applyState])
 
   const status = launcherStatusText(phase, {enabled, pending, detail}, t)
 
