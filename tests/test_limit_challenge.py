@@ -492,7 +492,7 @@ class ChallengeConfigurationTests(unittest.TestCase):
         template.pop('LimitChallenge')
         migrated = ConfigUpdater().config_update(template)
         self.assertEqual(migrated['LimitChallenge']['LimitChallenge']['AttemptedLevel'], 0)
-        for language in ('zh-CN', 'zh-MIAO', 'zh-TW', 'en-US', 'ja-JP'):
+        for language in ('zh-CN', 'zh-TW', 'en-US', 'ja-JP'):
             text = json.loads(Path(f'module/config/i18n/{language}.json').read_text(encoding='utf-8'))
             self.assertNotIn('Task.LimitChallenge', text['Task']['LimitChallenge']['name'])
             self.assertNotIn('LimitChallenge.', json.dumps(text['LimitChallenge']))

@@ -46,6 +46,8 @@ from datetime import datetime, timedelta, timezone
 
 import requests
 
+from deploy.api_endpoints import MAINTENANCE_API_URL
+from module.base.device_id import get_device_id
 from module.base.runtime_params import (
     HANDOVER_CONSUME_RETRY_MINUTES,
     HANDOVER_MAINTAIN_CHECK_MINUTES,
@@ -100,7 +102,7 @@ HANDOVER_WEEKDAY_NAMES = ['周一', '周二', '周三', '周四', '周五', '周
 
 # 停服维护时间接口，顶层是国服公告的聚合结果，servers 里按 cn/jp/en/tw 分别给出
 # maintenance_date(YYYY-MM-DD) 与 start_time(HH:MM)
-HANDOVER_MAINTAIN_API = 'https://api-blhx-maintain.nanoda.work/api/maintenance'
+HANDOVER_MAINTAIN_API = MAINTENANCE_API_URL
 # 接口里服务器时区的形状，如 `UTC+8`、`UTC-7`、`UTC+08:00`
 HANDOVER_MAINTAIN_TIMEZONE = re.compile(r'^UTC([+-])(\d{1,2})(?::?(\d{2}))?$')
 # 委托结束时间的初始值，表示脚本手上没有开过委托
@@ -747,8 +749,8 @@ class OperationHandover(CampaignRun):
     def handover_maintain_query(self):
         """查询停服维护接口，取出当前游戏服务器的那一份公告。
 
-        接口顶层是国服新闻聚合出来的结果，各服务器自己的公告在 `servers` 里，
-        并且带各自的时区。只有拿不到 `servers`（旧版接口）时才退回顶层数据。
+        使用 v2 按当前区服查询，RFC 3339 时间转换为当前区服时区。
+        其他区服没有计划时返回空结果，不退回国服公告。
 
         Returns:
             tuple[dict | None, datetime.timedelta, str]:
@@ -756,30 +758,29 @@ class OperationHandover(CampaignRun):
         """
         server = self.config.SERVER
         try:
-            response = requests.get(HANDOVER_MAINTAIN_API, timeout=10).json()
+            result = requests.get(HANDOVER_MAINTAIN_API, params={'server': server},
+                                  headers={'X-AzurPilot-ID': get_device_id()}, timeout=10)
+            result.raise_for_status()
+            response = result.json()
+            if response.get('schema_version') != 2 or response.get('server') != server or 'maintenance' not in response:
+                raise ValueError('维护接口返回了无效或其他区服的数据')
+            plan = response['maintenance']
+            default = SERVER_TO_TIMEZONE.get(server, SERVER_TO_TIMEZONE['cn'])
+            if plan is None:
+                return {}, default, ''
+            at = datetime.fromisoformat(plan['starts_at'].replace('Z', '+00:00'))
+            if at.tzinfo is None:
+                raise ValueError('维护时间缺少时区')
+            at = at.astimezone(timezone(default))
+            minutes = int(default.total_seconds() / 60)
+            sign = '+' if minutes >= 0 else '-'
+            absolute = abs(minutes)
+            tz = f'UTC{sign}{absolute // 60}' + (f':{absolute % 60:02d}' if absolute % 60 else '')
+            return {'maintenance_date': at.strftime('%Y-%m-%d'), 'start_time': at.strftime('%H:%M'),
+                    'timezone': tz, 'name': plan.get('name', server)}, default, ''
         except Exception as e:
             logger.warning(f'[作战委托] 查询维护时间失败，按不维护处理: {e}')
             return None, timedelta(), '查询维护时间失败'
-
-        data = response.get('data') or {}
-        if not data:
-            detail = response.get('message') or response.get('status')
-            logger.warning(f'[作战委托] 维护接口没有返回数据，按不维护处理: {detail}')
-            return None, timedelta(), '维护接口没有返回数据'
-
-        servers = data.get('servers')
-        if not isinstance(servers, dict) or not servers:
-            # 顶层公告来自国服新闻，退回它时只能按国服时区解释
-            logger.warning('[作战委托] 维护接口没有按服务器返回数据，退回顶层公告（国服）')
-            return data, SERVER_TO_TIMEZONE['cn'], ''
-
-        payload = servers.get(server)
-        if not payload:
-            reason = (data.get('server_errors') or {}).get(server) or '接口未返回该服务器'
-            logger.warning(f'[作战委托] {server} 的维护公告查询失败，按不维护处理: {reason}')
-            return None, timedelta(), f'{server} 维护公告查询失败'
-
-        return payload, SERVER_TO_TIMEZONE.get(server, SERVER_TO_TIMEZONE['cn']), ''
 
     def handover_maintain_timezone(self, payload, default):
         """解析维护公告所用的服务器时区。
@@ -806,7 +807,7 @@ class OperationHandover(CampaignRun):
     def handover_maintain_state(self):
         """今天有没有停服维护，有的话返回维护开始时间（可能已经开始）。
 
-        数据来自 api-blhx-maintain，按当前游戏服务器取对应公告，公告里的服务器本地
+        数据来自统一云 API，按当前游戏服务器取对应公告，公告里的服务器本地
         时间先换算成本机时间。不是今天的维护一律返回 None；今天已经开始的维护仍然
         返回时间，好让调用方区分「今天没事了」和「等维护」。
 
@@ -822,6 +823,8 @@ class OperationHandover(CampaignRun):
         payload, default, error = self.handover_maintain_query()
         if payload is None:
             return None, error, False
+        if not payload:
+            return None, '未发布维护安排', True
 
         try:
             start = datetime.strptime(

@@ -11,7 +11,11 @@ from deploy.utils import *
 
 
 class ExecutionError(Exception):
-    pass
+    """部署流程执行失败；code 取 ErrorCodes，供上游结构化识别。"""
+
+    def __init__(self, code: int = ErrorCodes.EXEC_UNKNOWN, message: str = ''):
+        super().__init__(message or f'deploy failed with error code {code}')
+        self.code = code
 
 
 class ConfigModel:
@@ -212,7 +216,10 @@ class DeployConfig(DeployConfigTransaction, ConfigModel):
             else:
                 logger.info(f"[ failure ], error_code: {error_code}")
                 self.show_error(command)
-                raise ExecutionError
+                raise ExecutionError(
+                    ErrorCodes.COMMAND_FAILED,
+                    f'Command failed (exit {error_code}): {command}',
+                )
         else:
             logger.info(f"[ success ]")
             return True

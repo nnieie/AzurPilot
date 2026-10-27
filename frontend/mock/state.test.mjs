@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { createMockState } from './state.mjs'
+import { normalizeReport } from '../src/components/statisticsData'
 
 describe('前端模拟服务', () => {
   it('活动候选按实例包名隔离，切换地区时刷新旧选择', () => {
@@ -154,6 +155,9 @@ describe('前端模拟服务', () => {
     expect(resources.series[0].label).toBe('石油')
     expect(resources.series.map(s => s.label)).toEqual(['石油', '物资', '钻石', '心智魔方', '活动 PT', '核心数据', '荣誉勋章', '功勋', '舰队币'])
     expect(resources.series[0].points).toHaveLength(24)
+    const decoded = normalizeReport(resources)
+    expect(decoded.series.flatMap(series => series.points).every(point =>
+      Number.isFinite(Date.parse(point.time.replace(' ', 'T'))) && Number.isFinite(point.value))).toBe(true)
 
     const action = dispatch('statistics.report', {instance: 'demo-main', category: 'action', days: 7})
     expect(action.series).toHaveLength(5)

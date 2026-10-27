@@ -49,7 +49,7 @@ class HardScheduleTests(unittest.TestCase):
         runner.config.data = runner.config.config_update(runner.config.data)
         runner.config.bind('Hard')
         self.assertTrue(runner.config.Hard_RunAt18)
-        for lang in ('zh-CN', 'zh-MIAO', 'en-US', 'ja-JP', 'zh-TW'):
+        for lang in ('zh-CN', 'en-US', 'ja-JP', 'zh-TW'):
             translation = read_file(f'module/config/i18n/{lang}.json')['Hard']['RunAt18']
             self.assertTrue(all(value and not value.startswith('Hard.RunAt18.') for value in translation.values()))
 

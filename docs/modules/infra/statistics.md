@@ -144,7 +144,7 @@ module/log_res/
 | `AzurStats.new()` → `DropImage` | 上下文管理器：战斗流程内 `drop.add()`/`drop.handle_add()` 收集截图，退出时自动 `commit()` |
 | `Cl1Database.db`（模块级单例） | 各任务写入月度统计；同步方法 + `async_*` 系列（走 `async_executor`） |
 | `opsi_runtime.record_*` / `start_/finish_battle_timer` | 大世界任务上报战斗、明石、吊机等事件的规范入口，避免任务代码直接写库 |
-| `LogRes(config).<Res> = value` | 资源变动的声明式入口：写 `Dashboard.<Res>` 配置 + 触发资源快照 |
+| `LogRes(config).<Res> = value` | 资源变动的声明式入口：写 `Dashboard.<Res>` 配置 + 触发资源快照（仅本次读数，其余列沿用最近一行） |
 | `alas.py _start_daily_summary_scheduler` | 日报独立检查线程（启用时随调度器启动） |
 | `statistics.report` / `statistics.refreshLoot` / `statistics.resources`（API 方法） | WebUI 统计页读取本层数据 |
 | `python -m module.statistics.drop_statistics` | 离线批量掉落分析脚本 |
@@ -316,7 +316,8 @@ flowchart TD
   └─ meow 来源只进 cl1_db 耙耋桶
 资源 OCR（LogRes 赋值）
   ├─ Dashboard.<Res>.Value/Record → 配置文件（WebUI 仪表盘）
-  └─ 全量快照 → resource_snapshots（config/azurpilot.db）
+  └─ 快照 → resource_snapshots（config/azurpilot.db）：只写本次读到的资源，
+     其余列沿用该实例最近一行；不从配置对象补全（战役用配置副本，Dashboard 可能过期），首行未读资源留空
 
 查询侧：
   statistics.report → opsi_month / commission_income_stats / research_stats / ship_exp_stats

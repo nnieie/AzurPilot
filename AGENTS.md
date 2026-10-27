@@ -1,48 +1,38 @@
 # AGENTS.md
 
-本文件是 Codex、Claude Code 等编码代理共用的仓库规范。只保留影响决策的项目约束；实现细节按任务查阅下方入口。
+游戏识别基于 **1280×720** 截图。
 
-## 协作与完成标准
+- 本项目使用 uv 管理依赖
+- 本项目使用 npm 管理 node.js 依赖
+- 项目文档 https://doc.azurpilot.com/llms.txt
 
-- 使用简体中文交流，新增注释、文档和提交说明也使用简体中文；代码标识符使用英文，翻译资源使用对应语言。
-- 将用户请求推进到可交付结果：完成实现、必要的生成产物与相关验证，修复本次改动引入的问题后再交付。若请求包含运行或界面验收，将其纳入完成范围。
-- 在已授权范围内，直接进行本地编辑、构建、隔离测试及失败修复，无需逐步确认。只有缺失信息会实质影响结果，或下一步超出授权范围时才询问；已有授权持续有效。
-- 真实游戏任务可能消耗资源或改变账号状态。普通开发验证优先使用测试夹具、已有截图和模拟服务；实际账号操作按用户指定的实例与任务范围执行。
-- 保留已有工作区修改。交付时说明结果、实际验证及剩余限制；遇到环境或权限阻塞，明确未完成的部分，不把初版或未验证结果当作完成。
-- 修改实现时，同一轮同步更新受影响的技能与模块文档：入口、配置、页面前置条件、游戏机制或恢复语义改变后，先以当前源码及已核实材料修正文档，再交付。可复用机制写入对应参考文档，不复制私人配置或把单次日志写成通用规则；无相关行为变化时不做无关文档改写。
-
-## 项目与环境
-
-AzurPilot 是面向安卓模拟器的碧蓝航线自动化框架，支持 CN/EN/JP/TW，按 7×24 小时运行设计。游戏识别基于 **1280×720** 截图，不支持真机；这一尺寸约束不适用于 WebUI 布局。
-
-- Python 使用 `uv` 项目模式和仓库内 `.venv/`。版本要求以 [pyproject.toml](pyproject.toml) 为准；依赖声明与 `uv.lock` 配套维护，不维护 `requirements*.txt`。
-- WebUI 使用 React、TypeScript、Vite，前端用 npm；Node.js 要求与脚本以 [frontend/package.json](frontend/package.json) 为准。
-- 在仓库根目录运行下列命令，按需选择，不是每次任务的必跑清单。
-
+## 常用命令
 | 用途 | 命令 |
 | --- | --- |
-| 同步 Python 依赖 | `uv sync --frozen` |
-| 安装前端锁定依赖 | `npm ci --prefix frontend` |
-| 启动 WebUI | `uv run python gui.py` |
-| 启动终端交互界面 (TUI) | `uv run python tui.py` |
-| 启动游戏调度器 | `uv run python alas.py` |
-| 启动独立 MCP SSE 服务 | `uv run python mcp_server_sse.py` |
-| Python 单个测试模块（示例） | `uv run python -m unittest tests.test_api` |
-| Python 全量单元测试 | `uv run python -m unittest discover -s tests` |
-| Python pytest 测试（含 shop_event 等） | `uv run pytest tests/shop_event` |
-| Python 基础 CI lint | `uv run ruff check . --select E9,F63,F7,F82 --ignore F821,F722` |
-| 前端类型检查 | `npm run typecheck --prefix frontend` |
-| 前端单元测试 | `npm test --prefix frontend` |
-| 前端生产构建 | `npm run build --prefix frontend` |
-| 浏览器端到端测试 | `npm run test:e2e --prefix frontend` |
-| 前端模拟服务端到端测试 | `npm run test:e2e:mock --prefix frontend` |
-| Python 导入冒烟检查 | `uv run python -m dev_tools.import_smoke_test` |
+| 启动 | `uv run python gui.py` |
+| 生成配置和前端选项 | `uv run -m module.config.config_updater` |
 
-## 按任务查阅
+## 配置与生成文件
 
-先定位相关实现；需要背景时再打开对应文档。小范围文案或局部修改不要求通读架构。模块文档位于 [docs/modules/](docs/modules/README.md)（按模块职责组织的 20 节标准文档，入口见其索引）；目录、依赖和行为以当前代码、清单及 CI 为准。
+本项目的 json 配置文件由生成器生成非手动维护
+`args.json`、`menu.json`、`module/config/config_generated.py` 与 `config/template.json` 由生成器维护
 
-## 游戏交互约束
+ `module/config/argument/` 
+
+| 源文件 | 职责 |
+| --- | --- |
+| `task.yaml` | 任务、选项组映射与菜单 |
+| `argument.yaml` | 参数类型、选项、默认值与校验 |
+| `default.yaml` | 用户可修改的任务特定默认值 |
+| `override.yaml` | 强制覆盖及隐藏等属性；与可修改默认值区分 |
+| `gui.yaml` | GUI 翻译键 |
+| `dashboard.yaml` | 仪表盘资源定义 |
+
+添加 i18n 翻译时请先运行命令生成 json 再替换生成器生成的临时键值
+示例：Campaign.Event.name
+配置路径为 `<Task>.<Group>.<Argument>`，绑定任务后通过 `self.config.Group_Argument` 访问。涉及加载或迁移时注意 `AzurLaneConfig` 初始化可能保存配置，测试使用临时配置目录。
+
+## 游戏交互
 
 游戏流程采用持续的「截图 → 识别 → 操作」状态循环。用当前画面的正向状态确认退出，点击后继续循环获取新截图；不要用固定休眠猜测界面已就绪。
 
@@ -69,40 +59,13 @@ def some_function(self, skip_first_screenshot=True):
 - 页面跳转复用 `UI` / `Page` 导航。涉及界面前后置条件时，在 Google 风格 docstring 中用 `Pages:` 标注；注释解释状态和原因，不规定注释比例或为凑行数拆文件。
 - 使用现有 `logger.hr()`、`logger.attr()` 记录阶段和状态。截图、日志、测试夹具中避免引入账号信息和密钥。
 
-## 配置与生成文件
-
-修改配置定义时，先改 `module/config/argument/` 下的源文件：
-
-| 源文件 | 职责 |
-| --- | --- |
-| `task.yaml` | 任务、选项组映射与菜单 |
-| `argument.yaml` | 参数类型、选项、默认值与校验 |
-| `default.yaml` | 用户可修改的任务特定默认值 |
-| `override.yaml` | 强制覆盖及隐藏等属性；与可修改默认值区分 |
-| `gui.yaml` | GUI 翻译键 |
-| `dashboard.yaml` | 仪表盘资源定义 |
-
-修改相关 YAML 后运行 `uv run -m module.config.config_updater`。`args.json`、`menu.json`、`module/config/config_generated.py` 与 `config/template.json` 由生成器维护，不直接修改，也不把真实用户配置当作模板。
-
-`module/config/i18n/*.json` 是例外：生成器保留已有翻译，新增名称和说明可能只是键路径（如 `Campaign.Event.name`）。生成后补齐 `zh-CN`、`zh-MIAO`、`en-US`、`ja-JP`、`zh-TW` 的新增翻译，选项文案也需检查；繁体用词需校对，不能假设生成器已完成翻译。
-
-配置路径为 `<Task>.<Group>.<Argument>`，绑定任务后通过 `self.config.Group_Argument` 访问。涉及加载或迁移时注意 `AzurLaneConfig` 初始化可能保存配置，测试使用临时配置目录。
-
 ## 资源与接口生成
 
-- 游戏图像资源位于 `assets/{cn,en,jp,tw}/`；按 1280×720 游戏画面的坐标约定提取，模板可以是局部裁剪。模板对象名称使用 `TEMPLATE_` 前缀。
-- 修改按钮资源后运行 `uv run -m dev_tools.button_extract`，检查生成的 `assets.py`。切换服务器进行离线识别时，在导入游戏模块前设置 `module.config.server.server`，避免资源已按其他服务器加载。
-- `campaign/` 下关卡主要是 Python 地图定义与战斗逻辑；活动适配参考相近活动及 [campaign/Readme.md](campaign/Readme.md)，不要套用统一 YAML 地图流程。
-- WebUI 业务通信使用 `/api/v1/ws`；前端位于 `frontend/`，后端接口与运行服务分别位于 `module/api/`、`module/runtime/`。新增功能沿用这些边界。
-- 修改后端 API 参数模型或方法注册后，运行 `uv run python -m dev_tools.export_api_schema`，同步 `frontend/src/api/generated.ts` 与 `frontend/src/api/contract.json`，不手改生成产物。
-- CI 会重新生成按钮、配置和 API 契约并检查差异。相关源文件与生成产物应一并交付；生成器产生无关差异时先查明原因，保留原有工作区修改。
+- 游戏图像资源位于 `assets/{cn,en,jp,tw}/`；按 1280×720 游戏画面的坐标约定提取，模板是局部裁剪。模板对象名称使用 `TEMPLATE_` 前缀。
+- 修改完资源后运行 `uv run -m dev_tools.button_extract`，不要检查 `assets.py`。切换服务器进行离线识别时，在导入游戏模块前设置 `module.config.server.server`，避免资源已按其他服务器加载。
 
-## 验证与交付
-
-- 修改过程中优先运行本次改动直接相关的测试及必要的关联模块测试，不在每次修改后重跑全量套件。非大规模重构且实际行为影响少于三个模块时不跑全量；仅在用户明确要求、大规模重构或实际行为影响至少三个模块时考虑扩大范围。生成文件、翻译、文档数量不计为行为模块数量；针对性验证通过后，只在新增修改、失败或尚未验证的关联风险出现时追加检查。
+- `campaign/` 下关卡是 Python 地图定义与战斗逻辑；活动适配参考相近活动及 [campaign/Readme.md](campaign/Readme.md)。
+- WebUI 业务通信使用 `/api/v1/ws`；前端位于 `frontend/`，后端接口与运行服务分别位于 `module/api/`、`module/runtime/`。
+- 修改后端 API 参数模型或方法注册后，运行 `uv run python -m dev_tools.export_api_schema`，同步 `frontend/src/api/generated.ts` 与 `frontend/src/api/contract.json`
 
 AI 自行创建 PR 或执行任何涉及提 PR 的操作时，必须按 [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md) 模板填写：如实勾选变更类型与代码质量确认项（未执行的检查不勾选），并在描述中说明变更原因、验证结果与相关 Issue。
-
-## 维护这些指令
-
-共享规范只在本文件维护，`CLAUDE.md` 仅负责导入。新增规则应针对实际工作流或已证实的陷阱；条件性细节放在相关文档并注明何时查阅。不要重新堆积完整 API 清单、易过期的数量或版本副本，也不要将单次任务的偏好扩展为所有任务的固定流程。

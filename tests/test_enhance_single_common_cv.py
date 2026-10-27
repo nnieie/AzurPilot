@@ -154,7 +154,7 @@ class SingleCommonCVConfigTests(unittest.TestCase):
                 self.assertEqual(config.bound['Enhance_KeepCommonCV'], key)
 
     def test_all_translations_are_complete(self):
-        for language in ('zh-CN', 'zh-MIAO', 'en-US', 'ja-JP', 'zh-TW'):
+        for language in ('zh-CN', 'en-US', 'ja-JP', 'zh-TW'):
             with self.subTest(language=language):
                 data = json.loads((ROOT / 'module/config/i18n' / f'{language}.json').read_text(encoding='utf-8'))
                 field = data['Enhance']['KeepCommonCV']

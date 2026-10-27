@@ -36,6 +36,7 @@ from deploy.utils import DEPLOY_TEMPLATE, poor_yaml_read, poor_yaml_write
 from module.base.timer import timer
 from module.config.deep import deep_default, deep_get, deep_iter, deep_set
 from module.config.env import IS_ON_PHONE_CLOUD
+from module.config.fleet_legacy import LEGACY_PATHS
 from module.config.server import VALID_CHANNEL_PACKAGE, VALID_PACKAGE, VALID_SERVER_LIST, to_package, to_server
 from module.config.redirect_utils.shop import migrate_shop_options
 from module.config.task_priority import get_scheduler_tasks, merge_task_priority
@@ -666,6 +667,7 @@ class ConfigGenerator:
 class ConfigUpdater:
     # 格式：source, target, (可选) convert_func
     redirection = [
+        ('FleetInfo', 'FleetInfo.FleetTraining.CheckIntervalHours', fleet_training_interval_redirect),
         ('OpsiGeneral.OpsiGeneral.ActionPointCheckInterval',
          'OpsiHazard1Leveling.OpsiHazard1Leveling.ActionPointCheckInterval'),
         ('OpsiGeneral.OpsiGeneral.SkipStrategicSearchCheck',
@@ -774,6 +776,13 @@ class ConfigUpdater:
             更新后的配置字典。
         """
         new = {}
+        # 保留尚未显式迁移的旧内容；不解析、不导入，也不作为分析数据源。
+        if not is_template:
+            missing = object()
+            for path in LEGACY_PATHS:
+                value = deep_get(old, path, missing)
+                if value is not missing:
+                    deep_set(new, path, deepcopy(value))
         # 交易玩家身份不是可编辑参数，运行器迁移必须原样保留。
         if not is_template and '_stockInstance' in old:
             new['_stockInstance'] = old['_stockInstance']

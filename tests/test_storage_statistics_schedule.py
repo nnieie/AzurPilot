@@ -103,7 +103,7 @@ class StorageScheduleTests(unittest.TestCase):
         self.assertEqual(field['value'], 7)
         self.assertEqual(field['validate'], [1, 3650])
         self.assertNotEqual(field.get('display'), 'hide')
-        for language in ('zh-CN', 'zh-MIAO', 'en-US', 'ja-JP', 'zh-TW'):
+        for language in ('zh-CN', 'en-US', 'ja-JP', 'zh-TW'):
             data = json.loads(Path(f'module/config/i18n/{language}.json').read_text(encoding='utf-8'))
             field = data['StorageStatistics']['RunIntervalDays']
             self.assertTrue(field['name'])

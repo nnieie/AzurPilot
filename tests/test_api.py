@@ -204,9 +204,9 @@ class ConfigApiTests(unittest.TestCase):
         key = 'OpsiAshBeacon.OpsiAshBeacon.AssistRequestLimit'
         field = self.configs.args['OpsiAshBeacon']['OpsiAshBeacon']['AssistRequestLimit']
         self.assertEqual((field['type'], field['value']), ('input', 0))
-        for value in (-1, 0, 1, 5, 100):
+        for value in (-1, 0, 1, 5, 100, '2', 2.0):
             self.assertEqual(self.configs.validate(key, value), key.split('.'))
-        for value in (-2, 1.5, True, '2', None):
+        for value in (-2, 1.5, True, '2.5', None):
             with self.subTest(value=value), self.assertRaises(ApiError):
                 self.configs.validate(key, value)
         with self.assertRaises(ApiError):
@@ -297,6 +297,55 @@ class ConfigApiTests(unittest.TestCase):
                             self.configs.validate(f'{task}.{group}.{arg}', field['validate'][1] + 1)
                         return
         self.fail('未找到数值范围参数')
+
+    def test_guild_join_threshold_accepts_fractions_within_documented_range(self):
+        """默认值 1.0 经 JSON 传输成为 1 后，比例仍可保存小数。"""
+        path = 'Guild.GuildOperation.JoinThreshold'
+        for value in [0, 0.2, 0.5, 1, 1.0, ' 0.2 ', '.5', '1e-1']:
+            with self.subTest(value=value):
+                original = self.configs.get('testpilot')
+                saved = self.configs.patch('testpilot', original['revision'], [ConfigChange(path=path, value=value)])
+                expected = float(value)
+                self.assertEqual(expected, saved['values']['Guild']['GuildOperation']['JoinThreshold'])
+                self.assertEqual(expected, self.configs.read_json(self.configs.path('testpilot'))['Guild']['GuildOperation']['JoinThreshold'])
+        original = self.configs.get('testpilot')
+        for value in [-0.01, 1.01, 1000, True, None, float('inf'), float('nan'), 'abc', '']:
+            with self.subTest(value=value), self.assertRaises(ApiError):
+                self.configs.patch('testpilot', original['revision'], [ConfigChange(path=path, value=value)])
+            self.assertEqual(original, self.configs.get('testpilot'))
+
+    def test_numeric_input_forms_are_normalized_without_changing_integer_semantics(self):
+        path = 'Guild.GuildOperation.NewOperationMaxDate'
+        for value in [2, 2.0, '2.0', '  +02  ', '2e0']:
+            with self.subTest(value=value):
+                original = self.configs.get('testpilot')
+                saved = self.configs.patch('testpilot', original['revision'], [ConfigChange(path=path, value=value)])
+                actual = saved['values']['Guild']['GuildOperation']['NewOperationMaxDate']
+                self.assertEqual(2, actual)
+                self.assertIs(int, type(actual))
+        for value in [2.5, '2.5', True, 'true', 'NaN', '1e999', [], {}]:
+            with self.subTest(value=value), self.assertRaises(ApiError):
+                self.configs.validate(path, value)
+
+    def test_explicit_numeric_type_takes_priority_over_default_literal(self):
+        field = self.configs.args['Guild']['GuildOperation']['JoinThreshold']
+        field['value'] = 1
+        self.assertEqual(['Guild', 'GuildOperation', 'JoinThreshold'],
+                         self.configs.validate('Guild.GuildOperation.JoinThreshold', 0.2))
+
+    def test_numeric_normalization_preserves_text_options_and_batch_atomicity(self):
+        original = self.configs.get('testpilot')
+        serial = 'Alas.Emulator.Serial'
+        saved = self.configs.patch('testpilot', original['revision'], [ConfigChange(path=serial, value=' 000123 ')])
+        self.assertEqual(' 000123 ', saved['values']['Alas']['Emulator']['Serial'])
+        with self.assertRaises(ApiError):
+            self.configs.validate('Main.Fleet.FleetOrder', 1.0)
+        before = self.configs.path('testpilot').read_bytes()
+        with self.assertRaises(ApiError):
+            self.configs.patch('testpilot', saved['revision'], [
+                ConfigChange(path=serial, value='should-not-save'),
+                ConfigChange(path='Guild.GuildOperation.JoinThreshold', value='1000')])
+        self.assertEqual(before, self.configs.path('testpilot').read_bytes())
 
     def test_hidden_and_fixed_fields_are_read_only(self):
         for path in ['Main.Scheduler.Command', 'Restart.Scheduler.Enable']:
@@ -556,7 +605,7 @@ class SocketApiTests(unittest.TestCase):
                 patch('module.runtime.updater.updater', SimpleNamespace(event=stop_event)), \
                 self.client.websocket_connect('/api/v1/ws') as ws:
             self.login(ws)
-            for task, group in [('MindCalculatorScan', 'MindCalculator'), ('FleetTechScan', 'FleetTech')]:
+            for task, group in [('DockScan', 'Dock')]:
                 with self.subTest(task=task):
                     config = self.call(ws, 'config.get', {'instance': 'testpilot'})['result']
                     patched = self.call(ws, 'config.patch', {
@@ -582,7 +631,7 @@ class SocketApiTests(unittest.TestCase):
         with patch.object(ProcessManager, 'get_manager', return_value=manager), \
                 self.client.websocket_connect('/api/v1/ws') as ws:
             self.login(ws)
-            for task in ['FleetTechnology', 'Main', 'UnknownScan']:
+            for task in ['FleetTechnology', 'MindCalculatorScan', 'FleetTechScan', 'Main', 'UnknownScan']:
                 with self.subTest(task=task):
                     response = self.call(ws, 'tasks.run', {'instance': 'testpilot', 'task': task})
                     self.assertEqual('INVALID_PARAMS', response['error']['code'])
@@ -595,7 +644,7 @@ class SocketApiTests(unittest.TestCase):
         with patch.object(ProcessManager, 'get_manager', return_value=manager), \
                 self.client.websocket_connect('/api/v1/ws') as ws:
             self.login(ws)
-            response = self.call(ws, 'tasks.run', {'instance': 'testpilot', 'task': 'FleetTechScan'})
+            response = self.call(ws, 'tasks.run', {'instance': 'testpilot', 'task': 'DockScan'})
             self.assertEqual('INSTANCE_RUNNING', response['error']['code'])
             manager.start.assert_not_called()
 

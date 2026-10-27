@@ -75,7 +75,7 @@ export function OpsiSimulatorPanel({instance, beforeStart}: {instance: string; b
     }
   }
 
-  const number = (value: number) => value.toLocaleString(language === 'zh-MIAO' ? 'zh-CN' : language, {maximumFractionDigits: 2})
+  const number = (value: number) => value.toLocaleString(language, {maximumFractionDigits: 2})
   const result = data?.result
   const metrics = result && [
     [ui('simulator.cl1Count'), number(result.cl1Count)],

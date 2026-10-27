@@ -1,6 +1,7 @@
-"""ATX 安装下载回归：隔离网络与 ADB，仅向临时目录解包。"""
+"""ATX 下载回归测试：隔离网络、缓存目录和设备，不操作真实模拟器。"""
 
 import io
+import os
 import tarfile
 import tempfile
 import unittest

@@ -49,4 +49,4 @@ const ja: Text = {
   bound: 'TPM 登録済み', unbound: 'TPM 未登録', unlocked: 'メモリ内で解除済み', locked: 'メモリ内ではロック中', change: '専用パスワードを変更', newPassword: '新しい専用パスワード',
   switch: '切替してゲームを起動', selected: '選択済み', delete: 'スナップショットを削除', empty: '保存したアカウントはありません。ゲームにログインしてから保存してください。', hidden: '情報は非表示です。パスワードを検証すると 60 秒間表示されます。', hide: 'アカウント情報を隠す', mismatch: 'パスワードが一致しません', done: 'アカウント操作が完了しました',
 }
-export const accountText: Record<Language, Text> = {'zh-CN': zh, 'en-US': en, 'zh-TW': tw, 'ja-JP': ja, 'zh-MIAO': {...zh, title: '账号管理喵', done: '账号操作完成了喵'}}
+export const accountText: Record<Language, Text> = {'zh-CN': zh, 'en-US': en, 'zh-TW': tw, 'ja-JP': ja}

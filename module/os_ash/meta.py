@@ -77,6 +77,9 @@ class MetaDigitCounter(DigitCounter):
         return result
 
 
+OCR_BEACON_REMAIN = MetaDigitCounter(BEACON_REMAIN, letter=(235, 235, 235), threshold=160)
+
+
 class Meta(UI, MapEventHandler):
     """META 战斗基础模块，处理地图事件和 OCR 识别。"""
 
@@ -162,7 +165,7 @@ class Meta(UI, MapEventHandler):
 
         Pages:
             in: META 主页面、信标页、档案页、协助页或战斗准备页
-            out: 信标页或 META 主页面；协助任务返回协助页
+            out: 信标页或 META 主页面；协助处理器返回协助页
         """
         # 最后一场可能是档案战斗，但此前普通信标的装备仍然需要恢复。
         if not self.ash_combat.equipment_handle_before_flag:
@@ -284,9 +287,66 @@ def _server_support_dossier_auto_attack():
 
 
 class OpsiAshBeacon(Meta):
-    """余烬信标主任务，处理 META 攻击、奖励领取和任务调度。"""
+    """META 统一任务，处理支援、信标、档案及共用装备的恢复。"""
     _meta_receive = []
     _meta_category = "undefined"
+    _assist_pending = False
+    _meta_waiting = False
+    _meta_delay = None
+
+    @cached_property
+    def ash_assist(self):
+        """支援沿用当前任务的配置与战斗实例，跨阶段只应用一次装备方案。"""
+        assist = AshBeaconAssist(config=self.config, device=self.device)
+        assist.ash_combat = self.ash_combat
+        return assist
+
+    def _delay_meta(self, **kwargs):
+        """任务内先汇总等待条件，支援结束后再合并十分钟重试并写入排期。"""
+        if self._meta_delay is not None:
+            if 'minute' in kwargs and 'minute' in self._meta_delay:
+                kwargs['minute'] = min(kwargs['minute'], self._meta_delay['minute'])
+            self._meta_delay.update(kwargs)
+            return
+        if self._assist_pending:
+            kwargs['minute'] = min(kwargs.get('minute', 10), 10)
+        self.config.task_delay(**kwargs)
+
+    def _is_dossier_active(self, skip_first_screenshot=True):
+        """支援前领取待结算的档案奖励，仅在确认档案未开启后放行。
+
+        Args:
+            skip_first_screenshot (bool): 是否复用进入档案页后的当前截图。
+
+        Returns:
+            bool: 档案仍开启时返回 True；只有确认解析入口时返回 False。
+
+        Pages:
+            in: in_meta
+            out: in_meta, DOSSIER_LIST
+        """
+        self.ensure_dossier_page()
+        while True:
+            if skip_first_screenshot:
+                skip_first_screenshot = False
+            else:
+                self.device.screenshot()
+
+            if self.handle_map_event():
+                continue
+            if self.appear(DOSSIER_LIST, offset=(20, 20)):
+                # 领奖仍占用已开启的档案，点击后必须用新截图确认解析入口。
+                if self.appear(BEACON_REWARD, offset=(20, 20)):
+                    if self.appear_then_click(BEACON_REWARD, offset=(20, 20), interval=2):
+                        logger.info('[META作战] 支援前领取档案奖励，等待确认档案未开启')
+                        if 'dossier' not in self._meta_receive:
+                            self._meta_receive.append('dossier')
+                    continue
+                if self.appear(META_AUTO_ATTACKING, offset=(20, 20)) \
+                        or self.appear(HELP_ENTER, offset=(30, 30)):
+                    return True
+                if self.appear(META_BEGIN_ENTRANCE, offset=(20, 20)):
+                    return False
 
     def _attack_meta(self, skip_first_screenshot=True):
         """处理 META 攻击的完整流程。
@@ -330,6 +390,7 @@ class OpsiAshBeacon(Meta):
                 if self._satisfy_attack_condition():
                     self._make_an_attack()
                     continue
+                break
             if MetaState.COMPLETE == state:
                 if self.appear(BEACON_LIST, offset=(20, 20)):
                     self._meta_category = "beacon"
@@ -428,7 +489,7 @@ class OpsiAshBeacon(Meta):
         档案模式下：META 正在自动攻击时，不再手动攻击。
 
         Returns:
-            bool: 是否满足攻击条件（始终返回 True，不满足时通过 task_stop 提前终止）。
+            bool: 是否满足攻击条件；等待时登记排期，由统一任务收尾。
         """
         if self.appear(BEACON_LIST, offset=(20, 20)):
             limit = self.config.OpsiAshBeacon_AssistRequestLimit
@@ -440,21 +501,19 @@ class OpsiAshBeacon(Meta):
                 damage = self._get_meta_damage()
                 if damage > 0:
                     logger.info(f'[META作战] 当前 META 已造成 {damage} 伤害，等待支援后再检查')
-                    self.handle_ash_equipment_after()
                     if limit > 0 and next_request is not None:
-                        self.config.task_delay(target=next_request)
+                        self._delay_meta(target=next_request)
                     else:
-                        self.config.task_delay(minute=30)
-                    self.ui_goto_main()
-                    self.config.task_stop()
+                        self._delay_meta(minute=30)
+                    self._meta_waiting = True
+                    return False
         if self.appear(DOSSIER_LIST, offset=(20, 20)):
             # META 正在自动攻击中
             if self.appear(META_AUTO_ATTACKING, offset=(20, 20)):
                 logger.info('[META作战] 当前 META 正在自动攻击，15 分钟后检查')
-                self.handle_ash_equipment_after()
-                self.config.task_delay(minute=15)
-                self.ui_goto_main()
-                self.config.task_stop()
+                self._delay_meta(minute=15)
+                self._meta_waiting = True
+                return False
         return True
 
     def _get_assist_request_state(self):
@@ -691,6 +750,8 @@ class OpsiAshBeacon(Meta):
             if self._check_beacon_point():
                 self.device.click(META_BEGIN_ENTRANCE)
                 logger.info('[META作战] 开始信标')
+            else:
+                self.appear_then_click(ASH_QUIT, offset=(10, 10), interval=2)
             return True
         # 档案页面
         elif _server_support() \
@@ -779,6 +840,8 @@ class OpsiAshBeacon(Meta):
                 return True
             if self.handle_map_event():
                 continue
+            if self.appear_then_click(BEACON_MY, offset=(20, 20), interval=2):
+                continue
             if self.appear_then_click(META_ENTRANCE, offset=(20, 300), interval=2):
                 continue
 
@@ -812,7 +875,10 @@ class OpsiAshBeacon(Meta):
             if self.handle_map_event():
                 continue
             if self.appear(ASH_SHOWDOWN, offset=(30, 30)):
-                self.device.click(META_MAIN_DOSSIER_ENTRANCE)
+                self.appear_then_click(META_MAIN_DOSSIER_ENTRANCE, offset=(20, 20), interval=2)
+                continue
+            if self.appear(BEACON_LIST, offset=(20, 20)):
+                self.appear_then_click(ASH_QUIT, offset=(10, 10), interval=2)
                 continue
 
     def _begin_beacon(self):
@@ -822,26 +888,53 @@ class OpsiAshBeacon(Meta):
             logger.info("当前服务器暂不支持档案信标和一刀模式，请联系开发者")
         self._ensure_meta_page()
         self._attack_meta()
-        self.handle_ash_equipment_after()
 
     def run(self):
-        """执行信标攻击任务主流程：进入 META 页面、攻击、领取奖励、延迟到下次服务器更新。"""
+        """先处理信标和档案，再按实际档案状态决定支援，统一恢复装备、领奖并排期。
+
+        Pages:
+            in: 任意可导航页面
+            out: page_main
+        """
+        self._meta_receive = []
+        self._assist_pending = False
+        self._meta_waiting = False
+        self._meta_delay = {}
         self.ui_ensure(page_reward)
-        self._begin_beacon()
+        try:
+            self._begin_beacon()
+            if self.config.OpsiAshAssist_Enable:
+                if self.config.OpsiAshBeacon_DossierSkipAssist and self._is_dossier_active():
+                    logger.info('[META支援] 档案仍处于开启状态，暂停支援，15 分钟后检查')
+                    self._delay_meta(minute=15)
+                    self._meta_waiting = True
+                else:
+                    self._assist_pending = not self.ash_assist._begin_meta_assist()
+                    # 支援中途找不到下一信标时，也领取此前已取得的同步奖励。
+                    self._meta_receive.append('beacon')
+        except TaskEnd:
+            self._meta_delay = None
+            self.handle_ash_equipment_after()
+            raise
+        self.handle_ash_equipment_after()
         self.ui_goto_main()
 
         with self.config.multi_set():
-            for meta in self._meta_receive:
+            for meta in dict.fromkeys(self._meta_receive):
                 MetaReward(self.config, self.device).run(category=meta)
             self._meta_receive = []
-            self.config.task_delay(server_update=True)
+            if not self._meta_waiting:
+                self._delay_meta(server_update=True)
+            delay = self._meta_delay
+            self._meta_delay = None
+            self._delay_meta(**delay)
         # MetaReward 会导航到 META/档案页面，领取完毕后需返回主界面，
         # 否则下一个任务启动时游戏仍在 META 页面导致页面识别失败而卡死
         self.ui_goto_main()
 
 
 class AshBeaconAssist(Meta):
-    """余烬信标协助任务，处理他人的信标求助。"""
+    """META 作战内的支援阶段，不单独调度或恢复共用装备。"""
 
     def _attack_meta(self, skip_first_screenshot=True):
         """协助攻击 META 信标。
@@ -852,37 +945,35 @@ class AshBeaconAssist(Meta):
             skip_first_screenshot (bool): 是否跳过首次截图。默认 True。
 
         Returns:
-            bool: 是否找到了可攻击的信标。
+            bool: 是否已确认当天支援次数耗尽；无信标或读数不可信时返回 False。
 
         Pages:
-            in: page_reward
-            out: page_reward
+            in: in_meta_assist
+            out: in_meta_assist
         """
         timeout = Timer(3, count=9).start()
-        appeared = False
         while 1:
             if skip_first_screenshot:
                 skip_first_screenshot = False
             else:
                 self.device.screenshot()
 
-            if not appeared and timeout.reached():
-                logger.info('[META支援] 未找到可支援的 META 信标，延迟任务')
-                break
-
             if self.handle_map_event():
                 continue
-            if self.appear(ASH_START, offset=(20, 20)):
-                appeared = True
-                remain_times = self.digit_ocr_point_and_check(BEACON_REMAIN, 1)
-                if remain_times:
+            if self._in_meta_assist_page():
+                remain, _, total = OCR_BEACON_REMAIN.ocr(self.device.image)
+                # OCR 失败返回 0/0，不能据此把未完成的支援当作当天已完成。
+                if total == 3 and remain == 0:
+                    logger.info('[META支援] 支援次数不足，任务完成')
+                    return True
+                if total == 3 and remain > 0 and self.appear(ASH_START, offset=(20, 20)):
                     self._ensure_meta_level()
                     self._make_an_attack()
-                else:
-                    logger.info('[META支援] 支援次数不足，任务完成')
-                    break
-
-        return appeared
+                    timeout.reset()
+                    continue
+            if timeout.reached():
+                logger.info('[META支援] 未找到可支援的 META 信标或有效次数，延迟任务')
+                return False
 
     def _make_an_attack(self):
         """执行一次 META 协助战斗。
@@ -916,6 +1007,7 @@ class AshBeaconAssist(Meta):
             return False
 
         # 执行战斗
+        self.ash_combat.is_dossier = False
         self.ash_combat.combat(expected_end=expected_end, save_get_items=False, emotion_reduce=False)
 
     def _ensure_meta_level(self):
@@ -991,28 +1083,8 @@ class AshBeaconAssist(Meta):
         """开始信标协助流程，确保进入协助页面后执行攻击。
 
         Returns:
-            bool: 是否成功找到并攻击信标。
+            bool: 是否已确认当天支援次数耗尽。
         """
         logger.hr('META支援')
         self._ensure_meta_assist_page()
-        result = self._attack_meta(skip_first_screenshot=False)
-        self.handle_ash_equipment_after()
-        return result
-
-    def run(self):
-        """
-        执行信标协助任务主流程。
-
-        成功协助后领取奖励并延迟到下次服务器更新；
-        未找到可协助的信标则延迟 10-20 分钟后重试。
-        """
-        self.ui_ensure(page_reward)
-
-        if self._begin_meta_assist():
-            MetaReward(self.config, self.device).run()
-            self.config.task_delay(server_update=True)
-            # MetaReward 会导航到 META 页面，领取完毕后需返回主界面，
-            # 否则下一个任务启动时游戏仍在 META 页面导致页面识别失败而卡死
-            self.ui_goto_main()
-        else:
-            self.config.task_delay(minute=(10, 20))
+        return self._attack_meta(skip_first_screenshot=False)

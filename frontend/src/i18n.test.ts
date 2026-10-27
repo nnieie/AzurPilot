@@ -15,17 +15,11 @@ describe('WebUI i18n', () => {
 
   it('offers a different delete-instance warning at each of the three confirmations', () => {
     const prompts = ['instance.deletePrompt', 'instance.deletePrompt2', 'instance.deletePrompt3'] as const
-    for (const language of ['zh-CN', 'zh-TW', 'en-US', 'ja-JP', 'zh-MIAO'] as const) {
+    for (const language of ['zh-CN', 'zh-TW', 'en-US', 'ja-JP'] as const) {
       const texts = prompts.map(key => translateUi(language, key, {name: 'alas-main'}))
       expect(new Set(texts).size).toBe(prompts.length)
       /* 键不存在时 translateUi 会把键名原样返回，那样三条也「互不相同」，所以这里必须排除。 */
       expect(texts.some(text => text.includes('instance.deletePrompt'))).toBe(false)
-    }
-  })
-
-  it('translates the Miao locale instead of falling back to Simplified Chinese', () => {
-    for (const key of ['nav.statistics', 'common.retry', 'dashboard.fitCards'] as const) {
-      expect(translateUi('zh-MIAO', key)).toContain('喵')
     }
   })
 

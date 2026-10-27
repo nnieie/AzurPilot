@@ -373,7 +373,7 @@ export function PairingPanel({ ready }: { ready: boolean }) {
                     <Clock size={12} />
                     <span>
                       {new Date(item.created_at * 1000).toLocaleString(
-                        language === 'zh-MIAO' ? 'zh-CN' : language,
+                        language,
                       )}
                     </span>
                   </div>

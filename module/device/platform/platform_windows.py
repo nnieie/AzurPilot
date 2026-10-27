@@ -327,13 +327,13 @@ class PlatformWindows(PlatformBase, EmulatorManager):
             # 短命 cmd 断开进程树关系；启动器的 Job 归属需要另外显式脱离。
             # 仅在启动器声明允许时请求 breakaway，旧 Job 不允许此标志会拒绝启动。
             creationflags = subprocess.CREATE_NO_WINDOW
-            if os.environ.get('ALAS_LAUNCHER_JOB_BREAKAWAY') == '1':
+            if os.environ.get('AP_LAUNCHER_JOB_BREAKAWAY') == '1':
                 creationflags |= subprocess.CREATE_BREAKAWAY_FROM_JOB
             # 模拟器不是 ALAS worker，不能继承退出清理标记或 WebUI 信任密钥。
             environment = {
                 key: value for key, value in os.environ.items()
                 if key.upper() not in {
-                    'ALAS_LAUNCHER_PID', 'ALAS_LAUNCHER_JOB_BREAKAWAY', 'ALAS_WEBUI_TRUST_SECRET',
+                    'AP_LAUNCHER_PID', 'AP_LAUNCHER_JOB_BREAKAWAY', 'AP_WEBUI_TRUST_SECRET',
                 }
             }
             proc = subprocess.Popen(

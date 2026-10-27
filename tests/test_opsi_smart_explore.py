@@ -11,7 +11,7 @@ from unittest.mock import Mock, patch
 
 from module.config.config import AzurLaneConfig, TaskEnd
 from module.config.deep import deep_get, deep_set
-from module.exception import GameStuckError
+from module.exception import GameStuckError, GameTooManyClickError
 from module.os.map_data import DIC_OS_MAP
 from module.os.operation_siren import OperationSiren
 from module.os.tasks.smart_explore import SMART_EXPLORE_CONFIG, SMART_EXPLORE_ROUTES, SMART_EXPLORE_ZONES
@@ -435,6 +435,60 @@ class SmartExploreTests(unittest.TestCase):
         self.assertEqual(self.runner.config.OpsiExploreCleanup_State['phase'], 'done')
         self.assertEqual(self.runner.globe_goto.call_count, 2)
 
+    def test_cleanup_failure_reload_and_completion_restore_normal_scheduling(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'smart-cleanup-restart-test.json'
+            data = json.loads(Path('config/template.json').read_text(encoding='utf-8'))
+            data['OpsiScheduling']['Scheduler']['Enable'] = True
+            data['OpsiScheduling']['OpsiSmartExplore'].update(Enable=True, EventCleanup=True)
+            data['OpsiScheduling']['OpsiScheduling'].update(
+                UseSmartSchedulingOperationCoinsPreserve=True, OperationCoinsPreserve=40000,
+            )
+            data['OpsiScheduling']['Storage']['Storage'] = {'Unrelated': 'keep'}
+            data['OpsiExploreCleanup']['OpsiExploreCleanup'].update(
+                State=dict(reset=RESET.isoformat(), phase='cleanup', order=[44, 22, 24], next=1, attempts=2),
+                Progress='已补扫 1/3',
+            )
+            path.write_text(json.dumps(data), encoding='utf-8')
+            with patch('module.config.config.filepath_config', return_value=str(path)), \
+                    patch('module.config.config_updater.filepath_config', return_value=str(path)):
+                self.runner.config = AzurLaneConfig('smart-cleanup-restart-test', task='OpsiScheduling')
+                state = self.state(second=True, third=True)
+                self.runner._save_smart_explore_state(dict(state, phase='cleanup'))
+                self.mark_monthly_complete()
+                del self.runner._run_with_opsi_task_context
+                def enter(zone, **kwargs):
+                    self.assertEqual(self.runner.config.task.command, 'OpsiExploreCleanup')
+                    self.assertEqual(kwargs, {'types': 'DANGEROUS', 'force_enter': True})
+                    self.runner.zone = SimpleNamespace(zone_id=zone)
+                self.runner.globe_goto = Mock(side_effect=enter)
+                self.runner.fleet_set = Mock()
+                self.runner.fleet_selector = SimpleNamespace(get=lambda: self.runner.config.OpsiFleet_Fleet)
+                self.runner.map_rescan = Mock(side_effect=[GameTooManyClickError('自律寻敌启动失败'), True, True])
+                self.runner.clear_question_any_fleet = Mock()
+                self.runner.os_map_goto_globe = Mock()
+                with self.assertRaises(GameTooManyClickError):
+                    self.runner.run_smart_scheduling_once()
+                self.assertEqual(self.runner.config.task.command, 'OpsiScheduling')
+                self.assertFalse(self.runner._opsi_meowfficer_cleanup)
+                self.runner.os_map_goto_globe.assert_not_called()
+                self.runner.config = AzurLaneConfig('smart-cleanup-restart-test', task='OpsiScheduling')
+                saved = self.runner.config.cross_get('OpsiExploreCleanup.OpsiExploreCleanup.State')
+                self.assertEqual((saved['next'], saved['attempts']), (1, 3))
+                for next_zone in (2, 3):
+                    self.runner.run_smart_scheduling_once()
+                    saved = self.runner.config.cross_get('OpsiExploreCleanup.OpsiExploreCleanup.State')
+                    self.assertEqual((saved['next'], saved['attempts']), (next_zone, 0))
+                    self.assertEqual(self.runner.config.task.command, 'OpsiScheduling')
+                    self.runner._execute_hazard1_leveling.assert_not_called()
+                self.assertEqual([entry.args[0] for entry in self.runner.globe_goto.call_args_list], [22, 22, 24])
+                self.assertEqual(saved['phase'], 'done')
+                storage = self.runner.config.cross_get('OpsiScheduling.Storage.Storage')
+                self.assertEqual(storage['SmartExplore']['phase'], 'done')
+                self.assertEqual(storage['Unrelated'], 'keep')
+                self.runner.run_smart_scheduling_once()
+                self.runner._execute_hazard1_leveling.assert_called_once()
+
     def test_real_config_and_task_context_restore_owner_and_persist_purchase(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'smart-explore-test.json'
@@ -485,7 +539,7 @@ class SmartExploreTests(unittest.TestCase):
         self.assertIs(template['OpsiSmartExplore']['ForceRun'], False)
         monthly = json.loads((root / 'config/template.json').read_text(encoding='utf-8'))['OpsiExplore']
         self.assertIs(monthly['OpsiExplore']['ForceRun'], False)
-        for lang in ('zh-CN', 'zh-MIAO', 'zh-TW', 'en-US', 'ja-JP'):
+        for lang in ('zh-CN', 'zh-TW', 'en-US', 'ja-JP'):
             texts = json.loads((root / f'module/config/i18n/{lang}.json').read_text(encoding='utf-8'))
             for value in texts['OpsiSmartExplore'].values():
                 for text in value.values():

@@ -1,4 +1,4 @@
-/** 远程配对的五语言文案。 */
+/** 远程配对的四语言文案。 */
 import type {Language} from '../i18n'
 
 const zh = {
@@ -26,24 +26,6 @@ const zh = {
 type Copy = typeof zh
 export const pairCopy: Record<Language, Copy> = {
   'zh-CN': zh,
-  'zh-MIAO': {
-    ...zh,
-    title: '与 AzurPilot for Android 配对喵',
-    start: '开始配对喵',
-    waiting: '等 AzurPilot for Android 连接喵',
-    connected: '配对成功喵',
-    expired: '配对码已过期喵',
-    copyCode: '复制配对码喵',
-    copiedCode: '已复制配对码喵',
-    copyPayload: '复制配对链接喵',
-    copiedPayload: '已复制链接喵',
-    regenerate: '重新生成配对码喵',
-    connectedHint: 'AzurPilot for Android 已完成配对喵，设备已加入已授权列表。',
-    deviceClient: 'AzurPilot for Android 客户端喵',
-    deviceAuthorized: '已授权喵',
-    noDevices: '还没有授权过设备喵',
-    scanGuide: '用手机扫描二维码喵',
-  },
   'zh-TW': {
     title: '與 AzurPilot for Android 配對', start: '開始配對', refresh: '重新產生',
     hint: '在 AzurPilot for Android 中掃描 QR Code，或輸入下方的六位配對碼。', waiting: '等待 AzurPilot for Android 連線',

@@ -579,6 +579,10 @@ class RewardResearch(ResearchSelector, ResearchQueue, StorageHandler):
         with self.stat.new(
                 genre='research', method=self.config.DropRecord_ResearchRecord
         ) as drop:
+            # Selection/reset frames are already uploaded individually by
+            # research_cloud_list_record. Keep this legacy local archive out of
+            # the completion stream so it cannot duplicate appearance samples.
+            drop.upload = False
             for _ in range(5):
                 if self.get_queue_slot() > 0:
                     success = self.research_queue_append(drop=drop)

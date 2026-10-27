@@ -134,6 +134,7 @@ class ResearchSelector(ResearchUI):
 
         通过逐个进入项目详情页识别项目属性，并按原始顺序重排。
         """
+        self.research_cloud_list_record()
         projects = []
         proj_sorted = []
 
@@ -177,6 +178,17 @@ class ResearchSelector(ResearchUI):
                 break
 
         self.projects = projects
+        self.research_cloud_list_record()
+
+    def research_cloud_list_record(self):
+        """Keep the actual appearance time of all five offered projects."""
+        if getattr(self.config, 'DropRecord_CloudUpload', False) is not True:
+            return
+        method = self.config.DropRecord_ResearchRecord
+        if method not in ('upload', 'save_and_upload'):
+            return
+        with self.stat.new('research_refresh', method=method) as record:
+            record.add(self.device.image)
 
     def research_sort_filter(self, enforce=False):
         """

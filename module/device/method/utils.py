@@ -16,6 +16,7 @@ import uiautomator2 as u2
 import uiautomator2cache
 from adbutils import AdbTimeout
 from lxml import etree
+from urllib3.exceptions import HTTPError as Urllib3HTTPError
 
 from module.device.method.remove_warning import remove_shell_warning
 
@@ -135,6 +136,29 @@ def setup_logger(*args, **kwargs):
 
 u2.setup_logger = setup_logger
 u2.init.setup_logger = setup_logger
+
+
+_u2_mirror_download = u2.init.mirror_download
+
+
+def mirror_download(url, filename=None, logger=u2_logger):
+    """优先下载 ATX 镜像，失败时使用同版本、同架构的 GitHub 发布包。"""
+    if not url.startswith('https://atx.azurpilot.com/'):
+        return _u2_mirror_download(url, filename, logger=logger)
+
+    storepath = u2.init.gen_cachepath(url)
+    try:
+        return u2.init.cache_download(url, filename, storepath=storepath, logger=logger)
+    except (requests.RequestException, Urllib3HTTPError,
+            FileNotFoundError, AssertionError, TypeError, ValueError) as exc:
+        logger.warning('ATX Agent 镜像下载失败，回退 GitHub：%s', exc)
+
+    github_url = u2.init.GITHUB_BASEURL + '/atx-agent/releases/download/%s/%s' % (
+        u2.version.__atx_agent_version__, os.path.basename(url))
+    return u2.init.cache_download(github_url, filename, storepath=storepath, logger=logger)
+
+
+u2.init.mirror_download = mirror_download
 
 
 # Patch Initer

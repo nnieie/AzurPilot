@@ -1,6 +1,6 @@
 """游戏服务器状态检查器。
 
-通过 server-checker.nanoda.work 查询碧蓝航线服务器状态。在任务调度前
+通过统一云 API 查询碧蓝航线服务器状态。在任务调度前
 检查所选服务器是否可用，避免在维护或尚未开放期间执行无效操作。
 """
 
@@ -9,6 +9,8 @@ from json import JSONDecodeError
 
 import requests
 
+from deploy.api_endpoints import API_BASE_URL
+from module.base.device_id import get_device_id
 from module.base.timer import Timer
 from module.config.server import VALID_SERVER_LIST as server_list
 from module.config.server import ServerInfo, get_server_info
@@ -16,7 +18,7 @@ from module.exception import ScriptError
 from module.logger import logger
 from module.server_status import ServerStatusQueryError, query_server
 
-SERVER_API_BASE = 'https://server-checker.nanoda.work'
+SERVER_API_BASE = API_BASE_URL
 AVAILABLE_SERVER_STATES = {'normal', 'full', 'reg_full'}
 UNAVAILABLE_SERVER_STATES = {'maintenance', 'unopened', 'unknown'}
 
@@ -56,7 +58,8 @@ class ServerChecker:
     def _load_server(self) -> None:
         """通过 API 获取当前服务器状态。
 
-        公共 API 暂时不可用时，改为直连游戏网关。两种来源均无法取得状态
+        公共 API 的连接和读取超时各为 3 秒，失败后改为直连游戏网关，避免
+        慢接口长时间阻塞任务启动。两种来源均无法取得状态
         才会走既有的快速重试；响应结构错误和非预期客户端错误仍会抛出
         ``ScriptError``，由顶层临时禁用检测器。
 
@@ -73,11 +76,10 @@ class ServerChecker:
             session = requests.Session()
             session.trust_env = False
             response = session.get(
-                url=(
-                    f'{self._base}/api/v1/servers/'
-                    f'{self._server_info.region}_{self._server_info.server_id}'
-                ),
-                timeout=15,
+                url=f'{self._base}/api/v2/get/server',
+                params={'region': self._server_info.region, 'server_id': self._server_info.server_id},
+                headers={'X-AzurPilot-ID': get_device_id()},
+                timeout=(3, 3),
             )
             if response.status_code == 200:
                 self._load_response(response.json())
@@ -102,7 +104,7 @@ class ServerChecker:
                     f'Response is {getattr(response, "text", "")}'
                 )
         except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
-            logger.error(e)
+            logger.warning(f'[服务器检查] 公共状态 API 查询失败，尝试直连游戏网关：{e}')
             if self._load_gateway_server():
                 return
 

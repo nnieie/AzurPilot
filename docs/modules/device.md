@@ -283,12 +283,12 @@ flowchart TD
 
 `PlatformWindows.execute(wait=False)` 用短命的 `cmd /c start` 断开模拟器与 ALAS 的进程树关系；
 这不会解除 Windows Job 归属。启动器需为后端 Job 设置 `JOB_OBJECT_LIMIT_BREAKAWAY_OK`，
-并向 Python 注入 `ALAS_LAUNCHER_JOB_BREAKAWAY=1`；ALAS 仅在此能力存在时以
+并向 Python 注入 `AP_LAUNCHER_JOB_BREAKAWAY=1`；ALAS 仅在此能力存在时以
 `CREATE_BREAKAWAY_FROM_JOB` 启动 cmd，使模拟器及其后代独立于后端 Job。
 普通 Python worker 仍继承 Job，退出或关闭 Job 句柄时照常回收。
 
-异步模拟器启动还会从复制的环境中移除 `ALAS_LAUNCHER_PID`、`ALAS_LAUNCHER_JOB_BREAKAWAY`
-和 `ALAS_WEBUI_TRUST_SECRET`，避免模拟器被启动器的残留进程扫描误杀或继承 WebUI 信任密钥。
+异步模拟器启动还会从复制的环境中移除 `AP_LAUNCHER_PID`、`AP_LAUNCHER_JOB_BREAKAWAY`
+和 `AP_WEBUI_TRUST_SECRET`，避免模拟器被启动器的残留进程扫描误杀或继承 WebUI 信任密钥。
 父进程环境及同步管理命令保持原有行为。直接运行 Python 不请求 breakaway；旧启动器未提供能力时
 保留原有启动方式，因此要彻底解决 Job 连带关闭问题，需同时更新启动器和 ALAS。
 显式配置的停止后关闭模拟器、模拟器故障恢复和看门狗仍按各自规则执行。
@@ -354,6 +354,7 @@ Device 构造也有自己的小型阶梯：`super().__init__` 抛 `EmulatorNotRu
 
 - 几乎所有连接资源都是 `cached_property`：`adb_binary`、`adb_client`、`adb`、`u2`、`reverse_server`、`droidcast_session`、`_minitouch_builder`、`nemu_ipc` 等。失效方式统一是 `del_cached_property` + 下次访问惰性重建；`release_resource()` 集中清理会话类资源。
 - `method/utils.py` 模块级 monkey patch：去掉 u2 的 minicap 安装、重定向 u2 日志到项目 logger、修补 adbutils 1.0 缺失的 `check_okay()`——import 即生效，不可重复触发。
+- ATX Agent 安装优先使用 `https://atx.azurpilot.com/`；镜像请求失败或下载长度校验失败时，直接回退 `https://github.com/openatx/atx-agent/releases/download/<版本>/<文件名>`，保留版本与 ABI 选择。两处下载共用镜像 URL 对应的缓存路径，GitHub 下载成功后可直接复用；两处均失败时继续抛出异常，由原有安装重试机制处理。运行时补丁与 `deploy/patch.py`、`deploy/Windows/patch.py` 的安装补丁保持一致，已有仅改写镜像地址的环境也会补齐回退行为。
 - 截图去抖动启用时（`Emulator_ScreenshotDedithering`）每张图多花 40–60ms；错误截图环形队列 `screenshot_deque`（长度由 `Error.ScreenshotLength` 控制，1–400）供错误现场保存。
 - 写回配置的自动检测结果：serial 修正、包名、`EmulatorInfo_*` 三元组、基准测试选出的 `Emulator_ScreenshotMethod` / `Optimization_OcrDevice`。雷电的 `127.0.0.1:5555+X ↔ emulator-5554+X` 配对与 MuMu12 的端口漂移是**动态修正，不写配置**。
 

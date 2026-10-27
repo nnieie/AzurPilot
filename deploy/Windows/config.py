@@ -25,7 +25,11 @@ def choose_fallback_repository() -> str:
 
 
 class ExecutionError(Exception):
-    pass
+    """部署流程执行失败；code 取 deploy.config.ErrorCodes，供上游结构化识别。"""
+
+    def __init__(self, code: int = 1, message: str = ''):
+        super().__init__(message or f'deploy failed with error code {code}')
+        self.code = code
 
 
 class ConfigModel:
@@ -257,7 +261,9 @@ class DeployConfig(DeployConfigTransaction, ConfigModel):
             else:
                 logger.info(f"[ failure ], error_code: {error_code}")
                 self.show_error(command)
-                raise ExecutionError
+                raise ExecutionError(
+                    10, f'Command failed (exit {error_code}): {command}'
+                )
         else:
             logger.info(f"[ success ]")
             return True

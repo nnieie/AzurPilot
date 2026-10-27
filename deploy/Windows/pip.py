@@ -41,7 +41,9 @@ class PipManager(DeployConfig):
         except Exception as exc:
             logger.critical(f'uv sync failed: {exc}')
             log_command_output(logger, command_output(exc))
-            raise ExecutionError from exc
+            raise ExecutionError(
+                13, f'依赖同步失败: {exc}'
+            ) from exc
         else:
             log_command_output(logger, result.output)
         Progress.UpdateDependency()

@@ -224,7 +224,6 @@ flowchart TD
 | `module/llm.py` | 可选的异常 AI 分析（`Error_LlmAnalysis`） |
 | `module/base/backup.py` | 每日备份 |
 | `module/statistics/daily_summary.py` | 日报生成与推送 |
-| `module/base/api_client.ApiClient` | 崩溃日志上报 |
 
 ### 与 `TaskHandler` 的区别
 

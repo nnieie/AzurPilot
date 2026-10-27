@@ -638,7 +638,7 @@ class EmotionReserveConfigTests(unittest.TestCase):
                 self.assertEqual([0, 150], groups['Emotion']['MinReserve']['validate'])
                 self.assertEqual('stored', groups['Emotion']['RecoveryWait']['type'])
                 self.assertEqual('hide', groups['Emotion']['RecoveryWait']['display'])
-        for language in ('zh-CN', 'zh-MIAO', 'en-US', 'ja-JP', 'zh-TW'):
+        for language in ('zh-CN', 'en-US', 'ja-JP', 'zh-TW'):
             translations = json.loads(Path(f'module/config/i18n/{language}.json').read_text(encoding='utf-8'))
             for field in ('MinReserve', 'RecoveryWait'):
                 self.assertTrue(translations['Emotion'][field]['name'])

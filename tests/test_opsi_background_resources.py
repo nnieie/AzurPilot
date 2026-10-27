@@ -448,14 +448,14 @@ class ResourceConfigurationTests(unittest.TestCase):
         updater.config_redirect(old, new)
         self.assertEqual(new['OpsiHazard1Leveling']['OpsiHazard1Leveling']['ActionPointCheckInterval'], 10)
 
-    def test_generated_controls_follow_sacrifice_control_and_have_five_translations(self):
+    def test_generated_controls_follow_sacrifice_control_and_have_all_translations(self):
         root = Path(__file__).parents[1]
         args = json.loads((root / 'module/config/argument/args.json').read_text(encoding='utf-8'))
         fields = list(args['OpsiHazard1Leveling']['OpsiHazard1Leveling'])
         index = fields.index('SkipHpCheck')
         self.assertEqual(fields[index + 1:index + 3], ['ActionPointCheckInterval', 'SkipStrategicSearchCheck'])
         self.assertNotIn('ActionPointCheckInterval', args['OpsiGeneral']['OpsiGeneral'])
-        for lang in ('zh-CN', 'zh-MIAO', 'en-US', 'ja-JP', 'zh-TW'):
+        for lang in ('zh-CN', 'en-US', 'ja-JP', 'zh-TW'):
             data = json.loads((root / f'module/config/i18n/{lang}.json').read_text(encoding='utf-8'))
             for field in ('ActionPointCheckInterval', 'SkipStrategicSearchCheck'):
                 self.assertNotIn(field, data['OpsiGeneral'])

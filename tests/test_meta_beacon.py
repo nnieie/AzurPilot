@@ -79,8 +79,9 @@ class MetaBeaconTests(unittest.TestCase):
         return runner
 
     def defer(self, runner):
-        with self.assertRaises(TaskEnd):
-            runner._attack_meta()
+        runner._meta_waiting = False
+        runner._attack_meta()
+        self.assertTrue(runner._meta_waiting)
 
     def test_zero_preserves_unlimited_assist_without_finishing_alone(self):
         runner = self.runner(limit=0)
@@ -592,15 +593,15 @@ class MetaEquipmentRecoveryTests(unittest.TestCase):
             runner._attack_meta()
         runner.handle_ash_equipment_after.assert_called_once()
 
-    def test_dossier_auto_attack_pause_restores_pending_without_changing_delay(self):
+    def test_dossier_auto_attack_pause_leaves_cleanup_to_unified_task(self):
         runner = MetaBeaconTests().runner(dossier=True)
         runner.appear = lambda button, **kwargs: button in (DOSSIER_LIST, META_AUTO_ATTACKING)
         runner.handle_ash_equipment_after = Mock(return_value=True)
-        with self.assertRaises(TaskEnd):
-            runner._satisfy_attack_condition()
-        runner.handle_ash_equipment_after.assert_called_once()
+        self.assertFalse(runner._satisfy_attack_condition())
+        self.assertTrue(runner._meta_waiting)
+        runner.handle_ash_equipment_after.assert_not_called()
         runner.config.task_delay.assert_called_once_with(minute=15)
-        runner.ui_goto_main.assert_called_once()
+        runner.ui_goto_main.assert_not_called()
 
     def test_prepare_timeout_keeps_pending_state_without_starting_combat(self):
         runner, state = self.runner(OpsiAshBeacon, 'own_loading')

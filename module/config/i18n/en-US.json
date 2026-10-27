@@ -254,10 +254,6 @@
       "name": "META Battle",
       "help": ""
     },
-    "OpsiAshAssist": {
-      "name": "META Support",
-      "help": ""
-    },
     "OpsiExplore": {
       "name": "Monthly Exploration",
       "help": ""
@@ -402,13 +398,9 @@
       "name": "Fleet Scan",
       "help": "Scan ships assigned to fleets"
     },
-    "MindCalculatorScan": {
-      "name": "Cognitive chip dock scan",
-      "help": "Scan a CN dock at 1280×720 and review results in the cognitive chip calculator. Keeps old data until completion; resets dock filters."
-    },
-    "FleetTechScan": {
-      "name": "Fleet technology scan",
-      "help": "Record ship identities and levels independently of cognitive chip exclusions."
+    "DockScan": {
+      "name": "Dock data scan",
+      "help": "Read dock cards into shared data for mental-chip and fleet-technology analysis; does not upgrade or swap ships."
     },
     "Daemon": {
       "name": "Semi-Auto Click",
@@ -1432,14 +1424,18 @@
       "zip": "zip"
     },
     "AzurStatsID": {
-      "name": "AzurStat ID",
-      "help": "The client ID declared when uploading to https://azur-stats.lyoko.io\nComposed of random characters and can be modified at will"
+      "name": "Contributor ID",
+      "help": "Optional anonymous contributor identifier for AzurPilot cloud statistics."
+    },
+    "CloudUpload": {
+      "name": "Cloud statistics upload",
+      "help": "Upload / Save and upload send research and drop screenshots to api.azurpilot.com while retaining local statistics. Turn off for local processing only. Failed uploads are retained for retry, up to 512 MiB and 7 days."
     },
     "API": {
-      "name": "Upload route",
-      "help": "If users in China cannot connect to AzurStat, they can use \"China Reverse Proxy\"",
-      "default": "Default (Cloudflare)",
-      "cn_gz_reverse_proxy": "China Reverse Proxy (Guangzhou)"
+      "name": "Unified cloud API",
+      "help": "Uses https://api.azurpilot.com. Old route options are retained only for configuration compatibility.",
+      "default": "api.azurpilot.com",
+      "cn_gz_reverse_proxy": "api.azurpilot.com"
     },
     "ResearchRecord": {
       "name": "Research screenshot",
@@ -1467,7 +1463,9 @@
       "name": "Combat drop screenshot",
       "help": "Enabling this will slow down click speed during settlement\nDoes not take effect in auto-search mode",
       "do_not": "No action",
-      "save": "Save"
+      "save": "Save",
+      "upload": "Upload",
+      "save_and_upload": "Save and upload"
     },
     "OpsiHazard1Leveling": {
       "name": "Corrosion 1 drop screenshot",
@@ -1550,10 +1548,6 @@
     "TelemetryReport": {
       "name": "Telemetry data reporting",
       "help": "After being enabled, CL1 statistics (anonymous data such as the number of battles and Akashi encounter probability) will be reported anonymously to the server on a regular basis. For details on ID generation, please see the source code. For statistical information https://azurpilot.com/"
-    },
-    "BugReport": {
-      "name": "Bug log reporting",
-      "help": "When enabled, bug logs will be anonymously reported to the server when an exception is encountered to help improve ID generation. See the source code for details."
     }
   },
   "Backup": {
@@ -3946,6 +3940,10 @@
       "name": "META assist",
       "help": "Beacon assist three times a day"
     },
+    "Enable": {
+      "name": "Enable META assists",
+      "help": "Complete the three daily assists within META fights, sharing equipment settings with your current-season beacons."
+    },
     "Tier": {
       "name": "Find beacons with level above X",
       "help": "If you try several times and still can't find a beacon that meets the criteria, fight a random one."
@@ -4046,6 +4044,10 @@
     "DossierAutoAttackMode": {
       "name": "Dossier beacon auto combat",
       "help": "Automatically fight after the first battle at the Dossier beacon. Currently only available on CN Server."
+    },
+    "DossierSkipAssist": {
+      "name": "Pause assists while a Dossier is active",
+      "help": "Pause daily META assists while a Dossier is open, being analyzed, or in auto combat. Collect pending Dossier rewards before resuming assists.\nYou must enable this option when using automatic equipment switching."
     },
     "RequestAssist": {
       "name": "Request assist",
@@ -6847,50 +6849,118 @@
       "help": "When multiple boosted products are detected, the first one in filter order is prioritized for replacement; the replacement slot is the last non-empty slot searched from Product5→1"
     }
   },
-  "MindCalculator": {
+  "Dock": {
     "_info": {
-      "name": "Cognitive chip calculator",
-      "help": "Calculate Cognitive Chips I and coins to reach level 120."
+      "name": "Shared dock data",
+      "help": "Read dock cards into shared data for mental-chip and fleet-technology analysis; does not upgrade or swap ships."
     },
     "MinLevel": {
       "name": "Minimum scan level",
-      "help": "Inclusive. Import ships at or above this level."
+      "help": "Read dock cards into shared data for mental-chip and fleet-technology analysis; does not upgrade or swap ships."
     },
     "MaxLevel": {
       "name": "Maximum scan level",
-      "help": "Inclusive. Import ships at or below this level."
-    },
-    "Result": {
-      "name": "Ship scan results",
-      "help": "Stores ships, levels and review states per instance."
-    },
-    "FleetTechRecord": {
-      "name": "Fleet technology records",
-      "help": "Stores cumulative scan evidence, manual overrides and faction technology levels per instance."
+      "help": "Read dock cards into shared data for mental-chip and fleet-technology analysis; does not upgrade or swap ships."
     }
   },
-  "FleetTech": {
+  "FleetRotation": {
     "_info": {
-      "name": "Technology scan",
-      "help": "Defaults to 95–125. Only a complete unfiltered 1–125 scan can confirm absence."
+      "name": "Rotation configuration",
+      "help": "Normal main and event stages only; disabled by default."
     },
-    "MinLevel": {
-      "name": "Minimum level",
-      "help": "Inclusive; preserve existing records outside the range."
+    "Enabled": {
+      "name": "Enable morale scheduling",
+      "help": "Normal main and event stages only; disabled by default."
     },
-    "MaxLevel": {
-      "name": "Maximum level",
-      "help": "Inclusive, up to level 125."
+    "SelectedOnly": {
+      "name": "Calculate morale for rotating ships only",
+      "help": "Off by default. When enabled, only selected slots control morale waiting and rotation; warnings from fixed ships may be confirmed. When disabled, wait for the whole fleet minimum. Both modes track training ships and retain task morale controls for rotation."
     },
-    "Record": {
-      "name": "Fleet technology records",
-      "help": "Store groups, manual corrections, level toggle history and scan coverage per instance."
+    "Rules": {
+      "name": "Rotation rules",
+      "help": "Configure slots and sources for each fleet. Slots stay unchanged by default. Reserves rotate in number order."
+    },
+    "State": {
+      "name": "Rotation history",
+      "help": "Stores the last reserve and completed slots. Check the in-game formation before clearing."
+    }
+  },
+  "FleetLevelTraining": {
+    "_info": {
+      "name": "Level training",
+      "help": "Off by default. Uses training slots and reserves. Verify every enabled goal on the same ship before completion; morale swaps keep progress."
+    },
+    "Enabled": {
+      "name": "Enabled",
+      "help": "Off by default. Uses training slots and reserves. Verify every enabled goal on the same ship before completion; morale swaps keep progress."
+    },
+    "Target": {
+      "name": "Target level",
+      "help": "Off by default. Uses training slots and reserves. Verify every enabled goal on the same ship before completion; morale swaps keep progress."
+    }
+  },
+  "FleetAffinityTraining": {
+    "_info": {
+      "name": "Affinity training",
+      "help": "Off by default. Uses training slots and reserves. Verify every enabled goal on the same ship before completion; morale swaps keep progress."
+    },
+    "Enabled": {
+      "name": "Enabled",
+      "help": "Off by default. Uses training slots and reserves. Verify every enabled goal on the same ship before completion; morale swaps keep progress."
+    },
+    "Target": {
+      "name": "Target affinity",
+      "help": "Off by default. Uses training slots and reserves. Verify every enabled goal on the same ship before completion; morale swaps keep progress."
+    }
+  },
+  "FleetTraining": {
+    "_info": {
+      "name": "Training records",
+      "help": "Persists verified readings, completed goals and pending swaps across restarts."
+    },
+    "FullScanIntervalDays": {
+      "name": "Full fleet scan interval (days)",
+      "help": "Default 3 days; positive whole days with no upper limit. Refresh all fleets only when due or no valid reference exists; task restarts retain the timer."
+    },
+    "FullScanRecord": {
+      "name": "Last full fleet scan",
+      "help": "Updated only after a successful full scan; partial scheduling reads do not reset this time."
+    },
+    "CheckIntervalHours": {
+      "name": "Shared read interval (hours)",
+      "help": "Default 6 hours, shared by all modes; nonnegative decimals with no upper limit. Read participating fleets and enabled goals when due or waiting/swapping is needed under the current morale control and map reserve. Finish the current map first. 0 checks every battle; preserve existing intervals and training records."
+    },
+    "State": {
+      "name": "Training records",
+      "help": "Persists verified readings, completed goals and pending swaps across restarts."
+    }
+  },
+  "FleetEquipment": {
+    "_info": {
+      "name": "Automatic equipment",
+      "help": "Unequip outgoing ships and apply incoming ship codes by actual type. Off by default."
+    },
+    "Enabled": {
+      "name": "Enable automatic equipment",
+      "help": "When off, keep the original smart rotation behavior."
+    },
+    "Codes": {
+      "name": "Equipment codes by type",
+      "help": "Up to three codes per type, ordered by actual slot separately in each row. Empty positions are skipped; old single codes remain first."
+    },
+    "State": {
+      "name": "Pending equipment",
+      "help": "Pending target slots are processed before resuming a task when enabled."
     }
   },
   "FleetInfo": {
     "_info": {
       "name": "Fleet information",
       "help": "Stores fleet scan results. Existing reliable readings can passively reduce uncertainty in calibrated morale without additional scans or waits."
+    },
+    "UpdateEmotion": {
+      "name": "Update morale during scan",
+      "help": "Choose whether to read morale for this scan. When disabled, existing slot morale references are retained and recovery-phase learning is skipped."
     },
     "Result": {
       "name": "Scan result",

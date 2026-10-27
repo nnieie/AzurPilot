@@ -343,6 +343,9 @@ page_dorm.link(button=DORM_GOTO_MAIN, destination=page_main)
 # 秘书舰
 page_profile = Page(PROFILE_CHECK)
 page_secretary_group = Page(SECRETARY_GROUP_CHECK)
+# 经典主界面与新版白色主界面的头像都在左上角同一位置，点击即进入个人资料页；
+# 只给白色主界面建链接时，经典主界面无法导航到 page_profile，秘书舰任务卡死
+page_main.link(button=MAIN_GOTO_PROFILE, destination=page_profile)
 page_main_white.link(button=MAIN_GOTO_PROFILE, destination=page_profile)
 page_profile.link(button=SECRETARY_BUTTON, destination=page_secretary_group)
 page_secretary_group.link(button=BACK_ARROW, destination=page_profile)
@@ -358,7 +361,7 @@ page_academy = Page(ACADEMY_CHECK)
 page_dormmenu.link(button=DORMMENU_GOTO_ACADEMY, destination=page_academy)
 page_academy.link(button=GOTO_MAIN, destination=page_main)
 
-# 私人休息室
+# 宿舍计划
 page_private_quarters = Page(PRIVATE_QUARTERS_CHECK)
 page_dormmenu.link(button=DORMMENU_GOTO_PRIVATE_QUARTERS, destination=page_private_quarters)
 page_private_quarters.link(button=PQ_GOTO_MAIN, destination=page_main)

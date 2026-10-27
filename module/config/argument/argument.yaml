@@ -556,6 +556,7 @@ DropRecord:
     value: zip
     option: [ bz2, gzip, xz, zip ]
   AzurStatsID: null
+  CloudUpload: true
   API:
     value: default
     option: [default, cn_gz_reverse_proxy]
@@ -570,7 +571,7 @@ DropRecord:
     option: [do_not, save]
   CombatRecord:
     value: do_not
-    option: [do_not, save]
+    option: [do_not, save, upload, save_and_upload]
   # 大世界掉落截图按任务拆分（原 OpsiRecord 单一开关）。跨月每日跟大世界每日、
   # 档案坐标跟隐秘海域、月度Boss跟深渊坐标共用一项，其余任务走 OpsiOther。
   OpsiHazard1Leveling:
@@ -604,7 +605,6 @@ DropRecord:
     value: do_not
     option: [do_not, save, upload, save_and_upload]
   TelemetryReport: true
-  BugReport: true
 Backup:
   Enable: true
   KeepDays:
@@ -669,7 +669,7 @@ YukikazeTaskManager:
       > OpsiAshBeacon
       > OpsiDaily > OpsiShop > OpsiVoucher > EventShop
       > OpsiAbyssal > OpsiStronghold > OpsiObscure > OpsiArchive
-      > Daily > LimitChallenge > Hard > OpsiAshBeacon > OpsiAshAssist > OpsiMonthBoss
+      > Daily > LimitChallenge > Hard > OpsiAshBeacon > OpsiMonthBoss
       > Sos > EventSp > EventA > EventB > EventC > EventD
       > RaidDaily > CoalitionSp > WarArchives > MaritimeEscort
       > IslandJuuEatery > IslandJuuCoffee > IslandGrill > IslandTeahouse > IslandRestaurant
@@ -1292,7 +1292,10 @@ GuildOperation:
   Enable: true
   SelectNewOperation: false
   NewOperationMaxDate: 15
-  JoinThreshold: 1
+  JoinThreshold:
+    value: 1.0
+    valuetype: float
+    validate: [0.0, 1.0]
   AttackBoss: true
   BossFleetRecommend: false
 Reward:
@@ -1559,6 +1562,7 @@ Sos:
 # ==================== Opsi ====================
 
 OpsiAshAssist:
+  Enable: true
   Tier: 15
 OpsiGeneral:
   UseLogger: true
@@ -1598,6 +1602,7 @@ OpsiAshBeacon:
     value: null
     display: hide
   DossierAutoAttackMode: false
+  DossierSkipAssist: false
   RequestAssist: true
   EnsureFullyCollected: true
   AutoCollectShip: true
@@ -2513,35 +2518,66 @@ IslandBusinessShop5:
 
 # ==================== Fleet Management ====================
 
-MindCalculator:
+Dock:
   MinLevel:
-    value: 95
+    value: 1
     validate: "^[1-9][0-9]?$|^1[01][0-9]$|^12[0-5]$"
   MaxLevel:
     value: 125
     validate: "^[1-9][0-9]?$|^1[01][0-9]$|^12[0-5]$"
-  Result:
-    type: stored
+
+FleetRotation:
+  Enabled: false
+  SelectedOnly: false
+  Rules:
+    type: textarea
+    value: '{}'
+  State:
+    type: storage
     value: {}
+
+FleetLevelTraining:
+  Enabled: false
+  Target:
+    value: 120
+    validate: [1, 125]
+
+FleetAffinityTraining:
+  Enabled: false
+  Target:
+    value: 100
+    validate: [1, 200]
+
+FleetTraining:
+  FullScanIntervalDays:
+    value: 3
+    valuetype: int
+    validate: '^[1-9][0-9]*$'
+  FullScanRecord:
+    type: stored
+    value: 2020-01-01 00:00:00
     display: hide
-  FleetTechRecord:
+  CheckIntervalHours:
+    value: 6.0
+    valuetype: float
+    validate: '^[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?$'
+  State:
     type: stored
     value: {}
     display: hide
 
-FleetTech:
-  MinLevel:
-    value: 95
-    validate: "^[1-9][0-9]?$|^1[01][0-9]$|^12[0-5]$"
-  MaxLevel:
-    value: 125
-    validate: "^[1-9][0-9]?$|^1[01][0-9]$|^12[0-5]$"
-  Record:
+FleetEquipment:
+  Enabled: false
+  Codes:
+    type: textarea
+    value: '{}'
+  State:
     type: stored
     value: {}
     display: hide
 
 FleetInfo:
+  UpdateEmotion: true
   Result:
     type: stored
     value: {}
@@ -2695,7 +2731,7 @@ Equipment:
   Config:
     type: textarea
     mode: yaml
-    value: |
+    value: |-
       flagship:
         before: null
         after: null

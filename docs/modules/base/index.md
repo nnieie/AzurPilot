@@ -50,7 +50,7 @@ module/base/
 ├── decorator.py       # Config.when()、cached_property、run_once 等
 ├── utils.py           # 图像处理、随机坐标、颜色比较等工具函数
 ├── async_executor.py  # AsyncExecutor 单例：后台 asyncio 事件循环线程
-├── api_client.py      # ApiClient：bug 上报、遥测提交、公告获取
+├── api_client.py      # ApiClient：遥测提交、公告获取
 ├── device_id.py       # 硬件指纹设备 ID（匿名统计用）
 ├── backup.py          # 每日备份（数据库 + 用户配置）
 ├── retry.py           # 通用重试装饰器（改自 retry 库）
@@ -68,8 +68,8 @@ module/base/
 | `filter.py` | `Filter` | 商店、退役、委托等选择器 |
 | `utils.py` | 图像/坐标工具 | 几乎所有模块（`from module.base.utils import *`） |
 | `decorator.py` | 装饰器全家桶 | 全仓（`Config.when` 是业务模块的核心分发手段） |
-| `async_executor.py` | 后台任务队列 | 统计提交、日志上报 |
-| `api_client.py` | 远程 API 客户端 | `alas.py`、遥测提交器 |
+| `async_executor.py` | 后台任务队列 | 统计写入、遥测提交 |
+| `api_client.py` | 远程 API 客户端 | 遥测提交器、公告服务 |
 | `device_id.py` | 设备 ID | 遥测、统计库 |
 | `backup.py` | 每日备份 | `alas.py` 启动时 |
 | `retry.py` | 通用重试 | `module/runtime/updater.py` |
@@ -170,7 +170,7 @@ module/base/
 | `ssh.py` | 不是 SSH 连接库。`clear_ssh_host_key()` 先用 `ssh -G` 查询目标主机实际使用的 known_hosts 文件，再 `ssh-keygen -R` 只删该主机的指纹记录，供远程模拟器管理与远程访问场景避免主机指纹变更导致的交互卡死 |
 | `device_id.py` | Windows 用 WMIC 查主板/CPU/BIOS/磁盘序列号，Linux 用 machine-id，macOS 用硬件 UUID（已舍弃 MAC 地址），拼接后 SHA-256 取前 32 位。变更时把旧 ID 暂存内存供统计数据库热迁移；`log/device_id.json` 每 5 分钟由 daemon 线程覆写 |
 | `backup.py` | 每日备份：SQLite `backup()` 保存 `azurpilot.db` 的已提交 WAL，再锁定并备份安全数据库、注册信息、密钥材料、`deploy.yaml` 与用户配置 JSON（排除 `template*`）；外部安全密钥不自动导出。全部成功后原子发布目录，写入 `AzurPilot_Data_Backup/<日期>/`，按保留天数清理。`enable=False` 时直接返回，不动备份目录 |
-| `api_client.py` | 远程 API 客户端（bug 日志、CL1 遥测、公告拉取），上报走 `async_executor` 异步化；`get_announcement` 同步。请求失败仅记日志，绝不阻断游戏流程 |
+| `api_client.py` | 远程 API 客户端（CL1 遥测、公告拉取），遥测上报走 `async_executor` 异步化；`get_announcement` 同步。请求失败仅记日志，绝不阻断游戏流程 |
 | `debug_clip.py` | 设备端 `screenrecord` 录制调试录像（30fps 输出、真实时间戳），`clip_recording()` 上下文管理器由侵蚀 1 练级与短猫相接使用。单段逻辑录像上限 5 分钟：设备端单进程只能录 180 秒，更长部分由后台轮转线程按段续录，收尾时转码并按顺序拼接（拼接失败则分段保存），到达上限自动停止。所有失败路径只记日志、优雅降级为不录，绝不影响游戏逻辑 |
 
 ## 6. 工作流程
@@ -289,10 +289,9 @@ stateDiagram-v2
 | --- | --- | --- | --- |
 | `Alas.Backup.Enable` | bool | `true` | 每日备份开关（`backup.py`），关闭后既不备份也不清理历史 |
 | `Alas.Backup.KeepDays` | int | `7` | 备份保留天数，校验范围 [1, 3650]，小于 1 按 1 处理 |
-| `Alas.DropRecord.BugReport` | bool | `true` | bug 日志上报开关，经 `submit_bug_log(enabled=...)` 传入 |
 | `BUTTON_OFFSET`（ManualConfig 常量） | int | `30` | `appear(offset=True)` 时模板匹配的默认搜索偏移，定义在 `module/config/config_manual.py`，非用户配置 |
 
-备份与上报均可在 WebUI 中关闭。`useOcrServer` 来自部署配置（`deploy.yaml`），决定 `release_resources()` 释放本地 OCR 模型还是仅断开远程 OCR 连接。
+备份可在 WebUI 中关闭。`useOcrServer` 来自部署配置（`deploy.yaml`），决定 `release_resources()` 释放本地 OCR 模型还是仅断开远程 OCR 连接。
 
 ## 11. 异常与错误处理
 
@@ -376,7 +375,7 @@ stateDiagram-v2
 
 ## 17. 已知限制
 
-- `ApiClient` 的主/备域名当前实际相同（都是 `alas-apiv2.nanoda.work`），故障转移形同虚设；`submit_bug_log` 的服务端接口也已废弃（代码注释明确说明），调用仍保留但基本无效果。
+- `ApiClient` 的主/备域名当前实际相同（都是 `alas-apiv2.nanoda.work`），故障转移形同虚设。
 - `ButtonGrid` 在未显式传 `name` 时用 `traceback` 从调用处源码文本提取赋值语句左侧作为名字——重构赋值行会静默改变按钮命名。
 - `module/base/retry.py` 与设备层 `retry_backend` 是两套独立实现，参数语义不同（如 `on_exhausted` 只存在于后者），容易混淆。
 - `device_id.json` 每 5 分钟覆写一次，主要价值是让外部能看到当前 ID；指纹含主机名（`platform.node()`），对极端克隆环境可能不唯一。

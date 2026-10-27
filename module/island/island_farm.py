@@ -486,13 +486,20 @@ class IslandFarm(Island, WarehouseOCR, LoginHandler):
                 continue
             if self.appear(ISLAND_SELECT_PRODUCT_CHECK, offset=1):
                 if self.select_product(selection, selection_check):
-                    if self.ensure_select_product_material(
-                            item_button=seed_config['shop'],
-                            required_quantity=seed_config['seed_number'],
-                            shop_check=ISLAND_SHOP_SEED_TAB_CHECK,
-                            item_name=f"{self._item_cn(product)}种子",
-                    ):
+                    # seed_number 是补货目标而非单次需求；补货买不起时，
+                    # 现有种子够页面显示的单次需求就直接种，不够才跳过
+                    material = self.ensure_select_product_material(
+                        item_button=seed_config['shop'],
+                        required_quantity=seed_config['seed_number'],
+                        shop_check=ISLAND_SHOP_SEED_TAB_CHECK,
+                        item_name=f"{self._item_cn(product)}种子",
+                    )
+                    if material == MATERIAL_RESTOCKED:
                         continue
+                    if material == MATERIAL_INSUFFICIENT:
+                        logger.warning(f"[岛屿-农田] {self._item_cn(product)}种子不足且无法补买，跳过本次种植")
+                        self.back_to_postmanage_from_dispatch()
+                        return False
                     self.device.sleep(0.3)
                     if not self.confirm_post_add_order(f"{product}种植派遣"):
                         self.back_to_postmanage_from_dispatch()
