@@ -73,34 +73,41 @@ export function MindCalculator({report: dock, onRefresh}: {report?: DockReport; 
   }, [dock, technology, catalog, instance, key])
   const candidates = useMemo(() => facts ? automaticCandidates(facts.dock.ships, facts.catalog, facts.technology.ships) : [], [facts])
   const technologyRows = useMemo(() => new Map(facts ? catalogRows(facts.catalog, facts.technology.ships).map(row => [row.group_type, row]) : []), [facts])
-  const ids = useMemo(() => candidates.filter(card => !plan?.excluded_groups.includes(card.group_type!)).map(card => card.id), [candidates, plan?.excluded_groups])
+  const candidateIds = useMemo(() => candidates.map(card => card.id), [candidates])
+  const included = useMemo(() => new Set(candidates.filter(card => !plan?.excluded_groups.includes(card.group_type!)).map(card => card.id)), [candidates, plan?.excluded_groups])
   useEffect(() => {
-    if (!facts || facts.dock.instance !== instance || !plan || connection !== 'ready') return
+    if (!facts || facts.dock.instance !== instance || !plan) return
     memory.current = {instance, plan}
     try {localStorage.setItem(key, JSON.stringify(plan))} catch { /* Calculation works without browser storage. */ }
+  }, [facts, plan, instance, key])
+  useEffect(() => {
+    if (!facts || facts.dock.instance !== instance || connection !== 'ready') return
     let active = true
     // Keep the completed view mounted during subsequent recalculations.
     setCalculating(true)
-    const timer = setTimeout(() => {
-      void api.request('mind.plan', {instance, revision: facts.dock.revision, ship_ids: ids,
-        target_level: 120}).then(value => {
-        if (active) {setResult(value); setCalculating(false); setError('')}
-      }).catch(e => {
-        if (!active) return
-        setCalculating(false)
-        if (e instanceof ApiError && e.code === 'CONFLICT') {refreshDock.current?.(); setReload(value => value + 1)}
-        else setError((e as Error).message)
-      })
-    }, 200)
-    return () => {active = false; clearTimeout(timer)}
-  }, [facts, plan, ids, connection, instance, key, calculateAttempt])
-  const included = useMemo(() => new Set(ids), [ids])
+    // Selection only changes totals; keep cost details for every candidate.
+    void api.request('mind.plan', {instance, revision: facts.dock.revision, ship_ids: candidateIds,
+      target_level: 120}).then(value => {
+      if (active) {setResult(value); setCalculating(false); setError('')}
+    }).catch(e => {
+      if (!active) return
+      setCalculating(false)
+      if (e instanceof ApiError && e.code === 'CONFLICT') {refreshDock.current?.(); setReload(value => value + 1)}
+      else setError((e as Error).message)
+    })
+    return () => {active = false}
+  }, [facts, candidateIds, connection, instance, calculateAttempt])
   const estimates = useMemo(() => new Map(result?.ships.map(row => [row.id, row])), [result])
+  const totals = useMemo(() => {
+    const selected = result?.ships.filter(row => included.has(row.id)) ?? []
+    return {included: selected.length, unknown: selected.filter(row => row.status === 'unknown').length,
+      mind: selected.reduce((sum, row) => sum + (row.mind ?? 0), 0),
+      gold: selected.reduce((sum, row) => sum + (row.gold ?? 0), 0)}
+  }, [result, included])
   const efficiencies = useMemo(() => {
-    const ships = new Map(facts?.catalog.ships.map(ship => [ship.group_type, ship]))
     const mindCosts = result?.mind_costs_100_to_120 ?? {}
-    return new Map(candidates.map(card => [card.id, technologyEfficiency(ships.get(card.group_type!), mindCosts)]))
-  }, [candidates, facts?.catalog, result?.mind_costs_100_to_120])
+    return new Map(candidates.map(card => [card.id, technologyEfficiency(technologyRows.get(card.group_type!), mindCosts)]))
+  }, [candidates, technologyRows, result?.mind_costs_100_to_120])
   const rows = useMemo(() => {
     const collator = new Intl.Collator(language, {numeric: true})
     const valueFor = (card: DockReport['ships'][number]): string | number | null => {
@@ -136,6 +143,13 @@ export function MindCalculator({report: dock, onRefresh}: {report?: DockReport; 
     setPlan(current => current && ({...current, excluded_groups: excluded
       ? [...new Set([...current.excluded_groups, group])] : current.excluded_groups.filter(value => value !== group)}))
   }
+  const allSelected = rows.length > 0 && rows.every(card => included.has(card.id))
+  function selectFiltered(selected: boolean) {
+    const groups = new Set((selected ? rows : candidates).map(card => card.group_type!))
+    setPlan(current => current && ({...current, excluded_groups: selected
+      ? current.excluded_groups.filter(group => !groups.has(group))
+      : [...new Set([...current.excluded_groups, ...groups])]}))
+  }
   function group(key: string, options: [string, string][], label = tr(key === 'type' ? 'category' : key)) {
     return <FleetFilterRow filter={key} label={label} options={options} filters={filters} setFilters={setFilters} all={tr('all')}/>
   }
@@ -157,11 +171,10 @@ export function MindCalculator({report: dock, onRefresh}: {report?: DockReport; 
     {technologyError && <ErrorBox message={technologyError} retry={retry}/>}
     {error && <ErrorBox message={error} retry={retry}/>}
     <section className="ft-summary" aria-busy={calculating}>
-      <h2>{ui('mind.title')}</h2>
-      {calculating && <p role="status">{ui('mind.calculating')}</p>}
+      <div className="cultivation-heading"><h2>{ui('mind.title')}</h2><span role="status">{calculating ? ui('mind.calculating') : ''}</span></div>
       <div className="cultivation-totals">
-        <div>{ui('mind.units')}<strong>{amount(result.mind)}</strong></div><div>{ui('mind.gold')}<strong>{amount(result.gold)}</strong></div>
-      </div><p role="status">{ui('mind.includedCount', {count: result.included - result.unknown})}{result.unknown > 0 && ui('mind.unknownCount', {count: result.unknown})}{candidates.length > ids.length && ui('mind.excludedCount', {count: candidates.length - ids.length})}</p>
+        <div>{ui('mind.units')}<strong>{amount(totals.mind)}</strong></div><div>{ui('mind.gold')}<strong>{amount(totals.gold)}</strong></div>
+      </div><p role="status">{ui('mind.includedCount', {count: totals.included - totals.unknown})}{totals.unknown > 0 && ui('mind.unknownCount', {count: totals.unknown})}{candidates.length > included.size && ui('mind.excludedCount', {count: candidates.length - included.size})}</p>
       <small>{ui('mind.autoHint')}</small>
       {review > 0 && <p className="cultivation-review">{ui('mind.reviewCount', {count: review})}<Link to="?tab=data">{ui('mind.reviewLink')}</Link></p>}
     </section>
@@ -179,14 +192,13 @@ export function MindCalculator({report: dock, onRefresh}: {report?: DockReport; 
     <p className="ft-edit-hint">{ui('mind.efficiencyHint')}</p>
     <div className="ft-search"><input type="search" aria-label={ui('mind.search')} placeholder={ui('mind.searchPlaceholder')} value={query} onChange={event => setQuery(event.target.value)}/><span title={ui('mind.detailHint')}>{ui('mind.shownCount', {shown: rows.length, total: candidates.length})}</span>
       <label className="cultivation-included"><input type="checkbox" checked={includedOnly} onChange={event => setIncludedOnly(event.target.checked)}/>{ui('mind.includedOnly')}</label>
-      <button className="button secondary" disabled={!plan.excluded_groups.length} onClick={() => setPlan({excluded_groups: []})}>{ui('mind.restore')}</button>
     </div>
-    <div className="ft-table-wrap cultivation-table"><table><thead><tr><th scope="col">{ui('mind.participating')}</th>{(Object.entries(columns) as [Column, typeof columns[Column]][]).map(([column, label]) => <th key={column} scope="col" aria-sort={sort.column === column ? sort.direction : 'none'} title={column === 'efficiency' ? ui('mind.efficiencyHint') : undefined}><button type="button" className="ft-sort" onClick={() => sortBy(column)}>{ui(`mind.${label}`)}<span aria-hidden="true">{sort.column === column ? sort.direction === 'ascending' ? '↑' : '↓' : '↕'}</span></button></th>)}<th scope="col">{tr('awakening_pending')}</th></tr></thead><tbody>
+    <div className="ft-table-wrap cultivation-table"><table><thead><tr><th scope="col"><label><input type="checkbox" aria-label={ui('mind.selectAll')} checked={allSelected} disabled={!rows.length} onChange={event => selectFiltered(event.target.checked)}/> {ui('mind.participating')}</label></th>{(Object.entries(columns) as [Column, typeof columns[Column]][]).map(([column, label]) => <th key={column} scope="col" aria-sort={sort.column === column ? sort.direction : 'none'} title={column === 'efficiency' ? ui('mind.efficiencyHint') : undefined}><button type="button" className="ft-sort" onClick={() => sortBy(column)}>{ui(`mind.${label}`)}<span aria-hidden="true">{sort.column === column ? sort.direction === 'ascending' ? '↑' : '↓' : '↕'}</span></button></th>)}<th scope="col">{tr('awakening_pending')}</th></tr></thead><tbody>
       {rows.map(card => {
         const row = estimates.get(card.id), participating = included.has(card.id), efficiency = efficiencies.get(card.id), awakeningPending = technologyRows.get(card.group_type!)?.awakening_pending === true
         return <tr key={card.id} className={participating ? '' : 'cultivation-excluded'}>
           <td><input type="checkbox" aria-label={ui('mind.participatingShip', {name: card.name})} checked={participating} onChange={event => exclude(card.group_type!, !event.target.checked)}/></td>
-          <td className="ft-name"><Link to={`?tab=data&ship=${card.id}`}>{card.name}</Link>{participating && row?.status === 'unknown' && <small className="cultivation-warning">{ui('mind.unknownCost')} · <Link to={`?tab=data&ship=${card.id}`}>{ui('mind.check')}</Link></small>}{!participating && <small className="cultivation-note">{ui('mind.excluded')}</small>}</td>
+          <td className="ft-name"><Link to={`?tab=data&ship=${card.id}`}>{card.name}</Link>{participating && row?.status === 'unknown' && <small className="cultivation-warning">{ui('mind.unknownCost')} · <Link to={`?tab=data&ship=${card.id}`}>{ui('mind.check')}</Link></small>}</td>
           <td>{card.level || ui('mind.unknown')}</td><td>{amount(row?.mind)}</td><td>{amount(row?.gold)}</td>
           <td title={efficiency?.value == null ? undefined : ui('mind.efficiencyDetail', {points: efficiency.points!, mind: amount(efficiency.mind)})}>{efficiency?.value == null ? '—' : efficiency.value.toLocaleString(language, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
           <td className={awakeningPending ? 'ft-awakening-pending' : ''} title={ui('mind.awakeningHint')}><span className="ft-mark" aria-label={`${card.name} · ${tr('awakening_pending')} · ${tr(awakeningPending ? 'marked' : 'notMarked')}`}>{awakeningPending ? '✓' : '—'}</span></td>

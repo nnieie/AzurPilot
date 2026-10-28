@@ -34,6 +34,42 @@ describe('authoritative cumulative technology', () => {
   })
 })
 
+describe('ship position and class filters', () => {
+  // Canonical group IDs and raw types from assets/ship/ship_data.json (group * 10 + 1).
+  const sailing = [
+    {...row, group_type: 960001, name: '皇家财富号', nationality: 96, type: 22},
+    {...row, group_type: 960003, name: '金鹿号', nationality: 96, type: 23},
+    {...row, group_type: 960002, name: '圣马丁号', nationality: 96, type: 24},
+  ]
+  it('classifies sailing S, V and M by their raw positions', () => {
+    expect(sailing.map(ship => matches(ship, {type: ['front']}, ''))).toEqual([false, true, false])
+    expect(sailing.map(ship => matches(ship, {type: ['back']}, ''))).toEqual([false, false, true])
+    expect(sailing.map(ship => matches(ship, {type: ['22']}, ''))).toEqual([true, true, true])
+    expect(sailing.map(ship => matches(ship, {type: ['8']}, ''))).toEqual([false, false, false])
+  })
+  it('retains ordinary surface and submarine position exclusions', () => {
+    const ships = [1, 20, 21, 2, 5, 7, 8, 17].map(type => ({...row, type}))
+    expect(ships.map(ship => matches(ship, {type: ['front']}, ''))).toEqual([true, true, true, true, false, false, false, false])
+    expect(ships.map(ship => matches(ship, {type: ['back']}, ''))).toEqual([false, false, false, false, true, true, false, false])
+    expect(ships.map(ship => matches(ship, {type: ['1']}, ''))).toEqual([true, true, true, false, false, false, false, false])
+  })
+  it('ORs selections within the type filter and ANDs separate filters', () => {
+    const ships = [...sailing, {...row, type: 1}, {...row, type: 5}, {...row, type: 8}]
+    expect(ships.map(ship => matches(ship, {type: ['front', '22']}, ''))).toEqual([true, true, true, true, false, false])
+    expect(ships.map(ship => matches(ship, {type: ['back', '8']}, ''))).toEqual([false, false, true, false, true, true])
+    expect(sailing.map(ship => matches(ship, {type: ['22'], nation: ['96']}, ''))).toEqual([true, true, true])
+    expect(sailing.map(ship => matches(ship, {type: ['22'], nation: ['1']}, ''))).toEqual([false, false, false])
+  })
+  it('normalizes sailing types in both general and stage-specific bonus filters', () => {
+    for (const type of [22, 23, 24]) {
+      const ship = {...row, technology: {...row.technology!, add_get_shiptype: [type], add_level_shiptype: [type]}}
+      expect(matches(ship, {bonusType: ['22'], attr: ['1']}, '')).toBe(true)
+      expect(matches(ship, {getBonusType: ['22'], getAttr: ['1'], levelBonusType: ['22'], levelAttr: ['5']}, '')).toBe(true)
+      expect(matches(ship, {bonusType: ['8']}, '')).toBe(false)
+    }
+  })
+})
+
 describe('explicit correction dependencies', () => {
   it('completes prerequisites and clears dependents when ownership is cancelled', () => {
     expect(changeMilestone({group_type: 1, full_star: true, lv120: true}, 'owned', false)).toEqual({group_type: 1, owned: false, full_star: false, lv120: false})

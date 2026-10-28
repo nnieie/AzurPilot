@@ -15,7 +15,6 @@ LEVEL_PATH = 'FleetInfo.FleetLevelTraining'
 AFFINITY_PATH = 'FleetInfo.FleetAffinityTraining'
 TRAINING_PATH = 'FleetInfo.FleetTraining.State'
 INTERVAL_PATH = 'FleetInfo.FleetTraining.CheckIntervalHours'
-FULL_INTERVAL_PATH = 'FleetInfo.FleetTraining.FullScanIntervalDays'
 FULL_RECORD_PATH = 'FleetInfo.FleetTraining.FullScanRecord'
 
 
@@ -26,11 +25,6 @@ def _date(value):
         return datetime.fromisoformat(value)
     except (ValueError, TypeError):
         return None
-
-
-def full_scan_due(config):
-    checked = _date(config.cross_get(FULL_RECORD_PATH, None))
-    return checked is None or (now() - checked).total_seconds() / 86400 >= config.cross_get(FULL_INTERVAL_PATH, 3)
 
 
 def mark_full_scan(config):
@@ -72,11 +66,13 @@ def restore_context(config, context):
     if isinstance(context.get('training_checked_at'), datetime):
         return
     checked = state(config).get('checks', {}).get(config.task.command, {})
-    if not isinstance(checked, dict) or checked.get('signature') != _check_signature(config):
+    if not isinstance(checked, dict):
         return
     date = _date(checked.get('checked_at'))
     if date is None:
         return
+    # 配置变化不能绕过实读间隔；心情状态由 RotationEmotion 按当前舰位和恢复设置复核。
+    context['training_checked_at'] = date
     if not isinstance(checked.get('training', {}), dict) or not isinstance(checked.get('morale_low', {}), dict):
         return
     training = {}
@@ -120,20 +116,16 @@ def interval(config):
 
 def due(config, context):
     signature = goals(config)
-    mood = config.cross_get(ROTATION_PATH + '.Enabled', False) is True
-    if not signature and not mood:
+    if not signature:
         return False
     restore_context(config, context)
     checked = context.get('training_checked_at')
-    return (context.get('training_goals') != signature
-            or context.get('training_mood') != mood
-            or context.get('training_rules') != config.cross_get(ROTATION_PATH + '.Rules', '{}')
-            or context.get('training_fleets') != active_fleets(config) or not isinstance(checked, datetime)
+    return (not isinstance(checked, datetime)
             or (now() - checked).total_seconds() / 3600 >= interval(config))
 
 
 def mark_checked(config, context, targets=None):
-    """记录共用读取时刻；目标变化仍强制重新核对，不能拼接不同批次的条件。"""
+    """记录共用读取时刻；下一轮到期再按当前目标完整核对。"""
     context['training_checked_at'] = now()
     context['training_goals'] = dict(goals(config) if targets is None else targets)
     context['training_mood'] = config.cross_get(ROTATION_PATH + '.Enabled', False) is True

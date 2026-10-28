@@ -87,8 +87,8 @@ class FleetTrainingReader(FleetShipDetail):
         if self.appear(FLEET_DETAIL_CHECK):
             self._back_to_formation()
 
-    def inventory(self, fleets):
-        """按详情固定舰位定位，再从编队舰位4、1进入选船页实读舰名和心情。
+    def inventory(self, fleets, *, slots=None):
+        """按固定舰位定位，从勾选舰位进入选船页，只实读目标舰队。
 
         Pages:
             in: Any
@@ -114,7 +114,7 @@ class FleetTrainingReader(FleetShipDetail):
                 result.setdefault(category, {})[str(fleet)] = records
         self.manager._save_result(result)
         for fleet in fleets:
-            self.manager.prepare_rotation(fleet)
+            self.manager.prepare_rotation(fleet, slots=(slots or {}).get(fleet), fleets={fleet})
             self.manager.finish_rotation()
         return self.config.cross_get(self.manager.RESULT_PATH, {})
 

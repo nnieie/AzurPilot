@@ -449,6 +449,8 @@ class FleetManagement(Dock):
             else:
                 preserve_emotions(result, self.config.cross_get(self.RESULT_PATH, {}))
             self._save_result(result)
+            self._rotation_pool = {category: (dock[category], dock_portraits[category])
+                                   for category in ('main', 'vanguard')}
         finally:
             self.dock_filter.reset_first = reset_first
 
@@ -578,12 +580,15 @@ class FleetManagement(Dock):
                    and item.get('name') == ship['name'] and item.get('level') == ship.get('level')]
         return matches[0] if len(matches) == 1 else None
 
-    def _scan_rotation_category(self, category):
-        """在当前选船页更新这一排的所有已编队角色，不退出或重设排序。"""
+    def _scan_rotation_category(self, category, *, fleets=None):
+        """更新当前排的参考；指定 fleets 时仅实读这些实际舰队，不退出或重设排序。"""
         result = deepcopy(self.__dict__.get('_rotation_result', self.config.cross_get(self.RESULT_PATH, {})))
-        scanner = self.__dict__.get('_rotation_scanner')
-        if scanner is None:
-            scanner = self._rotation_scanner = FormationDockScanner(update_emotion=True)
+        if fleets is not None:
+            scanner = FormationDockScanner(update_emotion=True, fleets=fleets)
+        else:
+            scanner = self.__dict__.get('_rotation_scanner')
+            if scanner is None:
+                scanner = self._rotation_scanner = FormationDockScanner(update_emotion=True)
         faces = self.__dict__.setdefault('_slot_portraits', {})
         matched = set()
         for attempt in range(2):
@@ -591,6 +596,8 @@ class FleetManagement(Dock):
             portraits = self._reference_portraits
             self.__dict__.setdefault('_rotation_pool', {})[category] = (dock, portraits)
             for fleet, ships in result.get(category, {}).items():
+                if fleets is not None and int(fleet) not in fleets:
+                    continue
                 pool, pictures = dock.get(fleet, []), portraits.get(fleet, [])
                 used = set()
                 for ship in ships:
@@ -610,29 +617,50 @@ class FleetManagement(Dock):
                             faces[key] = pictures[index]
                     if not attempt or value is not None:
                         ship['emotion'] = value
-            if all(ship.get('emotion') is not None for ships in result.get(category, {}).values() for ship in ships):
+            if all(ship.get('emotion') is not None for fleet, ships in result.get(category, {}).items()
+                   if fleets is None or int(fleet) in fleets for ship in ships):
                 break
         self._save_result(result)
         self._rotation_scanned_slot = self._rotation_picker
         return matched
 
-    def prepare_rotation(self, fleet):
-        """目标队只进入一次，先从4位读前排，再从1位读后排并停留选船页。
+    def prepare_rotation(self, fleet, *, slots=None, fleets=None, scan=True):
+        """从目标舰位进入选船页，刷新参考或复用本轮已核实的卡面池。
+
+        Args:
+            slots: 优先进入的勾选舰位；默认从4位读前排，再从1位读后排。
+            fleets: 限定实读的实际舰队；默认读取全部已编队舰船。
+            scan: False 时复用本轮已有卡面池，直接打开第一个目标舰位。
 
         Pages:
             in: Any
-            out: 目标舰队舰位1的选船页
+            out: 目标舰队当前舰位的选船页
         """
         if not (self._formation_visible() and fleet_type_selected(self.device.image, 'surface')
                 and bottom_fleet_index(self.device.image) == fleet and selector_closed(self.device.image)):
             self.fleet_enter(fleet)
         self._rotation_fleet = fleet
-        for category, slot in (('vanguard', 4), ('main', 1)):
+        if not scan:
+            # 候补已在本轮扫描，打开实际换船舰位，沿用已核实的卡面池。
+            slot = next(iter(slots or (1,)))
             self._open_slot(slot)
             self._rotation_picker = fleet, slot
             self._prepare_level_dock()
-            self._scan_rotation_category(category)
-            if slot == 4:
+            return self.rotation_readings()
+        entries = {}
+        for slot in slots or ():
+            entries.setdefault('main' if slot <= 3 else 'vanguard', slot)
+        for category, slot in (('vanguard', 4), ('main', 1)):
+            entries.setdefault(category, slot)
+        for index, (category, slot) in enumerate(entries.items()):
+            self._open_slot(slot)
+            self._rotation_picker = fleet, slot
+            self._prepare_level_dock()
+            if fleets is None:
+                self._scan_rotation_category(category)
+            else:
+                self._scan_rotation_category(category, fleets=fleets)
+            if index < len(entries) - 1:
                 self._close_picker()
                 self._rotation_picker = None
         return self.rotation_readings()
@@ -683,7 +711,7 @@ class FleetManagement(Dock):
             self.swap_slots(source, slot, fleet, slot)
             self._open_slot(slot)
             self._rotation_picker = fleet, slot
-            self._scan_rotation_category(category)
+            self._scan_rotation_category(category, fleets={source, fleet})
             return self.rotation_readings()
         pool, portraits = self._rotation_pool[category]
         source_pool, source_faces = pool.get(str(source), []), portraits.get(str(source), [])
@@ -714,7 +742,7 @@ class FleetManagement(Dock):
         self._rotation_result = result
         self._open_slot(slot)
         self._rotation_picker = fleet, slot
-        matched = self._scan_rotation_category(category)
+        matched = self._scan_rotation_category(category, fleets={source, fleet})
         if not {(source, slot), (fleet, slot)} <= matched:
             raise FleetManagementError('互换后双方卡面归属未读全，下次自动重扫实际编队')
         return self.rotation_readings()

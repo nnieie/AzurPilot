@@ -6918,17 +6918,13 @@
       "name": "Training records",
       "help": "Persists verified readings, completed goals and pending swaps across restarts."
     },
-    "FullScanIntervalDays": {
-      "name": "Full fleet scan interval (days)",
-      "help": "Default 3 days; positive whole days with no upper limit. Refresh all fleets only when due or no valid reference exists; task restarts retain the timer."
-    },
     "FullScanRecord": {
       "name": "Last full fleet scan",
       "help": "Updated only after a successful full scan; partial scheduling reads do not reset this time."
     },
     "CheckIntervalHours": {
-      "name": "Shared read interval (hours)",
-      "help": "Default 6 hours, shared by all modes; nonnegative decimals with no upper limit. Read participating fleets and enabled goals when due or waiting/swapping is needed under the current morale control and map reserve. Finish the current map first. 0 checks every battle; preserve existing intervals and training records."
+      "name": "Level/affinity check interval (hours)",
+      "help": "Defaults to 6 hours for level and affinity checks only; nonnegative decimals with no upper limit. Read participating active fleets when due and swap only after all enabled graduation goals are met. Morale reserve triggers independently. Confirmed swaps always scan all fleets without another interval. 0 checks after every battle."
     },
     "State": {
       "name": "Training records",

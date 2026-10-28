@@ -51,7 +51,7 @@ test('fixed boundary fees ignore legacy trials and optional exclusions persist w
   await expect(page.getByText('计入 0 种舰船', {exact: false})).toBeVisible()
   await page.reload()
   await expect(page.getByText('计入 0 种舰船', {exact: false})).toBeVisible()
-  await page.getByRole('button', {name: '恢复全部参与'}).click()
+  await page.getByRole('checkbox', {name: '全选当前筛选'}).check()
   await expect(page.getByText('计入 1 种舰船', {exact: false})).toBeVisible()
   expect((await rpc(page, 'dock.report', {instance})).ships).toEqual(saved.ships)
 })

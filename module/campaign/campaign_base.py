@@ -273,12 +273,12 @@ class CampaignBase(CampaignUI, Map, AutoSearchCombat):
                 training_due = training is not None and training()
                 training_checked = training is not None
                 if training_due and not training_due_noted:
-                    logger.info('共用实读间隔已到，先完成当前地图，下次出击前核对舰名、心情及已启用培养条件')
+                    logger.info('换船调度需要核对，先完成当前地图，再按心情触发或毕业检查处理')
                     training_due_noted = True
             except CampaignEnd:
                 training = self.__dict__.get('_fleet_training_after_battle')
                 if training is not None and not training_checked:
-                    # 最后一战由游戏直接退图时也检查到期，下一安全入口实读。
+                    # 最后一战由游戏直接退图时也检查调度触发，下一安全入口实读。
                     training()
                 self._recovery_map_active = False
                 self._restart_resume_guard = False

@@ -37,7 +37,8 @@ export function matches(row: Row, filters: Record<string, string[]>, query: stri
   ]
   for (const [key, values] of Object.entries(filters)) {
     if (!values.length || ['bonusType', 'attr', 'getBonusType', 'getAttr', 'levelBonusType', 'levelAttr'].includes(key)) continue
-    const current = key === 'type' ? [String(shipType(row.type)), ...([1, 2, 3, 18, 19, 20, 21, 23].includes(row.type) ? ['front'] : []), ...([4, 5, 6, 7, 10, 12, 13, 22].includes(row.type) ? ['back'] : [])] : key === 'status' ? statuses : key === 'nation' ? [String(row.nationality)] : [row.rarity]
+    // Sailing S (22) is submarine-positioned, V (23) is front, and M (24) is back.
+    const current = key === 'type' ? [String(shipType(row.type)), ...([1, 2, 3, 18, 19, 20, 21, 23].includes(row.type) ? ['front'] : []), ...([4, 5, 6, 7, 10, 12, 13, 24].includes(row.type) ? ['back'] : [])] : key === 'status' ? statuses : key === 'nation' ? [String(row.nationality)] : [row.rarity]
     if (!values.some(value => current.includes(value))) return false
   }
   if (filters.bonusType?.length || filters.attr?.length) {

@@ -1,4 +1,5 @@
 """Disk outbox retries and cloud/local recording coexistence; no real uploads."""
+import hashlib
 import tempfile
 import json
 import threading
@@ -36,6 +37,22 @@ class UploadSession:
         return Mock(status_code=202, json=Mock(return_value={'accepted': True, 'upload_id': self.upload_id}))
 
 
+class DirectSession(UploadSession):
+    """Answers A's v2 control calls; presigned parts are completed already."""
+    def post(self, url, **kwargs):
+        if self.fail:
+            raise requests.ConnectionError('offline')
+        self.calls.append((url, kwargs))
+        if url.endswith('/init'):
+            self.upload_id = kwargs['json']['metadata']['upload_id']
+        payload = {'schema_version': 2, 'accepted': True, 'upload_id': self.upload_id}
+        if '/prepare' in url or url.endswith('/complete'):
+            payload['completed'] = True
+        if url.endswith('/complete') and '/files/' not in url:
+            payload['sha256'] = 'f' * 64
+        return Mock(status_code=202, json=Mock(return_value=payload))
+
+
 class CloudUploadTest(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -45,23 +62,29 @@ class CloudUploadTest(unittest.TestCase):
                      'scene': 'research_complete', 'server': 'cn', 'collected_at': '2026-10-27T06:00:00+00:00'}
         self.image = np.zeros((720, 1280, 3), dtype=np.uint8)
 
-    def test_restart_reuses_job_id_and_cleans_only_after_complete(self):
-        queue = CloudUploadQueue(self.root)
+    def test_legacy_v1_queue_is_upgraded_to_direct_upload_and_keeps_one_id(self):
+        queue = CloudUploadQueue(self.root, protocol_version=1)
         ident = queue.enqueue([self.image, self.image], self.meta)
-        session = UploadSession()
-        session.fail = True
-        queue.drain_once(session)
-        self.assertTrue((self.root / f'{ident}.pending').is_dir())
-        restarted = CloudUploadQueue(self.root)
-        session.fail = False
-        restarted.drain_once(session)
-        self.assertEqual(session.upload_id, ident)
-        self.assertFalse(list(self.root.iterdir()))
-        self.assertTrue(session.calls[-1][0].endswith(f'/{ident}/complete'))
-        manifest = next(kwargs['json'] for url, kwargs in session.calls if url.endswith('/init'))
-        self.assertEqual(manifest['collected_at'], self.meta['collected_at'])
-        self.assertEqual(len(manifest['file_sizes']), 2)
-        self.assertTrue(all('api.azurpilot.com/api/v1/uploads/' in url for url, _ in session.calls))
+        failed = DirectSession()
+        failed.fail = True
+        queue.drain_once(failed)
+        entries = list(self.root.iterdir())
+        self.assertEqual(len(entries), 1)
+        job = entries[0]
+        upgraded = json.loads((job / 'metadata.json').read_text(encoding='utf-8'))
+        self.assertEqual(upgraded['upload_version'], 2)
+        self.assertEqual(len(upgraded['files']), 2)
+        self.assertNotEqual(upgraded['upload_id'], ident)
+        self.assertEqual(job.name, f"{upgraded['upload_id']}.pending")
+
+        session = DirectSession()
+        queue.send(job, session)
+        self.assertEqual(session.upload_id, upgraded['upload_id'])
+        self.assertTrue(all('/api/v2/uploads/' in url for url, _ in session.calls))
+        init = next(kwargs['json'] for url, kwargs in session.calls if url.endswith('/init'))
+        self.assertEqual(init['schema_version'], 2)
+        self.assertEqual([item['sha256'] for item in init['files']],
+                         [hashlib.sha256((job / f'{index}.png').read_bytes()).hexdigest() for index in range(2)])
 
     def test_quota_failure_removes_incomplete_files(self):
         queue = CloudUploadQueue(self.root, spool_bytes=1)
@@ -124,7 +147,7 @@ class CloudUploadTest(unittest.TestCase):
                        'http://127.0.0.1/other', 'https://api.azurpilot.com/api/v1/uploads/init',
                        'http://127.0.0.1:invalid/api/v1/uploads/init'):
             with self.subTest(target=target):
-                queue = CloudUploadQueue(self.root)
+                queue = CloudUploadQueue(self.root, protocol_version=1)
                 ident = queue.enqueue([self.image], self.meta)
                 job = self.root / f'{ident}.pending'
                 response = Mock(status_code=307, headers={'Location': target})
@@ -137,9 +160,10 @@ class CloudUploadTest(unittest.TestCase):
                 session.put.assert_not_called()
                 response.close.assert_called_once()
 
-    def test_real_http_redirect_sends_one_raw_png_per_put_directly_to_a(self):
+    def test_direct_upload_streams_raw_png_to_presigned_part(self):
         seen = []
         state = {}
+        parts = []
 
         class Handler(BaseHTTPRequestHandler):
             def log_message(self, *args):
@@ -147,63 +171,67 @@ class CloudUploadTest(unittest.TestCase):
 
             def do_POST(self):
                 body = self.rfile.read(int(self.headers.get('Content-Length', 0)))
+                seen.append(self.path)
+                upload_id = state.get('metadata', {}).get('upload_id')
                 if self.path.endswith('/init'):
                     state.update(json.loads(body))
-                seen.append((self.command, self.path, self.headers.get('X-AzurPilot-ID')))
-                data = json.dumps({'accepted': True, 'upload_id': state['upload_id'], 'sha256': 'f' * 64}).encode()
+                    upload_id = state['metadata']['upload_id']
+                    payload = {'schema_version': 2, 'accepted': True, 'upload_id': upload_id}
+                elif self.path.endswith('/prepare'):
+                    index = int(self.path.split('/')[-2])
+                    size = state['metadata']['file_sizes'][index]
+                    payload = {'schema_version': 2, 'accepted': True, 'upload_id': upload_id,
+                               'parts': [{'number': 1, 'offset': 0, 'size': size,
+                                          'url': f'https://upload.invalid/part/{index}'}]}
+                elif '/files/' in self.path:
+                    payload = {'schema_version': 2, 'accepted': True, 'upload_id': upload_id, 'completed': True}
+                else:
+                    payload = {'schema_version': 2, 'accepted': True, 'upload_id': upload_id,
+                               'completed': True, 'sha256': 'f' * 64}
+                data = json.dumps(payload).encode()
                 self.send_response(202)
                 self.send_header('Content-Type', 'application/json')
                 self.send_header('Content-Length', str(len(data)))
                 self.end_headers()
                 self.wfile.write(data)
 
-            def do_PUT(self):
-                body = self.rfile.read(int(self.headers['Content-Length']))
-                seen.append((self.command, self.path, self.headers.get('Content-Type'), body[:8], len(body)))
-                data = json.dumps({'accepted': True, 'upload_id': state['upload_id']}).encode()
-                self.send_response(202)
-                self.send_header('Content-Length', str(len(data)))
-                self.end_headers()
-                self.wfile.write(data)
+        class FakeStorage:
+            def __init__(self):
+                self.headers = {}
+                self.auth = None
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return False
+
+            def put(self, url, data=None, headers=None, timeout=None, allow_redirects=None):
+                parts.append((url, headers.get('Content-Type'), data.read()))
+                return Mock(status_code=200)
 
         server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
-        redirected = []
-
-        class RedirectHandler(BaseHTTPRequestHandler):
-            def log_message(self, *args):
-                pass
-
-            def do_POST(self):
-                self.rfile.read(int(self.headers.get('Content-Length', 0)))
-                redirected.append((self.command, self.path))
-                self.send_response(307)
-                self.send_header('Location', f'http://127.0.0.1:{server.server_port}{self.path}')
-                self.send_header('Content-Length', '0')
-                self.end_headers()
-
-            do_PUT = do_POST
-
-        origin = ThreadingHTTPServer(('127.0.0.1', 0), RedirectHandler)
-        origin_thread = threading.Thread(target=origin.serve_forever, daemon=True)
-        origin_thread.start()
         try:
-            queue = CloudUploadQueue(self.root, base_url=f'http://127.0.0.1:{origin.server_port}/api/v1/uploads')
-            queue.enqueue([self.image], self.meta)
+            queue = CloudUploadQueue(self.root, base_url=f'http://127.0.0.1:{server.server_port}/api/v2/uploads',
+                                     protocol_version=2)
+            ident = queue.enqueue([self.image], self.meta)
             with requests.Session() as session:
-                queue.drain_once(session)
-            self.assertEqual([call[0] for call in seen], ['POST', 'PUT', 'POST'])
-            self.assertEqual(redirected, [('POST', '/api/v1/uploads/init')])
-            self.assertEqual(seen[0][2], 'a' * 32)
-            self.assertEqual(seen[1][2], 'image/png')
-            self.assertEqual(seen[1][3], b'\x89PNG\r\n\x1a\n')
-            self.assertEqual(seen[1][4], state['file_sizes'][0])
+                with patch.object(cloud_upload.requests, 'Session', FakeStorage):
+                    queue.drain_once(session)
+            self.assertEqual(len(seen), 4)
+            self.assertTrue(seen[0].endswith('/init'))
+            self.assertTrue(seen[1].endswith('/prepare'))
+            self.assertEqual(seen[2], f'/api/v2/uploads/{ident}/files/0/complete')
+            self.assertEqual(seen[3], f'/api/v2/uploads/{ident}/complete')
+            self.assertEqual(len(parts), 1)
+            self.assertEqual(parts[0][1], 'application/octet-stream')
+            self.assertEqual(parts[0][2][:8], b'\x89PNG\r\n\x1a\n')
+            self.assertEqual(len(parts[0][2]), state['metadata']['file_sizes'][0])
+            self.assertEqual(state['files'][0]['sha256'], hashlib.sha256(parts[0][2]).hexdigest())
             self.assertFalse(list(self.root.iterdir()))
         finally:
-            origin.shutdown()
-            origin.server_close()
-            origin_thread.join(timeout=2)
             server.shutdown()
             server.server_close()
             thread.join(timeout=2)

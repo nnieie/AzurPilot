@@ -2549,10 +2549,6 @@ FleetAffinityTraining:
     validate: [1, 200]
 
 FleetTraining:
-  FullScanIntervalDays:
-    value: 3
-    valuetype: int
-    validate: '^[1-9][0-9]*$'
   FullScanRecord:
     type: stored
     value: 2020-01-01 00:00:00

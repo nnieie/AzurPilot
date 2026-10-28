@@ -71,6 +71,7 @@ class Router:
             'config.get': Method(p.InstanceParams, lambda x: configs.get(x.instance)),
             'config.export': Method(p.InstanceParams, lambda x: configs.export(x.instance)),
             'config.patch': Method(p.PatchParams, lambda x: configs.patch(x.instance, x.revision, x.changes), True),
+            'fleetTraining.reset': Method(p.RevisionParams, self.reset_fleet_training, True),
             'overview.get': Method(p.InstanceParams, lambda x: runtime.overview(x.instance)),
             'dock.report': Method(p.InstanceParams, lambda x: self.dock.report(x.instance)),
             'dock.importLegacy': Method(p.RevisionParams, lambda x: self.dock.import_legacy(x.instance, x.revision), True),
@@ -307,6 +308,13 @@ class Router:
         if entry.mutates and os.environ.get('DEMO') == '1':
             raise p.ApiError('READ_ONLY', '演示模式下禁止修改配置或运行任务')
         return entry.handler(validated)
+
+    def reset_fleet_training(self, params: p.RevisionParams):
+        """停止状态下清空智能换船记录；与启动共用生命周期锁，避免清空后被旧进程回写。"""
+        with ProcessManager._get_lifecycle_lock(params.instance):
+            if self.runtime.manager(params.instance).alive:
+                raise p.ApiError('INSTANCE_RUNNING', '请先停止实例，再刷新换船状态')
+            return self.configs.reset_fleet_training(params.instance, params.revision)
 
     def delete(self, params: p.RevisionParams):
         """删除指定实例及其关联的数据和进程。

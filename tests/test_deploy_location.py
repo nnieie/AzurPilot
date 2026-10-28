@@ -1,4 +1,6 @@
 import unittest
+import tempfile
+from pathlib import Path
 from unittest.mock import patch
 
 from deploy import config as deploy_config
@@ -33,14 +35,19 @@ class TestIp9Location(unittest.TestCase):
 
 class TestDeployLocation(unittest.TestCase):
     def make_config(self, config_module, repository=None):
-        instance = object.__new__(config_module.DeployConfig)
-        instance.config = {
-            'Repository': repository or config_module.GITHUB_REPOSITORY,
-        }
-        instance.Repository = instance.config['Repository']
-        instance.Branch = 'master'
-        instance._github_location_checked = False
-        return instance
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        root = Path(directory.name)
+        template = root / 'template.yaml'
+        file = root / 'deploy.yaml'
+        text = f'Repository: {repository or config_module.GITHUB_REPOSITORY}\nBranch: master\n'
+        template.write_text(text)
+        file.write_text(text)
+        template_patch = (patch.object(config_module, 'get_deploy_template', return_value=str(template))
+                          if config_module is deploy_config
+                          else patch.object(config_module, 'DEPLOY_TEMPLATE', str(template)))
+        with template_patch, patch.object(config_module.DeployConfig, 'show_config'):
+            return config_module.DeployConfig(str(file))
 
     def test_china_uses_cdn_and_gitcode_fallback(self):
         for config_module in (deploy_config, windows_config):
@@ -48,8 +55,6 @@ class TestDeployLocation(unittest.TestCase):
                 config_module, 'get_country_code', return_value='cn'
             ) as get_country_code:
                 config = self.make_config(config_module)
-
-                config.config_redirect()
 
                 self.assertEqual(config.config['Repository'], config_module.GIT_OVER_CDN_REPOSITORY)
                 self.assertTrue(config.GitOverCdn)

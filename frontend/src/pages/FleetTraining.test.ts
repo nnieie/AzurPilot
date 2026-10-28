@@ -138,10 +138,10 @@ describe('统一换船调度入口', () => {
   })
   it('四种语言提供小时单位和实际经验记录文案', () => {
     for (const language of ['zh-CN', 'zh-TW', 'en-US', 'ja-JP'] as const)
-      for (const key of ['training.title', 'training.moraleTitle', 'training.exp', 'training.checkedAt', 'training.unread', 'training.interval'] as const)
+      for (const key of ['training.title', 'training.moraleTitle', 'training.exp', 'training.checkedAt', 'training.unread', 'training.interval', 'training.reset', 'training.resetHelp', 'training.resetDone'] as const)
         expect(translateUi(language, key)).not.toBe(key)
     expect(translateUi('zh-CN', 'training.interval')).toContain('小时')
-    expect(translateUi('zh-CN', 'training.interval')).toContain('共用')
+    expect(translateUi('zh-CN', 'training.interval')).toContain('等级/好感')
     expect(translateUi('zh-CN', 'training.interval')).toContain('无上限')
   })
 })

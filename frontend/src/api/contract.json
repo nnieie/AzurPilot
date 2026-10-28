@@ -325,6 +325,31 @@
         "type": "object"
       }
     },
+    "fleetTraining.reset": {
+      "mutates": true,
+      "params": {
+        "additionalProperties": false,
+        "description": "带版本校验的请求参数模型。",
+        "properties": {
+          "instance": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Instance",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "string"
+          }
+        },
+        "required": [
+          "instance",
+          "revision"
+        ],
+        "title": "RevisionParams",
+        "type": "object"
+      }
+    },
     "overview.get": {
       "mutates": false,
       "params": {

@@ -3,6 +3,27 @@ import { describe, expect, it } from 'vitest'
 import { createMockState } from './state.mjs'
 import { normalizeReport } from '../src/components/statisticsData'
 
+describe('刷新智能换船状态', () => {
+  it('独立接口清空记录并保留调度配置', () => {
+    const {dispatch} = createMockState()
+    const before = dispatch('config.get', {instance: 'demo-main'})
+    const after = dispatch('fleetTraining.reset', {instance: 'demo-main', revision: before.revision})
+    expect(after.values.FleetInfo.FleetTraining.State).toEqual({})
+    expect(after.values.FleetInfo.FleetInfo.Result).toEqual({})
+    expect(after.values.FleetInfo.FleetRotation.Rules).toBe(before.values.FleetInfo.FleetRotation.Rules)
+    expect(after.values.FleetInfo.FleetTraining.CheckIntervalHours).toBe(before.values.FleetInfo.FleetTraining.CheckIntervalHours)
+    expect(after.values.FleetInfo.FleetEquipment).toEqual(before.values.FleetInfo.FleetEquipment)
+    expect(() => dispatch('fleetTraining.reset', {instance: 'demo-main', revision: '过期'})).toThrow(/配置已变化/)
+  })
+  it('实例运行时拒绝清空', () => {
+    const {dispatch} = createMockState()
+    dispatch('scheduler.start', {instance: 'demo-main'})
+    const before = dispatch('config.get', {instance: 'demo-main'})
+    expect(() => dispatch('fleetTraining.reset', {instance: 'demo-main', revision: before.revision})).toThrow(/先停止实例/)
+    expect(dispatch('config.get', {instance: 'demo-main'})).toEqual(before)
+  })
+})
+
 describe('前端模拟服务', () => {
   it('活动候选按实例包名隔离，切换地区时刷新旧选择', () => {
     const {dispatch} = createMockState()

@@ -16,7 +16,7 @@ from urllib.parse import urljoin, urlsplit, urlunsplit
 import cv2
 import requests
 
-from deploy.api_endpoints import UPLOAD_API_URL
+from deploy.api_endpoints import DIRECT_UPLOAD_API_URL
 from module.base.device_id import get_device_id
 from module.logger import logger
 
@@ -26,8 +26,36 @@ MAX_SPOOL_BYTES = 512 << 20
 JOB_NAME = re.compile(r'^[0-9a-f-]{36}\.(?:pending|part)$')
 
 
+class _FileSlice:
+    """A bounded file view: stream each signed part without loading it in RAM."""
+    def __init__(self, file, size, queue):
+        self.file = file
+        self.size = size
+        self.remaining = size
+        self.queue = queue
+
+    def __len__(self):
+        return self.size
+
+    def tell(self):
+        return self.size - self.remaining
+
+    def read(self, size=-1):
+        if self.queue.stop.is_set() or not self.queue.enabled():
+            raise ValueError('cloud upload stopped')
+        length = min(self.remaining, 64 << 10, size if size >= 0 else 64 << 10)
+        if not length:
+            return b''
+        block = self.file.read(length)
+        if not block:
+            raise ValueError('outbox file was truncated')
+        self.remaining -= len(block)
+        return block
+
+
 class CloudUploadQueue:
-    def __init__(self, root, *, spool_bytes=MAX_SPOOL_BYTES, base_url=UPLOAD_API_URL, enabled=lambda: True):
+    def __init__(self, root, *, spool_bytes=MAX_SPOOL_BYTES, base_url=DIRECT_UPLOAD_API_URL,
+                 enabled=lambda: True, protocol_version=2):
         self.root = Path(root)
         self.limit = spool_bytes
         self.base_url = base_url.rstrip('/')
@@ -37,6 +65,9 @@ class CloudUploadQueue:
         self.stop = threading.Event()
         self.thread = None
         self.next_try = {}
+        if protocol_version not in (1, 2):
+            raise ValueError('unsupported cloud upload protocol')
+        self.protocol_version = protocol_version
 
     def start(self):
         with self.lock:
@@ -68,6 +99,42 @@ class CloudUploadQueue:
                    if d.is_dir() and not d.is_symlink() and JOB_NAME.fullmatch(d.name)
                    for p in d.iterdir() if p.is_file() and not p.is_symlink())
 
+    def _upgrade_legacy(self, job):
+        """Send a queued v1 group straight to 123 Pan instead of through A.
+
+        A's uplink is saturated, so a legacy group is upgraded to the direct
+        protocol before its first send. It gets a fresh upload ID because A may
+        still hold the older v1 attempt, and the per-file hashes are persisted
+        so a retry never hashes the same screenshots twice.
+        """
+        metadata = json.loads((job / 'metadata.json').read_text(encoding='utf-8'))
+        if metadata.get('upload_version') == 2:
+            return job
+        sizes = metadata.get('file_sizes')
+        if not isinstance(sizes, list) or not sizes:
+            raise ValueError('invalid outbox manifest')
+        hashes = []
+        for index in range(len(sizes)):
+            md5, sha = hashlib.md5(), hashlib.sha256()
+            with (job / f'{index}.png').open('rb') as file:
+                for block in iter(lambda: file.read(64 << 10), b''):
+                    md5.update(block)
+                    sha.update(block)
+            hashes.append({'md5': md5.hexdigest(), 'sha256': sha.hexdigest()})
+        upload_id = str(uuid.uuid4())
+        upgraded = {**metadata, 'upload_id': upload_id, 'upload_version': 2, 'files': hashes}
+        payload = json.dumps(upgraded, ensure_ascii=False).encode('utf-8')
+        if len(payload) > (256 << 10):
+            raise ValueError('cloud metadata exceeds limit')
+        staging = job / 'metadata.json.next'
+        staging.write_bytes(payload)
+        target = self.root / f'{upload_id}.pending'
+        with self.lock:
+            job.rename(target)
+            (target / 'metadata.json.next').replace(target / 'metadata.json')
+            self.next_try.pop(job.name, None)
+        return target
+
     def enqueue(self, images, metadata):
         with self.lock:
             self.root.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -79,6 +146,7 @@ class CloudUploadQueue:
                 if len(list(self.root.iterdir())) > 128:
                     raise ValueError('too many pending cloud upload groups')
                 sizes = []
+                hashes = []
                 total = 0
                 for index, image in enumerate(images):
                     if self.stop.is_set():
@@ -95,11 +163,17 @@ class CloudUploadQueue:
                     with (stage / f'{index}.png').open('wb') as file:
                         file.write(memoryview(encoded))
                     sizes.append(size)
+                    if self.protocol_version == 2:
+                        hashes.append({'md5': hashlib.md5(memoryview(encoded)).hexdigest(),
+                                       'sha256': hashlib.sha256(memoryview(encoded)).hexdigest()})
                 if not sizes:
                     raise ValueError('no screenshots')
                 manifest = {**metadata, 'upload_id': upload_id, 'file_sizes': sizes}
+                if self.protocol_version == 2:
+                    manifest['upload_version'] = 2
+                    manifest['files'] = hashes
                 data = json.dumps(manifest, ensure_ascii=False).encode('utf-8')
-                if len(data) > 16384:
+                if len(data) > (256 << 10 if self.protocol_version == 2 else 16384) or used + total + len(data) > self.limit:
                     raise ValueError('cloud metadata exceeds limit')
                 (stage / 'metadata.json').write_bytes(data)
                 stage.rename(self.root / f'{upload_id}.pending')
@@ -112,6 +186,10 @@ class CloudUploadQueue:
 
     def send(self, job, session):
         metadata = json.loads((job / 'metadata.json').read_text(encoding='utf-8'))
+        version = metadata.pop('upload_version', 1)
+        hashes = metadata.pop('files', None)
+        if version not in (1, 2):
+            raise ValueError('unsupported outbox upload protocol')
         upload_id = metadata['upload_id']
         if job.name != f'{upload_id}.pending' or not JOB_NAME.fullmatch(job.name):
             raise ValueError('invalid upload manifest')
@@ -119,6 +197,12 @@ class CloudUploadQueue:
             if (job / f'{i}.png').stat().st_size != expected:
                 raise ValueError('outbox file size changed')
         headers = {'X-AzurPilot-ID': metadata['device_id'], 'User-Agent': 'AzurPilot/2'}
+
+        def base_for(version):
+            parsed = urlsplit(self.base_url)
+            if not re.fullmatch(r'/api/v[12]/uploads', parsed.path):
+                raise ValueError('invalid cloud upload API base')
+            return urlunsplit((parsed.scheme, parsed.netloc, f'/api/v{version}/uploads', '', ''))
 
         def accepted(response):
             response.raise_for_status()
@@ -129,37 +213,113 @@ class CloudUploadQueue:
 
         # C only returns A's public address. Resolve it once with the small
         # manifest; send all image bytes and the completion request directly to A.
-        base_url = self.base_url
-        response = session.post(base_url + '/init', json=metadata, headers=headers,
+        base_url = base_for(version)
+        manifest = metadata
+        if version == 2:
+            if not isinstance(hashes, list) or len(hashes) != len(metadata['file_sizes']):
+                raise ValueError('missing direct upload hashes')
+            for i, expected in enumerate(hashes):
+                digest_md5, digest_sha = hashlib.md5(), hashlib.sha256()
+                with (job / f'{i}.png').open('rb') as file:
+                    for block in iter(lambda: file.read(64 << 10), b''):
+                        digest_md5.update(block)
+                        digest_sha.update(block)
+                if expected != {'md5': digest_md5.hexdigest(), 'sha256': digest_sha.hexdigest()}:
+                    raise ValueError('outbox file hashes changed')
+            manifest = {'schema_version': 2, 'metadata': metadata, 'files': hashes}
+        response = session.post(base_url + '/init', json=manifest, headers=headers,
                                 timeout=(5, 15), allow_redirects=False)
         if response.status_code in (307, 308):
             try:
                 target = urlsplit(urljoin(base_url + '/init', response.headers.get('Location', '')))
                 if (target.scheme not in ('http', 'https') or not target.hostname
                         or target.username is not None or target.password is not None
-                        or target.path != '/api/v1/uploads/init' or target.query or target.fragment):
+                        or target.path != f'/api/v{version}/uploads/init' or target.query or target.fragment):
                     raise ValueError('invalid upload redirect')
                 target.port  # Validate a numeric port before following the redirect.
-                base_url = urlunsplit((target.scheme, target.netloc, '/api/v1/uploads', '', ''))
-                if base_url == self.base_url:
+                base_url = urlunsplit((target.scheme, target.netloc, f'/api/v{version}/uploads', '', ''))
+                if base_url == base_for(version):
                     raise ValueError('upload redirect loop')
             finally:
                 response.close()
-            response = session.post(base_url + '/init', json=metadata, headers=headers,
+            response = session.post(base_url + '/init', json=manifest, headers=headers,
                                     timeout=(5, 15), allow_redirects=False)
+        if version == 2:
+            original_accepted = accepted
+
+            def accepted(response):
+                body = original_accepted(response)
+                if body.get('schema_version') != 2:
+                    raise ValueError('unexpected direct upload protocol version')
+                return body
         accepted(response)
         for i in range(len(metadata['file_sizes'])):
             if self.stop.is_set() or not self.enabled():
                 raise ValueError('cloud upload stopped')
-            with (job / f'{i}.png').open('rb') as file:
-                accepted(session.put(f'{base_url}/{upload_id}/files/{i}', data=file,
-                                     headers={**headers, 'Content-Type': 'image/png'},
-                                     timeout=(5, 85), allow_redirects=False))
+            if version == 2:
+                self._send_direct_file(job / f'{i}.png', metadata['file_sizes'][i],
+                                       f'{base_url}/{upload_id}/files/{i}', session, headers, accepted)
+            else:
+                with (job / f'{i}.png').open('rb') as file:
+                    accepted(session.put(f'{base_url}/{upload_id}/files/{i}', data=file,
+                                         headers={**headers, 'Content-Type': 'image/png'},
+                                         timeout=(5, 85), allow_redirects=False))
         result = accepted(session.post(f'{base_url}/{upload_id}/complete', headers=headers,
                                        timeout=(5, 15), allow_redirects=False))
         if not re.fullmatch(r'[0-9a-f]{64}', str(result.get('sha256', ''))):
             raise ValueError('missing completed group hash')
         return result
+
+    def _send_direct_file(self, path, size, api, session, headers, accepted):
+        prepared = accepted(session.post(api + '/prepare', headers=headers,
+                                         timeout=(5, 15), allow_redirects=False))
+        if prepared.get('completed') is True:
+            return
+        if prepared.get('finalizing') is not True:
+            parts = prepared.get('parts')
+            if not isinstance(parts, list) or not 1 <= len(parts) <= 32:
+                raise ValueError('invalid cloud upload parts')
+            offset = 0
+            with path.open('rb') as file:
+                for number, part in enumerate(parts, 1):
+                    if self.stop.is_set() or not self.enabled():
+                        raise ValueError('cloud upload stopped')
+                    target = urlsplit(str(part.get('url', '')))
+                    length = part.get('size')
+                    if (target.scheme != 'https' or not target.hostname or target.username is not None
+                            or target.password is not None or target.fragment
+                            or part.get('number') != number or part.get('offset') != offset
+                            or type(length) is not int or not 0 < length <= size - offset):
+                        raise ValueError('invalid presigned upload part')
+                    target.port
+                    # A's headers and the API session never go to cloud storage.
+                    # A fresh session also prevents cookies/auth or a redirect
+                    # from changing the exact destination and signed request.
+                    with requests.Session() as storage:
+                        storage.headers.clear()
+                        storage.auth = lambda request: request  # Do not attach .netrc credentials to signed PUTs.
+                        response = storage.put(part['url'], data=_FileSlice(file, length, self),
+                                               headers={'Content-Type': 'application/octet-stream',
+                                                        'Content-Length': str(length)},
+                                               timeout=(5, 85), allow_redirects=False)
+                        try:
+                            if response.status_code != 200:
+                                raise ValueError(f'cloud part upload failed ({response.status_code})')
+                        finally:
+                            response.close()
+                    offset += length
+            if offset != size:
+                raise ValueError('cloud upload parts do not cover the entire file')
+        deadline = time.monotonic() + 30
+        while not self.stop.is_set() and self.enabled():
+            result = accepted(session.post(api + '/complete', headers=headers,
+                                           timeout=(5, 15), allow_redirects=False))
+            if result.get('completed') is True:
+                return
+            if time.monotonic() >= deadline:
+                break
+            self.stop.wait(1)
+        raise ValueError('cloud upload verification pending')
 
     def drain_once(self, session):
         with self.lock:
@@ -170,6 +330,7 @@ class CloudUploadQueue:
             if self.next_try.get(job.name, 0) > time.monotonic():
                 continue
             try:
+                job = self._upgrade_legacy(job)
                 self.send(job, session)
             except Exception as error:
                 self.next_try[job.name] = time.monotonic() + 60

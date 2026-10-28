@@ -98,6 +98,10 @@ class DeployConfig(DeployConfigTransaction, ConfigModel):
         self.config = {}
         self.config_template = {}
         self._github_location_checked = False
+        # 地区查询可能等待网络；预读仅用于查询，事务内仍重新读取最新配置。
+        values = {**poor_yaml_read(self.template_file), **poor_yaml_read(self.file)}
+        self._github_country_code = (get_country_code()
+                                     if values.get('Repository') == GITHUB_REPOSITORY else None)
         self.read()
 
         self.show_config()
@@ -152,7 +156,7 @@ class DeployConfig(DeployConfigTransaction, ConfigModel):
             return
 
         self._github_location_checked = True
-        country_code = get_country_code()
+        country_code = self._github_country_code
         if country_code == 'cn':
             logger.info('检测到中国大陆网络，切换至国内 Git 更新源')
             object.__setattr__(self, 'Repository', GIT_OVER_CDN_REPOSITORY)

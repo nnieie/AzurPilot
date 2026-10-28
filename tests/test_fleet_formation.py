@@ -472,6 +472,27 @@ class VisualTargetTests(unittest.TestCase):
 
 
 class DirectRotationTests(unittest.TestCase):
+    def test_local_check_starts_from_selected_slot_and_preserves_other_fleet_morale(self):
+        tool = self.direct_tool()
+        tool._rotation_result['main']['1'][0]['emotion'] = 70
+        readings = tool.prepare_rotation(6, slots=[1, 4], fleets={6})
+        self.assertEqual([call.args[0] for call in tool._open_slot.call_args_list], [1, 4])
+        self.assertEqual(70, readings[1][1])
+        self.assertEqual({1: 12, 4: 12}, readings[6])
+
+    def test_verified_candidate_pool_is_reused_when_opening_the_actual_swap_slot(self):
+        tool = self.direct_tool()
+        tool.prepare_rotation(6)
+        tool.finish_rotation()
+        tool._scan_category.reset_mock()
+        tool._open_slot.reset_mock()
+        tool.prepare_rotation(6, slots=[4], scan=False)
+        tool._open_slot.assert_called_once_with(4)
+        tool._scan_category.assert_not_called()
+        readings = tool.rotate_slot(1, 4, 6)
+        self.assertEqual(150, readings[6][4])
+        self.assertEqual(1, tool._scan_category.call_count)
+
     def direct_tool(self):
         tool = runner()
         tool.device.image = frame('swap_surface6')
@@ -955,6 +976,45 @@ class DetailNavigationTests(unittest.TestCase):
 
 
 class ReferenceScanTests(unittest.TestCase):
+    def test_targeted_scan_only_submits_selected_fleet_columns_to_ocr(self):
+        reader = FormationDockScanner(fleets={1})
+        submitted = []
+        original = reader.names.scan
+        def names(image, **kwargs):
+            submitted.append(len(reader.names.ocr_model.buttons))
+            return original(image, **kwargs)
+        reader.names.scan = Mock(side_effect=names)
+        cards = reader.scan(frame('vanguard_top'))
+        selected = [card for card in cards if card.fleet == 1]
+        others = [card for card in cards if card.fleet != 1]
+        self.assertEqual(3, len(selected))
+        self.assertEqual(3, sum(submitted))
+        self.assertEqual({'花月', '文琴佐·焦贝蒂', '阿尔弗雷多·奥里亚尼'},
+                         {card.ship['name'] for card in selected})
+        self.assertTrue(all(card.ship['name'] == '' and card.ship['level'] == 0
+                            and card.ship['emotion'] is None for card in others))
+
+    def test_targeted_scroll_keeps_all_physical_rows_and_finds_later_fleets(self):
+        expected = {'vanguard': {5: {'阿瑞托莎', 'Z18', 'Z19'}, 6: {'Z20'}},
+                    'main': {5: {'雪不归', '金色暗影', '帕特莉夏·阿贝尔海姆'}, 6: {'博格'}}}
+        for category, teams in expected.items():
+            for fleet, names in teams.items():
+                with self.subTest(category=category, fleet=fleet):
+                    reader, merger = FormationDockScanner(fleets={fleet}), FormationCardMerger()
+                    for index, stage in enumerate(('top', 'mid', 'bottom')):
+                        image = frame(f'{category}_{stage}')
+                        merger.add(image, reader.scan(image, has_remove=index == 0))
+                    members = [card for card, _ in merger.slots if card.fleet > 0]
+                    self.assertEqual(16, len(members))
+                    self.assertEqual(names, {card.ship['name'] for card in members if card.fleet == fleet})
+                    self.assertTrue(all(type(card.ship['emotion']) is int for card in members if card.fleet == fleet))
+                    self.assertTrue(all(card.ship['emotion'] is None for card in members if card.fleet != fleet))
+
+    def test_single_targeted_card_keeps_its_actual_morale(self):
+        cards = FormationDockScanner(fleets={6}).scan(frame('main_bottom'), has_remove=False)
+        selected = [card for card in cards if card.fleet == 6]
+        self.assertEqual([('博格', 119)], [(card.ship['name'], card.ship['emotion']) for card in selected])
+
     def test_disabling_morale_update_preserves_existing_slot_values_including_zero(self):
         current = {'vanguard': {'1': [{'slot': 4, 'name': '未知', 'emotion': None},
                                       {'slot': 5, 'name': '花月', 'emotion': None}]}}

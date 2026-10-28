@@ -301,17 +301,33 @@ class MoraleDockScanner(VisualDockScanner):
 class FormationDockScanner:
     """动态定位完整卡片行，舰名、等级、心情与徽标均作为参考信息。"""
 
-    def __init__(self, update_emotion=True):
+    def __init__(self, update_emotion=True, *, fleets=None):
         self.names = FleetNameScanner(grid_shape=(7, 1))
         self.levels = LevelScanner(grid_shape=(7, 1))
         self.emotions = FleetEmotionScanner(grid_shape=(7, 1))
         self.fleets = FleetScanner()
         self.update_emotion = update_emotion
+        self.target_fleets = None if fleets is None else set(fleets)
         self.row_offset = 0
 
     @property
     def matcher(self):
         return self.names.name_matcher
+
+    @staticmethod
+    def _read_columns(reader, image, columns, label):
+        """保留物理卡位，只向识别器提交目标舰队所在的列。"""
+        result = [None] * 7
+        if columns:
+            buttons = reader.ocr_model.buttons
+            try:
+                reader.ocr_model.buttons = [buttons[col] for col in columns]
+                values = reference_read(reader, image, len(columns), label)
+            finally:
+                reader.ocr_model.buttons = buttons
+            for col, value in zip(columns, values):
+                result[col] = value
+        return result
 
     def scan(self, image, bottom=627, has_remove=True):
         pixels = np.asarray(image)
@@ -325,20 +341,31 @@ class FormationDockScanner:
             for reader in (self.names, self.levels, self.emotions):
                 reader.move((0, offset - self.row_offset))
             self.row_offset = offset
-            names = reference_read(self.names, pixels, 7, '舰名')
-            levels = reference_read(self.levels, pixels, 7, '等级')
-            emotions = reference_read(self.emotions, pixels, 7, '心情') if self.update_emotion else [None] * 7
+            fleets = [fleet_status(crop(pixels, (x, y + 117, x + 35, y + 162)), self.fleets)
+                      for col in range(7)
+                      for x in [round(float(CARD_GRIDS.origin[0] + col * CARD_GRIDS.delta[0]))]]
+            if self.target_fleets is None:
+                names = reference_read(self.names, pixels, 7, '舰名')
+                levels = reference_read(self.levels, pixels, 7, '等级')
+                emotions = reference_read(self.emotions, pixels, 7, '心情') if self.update_emotion else [None] * 7
+            else:
+                columns = [col for col, fleet in enumerate(fleets) if fleet in self.target_fleets]
+                names = self._read_columns(self.names, pixels, columns, '舰名')
+                levels = self._read_columns(self.levels, pixels, columns, '等级')
+                emotions = (self._read_columns(self.emotions, pixels, columns, '心情')
+                            if self.update_emotion else [None] * 7)
             for col in range(7):
                 x = round(float(CARD_GRIDS.origin[0] + col * CARD_GRIDS.delta[0]))
                 glyphs, _, _ = level_reader.prepare(pixels[y:y + 32, x + 74:x + 138])
-                level = level_reader.read(glyphs)
+                fleet = fleets[col]
+                targeted = self.target_fleets is None or fleet in self.target_fleets
+                level = level_reader.read(glyphs) if targeted else 0
                 if not level and glyphs and type(levels[col]) is int and 1 <= levels[col] <= 125:
                     level = levels[col]
                 if not glyphs and has_remove and col == 0 and y == rows[0]:
                     continue
                 if not glyphs and float(pixels[y + 35:y + 150, x:x + 138].std()) < 20:
                     continue
-                fleet = fleet_status(crop(pixels, (x, y + 117, x + 35, y + 162)), self.fleets)
                 raw = names[col] or ''
                 name, status = self.matcher.approximate(raw)
                 confirmed = status in ('exact', 'prefix', 'similar')

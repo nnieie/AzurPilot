@@ -255,6 +255,12 @@ flowchart LR
 
 关键分叉在 `new()` 的 `method` 参数：配置值 `do_not` 产生空的 DropImage（零开销）；大世界掉落（`is_opsi_drop_genre()` 认可的任务，侵蚀1练级除外）的 `save` 与 `upload` **都会**解析入库，区别只在要不要把截图落盘——`upload` 这个名字是远程 AzurStats 时代的遗留，现在的「上传」就是「解析入本地库、不落盘」。解析中发现只有数字代号的未识别物品时，把结算截图画上红框另存到 `screenshots/unknown_items/`，供人工补模板。
 
+### 云端截图提交（与本地统计并存）
+
+`DropRecord_CloudUpload` 控制独立的云端提交；启用时，上传路径还会由 `cloud_upload.py` 将截图先写入 `log/cloud_upload/<实例>/` 的有界磁盘队列，本地解析及保留策略继续生效。新任务持久化 `upload_version=2`、MD5 与 SHA-256，通过 `https://api.azurpilot.com/api/v2/uploads/init` 获取 A 的 307 地址，随后向 A 登记清单并申请 123 盘 HTTPS 预签名 URL。图片以最多 64 KiB 的读缓冲直接 PUT 到云盘，不经过 A/C，也不携带网盘账户令牌。
+
+A 自行向云盘核验 MD5、大小和目标归属，全部文件通过后才确认图片组。客户端只在收到最终组回执后清理上传暂存；地址失效、网络断开或进程重启时保留原任务 ID、截图和采集时间重试。旧队列没有 `upload_version` 字段，升级后继续调用 `/api/v1/uploads`，旧服务端协议未改变。云端校验失败不会改写本地统计；B 的下载 SHA-256 复核和每 30 分钟派发规则保持不变。
+
 ### 日报流程
 
 ```mermaid
@@ -446,7 +452,7 @@ stateDiagram-v2
 
 ## 17. 已知限制
 
-- `AzurStats` 的远程上传路径已废弃；大世界 `upload` 表示本地解析、不保存截图，侵蚀1练级除外。
+- 原 AzurStats 远程地址已废弃；现有云端提交由独立开关和 `cloud_upload.py` 实现，大世界本地解析及截图保留策略仍保留，侵蚀1练级的原有例外不变。
 - `AzurStats.get_meow_loot_monthly_totals` / `get_meow_loot_available_months` 目前在仓库内没有调用方，属于预留接口。
 - 委托收益条目没有「已检查但零结算」的心跳记录，日报侧只能把空列表标为 `available=False` 而非零收益（`commission_income_stats` 有注释说明）。
 - 遥测域名 `ApiClient.PRIMARY_DOMAIN` 与 `FALLBACK_DOMAIN` 当前相同，故障转移实际未生效。

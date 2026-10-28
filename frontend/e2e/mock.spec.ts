@@ -57,7 +57,7 @@ test('智能换船整合四个页签，旧入口兼容且刷新与手机布局�
     expect(methods).not.toContain(method)
 })
 
-test('换船调度集中三种开关，分别保存天数扫描及共用小时实读间隔', async ({page}) => {
+test('换船调度区分心情触发和毕业检查，移除全舰扫描间隔', async ({page}) => {
   const requests: {method: string; params?: {changes?: {path: string; value: unknown}[]}}[] = []
   await page.addInitScript(() => {
     localStorage.setItem('azurpilot.language', 'zh-CN')
@@ -83,21 +83,17 @@ test('换船调度集中三种开关，分别保存天数扫描及共用小时�
   await expect(page.getByRole('heading', {name: '换船调度', exact: true})).toBeVisible()
   const level = page.getByRole('region', {name: '等级调度', exact: true})
   const affinity = page.getByRole('region', {name: '好感调度', exact: true})
-  const interval = '共用实读间隔（小时，0为每次结算，无上限）'
+  const interval = '等级/好感检查间隔（小时，0为每次结算，无上限）'
   const sharedInterval = page.getByRole('spinbutton', {name: interval, exact: true})
   const fullInterval = page.getByRole('spinbutton', {name: '全舰队扫描间隔（天）', exact: true})
   for (const title of ['心情调度', '等级调度', '好感调度'])
     await expect(page.getByRole('switch', {name: `启用${title}`, exact: true})).toHaveAttribute('aria-checked', 'false')
   await expect(sharedInterval).toHaveCount(1)
   await expect(sharedInterval).toHaveValue('6')
-  await expect(fullInterval).toHaveValue('3')
+  await expect(fullInterval).toHaveCount(0)
+  await expect(page.getByText(/仅用于等级和好感检查/)).toBeVisible()
+  await expect(page.getByText(/心情到保留要求就触发全舰队扫描/)).toBeVisible()
   await page.screenshot({path: 'test-results/fleet-scan-intervals-defaults.png', fullPage: true, animations: 'disabled'})
-  expect(await fullInterval.getAttribute('max')).toBeNull()
-  await fullInterval.fill('0')
-  await expect(page.getByRole('button', {name: '保存调度设置', exact: true})).toBeDisabled()
-  await fullInterval.fill('1.5')
-  await expect(page.getByRole('button', {name: '保存调度设置', exact: true})).toBeDisabled()
-  await fullInterval.fill('10000')
   await expect(level.getByRole('spinbutton')).toHaveCount(1)
   await expect(affinity.getByRole('spinbutton')).toHaveCount(1)
   await level.getByRole('spinbutton', {name: '目标等级', exact: true}).fill('125')
@@ -126,7 +122,7 @@ test('换船调度集中三种开关，分别保存天数扫描及共用小时�
     await expect(page.getByRole('switch', {name: `启用${title}`, exact: true})).toHaveAttribute('aria-checked', 'true')
   await expect(selected).toBeChecked()
   await expect(sharedInterval).toHaveValue('48.5')
-  await expect(fullInterval).toHaveValue('10000')
+  await expect(fullInterval).toHaveCount(0)
   await expect(level.getByRole('spinbutton', {name: '目标等级', exact: true})).toHaveValue('125')
   await expect(affinity.getByRole('spinbutton', {name: '目标好感', exact: true})).toHaveValue('200')
   await sharedInterval.fill('-1')
@@ -158,7 +154,63 @@ test('换船调度集中三种开关，分别保存天数扫描及共用小时�
   expect(intervals.length).toBeGreaterThan(0)
   expect(intervals.every(item => item.path === 'FleetInfo.FleetTraining.CheckIntervalHours')).toBe(true)
   expect(patches.flatMap(item => item.params?.changes ?? [])
-    .some(item => item.path === 'FleetInfo.FleetTraining.FullScanIntervalDays' && item.value === 10000)).toBe(true)
+    .some(item => item.path === 'FleetInfo.FleetTraining.FullScanIntervalDays')).toBe(false)
+})
+
+test('刷新换船状态清空三类记录并保留调度设置', async ({page}) => {
+  let cleared = false
+  const methods: string[] = []
+  await page.addInitScript(() => {
+    localStorage.setItem('azurpilot.language', 'zh-CN')
+    localStorage.setItem('azurpilot.theme', 'light')
+    localStorage.setItem('azurpilot.material', 'plain')
+    localStorage.setItem('azurpilot.background.plain', JSON.stringify({source: 'off'}))
+  })
+  await page.routeWebSocket('**/api/v1/ws', socket => {
+    const server = socket.connectToServer()
+    socket.onMessage(message => {
+      const request = JSON.parse(String(message))
+      methods.push(request.method)
+      if (request.method === 'fleetTraining.reset') cleared = true
+      server.send(message)
+    })
+    server.onMessage(message => {
+      const response = JSON.parse(String(message))
+      const fleet = response.result?.values?.FleetInfo
+      if (fleet && !cleared) {
+        fleet.FleetRotation.Rules = JSON.stringify({'1': {slots: [4], sources: [3]}})
+        fleet.FleetInfo.Result = {vanguard: {'1': [{name: '热心.改', slot: 4, level: 105, emotion: 136}]}}
+        fleet.FleetTraining.State = {records: {
+          '热心.改': {fleet: 1, slot: 4, level: 117, exp: 1288961, checked_at: '2026-10-27T19:34:32'},
+          '花月': {fleet: 3, slot: 5, level: 120, completed_for: {level: 120}},
+          '拉菲': {fleet: 4, slot: 4, level: 80},
+        }, checks: {Main: {checked_at: '2026-10-27T19:34:32'}}, pending: {}}
+      }
+      socket.send(JSON.stringify(response))
+    })
+  })
+  await page.goto('/#/i/demo-main/task/FleetTraining')
+  const groups = ['培养舰船', '完成舰船', '旧记录舰船'].map(name => page.getByRole('region', {name, exact: true}))
+  for (const group of groups) await expect(group.locator('tbody tr')).toHaveCount(1)
+  const interval = page.getByRole('spinbutton', {name: '等级/好感检查间隔（小时，0为每次结算，无上限）', exact: true})
+  const hours = await interval.inputValue()
+  const enabled = await page.getByRole('switch', {name: '启用等级调度', exact: true}).getAttribute('aria-checked')
+  await groups[0].locator('..').screenshot({path: 'test-results/fleet-training-reset-before.png', animations: 'disabled'})
+  await page.getByRole('button', {name: '刷新状态', exact: true}).click()
+  await expect(page.getByText('换船记录和检查状态已清空', {exact: true})).toBeVisible()
+  for (const group of groups) {
+    await expect(group.locator('tbody tr')).toHaveCount(0)
+    await expect(group.getByText('尚无实读记录', {exact: true})).toBeVisible()
+  }
+  await expect(interval).toHaveValue(hours)
+  await expect(page.getByRole('switch', {name: '启用等级调度', exact: true})).toHaveAttribute('aria-checked', enabled!)
+  await groups[0].locator('..').screenshot({path: 'test-results/fleet-training-reset-after.png', animations: 'disabled'})
+  await page.reload()
+  for (const group of groups) await expect(group.locator('tbody tr')).toHaveCount(0)
+  expect(methods).toContain('fleetTraining.reset')
+  expect(methods).not.toContain('config.patch')
+  expect(methods).not.toContain('tasks.run')
+  expect(methods).not.toContain('scheduler.start')
 })
 
 test('换船调度记录按舰位展示真实舰名心情，三框区分且历史各不超过六条', async ({page}) => {
@@ -308,7 +360,6 @@ test('仅等级调度展示未突破舰船的实际120级与存储经验', async
         values.FleetRotation.Enabled = false
         values.FleetRotation.SelectedOnly = false
         values.FleetTraining.CheckIntervalHours = 6
-        values.FleetTraining.FullScanIntervalDays = 3
         values.FleetLevelTraining = {Enabled: true, Target: 120}
         values.FleetAffinityTraining = {Enabled: false, Target: 100}
         values.FleetRotation.Rules = JSON.stringify({'1': {slots: [4, 5, 6], sources: [3, 4]}})

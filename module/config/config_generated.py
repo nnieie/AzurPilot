@@ -1216,7 +1216,6 @@ class GeneratedConfig:
     FleetAffinityTraining_Target = 100
 
     # 配置组 `FleetTraining`
-    FleetTraining_FullScanIntervalDays = 3
     FleetTraining_FullScanRecord = datetime.datetime(2020, 1, 1, 0, 0)
     FleetTraining_CheckIntervalHours = 6.0
     FleetTraining_State = {}

@@ -107,7 +107,7 @@ const metrics: Metric[] = ['level', 'affinity']
 export function FleetTraining() {
   const {instance = ''} = useParams(), {ui, notify, instances} = useApp(), connection = useConnection()
   const [morale, setMorale] = useState(false), [selectedOnly, setSelectedOnly] = useState(false)
-  const [hours, setHours] = useState('6'), [days, setDays] = useState('3')
+  const [hours, setHours] = useState('6')
   const [settings, setSettings] = useState<Record<Metric, Goal>>({
     level: {enabled: false, target: '120'},
     affinity: {enabled: false, target: '100'},
@@ -119,7 +119,6 @@ export function FleetTraining() {
     const {target} = settings[metric], limit = metric === 'level' ? 125 : 200
     return target.trim() !== '' && Number.isInteger(Number(target)) && Number(target) >= 1 && Number(target) <= limit
       && hours.trim() !== '' && Number.isFinite(Number(hours)) && Number(hours) >= 0
-      && days.trim() !== '' && Number.isInteger(Number(days)) && Number(days) >= 1
   })
   useEffect(() => {
     if (connection !== 'ready') return
@@ -131,7 +130,6 @@ export function FleetTraining() {
       setMorale(values.FleetRotation?.Enabled === true)
       setSelectedOnly(values.FleetRotation?.SelectedOnly === true)
       setHours(String(values.FleetTraining?.CheckIntervalHours ?? 6))
-      setDays(String(values.FleetTraining?.FullScanIntervalDays ?? 3))
       setSettings(Object.fromEntries(metrics.map(metric => {
         const value = values[groups[metric]]
         return [metric, {enabled: value?.Enabled === true, target: String(value?.Target ?? (metric === 'level' ? 120 : 100))}]
@@ -167,7 +165,6 @@ export function FleetTraining() {
         {path: 'FleetInfo.FleetRotation.Enabled', value: nextMorale},
         {path: 'FleetInfo.FleetRotation.SelectedOnly', value: selectedOnly},
         {path: 'FleetInfo.FleetTraining.CheckIntervalHours', value: Number(hours)},
-        {path: 'FleetInfo.FleetTraining.FullScanIntervalDays', value: Number(days)},
         ...metrics.flatMap(metric => [
           {path: `FleetInfo.${groups[metric]}.Enabled`, value: nextSettings[metric].enabled},
           {path: `FleetInfo.${groups[metric]}.Target`, value: Number(nextSettings[metric].target)},
@@ -177,9 +174,22 @@ export function FleetTraining() {
     } catch (error) {setError((error as Error).message)} finally {setBusy(false)}
   }
 
+  async function resetStatus() {
+    setBusy(true); setError('')
+    try {
+      await editor(`config:${instance}`).settled()
+      const current = await api.request('config.get', {instance})
+      const result = await api.request('fleetTraining.reset', {instance, revision: current.revision})
+      setSnapshot(recordSnapshot(result.values.FleetInfo)); notify(ui('training.resetDone'))
+    } catch (error) {setError((error as Error).message)} finally {setBusy(false)}
+  }
+
   return <>
     <PageTitle title={ui('training.title')} actions={
-      <button className="button primary" disabled={disabled || !loaded || !dirty || !valid} onClick={() => void save()}>{ui('training.save')}</button>
+      <>
+        <button className="button" disabled={disabled || running || !loaded} onClick={() => void resetStatus()}>{ui('training.reset')}</button>
+        <button className="button primary" disabled={disabled || !loaded || !dirty || !valid} onClick={() => void save()}>{ui('training.save')}</button>
+      </>
     }/>
     <p className="muted">{ui('training.help')}</p>
     <p><Link to={`/i/${instance}/task/FleetSwitch?tab=rotation`}>{ui('training.slotConfig')}</Link></p>
@@ -191,10 +201,6 @@ export function FleetTraining() {
           {ui('rotation.selectedOnly')}
         </label>
         <p className="muted">{ui('rotation.emotionHelp')}</p>
-        <label style={{display: 'grid', gap: 8, marginTop: 16}}>{ui('training.fullScanInterval')}
-          <input type="number" min={1} step={1} value={days} disabled={disabled} onChange={event => {setDays(event.target.value); setDirty(true)}}/>
-        </label>
-        <p className="muted">{ui('training.fullScanHelp')}</p>
         <label style={{display: 'grid', gap: 8, marginTop: 16}}>{ui('training.interval')}
           <input type="number" min={0} step="any" value={hours} disabled={disabled} onChange={event => {setHours(event.target.value); setDirty(true)}}/>
         </label>
@@ -221,6 +227,7 @@ export function FleetTraining() {
           </section>
         })}
       </div>
+      <p className="muted">{ui('training.resetHelp')}</p>
       <TrainingRecords snapshot={snapshot}/>
     </>}
   </>

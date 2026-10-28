@@ -503,6 +503,22 @@ export function createMockState({ empty = false } = {}) {
         instances.delete(name); startup.delete(name); programs.delete(name); simulations.delete(name); fleetStates.delete(name)
         return { deleted: name }
       case 'config.get': return snapshot(name)
+      case 'fleetTraining.reset': {
+        if (get(name).status === 'running') fail('INSTANCE_RUNNING', '请先停止实例，再刷新换船状态')
+        const current = snapshot(name)
+        if (params.revision !== current.revision) fail('CONFLICT', '配置已变化，请重新载入后刷新状态')
+        const fleet = current.values.FleetInfo
+        const training = fleet.FleetTraining.State ?? {}, rotation = fleet.FleetRotation.State ?? {}
+        if (Object.keys(training.pending ?? {}).length || training.reading
+          || Object.keys(fleet.FleetEquipment.State ?? {}).length
+          || Object.values(rotation).some(item => item && (item.source || item.pending)))
+          fail('PENDING_OPERATION', '存在未完成的换船、读取或换装，请先完成恢复再刷新状态')
+        fleet.FleetTraining.State = {}; fleet.FleetRotation.State = {}
+        fleet.FleetInfo.Result = {}; fleet.FleetInfo.Record = '2020-01-01 00:00:00'
+        fleet.FleetTraining.FullScanRecord = '2020-01-01 00:00:00'
+        get(name).values = current.values
+        return snapshot(name)
+      }
       case 'config.export': {
         if (!programs.has(name)) return snapshot(name).values
         const {mode, draft, active} = program(name)

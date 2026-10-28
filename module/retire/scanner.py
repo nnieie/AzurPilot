@@ -696,6 +696,7 @@ class FleetEmotionScanner(EmotionScanner):
             images.append(self.ocr_model.prepare_low_emotion(raw) if status == 'yellow' else raw)
             statuses.append(status)
         results = self.ocr_model.ocr(images, direct_ocr=True)
+        results = results if isinstance(results, list) else [results]
         # Lua 心情配置：红色只对应0，黄色对应1–30；不截位或猜测失败的数字。
         for index, (value, status) in enumerate(zip(results, statuses)):
             if status == 'red':

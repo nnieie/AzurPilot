@@ -593,6 +593,28 @@ class ConfigService:
             atomic_write(str(self.path(name)), json.dumps(data, ensure_ascii=False, indent=2))
             return self.get(name)
 
+    def reset_fleet_training(self, name, revision):
+        """原子清空三类培养记录、编队快照及检查状态，保留全部用户设置。"""
+        with self.lock, config_transaction(self.path(name)):
+            data, current = self.read(name)
+            if revision != current:
+                raise ApiError('CONFLICT', '配置已变化，请重新载入后刷新状态')
+            fleet = data.setdefault('FleetInfo', {})
+            training = fleet.get('FleetTraining', {}).get('State', {})
+            rotation = fleet.get('FleetRotation', {}).get('State', {})
+            equipment = fleet.get('FleetEquipment', {}).get('State', {})
+            if (isinstance(training, dict) and (training.get('pending') or training.get('reading'))
+                    or equipment or isinstance(rotation, dict) and any(
+                        isinstance(item, dict) and (item.get('source') or item.get('pending'))
+                        for item in rotation.values())):
+                raise ApiError('PENDING_OPERATION', '存在未完成的换船、读取或换装，请先完成恢复再刷新状态')
+            fleet.setdefault('FleetTraining', {})['State'] = {}
+            fleet.setdefault('FleetRotation', {})['State'] = {}
+            fleet.setdefault('FleetInfo', {}).update(Result={}, Record='2020-01-01 00:00:00')
+            fleet['FleetTraining']['FullScanRecord'] = '2020-01-01 00:00:00'
+            atomic_write(str(self.path(name)), json.dumps(data, ensure_ascii=False, indent=2))
+            return self.get(name)
+
     @staticmethod
     def _reset_opsi_explore_progress(data, path):
         """清空对应开荒断点，保留本月行动力购买记录及其他任务状态。"""

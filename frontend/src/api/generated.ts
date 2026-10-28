@@ -14,6 +14,7 @@ export interface Parameters {
   "config.get": { instance: string }
   "config.export": { instance: string }
   "config.patch": { instance: string; revision?: string | null; changes: Array<{ path: string; value: unknown }> }
+  "fleetTraining.reset": { instance: string; revision: string }
   "overview.get": { instance: string }
   "dock.report": { instance: string }
   "dock.importLegacy": { instance: string; revision: string }

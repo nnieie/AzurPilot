@@ -55,8 +55,8 @@
 .ft-name a:hover { text-decoration: underline; }
 .ft-table-wrap td.ft-rarity-N { color: var(--theme-muted); }
 .ft-table-wrap td.ft-rarity-R { color: color-mix(in srgb, #0879d9 75%, var(--theme-text)); }
-.ft-table-wrap td.ft-rarity-SR, .ft-table-wrap td.ft-rarity-PR { color: color-mix(in srgb, #8b39d2 75%, var(--theme-text)); }
-.ft-table-wrap td.ft-rarity-SSR { color: color-mix(in srgb, #b8860b 75%, var(--theme-text)); }
+.ft-table-wrap td.ft-rarity-SR { color: color-mix(in srgb, #8b39d2 75%, var(--theme-text)); }
+.ft-table-wrap td.ft-rarity-SSR, .ft-table-wrap td.ft-rarity-PR { color: color-mix(in srgb, #b8860b 75%, var(--theme-text)); }
 .ft-table-wrap td.ft-rarity-UR, .ft-table-wrap td.ft-rarity-DR { color: color-mix(in srgb, #b04f91 75%, var(--theme-text)); }
 .ft-table-wrap tbody tr td.ft-marked, .ft-table-wrap tbody tr td.ft-point.ft-state-finished { background: #87f6d6; }
 .ft-table-wrap tbody tr td.ft-awakening-pending { background: #ffd096; }

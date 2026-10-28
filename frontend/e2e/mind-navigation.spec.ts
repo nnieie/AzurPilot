@@ -73,7 +73,7 @@ test('舰队管理打开舰船数据与智能换船，扫描开关只运行工�
   await expect(page).toHaveURL(url => url.hash === '#/i/demo-alt/task/FleetAnalysis?tab=mind')
   await page.reload()
   await expect(page.getByRole('heading', {name: '养成计算', exact: true})).toBeVisible({timeout: 15000})
-  await expect(page.getByRole('button', {name: '恢复全部参与', exact: true})).toBeVisible()
+  await expect(page.getByRole('checkbox', {name: '全选当前筛选'})).toBeVisible()
   await expect(page.locator('input[type=file]')).toHaveCount(0)
   await expect(page.locator('.breadcrumb-current')).toHaveText('舰船数据')
   await page.getByRole('button', {name: '舰队管理', exact: true}).hover()

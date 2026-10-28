@@ -229,6 +229,7 @@ export interface Results {
   'instances.delete': {deleted: string}
   'config.get': Config
   'config.patch': Config
+  'fleetTraining.reset': Config
   'overview.get': Overview
   'scheduler.start': Overview
   'scheduler.stop': Overview
