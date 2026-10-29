@@ -6,10 +6,12 @@ and files survive retries/restarts, so A can reuse its original hash record.
 import hashlib
 import json
 import re
+import random
 import threading
 import time
 import uuid
 from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 from urllib.parse import urljoin, urlsplit, urlunsplit
 
@@ -24,6 +26,70 @@ MAX_FILE_BYTES = 10 << 20
 MAX_GROUP_BYTES = 500 << 20
 MAX_SPOOL_BYTES = 512 << 20
 JOB_NAME = re.compile(r'^[0-9a-f-]{36}\.(?:pending|part)$')
+
+# 云端上传硬开关：False 时不再入队，也不发送已存在的暂存任务。
+UPLOAD_ENABLED = False
+
+
+class UploadDeferred(Exception):
+    """Another instance in this process has already received server backoff."""
+
+
+class UploadRetryLater(Exception):
+    def __init__(self, response):
+        self.status = response.status_code
+        self.retry_after = 0.0
+        raw = response.headers.get('Retry-After', '')
+        try:
+            value = float(raw)
+            if 0 <= value < float('inf'):
+                self.retry_after = value
+        except (TypeError, ValueError):
+            try:
+                self.retry_after = max(0, parsedate_to_datetime(raw).timestamp() - time.time())
+            except (TypeError, ValueError, OverflowError, AttributeError):
+                pass
+        super().__init__(f'upload HTTP {self.status}; retry later')
+
+
+class ServerBackoff:
+    """Share server-requested pauses across instances, without pacing success."""
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.until = 0.0
+        self.failures = 0
+
+    def remaining(self):
+        with self.lock:
+            return max(0.0, self.until - time.monotonic())
+
+    def throttle(self, retry_after):
+        with self.lock:
+            now = time.monotonic()
+            if now >= self.until:
+                self.failures = min(6, self.failures + 1)
+                base = max(retry_after, min(120, 5 * 2 ** (self.failures - 1)))
+                self.until = now + base + random.uniform(1, min(30, max(2, base / 2)))
+            else:
+                # Simultaneous failures are one cooldown, not six exponential
+                # escalations. A later real Retry-After may still extend it.
+                self.until = max(self.until, now + retry_after)
+            return max(0.0, self.until - now)
+
+    def success(self):
+        with self.lock:
+            self.failures = 0
+
+
+_server_backoffs = {}
+_server_backoffs_lock = threading.Lock()
+
+
+def server_backoff(base_url):
+    endpoint = urlsplit(base_url)
+    key = endpoint.scheme, endpoint.netloc.lower()
+    with _server_backoffs_lock:
+        return _server_backoffs.setdefault(key, ServerBackoff())
 
 
 class _FileSlice:
@@ -59,6 +125,7 @@ class CloudUploadQueue:
         self.root = Path(root)
         self.limit = spool_bytes
         self.base_url = base_url.rstrip('/')
+        self.backoff = server_backoff(self.base_url)
         self.enabled = enabled
         self.lock = threading.RLock()
         self.wake = threading.Event()
@@ -205,6 +272,10 @@ class CloudUploadQueue:
             return urlunsplit((parsed.scheme, parsed.netloc, f'/api/v{version}/uploads', '', ''))
 
         def accepted(response):
+            if response.status_code in (429, 503):
+                error = UploadRetryLater(response)
+                response.close()
+                raise error
             response.raise_for_status()
             body = response.json()
             if response.status_code not in (200, 202) or body.get('accepted') is not True or body.get('upload_id') != upload_id:
@@ -227,7 +298,7 @@ class CloudUploadQueue:
                 if expected != {'md5': digest_md5.hexdigest(), 'sha256': digest_sha.hexdigest()}:
                     raise ValueError('outbox file hashes changed')
             manifest = {'schema_version': 2, 'metadata': metadata, 'files': hashes}
-        response = session.post(base_url + '/init', json=manifest, headers=headers,
+        response = self._post(session, base_url + '/init', json=manifest, headers=headers,
                                 timeout=(5, 15), allow_redirects=False)
         if response.status_code in (307, 308):
             try:
@@ -242,7 +313,7 @@ class CloudUploadQueue:
                     raise ValueError('upload redirect loop')
             finally:
                 response.close()
-            response = session.post(base_url + '/init', json=manifest, headers=headers,
+            response = self._post(session, base_url + '/init', json=manifest, headers=headers,
                                     timeout=(5, 15), allow_redirects=False)
         if version == 2:
             original_accepted = accepted
@@ -264,14 +335,19 @@ class CloudUploadQueue:
                     accepted(session.put(f'{base_url}/{upload_id}/files/{i}', data=file,
                                          headers={**headers, 'Content-Type': 'image/png'},
                                          timeout=(5, 85), allow_redirects=False))
-        result = accepted(session.post(f'{base_url}/{upload_id}/complete', headers=headers,
+        result = accepted(self._post(session, f'{base_url}/{upload_id}/complete', headers=headers,
                                        timeout=(5, 15), allow_redirects=False))
         if not re.fullmatch(r'[0-9a-f]{64}', str(result.get('sha256', ''))):
             raise ValueError('missing completed group hash')
         return result
 
+    def _post(self, session, url, **kwargs):
+        if self.backoff.remaining() > 0:
+            raise UploadDeferred()
+        return session.post(url, **kwargs)
+
     def _send_direct_file(self, path, size, api, session, headers, accepted):
-        prepared = accepted(session.post(api + '/prepare', headers=headers,
+        prepared = accepted(self._post(session, api + '/prepare', headers=headers,
                                          timeout=(5, 15), allow_redirects=False))
         if prepared.get('completed') is True:
             return
@@ -282,6 +358,8 @@ class CloudUploadQueue:
             offset = 0
             with path.open('rb') as file:
                 for number, part in enumerate(parts, 1):
+                    if self.backoff.remaining() > 0:
+                        raise UploadDeferred()
                     if self.stop.is_set() or not self.enabled():
                         raise ValueError('cloud upload stopped')
                     target = urlsplit(str(part.get('url', '')))
@@ -303,6 +381,8 @@ class CloudUploadQueue:
                                                         'Content-Length': str(length)},
                                                timeout=(5, 85), allow_redirects=False)
                         try:
+                            if response.status_code in (429, 503):
+                                raise UploadRetryLater(response)
                             if response.status_code != 200:
                                 raise ValueError(f'cloud part upload failed ({response.status_code})')
                         finally:
@@ -312,7 +392,7 @@ class CloudUploadQueue:
                 raise ValueError('cloud upload parts do not cover the entire file')
         deadline = time.monotonic() + 30
         while not self.stop.is_set() and self.enabled():
-            result = accepted(session.post(api + '/complete', headers=headers,
+            result = accepted(self._post(session, api + '/complete', headers=headers,
                                            timeout=(5, 15), allow_redirects=False))
             if result.get('completed') is True:
                 return
@@ -322,9 +402,13 @@ class CloudUploadQueue:
         raise ValueError('cloud upload verification pending')
 
     def drain_once(self, session):
+        if self.backoff.remaining() > 0:
+            return
         with self.lock:
             jobs = sorted(self.root.glob('*.pending'))
         for job in jobs:
+            if self.backoff.remaining() > 0:
+                return
             if self.stop.is_set() or not self.enabled():
                 return
             if self.next_try.get(job.name, 0) > time.monotonic():
@@ -332,13 +416,21 @@ class CloudUploadQueue:
             try:
                 job = self._upgrade_legacy(job)
                 self.send(job, session)
+            except UploadDeferred:
+                return
+            except UploadRetryLater as error:
+                delay = self.backoff.throttle(error.retry_after)
+                self.next_try[job.name] = time.monotonic() + delay
+                logger.warning(f'[云端统计] HTTP {error.status}，上传队列暂停 {delay:.1f} 秒后随机错峰重试，保留全部文件')
+                return
             except Exception as error:
-                self.next_try[job.name] = time.monotonic() + 60
+                self.next_try[job.name] = time.monotonic() + random.uniform(45, 90)
                 logger.warning(f'[云端统计] 上传未完成，保留文件重试: {type(error).__name__}')
                 continue
             with self.lock:
                 self._remove(job)
                 self.next_try.pop(job.name, None)
+            self.backoff.success()
             logger.info('[云端统计] 图片组已接收，本地上传暂存已清理')
 
     def _run(self):
@@ -353,11 +445,11 @@ class CloudUploadQueue:
                                 if age > (7 * 86400 if job.name.endswith('.pending') else 86400):
                                     self._remove(job)
                                     self.next_try.pop(job.name, None)
-                    if self.enabled():
+                    if UPLOAD_ENABLED and self.enabled():
                         self.drain_once(session)
                 except OSError as error:
                     logger.warning(f'[云端统计] 暂存目录暂不可用: {type(error).__name__}')
-                self.wake.wait(30)
+                self.wake.wait(self.backoff.remaining() or 30)
 
 
 _queues = {}
@@ -390,6 +482,8 @@ def queue_for(config):
 
 
 def enqueue(config, images, genre, combat_count, collected_at):
+    if not UPLOAD_ENABLED:
+        return None
     queue, device, instance = queue_for(config)
     project = 'research' if genre in ('research', 'research_refresh') else 'drop'
     scene = 'research_complete' if genre == 'research' else genre

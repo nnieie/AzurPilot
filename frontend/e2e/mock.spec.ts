@@ -157,7 +157,7 @@ test('换船调度区分心情触发和毕业检查，移除全舰扫描间隔',
     .some(item => item.path === 'FleetInfo.FleetTraining.FullScanIntervalDays')).toBe(false)
 })
 
-test('刷新换船状态清空三类记录并保留调度设置', async ({page}) => {
+test('异常实例无需恢复未完成操作即可刷新换船状态并保留设置', async ({page}) => {
   let cleared = false
   const methods: string[] = []
   await page.addInitScript(() => {
@@ -184,17 +184,22 @@ test('刷新换船状态清空三类记录并保留调度设置', async ({page})
           '热心.改': {fleet: 1, slot: 4, level: 117, exp: 1288961, checked_at: '2026-10-27T19:34:32'},
           '花月': {fleet: 3, slot: 5, level: 120, completed_for: {level: 120}},
           '拉菲': {fleet: 4, slot: 4, level: 80},
-        }, checks: {Main: {checked_at: '2026-10-27T19:34:32'}}, pending: {}}
+        }, checks: {Main: {checked_at: '2026-10-27T19:34:32'}},
+        pending: {'1:4': {fleet: 1}}, reading: {fleet: 1}}
+        fleet.FleetRotation.State = {'1': {source: 3, pending: {slot: 4}}}
+        fleet.FleetEquipment.State = {'1:4': {fleet: 1, slot: 4}}
       }
       socket.send(JSON.stringify(response))
     })
   })
-  await page.goto('/#/i/demo-main/task/FleetTraining')
+  await page.goto('/#/i/demo-error/task/FleetTraining')
   const groups = ['培养舰船', '完成舰船', '旧记录舰船'].map(name => page.getByRole('region', {name, exact: true}))
   for (const group of groups) await expect(group.locator('tbody tr')).toHaveCount(1)
   const interval = page.getByRole('spinbutton', {name: '等级/好感检查间隔（小时，0为每次结算，无上限）', exact: true})
   const hours = await interval.inputValue()
   const enabled = await page.getByRole('switch', {name: '启用等级调度', exact: true}).getAttribute('aria-checked')
+  await expect(page.getByText(/卡住的状态可直接清空，无需先恢复/)).toBeVisible()
+  await expect(page.getByRole('button', {name: '刷新状态', exact: true})).toBeEnabled()
   await groups[0].locator('..').screenshot({path: 'test-results/fleet-training-reset-before.png', animations: 'disabled'})
   await page.getByRole('button', {name: '刷新状态', exact: true}).click()
   await expect(page.getByText('换船记录和检查状态已清空', {exact: true})).toBeVisible()
@@ -205,12 +210,14 @@ test('刷新换船状态清空三类记录并保留调度设置', async ({page})
   await expect(interval).toHaveValue(hours)
   await expect(page.getByRole('switch', {name: '启用等级调度', exact: true})).toHaveAttribute('aria-checked', enabled!)
   await groups[0].locator('..').screenshot({path: 'test-results/fleet-training-reset-after.png', animations: 'disabled'})
+  await page.screenshot({path: 'test-results/fleet-training-reset-recovery.png', fullPage: true, animations: 'disabled'})
   await page.reload()
   for (const group of groups) await expect(group.locator('tbody tr')).toHaveCount(0)
   expect(methods).toContain('fleetTraining.reset')
   expect(methods).not.toContain('config.patch')
   expect(methods).not.toContain('tasks.run')
   expect(methods).not.toContain('scheduler.start')
+  expect(methods).not.toContain('scheduler.stop')
 })
 
 test('换船调度记录按舰位展示真实舰名心情，三框区分且历史各不超过六条', async ({page}) => {

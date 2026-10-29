@@ -166,6 +166,8 @@ BB、CVL、CV、BBV、SS、SSV、AR、BM、AE、IX共15项。潜艇及潜母可�
 下次两个开关仍开启时，先离开已知装备页，重新扫描实际编队并补完当前舰位的装备，再判断
 心情是否需要换船，避免已换入高心情舰船漏装。关闭功能保留原行为，不自动处理这些记录。
 每次出击前读取开关；已开始卸装的本轮先处理完当前舰位，再响应下一轮开关设置。
+用户主动点击换船调度的“刷新状态”时，也清空这些未完成的换装待办，无需先恢复；装备方案仍保留。
+刷新不会操作游戏或还原已卸装的装备，之后不再按旧待办续接。
 
 原生徽标及截图时间见`tests/fixtures/fleet_equipment/README.md`。页面桌面及手机效果见
 `docs/modules/webui/images/fleet-equipment-desktop.png`和`fleet-equipment-mobile.png`。

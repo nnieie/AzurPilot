@@ -9,6 +9,8 @@ describe('刷新智能换船状态', () => {
     const before = dispatch('config.get', {instance: 'demo-main'})
     const after = dispatch('fleetTraining.reset', {instance: 'demo-main', revision: before.revision})
     expect(after.values.FleetInfo.FleetTraining.State).toEqual({})
+    expect(after.values.FleetInfo.FleetRotation.State).toEqual({})
+    expect(after.values.FleetInfo.FleetEquipment.State).toEqual({})
     expect(after.values.FleetInfo.FleetInfo.Result).toEqual({})
     expect(after.values.FleetInfo.FleetRotation.Rules).toBe(before.values.FleetInfo.FleetRotation.Rules)
     expect(after.values.FleetInfo.FleetTraining.CheckIntervalHours).toBe(before.values.FleetInfo.FleetTraining.CheckIntervalHours)

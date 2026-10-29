@@ -312,7 +312,7 @@ class TrainingIntegrationTests(unittest.TestCase):
         self.manager.rotate_slot.assert_not_called()
         self.assertFalse(excluded(state(self.config)['records'][name], goals(self.config)))
 
-    def test_refresh_state_rejects_running_stale_and_interrupted_operations_without_writes(self):
+    def test_refresh_state_rejects_running_and_stale_requests_without_writes(self):
         from module.api.router import Router
         self.configure()
         router = Router(self.service, SimpleNamespace(manager=lambda _: SimpleNamespace(alive=True)))
@@ -325,18 +325,30 @@ class TrainingIntegrationTests(unittest.TestCase):
             self.service.reset_fleet_training('testpilot', '过期版本')
         self.assertEqual('CONFLICT', error.exception.code)
         self.assertEqual(before, self.path.read_bytes())
+
+    def test_refresh_state_clears_interrupted_operations_without_recovering_them(self):
+        self.configure()
         for path, pending in ((TRAINING_PATH, {'pending': {'1:4': {'fleet': 1}}}),
                               (TRAINING_PATH, {'reading': {'fleet': 1}}),
                               ('FleetInfo.FleetEquipment.State', {'1:4': {'fleet': 1, 'slot': 4}}),
-                              (ROTATION_PATH + '.State', {'1': {'source': 3}})):
+                              (ROTATION_PATH + '.State', {'1': {'source': 3}}),
+                              (ROTATION_PATH + '.State', {'1': {'pending': {'slot': 4}}})):
             clean = {TRAINING_PATH: {}, ROTATION_PATH + '.State': {}, 'FleetInfo.FleetEquipment.State': {}}
             clean[path] = pending
             self.config.cross_set_many(clean)
-            before = self.path.read_bytes()
-            with self.assertRaises(ApiError) as error:
-                self.service.reset_fleet_training('testpilot', self.service.get('testpilot')['revision'])
-            self.assertEqual('PENDING_OPERATION', error.exception.code)
-            self.assertEqual(before, self.path.read_bytes())
+            before = self.service.get('testpilot')
+            with self.subTest(path=path, pending=pending):
+                result = self.service.reset_fleet_training('testpilot', before['revision'])
+                fleet, original = result['values']['FleetInfo'], before['values']['FleetInfo']
+                for group in ('FleetTraining', 'FleetRotation', 'FleetEquipment'):
+                    self.assertEqual({}, fleet[group]['State'])
+                    self.assertEqual({key: value for key, value in original[group].items()
+                                      if key not in ('State', 'FullScanRecord')},
+                                     {key: value for key, value in fleet[group].items()
+                                      if key not in ('State', 'FullScanRecord')})
+                self.assertEqual({}, fleet['FleetInfo']['Result'])
+                self.assertEqual(result, self.service.get('testpilot'))
+        self.manager.rotate_slot.assert_not_called()
 
     def setUp(self):
         rotation_cases.RotationIntegrationTests.setUp(self)
