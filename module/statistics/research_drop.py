@@ -14,11 +14,12 @@
 
 入口：
     record_research_drop() 由 AzurStats.commit() 在领奖时调用。
-    模板库里缺某件物品时该物品会被跳过而不是记成乱码，
-    补模板见 alas-research-stats 技能文档。
+    启用云端统计时，未知物品保留本地待编号身份、数量和标签，
+    后台直接向模板服务提交 49px 图标，并按发布的映射修正历史。
 """
 
 import re
+import threading
 import typing as t
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -250,6 +251,7 @@ class ResearchDrop:
     project: str = ''
     series: int = 0
     items: t.Dict[str, int] = field(default_factory=dict)
+    source_items: list = field(default_factory=list)
 
     @property
     def valid(self) -> bool:
@@ -398,6 +400,7 @@ class ResearchDropParser:
             logger.info('[科研统计] 本组截图没有队列页，只统计掉落物')
 
         seen = set()
+        previous_items = None
         for frame in frames:
             if frame is queue_page:
                 continue
@@ -406,10 +409,23 @@ class ResearchDropParser:
                 continue
             seen.add(key)
             try:
-                items = self.stats.stats_get_items(frame)
+                items = self.stats.stats_get_items(frame, tag=True)
             except Exception:
                 # 不是「获得道具」界面
                 continue
+            # A large reward is captured before and after scrolling. Keep the
+            # overlapping suffix once while retaining repeated slots on one page.
+            second_page = previous_items is not None
+            if second_page:
+                overlap = 0
+                for count in range(1, min(len(previous_items), len(items)) + 1):
+                    if [str(item) for item in previous_items[-count:]] == [str(item) for item in items[:count]]:
+                        overlap = count
+                items = items[overlap:]
+                previous_items = None
+            from module.combat.assets import GET_ITEMS_3
+            if not second_page and GET_ITEMS_3.match(frame, offset=(5, 0)):
+                previous_items = list(items)
             for item in items:
                 if not item.is_known_item():
                     continue
@@ -417,11 +433,16 @@ class ResearchDropParser:
                     logger.warning(f'[科研统计] {item.name} 数量无法确认，跳过本格')
                     continue
                 drop.items[item.name] = drop.items.get(item.name, 0) + item.amount
+                drop.source_items.append({'item': item.name, 'amount': int(item.amount),
+                                          # Keep the observed tag, so removing a later override is reversible.
+                                          'tag': getattr(item, 'tag', '') or '',
+                                          'source_template_id': getattr(item, 'source_template_id', item.name)})
 
         return drop
 
 
 _parser: t.Optional[ResearchDropParser] = None
+_parser_lock = threading.RLock()
 
 
 def get_parser() -> ResearchDropParser:
@@ -436,7 +457,8 @@ def get_parser() -> ResearchDropParser:
     return _parser
 
 
-def record_research_drop(images: t.Sequence[np.ndarray], instance: str, imgid: str = '') -> t.Optional[dict]:
+def record_research_drop(images: t.Sequence[np.ndarray], instance: str, imgid: str = '', *,
+                         config=None, collected_at=None, identity=None) -> t.Optional[dict]:
     """解析一组科研掉落截图并写入本地库。
 
     Args:
@@ -448,7 +470,15 @@ def record_research_drop(images: t.Sequence[np.ndarray], instance: str, imgid: s
         dict: 写入的条目；无有效掉落或重复时返回 None。
     """
     try:
-        drop = get_parser().parse(images)
+        with _parser_lock:
+            parser = get_parser()
+            grid = parser.stats._target_grid()
+            from module.statistics.cloud_upload import resolver_for
+            grid.cloud_resolver = resolver_for(config, 'research') if config is not None else None
+            try:
+                drop = parser.parse(images)
+            finally:
+                grid.cloud_resolver = None
     except Exception as e:
         logger.warning(f'[科研统计] 解析失败，跳过本次记录: {e}')
         return None
@@ -458,9 +488,49 @@ def record_research_drop(images: t.Sequence[np.ndarray], instance: str, imgid: s
         return None
 
     from module.statistics.cl1_database import db as cl1_db
+    if identity is not None:
+        drop.project, drop.series = identity
     entry = cl1_db.add_research_drop(
-        instance, drop.project, drop.series, drop.items, imgid=imgid)
+        instance, drop.project, drop.series, drop.items, imgid=imgid,
+        source_items=drop.source_items)
     if entry is not None:
         detail = ', '.join(f'{name}x{amount}' for name, amount in drop.items.items())
         logger.info(f'[科研统计] {drop.project or "未知项目"} 记录入库: {detail}')
+        if config is not None:
+            try:
+                from module.statistics.cloud_upload import enqueue_record
+                from module.cloud.catalog import map_items
+                enqueue_record(config, 'research', map_items(drop.source_items, []),
+                               source_items=drop.source_items, project=drop.project,
+                               series=drop.series, collected_at=collected_at)
+            except Exception as error:
+                logger.warning(f'[云端统计] 科研上报入队失败，本地记录保留: {type(error).__name__}')
     return entry
+
+
+def read_research_identity(image, index=0):
+    """Read the actual reward's card, supporting queue and curved research list layouts."""
+    from module.research.assets import QUEUE_CHECK
+    from module.base.utils import crop
+    from module.research.series import match_series
+
+    with _parser_lock:
+        parser = get_parser()
+        if QUEUE_CHECK.match(image, offset=(10, 10)):
+            if not 0 <= index < 5:
+                return '', 0
+            names = parser.ocr.ocr(image)
+            names = names if isinstance(names, list) else [names]
+            code = names[index].strip().upper() if index < len(names) else ''
+            code = code if code in parser.lookup else parser._correct_code(code)
+            offset = QUEUE_CARD_AREAS[index][0] - QUEUE_CARD_AREAS[0][0]
+            area = tuple(value + (offset if n % 2 == 0 else 0)
+                         for n, value in enumerate(SERIES_BADGE_AREA))
+            return code, match_series(crop(image, area), scaling=1.0)
+        from module.research.project import get_research_finished, research_detect
+        finished = get_research_finished(image)
+        projects = research_detect(image)
+        if finished is None or finished >= len(projects):
+            return '', 0
+        project = projects[finished]
+        return project.name, int(str(project.series).removeprefix('S') or 0)

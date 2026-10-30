@@ -2039,6 +2039,9 @@ class RewardCommission(Dock, UI, InfoHandler):
                     else:
                         self.device.screenshot()
 
+                    if drop and hasattr(drop, 'capture_commission_status'):
+                        drop.capture_commission_status(self.device.image)
+
                     if self.ui_page_appear(page_commission, offset=(20, 20)):
                         break
 

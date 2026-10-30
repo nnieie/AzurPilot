@@ -37,10 +37,10 @@ class ApiClient:
         Returns:
             list[str]: 端点完整 URL 列表。
         """
-        return [
+        return list(dict.fromkeys([
             f'{cls.PRIMARY_DOMAIN}{path}',
             f'{cls.FALLBACK_DOMAIN}{path}'
-        ]
+        ]))
     
     @classmethod
     def _post_with_fallback(cls, path: str, json_data: Dict[str, Any], timeout: int = 5) -> Tuple[bool, int, str]:
@@ -92,6 +92,7 @@ class ApiClient:
             
         endpoints = cls._get_endpoints(path)
         last_error = None
+        last_status = 0
         
         for i, endpoint in enumerate(endpoints):
             try:
@@ -124,6 +125,9 @@ class ApiClient:
                 else:
                     logger.warning(f'[基础-API] {domain_type}返回错误状态: {response.status_code}')
                     last_error = f'HTTP {response.status_code}'
+                    last_status = response.status_code
+                    if 400 <= last_status < 500 and last_status != 429:
+                        break
                     
             except requests.exceptions.Timeout:
                 logger.warning(f'[基础-API] {domain_type if i > 0 else "主域名"}请求超时')
@@ -135,7 +139,7 @@ class ApiClient:
                 logger.warning(f'[基础-API] {domain_type if i > 0 else "主域名"}发生异常: {e}')
                 last_error = str(e)
         
-        return False, 0, last_error or 'Unknown error'
+        return False, last_status, last_error or 'Unknown error'
     
     @staticmethod
     def _submit_cl1_data(data: Dict[str, Any], timeout: int):
@@ -156,23 +160,36 @@ class ApiClient:
             logger.attr('明石遭遇次数', data.get('akashi_encounters', 0))
             logger.attr('明石出现概率', f"{data.get('akashi_probability', 0):.2%}")
             
+            payload = ApiClient.cl1_payload(data)
             success, status_code, response_text = ApiClient._post_with_fallback(
                 ApiClient.CL1_DATA_PATH,
-                ApiClient.cl1_payload(data),
+                payload,
                 timeout=timeout
             )
             
             if success:
+                import json
+                acknowledgement = json.loads(response_text)
+                if (not isinstance(acknowledgement, dict)
+                        or acknowledgement.get('schema_version') != 2
+                        or acknowledgement.get('request_id') != payload['request_id']
+                        or (acknowledgement.get('accepted') is not True
+                            and acknowledgement.get('duplicate') is not True)):
+                    logger.warning('[基础-API] CL1 回执无效，等待下次快照提交')
+                    return False
                 logger.info('[基础-API] CL1 数据提交成功')
+                return True
             else:
                 logger.warning(f'[基础-API] CL1 数据提交失败: {response_text}')
+                return False
 
         except Exception as e:
             logger.exception(f'[基础-API] CL1 数据提交异常: {e}')
+            return False
 
     @staticmethod
     def cl1_payload(data: Dict[str, Any]) -> Dict[str, Any]:
-        """Send raw monthly counters; derived metrics are computed by C."""
+        """Send raw monthly counters; the main statistics service computes derived metrics."""
         return {
             'request_id': data.get('request_id') or str(uuid.uuid4()),
             'device_id': data['device_id'],
@@ -195,7 +212,7 @@ class ApiClient:
             timeout (int): 请求超时时间（秒），默认 10 秒。
         """
         from module.base.async_executor import async_executor
-        async_executor.submit(cls._submit_cl1_data, data, timeout)
+        return async_executor.submit(cls._submit_cl1_data, data, timeout)
 
     @classmethod
     def get_announcement(cls, timeout: int = 1, current_id: int = None) -> Optional[Dict[str, Any]]:

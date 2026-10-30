@@ -800,6 +800,13 @@ class ItemGrid:
             name_list = [self.match_template(item.image) for item in self.items]
             for item, n in zip(self.items, name_list):
                 item.name = n
+                resolver = getattr(self, 'cloud_resolver', None)
+                if resolver is not None:
+                    identity = resolver(item.image, item.name)
+                    # Canonical IDs may legitimately end in _2; do not strip them.
+                    item._name = identity['item']
+                    item.source_template_id = identity['source_template_id']
+                    item.cloud_tag = identity.get('tag', '')
         if amount:
             amount_images = [item.crop(self.amount_area_for(item.name)) for item in self.items]
             item_names = [item.name for item in self.items]

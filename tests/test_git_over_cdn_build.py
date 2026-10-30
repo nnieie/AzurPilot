@@ -27,7 +27,7 @@ class TestGitOverCdnBuild(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             source, local, mirror = (root / name for name in ('source', 'local', 'mirror.git'))
-            git(root, 'init', str(source))
+            git(root, 'init', '--initial-branch=master', str(source))
             stream = bytearray()
             for index in range(5):
                 message = f'测试提交 {index}\n'.encode('utf-8')
@@ -44,10 +44,15 @@ class TestGitOverCdnBuild(unittest.TestCase):
             old = git(source, 'rev-parse', 'master~2').decode()
             latest = git(source, 'rev-parse', 'master').decode()
             git(source, 'update-ref', 'refs/heads/master', old)
-            git(root, 'clone', '--no-local', str(source), str(local))
+            # Bundles retain the reachable-object boundary without requiring a
+            # file transport shell (unavailable in restricted Windows sessions).
+            old_bundle = root / 'old.bundle'
+            git(source, 'bundle', 'create', str(old_bundle), 'master')
+            git(root, 'clone', str(old_bundle), str(local))
             git(source, 'update-ref', 'refs/heads/master', latest)
-            git(root, 'init', '--bare', str(mirror))
-            git(source, 'push', '--force', str(mirror), 'HEAD:refs/heads/master')
+            latest_bundle = root / 'latest.bundle'
+            git(source, 'bundle', 'create', str(latest_bundle), 'master')
+            git(root, 'clone', '--bare', str(latest_bundle), str(mirror))
             self.assertEqual(latest, git(mirror, 'rev-parse', 'master').decode())
 
             output = root / 'output'

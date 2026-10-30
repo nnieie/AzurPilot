@@ -12,6 +12,7 @@ from unittest.mock import patch
 from module.api.config_service import ConfigService, ROOT
 from module.api.protocol import ApiError
 from module.runtime.fleet_database import FleetDatabase
+from tests.platform_capabilities import supports_symlinks
 
 
 class FleetDatabaseLifecycleTest(unittest.TestCase):
@@ -39,7 +40,7 @@ class FleetDatabaseLifecycleTest(unittest.TestCase):
         json_backup, = backup.glob('*.json')
         fleet_backup, = backup.glob('*.fleet.sqlite3')
         self.assertEqual(fleet_backup.name, f'{json_backup.stem}.fleet.sqlite3')
-        self.assertIn('Alas', json.loads(json_backup.read_text()))
+        self.assertIn('Alas', json.loads(json_backup.read_text(encoding='utf-8')))
         with closing(sqlite3.connect(fleet_backup)) as connection:
             self.assertEqual(connection.execute(
                 "SELECT owned FROM technology_progress WHERE group_type='10102'").fetchone()[0], 1)
@@ -109,6 +110,7 @@ class FleetDatabaseLifecycleTest(unittest.TestCase):
         self.assertEqual(self.database.load(), original)
         self.assertFalse(list((self.configs.directory / 'backup').glob('*.fleet.sqlite3')))
 
+    @unittest.skipUnless(supports_symlinks(), 'OS does not grant symbolic-link creation privileges')
     def test_delete_refuses_database_symlink_and_preserves_config(self):
         original = self.database.path.with_suffix('.original')
         self.database.path.replace(original)

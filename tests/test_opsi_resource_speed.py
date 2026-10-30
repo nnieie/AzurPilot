@@ -597,10 +597,10 @@ class TestIntervalConfiguration(unittest.TestCase):
         service.__dict__['args'] = json.loads(args_path.read_text(encoding='utf-8'))
         field = service.args['OpsiHazard1Leveling']['OpsiHazard1Leveling']['ActionPointCheckInterval']
         self.assertEqual(field['value'], 0)
-        for value in (0, 1, 60, 99999):
+        for value in (0, 1, 60, 99999, '10'):
             self.assertEqual(service.validate('OpsiHazard1Leveling.OpsiHazard1Leveling.ActionPointCheckInterval', value),
                              ['OpsiHazard1Leveling', 'OpsiHazard1Leveling', 'ActionPointCheckInterval'])
-        for value in (-1, 0.5, True, '10'):
+        for value in (-1, 0.5, True, '10.5'):
             with self.subTest(value=value), self.assertRaises(ApiError):
                 service.validate('OpsiHazard1Leveling.OpsiHazard1Leveling.ActionPointCheckInterval', value)
 

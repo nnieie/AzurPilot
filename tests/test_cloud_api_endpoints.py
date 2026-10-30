@@ -13,11 +13,12 @@ from module.server_checker import SERVER_API_BASE
 
 class CloudApiEndpointsTest(unittest.TestCase):
     def test_cl1_sends_raw_counters_with_v2(self):
-        payload = {'device_id': 'a' * 32, 'instance_id': 'b' * 16,
+        payload = {'device_id': 'a' * 32, 'instance_id': 'b' * 16, 'request_id': 'test-request',
                    'month': '2026-10', 'battle_count': 2, 'net_stamina_gain': 0}
-        response = Mock(status_code=200, text='{"status":"success"}')
+        response = Mock(status_code=200, text=json.dumps({'schema_version': 2, 'request_id': 'test-request',
+                                                         'accepted': True, 'duplicate': False}))
         with patch('module.base.api_client.requests.post', return_value=response) as request:
-            ApiClient._submit_cl1_data(payload, 5)
+            self.assertTrue(ApiClient._submit_cl1_data(payload, 5))
         self.assertEqual(request.call_args.args[0], 'https://api.azurpilot.com/api/v2/post/cl1')
         body = request.call_args.kwargs['json']
         self.assertEqual(body['akashi_ap'], 0)
@@ -25,6 +26,21 @@ class CloudApiEndpointsTest(unittest.TestCase):
         self.assertIn('request_id', body)
         self.assertIn('collected_at', body)
         self.assertEqual(request.call_args.kwargs['headers']['X-AzurPilot-ID'], 'a' * 32)
+
+    def test_cl1_needs_a_matching_business_acknowledgement(self):
+        payload = {'device_id': 'a' * 32, 'instance_id': 'b' * 16, 'request_id': 'expected',
+                   'month': '2026-10', 'battle_count': 2}
+        for reply in [{'status': 'success'}, {'schema_version': 2, 'request_id': 'wrong', 'accepted': True}]:
+            with patch.object(ApiClient, '_post_with_fallback', return_value=(True, 200, json.dumps(reply))):
+                self.assertFalse(ApiClient._submit_cl1_data(payload, 5))
+
+    def test_identical_fallback_origin_does_not_send_twice(self):
+        response = Mock(status_code=400)
+        with patch('module.base.api_client.requests.post', return_value=response) as request:
+            success, status, _ = ApiClient._post_with_fallback('/bad', {})
+        self.assertFalse(success)
+        self.assertEqual(status, 400)
+        request.assert_called_once()
 
     def test_announcement_keeps_root_id_contract(self):
         notice = {'id': 'notice-test', 'title': 'test', 'content': 'body', 'url': ''}
@@ -63,6 +79,16 @@ class CloudApiEndpointsTest(unittest.TestCase):
             result, _, error = OperationHandover.handover_maintain_query(target)
             self.assertIsNone(result)
             self.assertTrue(error)
+
+    def test_unavailable_maintenance_is_an_explicit_query_error(self):
+        import requests
+        target = SimpleNamespace(config=SimpleNamespace(SERVER='cn'))
+        response = Mock()
+        response.raise_for_status.side_effect = requests.HTTPError('503 Service Unavailable')
+        with patch('module.handover.handover.requests.get', return_value=response):
+            result, _, error = OperationHandover.handover_maintain_query(target)
+        self.assertIsNone(result)
+        self.assertTrue(error)
 
 
 if __name__ == '__main__':

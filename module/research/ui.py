@@ -147,6 +147,7 @@ class ResearchUI(UI):
         """
         if not drop:
             return
+        start = drop.count
         button = self.get_items()
         if button == GET_ITEMS_1 or button == GET_ITEMS_2:
             drop.add(self.device.image)
@@ -154,11 +155,15 @@ class ResearchUI(UI):
             self.device.sleep(1.5)
             self.device.screenshot()
             drop.add(self.device.image)
+
             self.device.swipe_vector((0, 250), box=ITEMS_3_SWIPE.area, random_range=(-10, -10, 10, 10),
                                      padding=0)
             self.device.sleep(2)
             self.device.screenshot()
             drop.add(self.device.image)
+
+        if hasattr(drop, 'finish_research_reward'):
+            drop.finish_research_reward(start)
 
     def get_research_status(self, image):
         """检测科研主页 5 个槽位的当前项目状态。

@@ -12,6 +12,7 @@ from unittest.mock import patch
 from module.runtime import dock_data
 from module.runtime.fleet_database import FleetDatabase, FleetDatabaseAlreadyImported, FleetDatabaseConflict
 from module.runtime.fleet_tech import revision
+from tests.platform_capabilities import supports_symlinks
 
 
 def snapshot(tag='first'):
@@ -440,6 +441,7 @@ class FleetDatabaseTest(unittest.TestCase):
             self.assertEqual(connection.execute('SELECT value FROM existing').fetchone()[0], 'keep')
 
 
+    @unittest.skipUnless(supports_symlinks(), 'OS does not grant symbolic-link creation privileges')
     def test_refuses_directory_database_and_sidecar_symlinks(self):
         external = Path(self.temp.name) / 'external'
         external.mkdir()

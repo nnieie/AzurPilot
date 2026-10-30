@@ -292,6 +292,78 @@ class TestSchedulerRecovery(unittest.TestCase):
         script.config.task_delay.assert_not_called()
         self.assertEqual(script.config.task_call.call_count, 5)
 
+    def test_disabling_limit_releases_matching_cooldown(self):
+        script = self.make_script()
+        script.config.Error_TaskRestartLimit = 0
+        tomorrow = datetime.now().replace(microsecond=0) + timedelta(days=1)
+        script.task_restart_delays = {'Commission': tomorrow}
+        script.config.cross_get.return_value = tomorrow
+
+        self.run_tasks(script, ['Commission'])
+
+        self.assertEqual(script.task_restart_delays, {})
+        script.config.cross_set.assert_called_once_with(
+            'Commission.Scheduler.NextRun',
+            script.config.cross_set.call_args.args[1],
+        )
+        self.assertLess(script.config.cross_set.call_args.args[1], tomorrow)
+        script.config.task_call.assert_not_called()
+        script.commission.assert_called_once_with()
+
+    def test_disabling_limit_keeps_user_rescheduled_task(self):
+        script = self.make_script()
+        script.config.Error_TaskRestartLimit = 0
+        tomorrow = datetime.now().replace(microsecond=0) + timedelta(days=1)
+        script.task_restart_delays = {'Commission': tomorrow}
+        script.config.cross_get.return_value = tomorrow + timedelta(hours=3)
+
+        self.run_tasks(script, ['Commission'])
+
+        self.assertEqual(script.task_restart_delays, {})
+        script.config.task_call.assert_not_called()
+
+    def test_disabling_limit_does_not_touch_task_switch(self):
+        script = self.make_script()
+        script.config.Error_TaskRestartLimit = 0
+        tomorrow = datetime.now().replace(microsecond=0) + timedelta(days=1)
+        script.task_restart_delays = {'Commission': tomorrow}
+        script.config.cross_get.return_value = tomorrow
+
+        self.run_tasks(script, ['Commission'])
+
+        # 直接改排期，不经过 task_call()，避免接管模式把任务塞进队列。
+        script.config.task_call.assert_not_called()
+        script.config.cross_set.assert_called_once()
+        self.assertNotIn('Commission', script.task_restart_delays)
+
+    def test_disabling_limit_releases_unselected_cooldowns(self):
+        script = self.make_script()
+        script.config.Error_TaskRestartLimit = 0
+        tomorrow = datetime.now().replace(microsecond=0) + timedelta(days=1)
+        script.task_restart_delays = {'Commission': tomorrow, 'Research': tomorrow}
+        script.config.cross_get.return_value = tomorrow
+
+        self.run_tasks(script, ['Commission'])
+
+        self.assertEqual(script.task_restart_delays, {})
+        keys = sorted(
+            call_args.args[0]
+            for call_args in script.config.cross_set.call_args_list
+            if call_args.args and str(call_args.args[0]).endswith('Scheduler.NextRun')
+        )
+        self.assertEqual(keys, ['Commission.Scheduler.NextRun', 'Research.Scheduler.NextRun'])
+
+    def test_disabling_limit_clears_cooldown_before_counting_failure(self):
+        script = self.make_script()
+        script.config.Error_TaskRestartLimit = 0
+        script.task_restart_record = {'Commission': 2}
+        script.task_restart_delays = {'Commission': datetime.now() + timedelta(hours=1)}
+
+        self.assertFalse(script._record_task_restart('Commission', 'recoverable'))
+
+        self.assertEqual(script.task_restart_record, {})
+        self.assertEqual(script.task_restart_delays, {})
+
     def test_failed_restart_task_is_never_deferred(self):
         script = self.make_script()
         script.config.Error_TaskRestartLimit = 2

@@ -92,6 +92,9 @@ class DropImage:
         self.collected_at = None
         self.info = info
         self.images = []
+        self.research_groups = []
+        self._commission_kind = None
+        self.cloud_capture_valid = True
         self.combat_count = 0
 
     def add(self, image):
@@ -101,11 +104,27 @@ class DropImage:
             image (np.ndarray): 截图图像。
         """
         if self:
+            if self.genre == 'commission' and self.upload:
+                from module.statistics.commission_drop import classify_frame
+                kind = classify_frame(image)
+                if kind == self._commission_kind:
+                    if kind != 'reward' or np.array_equal(self.images[-1], image):
+                        return
+                if len(self.images) >= 80:
+                    self.cloud_capture_valid = False
+                    logger.warning('[云端统计] 委托截图组超过 80 帧，本组仅保留本地记录')
+                    return
+                self._commission_kind = kind
             if not self.images:
                 self.collected_at = datetime.now(timezone.utc).isoformat()
             self.images.append(image)
             logger.info(
                 f'Drop record added, genre={self.genre}, amount={self.count}')
+
+    def capture_commission_status(self, image):
+        from module.statistics.commission_drop import classify_frame
+        if self.upload and classify_frame(image) in ('done', 'perfect'):
+            self.add(image)
 
     def set_combat_count(self, count):
         """设置当前关联的战斗场次计数。
@@ -114,6 +133,11 @@ class DropImage:
             count (int): 战斗场次数。
         """
         self.combat_count = count
+
+    def finish_research_reward(self, start):
+        """Keep the live collector's project boundary, including a scrolled reward page."""
+        if self.genre == 'research' and len(self.images) > start:
+            self.research_groups.append((start, len(self.images)))
 
     def handle_add(self, main, before=None):
         """在添加截图前后执行等待，并截取当前屏幕保存。
@@ -134,6 +158,7 @@ class DropImage:
     def clear(self):
         """清空已缓存的截图列表。"""
         self.images = []
+        self.research_groups = []
 
     @property
     def count(self):
@@ -154,14 +179,15 @@ class DropImage:
         if self:
             self.stat.commit(images=self.images, genre=self.genre, save=self.save,
                              local=self.local, info=self.info, combat_count=self.combat_count,
-                             analyze=self.analyze, upload=self.upload, collected_at=self.collected_at)
+                             analyze=self.analyze, upload=self.upload, collected_at=self.collected_at,
+                             research_groups=self.research_groups, cloud_capture_valid=self.cloud_capture_valid)
 
 
 class AzurStats:
     """AzurStats 统计管理核心类，负责掉落截图的保存、解析和数据存储。
 
     提供两种数据处理路径：
-        - 云端上报：按上传设置将截图送入磁盘重试队列，交由 A/B/C 识别统计。
+        - 云端上报：本地识别后发送结构化统计，未知图标直传模板服务。
         - 本地处理：将截图中的物品信息解析后存入 SQLite 数据库，
           并生成统计汇总 CSV 文件（如指挥喵 farming 统计）。
 
@@ -196,8 +222,13 @@ class AzurStats:
             config:
         """
         self.config = config
-        from module.statistics.cloud_upload import update_policy
+        from module.statistics.cloud_upload import resume_pending, update_policy
         update_policy(config)
+        try:
+            resume_pending(config)
+        except Exception as error:
+            # Offline cloud data corruption must not prevent local statistics.
+            logger.warning(f'[云端统计] 待处理队列恢复失败，本地统计继续运行: {error}')
 
     meowofficer_farming_labels = ['侵蚀等级', '上次记录时间', '有效战斗轮数', '平均黄币/轮', '平均金菜/轮', '平均深渊/轮', '平均隐秘/轮']
     meowofficer_farming_map = [
@@ -658,7 +689,7 @@ class AzurStats:
         return False
 
     def commit(self, images, genre, save=False, local=False, info='', combat_count=0,
-               analyze=False, upload=False, collected_at=None):
+               analyze=False, upload=False, collected_at=None, research_groups=None, cloud_capture_valid=True):
         """提交并处理一组掉落截图，执行保存、本地入库或专用解析。
 
         Args:
@@ -702,16 +733,27 @@ class AzurStats:
             # 解析失败只记日志，绝不影响领奖流程本身。
             try:
                 from module.statistics.research_drop import record_research_drop
-                record_research_drop(images, instance=self.config.config_name, imgid=filename)
+                if research_groups:
+                    from module.statistics.research_drop import read_research_identity
+                    for index, (start, end) in enumerate(research_groups):
+                        identity = read_research_identity(images[0], index)
+                        record_research_drop(images[start:end], instance=self.config.config_name,
+                                             imgid=f'{filename}:{index}', identity=identity,
+                                             config=self.config if upload else None,
+                                             collected_at=collected_at)
+                else:
+                    record_research_drop(images, instance=self.config.config_name, imgid=filename,
+                                         config=self.config if upload else None,
+                                         collected_at=collected_at)
             except Exception as e:
                 logger.warning(f'[科研统计] 掉落解析失败，跳过本次记录: {type(e).__name__}')
 
-        if upload:
+        if upload and genre == 'commission' and cloud_capture_valid:
             try:
-                from module.statistics.cloud_upload import enqueue
-                enqueue(self.config, images, genre, combat_count, collected_at)
+                from module.statistics.commission_drop import record_commission_drops
+                record_commission_drops(images, self.config, collected_at=collected_at)
             except Exception as error:
-                logger.warning(f'[云端统计] 本次截图未进入上传队列，本地统计保留: {type(error).__name__}')
+                logger.warning(f'[云端统计] 委托上报入队失败，本地统计保留: {type(error).__name__}')
 
         return True
 
@@ -751,5 +793,5 @@ class AzurStats:
         # 存图与否都保留本地统计；upload 档额外通过临时磁盘队列上报云端。
         analyze = genre == 'research' and method_value != 'do_not'
         upload = (getattr(self.config, 'DropRecord_CloudUpload', False) is True
-                  and method_value in ('upload', 'save_and_upload') and genre not in OPSI_DROP_GENRE_EXCLUDE)
+                  and method_value in ('upload', 'save_and_upload') and genre in ('commission', 'research'))
         return DropImage(stat=self, genre=genre, save=save, local=local, info=info, analyze=analyze, upload=upload)

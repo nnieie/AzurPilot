@@ -134,7 +134,7 @@ class ResearchSelector(ResearchUI):
 
         通过逐个进入项目详情页识别项目属性，并按原始顺序重排。
         """
-        self.research_cloud_list_record()
+        self.research_list_archive()
         projects = []
         proj_sorted = []
 
@@ -178,10 +178,10 @@ class ResearchSelector(ResearchUI):
                 break
 
         self.projects = projects
-        self.research_cloud_list_record()
+        self.research_list_archive()
 
-    def research_cloud_list_record(self):
-        """Keep the actual appearance time of all five offered projects."""
+    def research_list_archive(self):
+        """Keep optional local selection screenshots outside the cloud reward stream."""
         if getattr(self.config, 'DropRecord_CloudUpload', False) is not True:
             return
         method = self.config.DropRecord_ResearchRecord
