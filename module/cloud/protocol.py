@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 from urllib.parse import urlsplit
 
-import requests
+from module.base import http
 
 from deploy.api_endpoints import API_BASE_URL, TEMPLATE_API_BASE_URL, TEMPLATE_CDN_BASE_URL
 
@@ -38,14 +38,15 @@ class PublicAPI:
         self.main = main.rstrip('/')
         self.templates = templates.rstrip('/')
         self.cdn = cdn.rstrip('/')
-        self.session = session or requests.Session()
-        self.headers = {'User-Agent': 'AzurPilot', 'X-AzurPilot-ID': device_id}
+        self.session = session or http.Session()
+        self.headers = {'User-Agent': http.USER_AGENT, 'X-AzurPilot-ID': device_id}
 
     def request(self, method, url, *, limit=8 << 20, **kwargs):
         headers = {**self.headers, **kwargs.pop('headers', {})}
+        download = urlsplit(url).netloc == urlsplit(self.cdn).netloc
         try:
             with self.session.request(method, url, headers=headers, timeout=(5, 20),
-                                      allow_redirects=False, stream=True, **kwargs) as response:
+                                      allow_redirects=False, stream=True, download=download, **kwargs) as response:
                 if response.status_code == 304:
                     return None, dict(response.headers)
                 if response.status_code != 200:
@@ -57,7 +58,7 @@ class PublicAPI:
                     if len(data) > limit:
                         raise CloudError('Cloud response exceeds size limit')
                 return bytes(data), dict(response.headers)
-        except requests.RequestException as error:
+        except http.RequestException as error:
             raise CloudError(type(error).__name__) from error
 
     def json(self, method, url, **kwargs):
@@ -90,6 +91,11 @@ class PublicAPI:
     def submit(self, drops):
         return self.json('POST', self.main + '/api/v3/post/drops', limit=1 << 20,
                          json={'drops': drops})
+
+    def upload_screenshot(self, image_base64, references, scene):
+        return self.json('POST', self.templates + '/api/v3/post/templates/screenshots',
+                         limit=65536, json={'image_base64': image_base64, 'references': references,
+                                           'scene': scene, 'client': 'AzurPilot'})
 
     def statistics(self, scene, *, options=False, **filters):
         if scene not in ('commission', 'research'):

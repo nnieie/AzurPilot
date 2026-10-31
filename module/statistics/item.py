@@ -807,6 +807,9 @@ class ItemGrid:
                     item._name = identity['item']
                     item.source_template_id = identity['source_template_id']
                     item.cloud_tag = identity.get('tag', '')
+            capture = getattr(getattr(self, 'cloud_resolver', None), 'capture', None)
+            if capture is not None:
+                capture(image, self.items)
         if amount:
             amount_images = [item.crop(self.amount_area_for(item.name)) for item in self.items]
             item_names = [item.name for item in self.items]

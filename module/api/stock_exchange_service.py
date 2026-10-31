@@ -10,10 +10,9 @@ from datetime import datetime
 from email.utils import parsedate_to_datetime
 from functools import wraps
 from pathlib import Path
-from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse, parse_qs
-from urllib.request import Request, urlopen
 
+from module.base import http
 from module.api.protocol import ApiError
 from module.api.stock_exchange_identity import load_identity, binding_key, make_report
 from module.api.stock_exchange_history import ActionHistory
@@ -245,21 +244,23 @@ class StockExchangeService:
         failures = 0
         while not self.stop.is_set():
             try:
-                request = Request(exchange_url() + '/api/events', headers={'Accept': 'text/event-stream'})
-                with urlopen(request, timeout=12) as response:
+                with http.get(exchange_url() + '/api/events', headers={'Accept': 'text/event-stream'},
+                              timeout=12, stream=True) as response:
                     self.event_response = response
-                    if response.headers.get_content_type() != 'text/event-stream':
+                    response.raise_for_status()
+                    if response.headers.get('Content-Type', '').split(';', 1)[0].strip() != 'text/event-stream':
                         raise ValueError('交易所不支持实时事件流')
-                    while not self.stop.is_set():
-                        line = response.readline()
-                        if not line:
-                            raise OSError('交易所事件流已断开')
+                    for line in response.iter_lines(chunk_size=1):
+                        if self.stop.is_set():
+                            break
                         if line.startswith(b'data: '):
                             data = json.loads(line[6:])
                             if isinstance(data, dict) and type(data.get('revision')) is int:
                                 failures = 0
                                 self._notify({**data, 'online': True})
-            except (URLError, TimeoutError, OSError, ValueError, ApiError):
+                    if not self.stop.is_set():
+                        raise OSError('交易所事件流已断开')
+            except (http.RequestException, TimeoutError, OSError, ValueError, ApiError):
                 if not self.stop.is_set():
                     self._notify({'online': False})
                     failures = min(failures + 1, 5)
@@ -319,21 +320,19 @@ class StockExchangeService:
         if etag:
             headers['If-None-Match'] = etag
         payload = None if body is None else json.dumps(body, ensure_ascii=False, allow_nan=False).encode()
-        request = Request(exchange_url() + '/api' + path, data=payload, headers=headers, method=method)
         try:
-            response = urlopen(request, timeout=12)
-        except HTTPError as error:
-            response = error
-        except (URLError, TimeoutError, OSError):
+            response = http.request(method, exchange_url() + '/api' + path, data=payload,
+                                    headers=headers, timeout=12)
+        except (http.RequestException, TimeoutError, OSError):
             raise ApiError('STOCK_UNAVAILABLE', '交易所暂不可连接，稍后自动重试') from None
         with response:
-            raw = response.read()
+            raw = response.content
             try:
                 data = json.loads(raw) if raw else None
                 server_time = int(parsedate_to_datetime(response.headers['Date']).timestamp()) if response.headers.get('Date') else int(time.time())
             except (ValueError, TypeError):
                 raise ApiError('STOCK_INVALID_RESPONSE', '交易所响应格式无效') from None
-            return {'status': response.status, 'data': data, 'etag': response.headers.get('ETag', ''), 'serverTime': server_time}
+            return {'status': response.status_code, 'data': data, 'etag': response.headers.get('ETag', ''), 'serverTime': server_time}
 
     @staticmethod
     def _accepted(reply):

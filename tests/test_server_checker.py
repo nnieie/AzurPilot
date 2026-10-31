@@ -7,7 +7,7 @@ from json import JSONDecodeError
 from time import monotonic
 from unittest.mock import Mock, patch
 
-import requests
+import niquests as requests
 
 from module.exception import ScriptError
 from module.server_checker import ServerChecker
@@ -48,7 +48,7 @@ class ServerCheckerTestCase(unittest.TestCase):
             payload=make_server_payload(1, "测试服务器", "normal")
         )
         self.session_patch = patch(
-            "module.server_checker.requests.Session", return_value=self.session
+            "module.server_checker.http.Session", return_value=self.session
         )
         self.session_patch.start()
         self.addCleanup(self.session_patch.stop)

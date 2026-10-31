@@ -16,6 +16,7 @@ from urllib.request import getproxies, proxy_bypass
 
 import aiohttp
 
+from module.base import http
 from deploy.atomic import atomic_write
 from module.logger import logger
 
@@ -184,13 +185,19 @@ class CloudflareRemoteAccessProvider:
             raise ValueError(f'远程注册 API 路径必须以 /api/v1/ 开头：{method} {path}')
         identity = self.identity().load()
         url = self.registry() + path
-        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=15)) as session:
-            async with session.request(method, url, json=data, proxy=_request_proxy(url),
-                                       headers={'Authorization': 'Bearer ' + identity['device_key']},
-                                       allow_redirects=False) as response:
-                if response.status != 200:
+        async with http.AsyncSession(timeout=15) as session:
+            # Keep proxy discovery without allowing .netrc to replace device auth.
+            session.trust_env = False
+            proxy = _request_proxy(url)
+            response = await session.request(
+                method, url, json=data, proxies={'http': proxy, 'https': proxy} if proxy else {},
+                headers={'Authorization': 'Bearer ' + identity['device_key']},
+                allow_redirects=False, stream=True,
+            )
+            async with response:
+                if response.status_code != 200:
                     try:
-                        error = json.loads(await response.content.read(4096))
+                        error = json.loads(await response.raw.read(4096, decode_content=True))
                     except (ValueError, UnicodeError):
                         error = {}
                     if not isinstance(error, dict):
@@ -198,11 +205,11 @@ class CloudflareRemoteAccessProvider:
                     message = error.get('error')
                     message = message[:160] if isinstance(message, str) else '请求失败'
                     code = error.get('code', '')
-                    if response.status == 404 and message == '配对已过期':
+                    if response.status_code == 404 and message == '配对已过期':
                         code = 'PAIRING_EXPIRED'
-                    elif response.status == 404 and not code:
+                    elif response.status_code == 404 and not code:
                         code, message = 'API_NOT_FOUND', '注册接口不存在，请检查 AP 与服务端版本'
-                    raise RemoteRegistryError(response.status, code, message, method, path)
+                    raise RemoteRegistryError(response.status_code, code, message, method, path)
                 return await response.json()
 
     def start(self):
@@ -326,7 +333,7 @@ class CloudflareRemoteAccessProvider:
                             'device_id': identity['device_id'], 'name': socket.gethostname()[:80],
                             'tunnel_url': self.tunnel_url,
                         })
-                    except (aiohttp.ClientError, TimeoutError, ValueError) as exc:
+                    except (aiohttp.ClientError, http.RequestException, TimeoutError, ValueError) as exc:
                         # 注册或探测瞬断只重试同一 URL，不销毁健康进程重新申请 Tunnel。
                         self.address, self.state = '', 'failed'
                         reason = '网络请求超时' if isinstance(exc, TimeoutError) else _failure_reason(exc)
@@ -345,7 +352,7 @@ class CloudflareRemoteAccessProvider:
                 self.address = ''
                 try:
                     await self.request('DELETE', '/api/v1/devices/' + self.identity().load()['device_id'])
-                except (aiohttp.ClientError, TimeoutError, ValueError):
+                except (aiohttp.ClientError, http.RequestException, TimeoutError, ValueError):
                     pass
 
     async def check_tunnel(self, url):

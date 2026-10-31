@@ -1,7 +1,7 @@
 # 客户端云 API
 
-客户端负责截图识别、本地留存和重试。截图不发送到云端；未知物品只裁出
-49×49 RGB PNG，直接上传独立模板服务器。主统计服务器只接收结构化委托、科研
+客户端负责截图识别、本地留存和重试。未知物品的 49×49 RGB PNG 和对应的完整
+1280×720 奖励原图直接上传独立模板服务器，原图供管理员辨认。主统计服务器只接收结构化委托、科研
 掉落和既有 CL1 月度计数。大世界、战斗等其他掉落继续留在本地。
 
 ## 服务与端点
@@ -10,6 +10,7 @@
 | --- | --- | --- |
 | `https://templates-api.azurpilot.com` | `POST /api/v3/post/templates/unknown` | 图标匹配与 U-ID 分配 |
 | 同上 | `POST /api/v3/post/unknown-candidates` | 可选批量注册，最多 50 项且正文不超过 256 KiB |
+| 同上 | `POST /api/v3/post/templates/screenshots` | 未知物品完整 PNG 原图和物品格位置，原图最大 4 MiB |
 | `https://templates.azurpilot.com` | `GET /latest.json` | 获取签名版本指针，支持 ETag |
 | 同上 | `GET /releases/{revision}/manifest.json` | 获取签名模板与累计历史映射 |
 | 同上 | `GET /releases/{revision}/icons/{sha256}.png` | 获取校验后的图标 |
@@ -49,7 +50,13 @@ options = api.statistics('commission', options=True, server='jp')
 `status`、带时区的 `collected_at`、`template_revision`、`client`、匿名 `device_id`
 和 `items`。每项物品是 `{"item": "U-...", "tag": "bonus", "amount": 2}`。
 委托额外提供 `comm`、`name`，状态 0 为完成、1 为大成功；科研提供 `series`、
-`project`。不上传实例原名、截图、账号或管理凭证。
+`project`。这条主服务器接口不上传截图、实例原名或管理凭证。
+
+原图先在本地持久化，图标注册完成后以服务器 `identity_id` 和完整画面中的物品格
+`bounds` 关联。同一原图可关联多个 U-ID，重复上传幂等；本地已缓存、仍未映射的
+临时模板再次出现时也会上传原图。正式已知物品不触发截图上传。原图只在模板
+管理 WebSocket 中读取，不进入公开 Worker 模板库。客户端在主服务器不可用时
+仍可独立上传原图；旧版没有上传过的原图需要新版再次遇到物品才能补充。
 
 `accepted`、`duplicate` 回执移除队列记录；`invalid`、`unsupported_scene` 转入
 本地 `rejected` 保留错误原因；`retry`、缺失回执、无效 JSON、网络错误和 429
@@ -66,6 +73,8 @@ options = api.statistics('commission', options=True, server='jp')
 | `catalog/icons/` | 按 PNG SHA-256 保存的图标 |
 | `catalog/pending-release.json` | 尚未完成历史迁移的恢复日志 |
 | `icons/` | 待上传的 49px 图标与识别场景 |
+| `screenshots/` | 待上传的完整 PNG 原图及待关联物品，失败后重试、重启续传 |
+| `uploaded-screenshots.json` | 已确认原图和位置，用于去重，保留最近最多 10000 张的回执 |
 | `bindings.json` | 本地待编号键到模板服务器身份的持久化绑定 |
 | `jobs/` | 待确认的结构化统计 |
 | `history-dirty.json` | 新本地记录提交后的历史映射刷新请求，覆盖注册与本地入库的并发顺序 |

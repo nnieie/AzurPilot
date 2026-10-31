@@ -88,6 +88,8 @@ def main():
                         'AUTO_PUBLISH_SECONDS': '0.2'}
         subprocess.run([str(template_python), '-m', 'alembic', 'upgrade', 'head'],
                        cwd=args.template_root, env=template_env, check=True)
+        subprocess.run([str(template_python), '-m', 'alembic', 'check'],
+                       cwd=args.template_root, env=template_env, check=True)
         start([str(template_python), '-m', 'templateserver'], template_env, args.template_root, 'template')
         ready('http://127.0.0.1:18096/healthz')
         ready('http://127.0.0.1:18093/healthz')

@@ -88,6 +88,8 @@ class StockExchangeTests(unittest.TestCase):
             value = io.BytesIO(f'event: stock\ndata: {{"revision":{revision},"serverTime":123}}\n\n'.encode())
             value.headers = Message()
             value.headers['Content-Type'] = 'text/event-stream'
+            value.raise_for_status = lambda: None
+            value.iter_lines = lambda chunk_size: iter(value)
             return value
         updates = []
         def receive(data):
@@ -95,7 +97,7 @@ class StockExchangeTests(unittest.TestCase):
             if data.get('revision') == 2:
                 self.service.stop.set()
         self.service.listeners.add(receive)
-        with patch('module.api.stock_exchange_service.urlopen', side_effect=[stream(1), stream(2)]):
+        with patch('module.api.stock_exchange_service.http.get', side_effect=[stream(1), stream(2)]):
             self.service._listen_events()
         self.assertEqual([True, False, True], [value['online'] for value in updates])
         self.assertEqual([1, 2], [value['revision'] for value in updates if 'revision' in value])

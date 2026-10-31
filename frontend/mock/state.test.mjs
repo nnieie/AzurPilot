@@ -45,14 +45,15 @@ describe('前端模拟服务', () => {
       .toEqual(schema.args.Event.Campaign.Event.option_cn)
   })
 
-  it('跨服活动选择失败不会部分保存同一批其他字段', () => {
+  it('无效活动选择失败不会部分保存同一批其他字段', () => {
     const {dispatch} = createMockState()
     const initial = dispatch('config.get', {instance: 'demo-main'})
-    const taiwan = dispatch('schema.get', {language: 'zh-CN'}).args.Event.Campaign.Event.option_tw[0]
+    // 当前四服共用 event_20261022_cn，不能再将台服候选当作无效活动。
+    const invalidEvent = 'event_nonexistent'
     expect(() => dispatch('config.patch', {instance: 'demo-main', changes: [
       {path: 'Alas.Emulator.Serial', value: 'should-not-save'},
-      {path: 'Event.Campaign.Event', value: taiwan},
-    ]})).toThrow(/当前服务器/)
+      {path: 'Event.Campaign.Event', value: invalidEvent},
+    ]})).toThrow(/有效选项/)
     expect(dispatch('config.get', {instance: 'demo-main'})).toEqual(initial)
   })
 

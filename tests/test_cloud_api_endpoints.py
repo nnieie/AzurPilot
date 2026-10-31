@@ -17,7 +17,7 @@ class CloudApiEndpointsTest(unittest.TestCase):
                    'month': '2026-10', 'battle_count': 2, 'net_stamina_gain': 0}
         response = Mock(status_code=200, text=json.dumps({'schema_version': 2, 'request_id': 'test-request',
                                                          'accepted': True, 'duplicate': False}))
-        with patch('module.base.api_client.requests.post', return_value=response) as request:
+        with patch('module.base.api_client.http.post', return_value=response) as request:
             self.assertTrue(ApiClient._submit_cl1_data(payload, 5))
         self.assertEqual(request.call_args.args[0], 'https://api.azurpilot.com/api/v2/post/cl1')
         body = request.call_args.kwargs['json']
@@ -36,7 +36,7 @@ class CloudApiEndpointsTest(unittest.TestCase):
 
     def test_identical_fallback_origin_does_not_send_twice(self):
         response = Mock(status_code=400)
-        with patch('module.base.api_client.requests.post', return_value=response) as request:
+        with patch('module.base.api_client.http.post', return_value=response) as request:
             success, status, _ = ApiClient._post_with_fallback('/bad', {})
         self.assertFalse(success)
         self.assertEqual(status, 400)
@@ -45,7 +45,7 @@ class CloudApiEndpointsTest(unittest.TestCase):
     def test_announcement_keeps_root_id_contract(self):
         notice = {'id': 'notice-test', 'title': 'test', 'content': 'body', 'url': ''}
         response = Mock(status_code=200, text=json.dumps({'schema_version': 2, 'announcement': notice}))
-        with patch('module.base.api_client.requests.get', return_value=response) as request:
+        with patch('module.base.api_client.http.get', return_value=response) as request:
             service = AnnouncementService()
             self.assertEqual(service.get(force=True)['announcementId'], 'notice-test')
             self.assertEqual(request.call_args.args[0], 'https://api.azurpilot.com/api/v2/get/notice/data.json')
@@ -70,7 +70,7 @@ class CloudApiEndpointsTest(unittest.TestCase):
         response = Mock()
         response.json.return_value = {'schema_version': 2, 'server': 'jp', 'maintenance': None}
         with patch('module.handover.handover.get_device_id', return_value='a' * 32), \
-                patch('module.handover.handover.requests.get', return_value=response) as request:
+                patch('module.handover.handover.http.get', return_value=response) as request:
             result, _, error = OperationHandover.handover_maintain_query(target)
             self.assertEqual(result, {})
             self.assertEqual(error, '')
@@ -85,7 +85,7 @@ class CloudApiEndpointsTest(unittest.TestCase):
         target = SimpleNamespace(config=SimpleNamespace(SERVER='cn'))
         response = Mock()
         response.raise_for_status.side_effect = requests.HTTPError('503 Service Unavailable')
-        with patch('module.handover.handover.requests.get', return_value=response):
+        with patch('module.handover.handover.http.get', return_value=response):
             result, _, error = OperationHandover.handover_maintain_query(target)
         self.assertIsNone(result)
         self.assertTrue(error)

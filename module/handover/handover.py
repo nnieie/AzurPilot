@@ -44,7 +44,7 @@ import math
 import re
 from datetime import datetime, timedelta, timezone
 
-import requests
+from module.base import http
 
 from deploy.api_endpoints import MAINTENANCE_API_URL
 from module.base.device_id import get_device_id
@@ -758,7 +758,7 @@ class OperationHandover(CampaignRun):
         """
         server = self.config.SERVER
         try:
-            result = requests.get(HANDOVER_MAINTAIN_API, params={'server': server},
+            result = http.get(HANDOVER_MAINTAIN_API, params={'server': server},
                                   headers={'X-AzurPilot-ID': get_device_id()}, timeout=10)
             result.raise_for_status()
             response = result.json()

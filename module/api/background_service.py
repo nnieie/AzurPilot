@@ -24,6 +24,7 @@ from urllib.parse import urlparse
 
 import requests
 
+from module.base import http
 from module.api.protocol import ApiError
 from module.logger import logger
 
@@ -35,7 +36,13 @@ MAX_REDIRECTS = 5
 MAX_BYTES = 20 * 1024 * 1024
 IMAGE_SUFFIX = ('.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.avif')
 VIDEO_SUFFIX = ('.mp4', '.webm', '.mov')
-USER_AGENT = 'AzurPilot/1.0 (+background)'
+USER_AGENT = http.BROWSER_USER_AGENT
+
+
+def _download_get(url, **kwargs):
+    if http.is_service_url(url):
+        return http.get(url, download=True, **kwargs)
+    return requests.get(url, **kwargs)
 
 # 明确列出"代抓绝不允许落到"的网段。用显式清单而不是 ipaddress 的 is_private / is_reserved：
 # 后两者把 198.18.0.0/15（基准测试段，也是 Clash 这类 fake-IP 代理的占位地址）也算作私网，
@@ -136,10 +143,10 @@ def fetch_once(url: str, *, allow_json: bool) -> Dict[str, str]:
     current = ensure_public_url(url)
     for _ in range(MAX_REDIRECTS + 1):
         try:
-            response = requests.get(
+            response = _download_get(
                 current, timeout=DOWNLOAD_TIMEOUT, stream=True, allow_redirects=False, headers={'User-Agent': USER_AGENT}
             )
-        except requests.RequestException as error:
+        except (requests.RequestException, http.RequestException) as error:
             raise BackgroundError(f'抓取失败：{type(error).__name__}') from error
         with response:
             if response.is_redirect or response.is_permanent_redirect:
@@ -241,8 +248,8 @@ def proxy_fetch(url: str) -> tuple:
     if cached.exists():
         return cached.read_bytes(), meta['content_type']
     try:
-        response = requests.get(meta['final_url'], timeout=DOWNLOAD_TIMEOUT, stream=True, headers={'User-Agent': USER_AGENT})
-    except requests.RequestException as error:
+        response = _download_get(meta['final_url'], timeout=DOWNLOAD_TIMEOUT, stream=True, headers={'User-Agent': USER_AGENT})
+    except (requests.RequestException, http.RequestException) as error:
         raise BackgroundError(f'抓取失败：{type(error).__name__}') from error
     chunks = []
     total = 0
@@ -291,8 +298,8 @@ def gallery_add(url: str, name: str = '') -> Dict[str, Any]:
     LIBRARY_DIR.mkdir(parents=True, exist_ok=True)
     target = LIBRARY_DIR / identifier
     try:
-        response = requests.get(meta['final_url'], timeout=DOWNLOAD_TIMEOUT, stream=True, headers={'User-Agent': USER_AGENT})
-    except requests.RequestException as error:
+        response = _download_get(meta['final_url'], timeout=DOWNLOAD_TIMEOUT, stream=True, headers={'User-Agent': USER_AGENT})
+    except (requests.RequestException, http.RequestException) as error:
         raise BackgroundError(f'抓取失败：{type(error).__name__}') from error
     written = 0
     with response, open(target, 'wb') as handle:

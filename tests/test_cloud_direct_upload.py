@@ -153,6 +153,82 @@ def test_offline_icon_is_49px_and_waits_for_server_id(release):
     assert not list((queue.root / 'jobs').glob('*.json'))
 
 
+def test_source_screenshot_waits_for_ids_retries_and_deduplicates_after_restart(release):
+    queue, api, image = service(release)
+    cell = np.zeros((96, 96, 3), np.uint8)
+    cell[21:70, 40:89] = image
+    identity = queue.identify(cell, '1')
+    frame = np.zeros((720, 1280, 3), np.uint8)
+    frame[200:296, 100:196] = cell
+    observation = {'source': identity['source_template_id'], 'bounds': [100, 200, 196, 296]}
+    queue.capture(frame, [observation], scene='research')
+    queue.capture(frame, [observation], scene='research')
+    pending = list((queue.root / 'screenshots').glob('*.json'))
+    assert len(pending) == 1
+    png = base64.b64decode(read_json(pending[0])['image_base64'])
+    decoded = cv2.cvtColor(cv2.imdecode(np.frombuffer(png, np.uint8), cv2.IMREAD_COLOR), cv2.COLOR_BGR2RGB)
+    assert np.array_equal(decoded, frame)
+    api.upload_screenshot = Mock()
+    queue._upload_screenshots()
+    api.upload_screenshot.assert_not_called()
+    api.register = Mock(return_value={'match': 'new', 'template_id': 'U-ABCD', 'identity_id': 'U-ABCD'})
+    queue._register()
+    api.upload_screenshot.side_effect = CloudError('offline')
+    with pytest.raises(CloudError):
+        queue._upload_screenshots()
+    assert pending[0].exists()
+    restored = CloudService(queue.root, 'a' * 32, api=api, public_key=release[1])
+    restored.start = Mock()
+    api.upload_screenshot.side_effect = None
+    api.upload_screenshot.return_value = {'stored': True, 'sha256': hashlib.sha256(png).hexdigest()}
+    restored._upload_screenshots()
+    assert api.upload_screenshot.call_args.args[1] == [{'identity_id': 'U-ABCD', 'bounds': [100, 200, 196, 296]}]
+    assert not pending[0].exists()
+    restored.capture(frame, [observation], scene='research')
+    assert not list((queue.root / 'screenshots').glob('*.json'))
+
+
+def test_cached_temporary_items_also_capture_full_frames_and_known_items_do_not(release):
+    from types import SimpleNamespace
+    from module.statistics.cloud_upload import RewardResolver
+    queue, api, image = service(release)
+    queue.catalog.sync()
+    cell = np.zeros((96, 96, 3), np.uint8)
+    cell[21:70, 40:89] = image
+    resolver = RewardResolver(queue, 'commission')
+    identity = resolver(cell, '1')
+    assert identity['item'].startswith('U-')
+    frame = np.zeros((720, 1280, 3), np.uint8)
+    button = SimpleNamespace(area=(100, 200, 196, 296))
+    item = SimpleNamespace(name=identity['item'], source_template_id=identity['source_template_id'], _button=button)
+    resolver.capture(frame, [item, SimpleNamespace(name='Coins')])
+    pending = list((queue.root / 'screenshots').glob('*.json'))
+    assert len(pending) == 1
+    assert read_json(pending[0])['observations'][0]['source'] == identity['source_template_id']
+    assert not list((queue.root / 'icons').glob('*.json'))
+    queue.enabled = lambda: False
+    resolver.capture(np.ones_like(frame), [item])
+    assert len(list((queue.root / 'screenshots').glob('*.json'))) == 1
+    queue.enabled = lambda: True
+    queue.MAX_JOBS = 1
+    resolver.capture(np.ones_like(frame), [item])  # A full evidence queue must not abort local recognition.
+    assert len(list((queue.root / 'screenshots').glob('*.json'))) == 1
+
+
+def test_main_server_outage_does_not_block_template_screenshot_upload(release):
+    queue, api, image = service(release)
+    queue.capture(np.zeros((720, 1280, 3), np.uint8),
+                  [{'source': 'U-0', 'bounds': [0, 0, 96, 96]}], scene='research')
+    pending = next((queue.root / 'screenshots').glob('*.json'))
+    api.upload_screenshot = Mock(return_value={'stored': True, 'sha256': pending.stem})
+    queue.enqueue(record())
+    api.submit = Mock(side_effect=CloudError('main offline'))
+    assert not queue.drain_once()
+    api.upload_screenshot.assert_called_once()
+    assert not pending.exists()
+    assert list((queue.root / 'jobs').glob('*.json'))
+
+
 def test_partial_ack_retry_duplicate_and_rejection(release):
     queue, api, image = service(release)
     for index in range(1, 4):

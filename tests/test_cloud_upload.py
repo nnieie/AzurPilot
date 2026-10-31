@@ -68,6 +68,14 @@ def test_optional_registration_batch_uses_template_origin_and_respects_limits():
             api.register_many(candidates)
 
 
+def test_source_screenshots_go_directly_to_template_service():
+    api = PublicAPI('a' * 32)
+    with patch.object(api, 'json', return_value={'stored': True}) as request:
+        api.upload_screenshot('FULL_PNG', [{'identity_id': 'U-1234', 'bounds': [0, 0, 96, 96]}], 'commission')
+    assert request.call_args.args == ('POST', 'https://templates-api.azurpilot.com/api/v3/post/templates/screenshots')
+    assert request.call_args.kwargs['json']['image_base64'] == 'FULL_PNG'
+
+
 @pytest.mark.parametrize('scene', ['commission', 'research'])
 @pytest.mark.parametrize('options', [False, True])
 def test_public_statistics(scene, options):

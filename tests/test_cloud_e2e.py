@@ -68,6 +68,13 @@ def test_client_complete_cloud_cycle(tmp_path):
         source = queue.identify(image, '1', scene='research')
         assert source['item'].startswith('U?')
         sources.append({**source, 'amount': amount})
+    frame = np.zeros((720, 1280, 3), dtype=np.uint8)
+    observations = []
+    for index, seed in enumerate((1234, 4321)):
+        x = 100 + index * 110
+        frame[200:296, x:x + 96] = np.random.default_rng(seed).integers(20, 230, (96, 96, 3), dtype=np.uint8)
+        observations.append({'source': sources[index]['source_template_id'], 'bounds': [x, 200, x + 96, 296]})
+    queue.capture(frame, observations, scene='research')
     database.add_research_drop('test', 'D-737-MI', 9,
                                {row['item']: row['amount'] for row in sources},
                                imgid='first', source_items=sources)
@@ -89,6 +96,20 @@ def test_client_complete_cloud_cycle(tmp_path):
     else:
         raise AssertionError('Initial durable registrations and drop acknowledgements timed out')
     bindings = queue._bindings()
+    assert not list((queue.root / 'screenshots').glob('*.json'))
+    for observation in observations:
+        identity = bindings[observation['source']]['identity_id']
+        captures = rpc('screenshots.list', {'identity_id': identity})['items']
+        assert len(captures) == 1 and captures[0]['bounds'] == observation['bounds']
+        assert (captures[0]['width'], captures[0]['height']) == (1280, 720)
+    screenshot = bytearray()
+    while True:
+        chunk = rpc('screenshots.get', {'sha256': captures[0]['sha256'], 'offset': len(screenshot)})
+        screenshot.extend(base64.b64decode(chunk['data_base64']))
+        if len(screenshot) == chunk['total_size']:
+            break
+    expected = cv2.imencode('.png', cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))[1].tobytes()
+    assert bytes(screenshot) == expected
     unknowns = {row['template_id'] for row in bindings.values()}
     assert len(unknowns) == 2 and all(name.startswith('U-') for name in unknowns)
     candidates = []
@@ -189,6 +210,7 @@ def test_client_complete_cloud_cycle(tmp_path):
               'post_mapping_source_identity_preserved': True,
               'cl1_post_and_duplicate_verified': True,
               'batch_template_registration_verified': True,
-              'direct_template_upload': True, 'signed_worker_distribution': True}
+              'direct_template_upload': True, 'signed_worker_distribution': True,
+              'private_full_screenshots_verified': True}
     Path('log/cloud-api-e2e-result.json').write_text(json.dumps(report, indent=2), encoding='utf-8')
     socket.close()

@@ -18,6 +18,7 @@ from adbutils import AdbTimeout
 from lxml import etree
 from urllib3.exceptions import HTTPError as Urllib3HTTPError
 
+from module.base import http
 from module.device.method.remove_warning import remove_shell_warning
 
 try:
@@ -148,8 +149,8 @@ def mirror_download(url, filename=None, logger=u2_logger):
 
     storepath = u2.init.gen_cachepath(url)
     try:
-        return u2.init.cache_download(url, filename, storepath=storepath, logger=logger)
-    except (requests.RequestException, Urllib3HTTPError,
+        return http.download_file(url, storepath)
+    except (http.RequestException, requests.RequestException, Urllib3HTTPError,
             FileNotFoundError, AssertionError, TypeError, ValueError) as exc:
         logger.warning('ATX Agent 镜像下载失败，回退 GitHub：%s', exc)
 
@@ -215,8 +216,8 @@ class PatchedIniter(u2.init.Initer):
             try:
                 self.logger.info(f'[设备-ATX] 下载 {source}')
                 # 上游固定发送 Origin: https://github.com，重定向到 CNB 后会得到 403。
-                with requests.get(source, stream=True, headers={'Accept-Encoding': 'identity'},
-                                  timeout=(5, 30)) as response:
+                with http.get(source, download=True, stream=True, headers={'Accept-Encoding': 'identity'},
+                              timeout=(5, 30)) as response:
                     response.raise_for_status()
                     with tempfile.NamedTemporaryFile(dir=os.path.dirname(path), suffix='.part',
                                                      delete=False) as output:
@@ -230,7 +231,7 @@ class PatchedIniter(u2.init.Initer):
                     raise ValueError('atx-agent 下载内容不是有效的 agent 归档')
                 os.replace(partial, path)
                 return
-            except (requests.RequestException, ValueError) as error:
+            except (http.RequestException, ValueError) as error:
                 self.logger.warning(f'[设备-ATX] 下载失败 {source}: {error}')
                 last_error = error
             finally:

@@ -7,7 +7,7 @@
 from collections import deque
 from json import JSONDecodeError
 
-import requests
+from module.base import http
 
 from deploy.api_endpoints import API_BASE_URL
 from module.base.device_id import get_device_id
@@ -23,7 +23,7 @@ AVAILABLE_SERVER_STATES = {'normal', 'full', 'reg_full'}
 UNAVAILABLE_SERVER_STATES = {'maintenance', 'unopened', 'unknown'}
 
 
-class ServerApiUnavailableError(requests.exceptions.ConnectionError):
+class ServerApiUnavailableError(http.exceptions.ConnectionError):
     """服务器检查 API 的临时可用性错误。"""
 
 
@@ -73,14 +73,17 @@ class ServerChecker:
 
         assert self._server_info is not None
         try:
-            session = requests.Session()
+            session = http.Session()
             session.trust_env = False
-            response = session.get(
-                url=f'{self._base}/api/v2/get/server',
-                params={'region': self._server_info.region, 'server_id': self._server_info.server_id},
-                headers={'X-AzurPilot-ID': get_device_id()},
-                timeout=(3, 3),
-            )
+            try:
+                response = session.get(
+                    url=f'{self._base}/api/v2/get/server',
+                    params={'region': self._server_info.region, 'server_id': self._server_info.server_id},
+                    headers={'X-AzurPilot-ID': get_device_id()},
+                    timeout=(3, 3),
+                )
+            finally:
+                session.close()
             if response.status_code == 200:
                 self._load_response(response.json())
             elif response.status_code == 404:
@@ -103,7 +106,7 @@ class ServerChecker:
                     f'Get status_code {response.status_code}. '
                     f'Response is {getattr(response, "text", "")}'
                 )
-        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+        except (http.exceptions.ConnectionError, http.exceptions.Timeout) as e:
             logger.warning(f'[服务器检查] 公共状态 API 查询失败，尝试直连游戏网关：{e}')
             if self._load_gateway_server():
                 return
@@ -306,11 +309,14 @@ class ServerChecker:
         self._retry = True
         try:
             try:
-                session = requests.Session()
+                session = http.Session()
                 session.trust_env = False
-                session.get('https://www.baidu.com', timeout=5)
+                try:
+                    session.get('https://www.baidu.com', timeout=5)
+                finally:
+                    session.close()
                 network_available = True
-            except requests.exceptions.RequestException as e:
+            except http.exceptions.RequestException as e:
                 logger.error(e)
                 network_available = False
 

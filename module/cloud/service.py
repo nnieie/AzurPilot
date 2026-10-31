@@ -1,4 +1,4 @@
-"""Durable icon registration and structured statistics, with no screenshot upload route."""
+"""Durable template icons, private source screenshots and structured statistics."""
 
 import base64
 import hashlib
@@ -57,12 +57,13 @@ class CloudService:
         self.history(self.mappings(published))
 
     def _capacity(self):
-        files = list((self.root / 'jobs').glob('*.json')) + list((self.root / 'icons').glob('*.json'))
+        files = [path for folder in ('jobs', 'icons', 'screenshots')
+                 for path in (self.root / folder).glob('*.json')]
         if len(files) >= self.MAX_JOBS or sum(path.stat().st_size for path in files) >= self.MAX_BYTES:
             raise CloudError('Cloud queue is full; local statistics are retained', retry_after=300)
 
     def identify(self, image, local_name='', *, scene='research'):
-        """Runs offline in the game thread. Only the 49px icon is durably queued."""
+        """Runs offline; registration completes before dependent statistics and screenshots."""
         icon = np.ascontiguousarray(image[21:70, 40:89, :3], dtype=np.uint8)
         if icon.shape != (49, 49, 3):
             raise ValueError('Expected a 96px reward item')
@@ -96,6 +97,68 @@ class CloudService:
                                   'scene': scene})
         self.start()
         return {'item': source, 'source_template_id': source, 'tag': ''}
+
+    def capture(self, image, observations, *, scene):
+        """Keep one lossless full frame for all its unresolved items, including cached U-IDs."""
+        if not observations or not self.enabled():
+            return
+        if image.shape != (720, 1280, 3) or image.dtype != np.uint8:
+            raise ValueError('Expected a complete 1280x720 RGB reward screenshot')
+        ok, png = cv2.imencode('.png', cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+        if not ok:
+            raise CloudError('Could not encode source screenshot')
+        raw = png.tobytes()
+        digest = hashlib.sha256(raw).hexdigest()
+        with config_transaction(self._lock_path):
+            receipts = read_json(self.root / 'uploaded-screenshots.json', {})
+            sent = receipts.get(digest, [])
+            pending = [row for row in observations if row not in sent]
+            if not pending:
+                return
+            path = self.root / 'screenshots' / (digest + '.json')
+            job = read_json(path, {'image_base64': base64.b64encode(raw).decode(),
+                                   'scene': scene, 'observations': []})
+            self._capacity()
+            for row in pending:
+                if row not in job['observations']:
+                    job['observations'].append(row)
+            write_json(path, job)
+        self.start()
+
+    def _upload_screenshots(self):
+        for path in sorted((self.root / 'screenshots').glob('*.json'))[:10]:
+            if not self.enabled():
+                return
+            job = read_json(path)
+            bindings = self._bindings()
+            references = []
+            for row in job['observations']:
+                identity = row['source']
+                if identity.startswith('U?'):
+                    identity = bindings.get(identity, {}).get('identity_id', identity)
+                if identity.startswith('U?'):
+                    break
+                references.append({'identity_id': identity, 'bounds': row['bounds']})
+            else:
+                response = self.api.upload_screenshot(job['image_base64'], references, job['scene'])
+                if response.get('stored') is not True or response.get('sha256') != path.stem:
+                    raise CloudError('Invalid source screenshot acknowledgement')
+                with config_transaction(self._lock_path):
+                    receipts = read_json(self.root / 'uploaded-screenshots.json', {})
+                    confirmed = receipts.setdefault(path.stem, [])
+                    for row in job['observations']:
+                        if row not in confirmed:
+                            confirmed.append(row)
+                    while len(receipts) > self.MAX_JOBS:
+                        del receipts[next(iter(receipts))]
+                    write_json(self.root / 'uploaded-screenshots.json', receipts)
+                    current = read_json(path)
+                    current['observations'] = [row for row in current['observations']
+                                               if row not in confirmed]
+                    if current['observations']:
+                        write_json(path, current)
+                    else:
+                        path.unlink()
 
     def enqueue(self, record):
         if not self.enabled():
@@ -230,6 +293,10 @@ class CloudService:
                         self._next_sync = time.monotonic() + 300
                     except Exception as error:
                         errors.append(error)
+                try:
+                    self._upload_screenshots()
+                except Exception as error:
+                    errors.append(error)
                 self._refresh_history()
                 self._submit()
                 if errors:

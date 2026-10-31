@@ -1,7 +1,6 @@
 """ATX 下载回归测试：隔离网络、缓存目录和设备，不操作真实模拟器。"""
 
 import io
-import os
 import tarfile
 import tempfile
 import unittest
@@ -11,7 +10,7 @@ from unittest.mock import Mock, patch
 # 先加载项目设备兼容层，不构造设备或读取用户配置。
 from module.device.device import Device  # noqa: F401
 from module.device.method import utils
-import requests
+import niquests as requests
 import uiautomator2 as u2
 
 
@@ -63,7 +62,7 @@ class TestAtxAgentDownload(unittest.TestCase):
             # 复现 CNB 对下载器旧请求头的拒绝。
             return response(self.content, status=403 if 'origin' in headers else 200)
 
-        with patch('requests.get', side_effect=download) as get:
+        with patch('module.device.method.utils.http.get', side_effect=download) as get:
             self.install_agent()
 
         get.assert_called_once()
@@ -74,7 +73,7 @@ class TestAtxAgentDownload(unittest.TestCase):
         self.assert_agent_pushed()
 
     def test_mirror_failure_falls_back_to_matching_official_release(self):
-        with patch('requests.get', side_effect=[response(b'Forbidden', 403), response(self.content)]) as get:
+        with patch('module.device.method.utils.http.get', side_effect=[response(b'Forbidden', 403), response(self.content)]) as get:
             self.install_agent()
 
         self.assertEqual([item.args[0] for item in get.call_args_list], [
@@ -85,7 +84,7 @@ class TestAtxAgentDownload(unittest.TestCase):
         self.assert_agent_pushed()
 
     def test_read_timeout_also_uses_official_fallback(self):
-        with patch('requests.get', side_effect=[requests.ReadTimeout('下载超时'), response(self.content)]) as get:
+        with patch('module.device.method.utils.http.get', side_effect=[requests.ReadTimeout('下载超时'), response(self.content)]) as get:
             self.install_agent()
 
         self.assertEqual(get.call_count, 2)
@@ -94,7 +93,7 @@ class TestAtxAgentDownload(unittest.TestCase):
     def test_valid_cache_is_reused_without_network(self):
         self.cache.parent.mkdir(parents=True)
         self.cache.write_bytes(self.content)
-        with patch('requests.get', side_effect=AssertionError('不应访问网络')) as get:
+        with patch('module.device.method.utils.http.get', side_effect=AssertionError('不应访问网络')) as get:
             self.install_agent()
 
         get.assert_not_called()
@@ -103,7 +102,7 @@ class TestAtxAgentDownload(unittest.TestCase):
     def test_invalid_cache_is_replaced_only_after_valid_download(self):
         self.cache.parent.mkdir(parents=True)
         self.cache.write_bytes(b'Forbidden')
-        with patch('requests.get', return_value=response(self.content)) as get:
+        with patch('module.device.method.utils.http.get', return_value=response(self.content)) as get:
             self.install_agent()
 
         get.assert_called_once()
@@ -111,14 +110,14 @@ class TestAtxAgentDownload(unittest.TestCase):
         self.assert_agent_pushed()
 
     def test_html_response_is_rejected_before_fallback_and_push(self):
-        with patch('requests.get', side_effect=[response(b'<html>error</html>'), response(self.content)]):
+        with patch('module.device.method.utils.http.get', side_effect=[response(b'<html>error</html>'), response(self.content)]):
             self.install_agent()
 
         self.assertEqual(self.cache.read_bytes(), self.content)
         self.assert_agent_pushed()
 
     def test_truncated_response_is_not_cached_or_pushed(self):
-        with patch('requests.get', side_effect=[response(self.content[:20]), response(b'Forbidden', 403)]) as get:
+        with patch('module.device.method.utils.http.get', side_effect=[response(self.content[:20]), response(b'Forbidden', 403)]) as get:
             with self.assertRaises(requests.HTTPError):
                 self.install_agent()
 
@@ -130,7 +129,7 @@ class TestAtxAgentDownload(unittest.TestCase):
     def test_stream_failure_closes_response_and_cleans_partial_file(self):
         failed = response(self.content)
         failed.iter_content.side_effect = requests.ConnectionError('传输中断')
-        with patch('requests.get', side_effect=[failed, response(b'Forbidden', 403)]):
+        with patch('module.device.method.utils.http.get', side_effect=[failed, response(b'Forbidden', 403)]):
             with self.assertRaises(requests.HTTPError):
                 self.install_agent()
 
@@ -139,7 +138,7 @@ class TestAtxAgentDownload(unittest.TestCase):
         self.init._device.sync.push.assert_not_called()
 
     def test_download_without_content_length_is_supported(self):
-        with patch('requests.get', return_value=response(self.content, content_length=False)):
+        with patch('module.device.method.utils.http.get', return_value=response(self.content, content_length=False)):
             self.install_agent()
 
         self.assert_agent_pushed()

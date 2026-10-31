@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Tuple, Optional
 from datetime import datetime, timezone
 import uuid
 
-import requests
+from module.base import http
 
 from deploy.api_endpoints import API_BASE_URL
 from module.logger import logger
@@ -100,20 +100,20 @@ class ApiClient:
                 logger.debug(f'[基础-API] 尝试使用{domain_type}: {endpoint}')
                 
                 if method == 'GET':
-                    response = requests.get(
+                    response = http.get(
                         endpoint,
                         params=params,
                         timeout=timeout,
-                        headers={'User-Agent': 'alas AzurPilot'}
+                        headers={'User-Agent': http.USER_AGENT}
                     )
                 else:
-                    response = requests.post(
+                    response = http.post(
                         endpoint,
                         json=json_data,
                         timeout=timeout,
                         headers={
                             'Content-Type': 'application/json',
-                            'User-Agent': 'alas AzurPilot',
+                            'User-Agent': http.USER_AGENT,
                             'X-AzurPilot-ID': str((json_data or {}).get('device_id', '')),
                         }
                     )
@@ -129,10 +129,10 @@ class ApiClient:
                     if 400 <= last_status < 500 and last_status != 429:
                         break
                     
-            except requests.exceptions.Timeout:
+            except http.exceptions.Timeout:
                 logger.warning(f'[基础-API] {domain_type if i > 0 else "主域名"}请求超时')
                 last_error = 'Timeout'
-            except requests.exceptions.RequestException as e:
+            except http.exceptions.RequestException as e:
                 logger.warning(f'[基础-API] {domain_type if i > 0 else "主域名"}请求失败: {e}')
                 last_error = str(e)
             except Exception as e:
