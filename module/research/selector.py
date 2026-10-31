@@ -182,10 +182,8 @@ class ResearchSelector(ResearchUI):
 
     def research_list_archive(self):
         """Keep optional local selection screenshots outside the cloud reward stream."""
-        if getattr(self.config, 'DropRecord_CloudUpload', False) is not True:
-            return
         method = self.config.DropRecord_ResearchRecord
-        if method not in ('upload', 'save_and_upload'):
+        if method != 'save_and_upload':
             return
         with self.stat.new('research_refresh', method=method) as record:
             record.add(self.device.image)

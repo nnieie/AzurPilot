@@ -6,11 +6,11 @@
 档案坐标跟隐秘海域、月度Boss跟深渊海域共用开关，共用只影响存图与否，掉落统计
 仍按各自的 genre 归类。这里锁定四件事：旧配置迁移时旧值被铺给每个新开关、
 运行期按当前任务取到该读的开关（含共用）、没列出的任务落到 `OpsiOther`、
-共用任务不占独立开关。耄耋相接的开关还必须在 `upload` 档位继续打开本地解析
-——统计页的短猫收益靠它。
+共用任务不占独立开关。截图开关不再控制本地解析；统计页的收益不因「不保存」丢失。
 """
 
 import unittest
+from types import SimpleNamespace
 
 import inflection
 
@@ -38,6 +38,7 @@ class FakeConfigTestCase(unittest.TestCase):
             AzurLaneConfig: 只填了 DropRecord 与 Scheduler.Command 的配置对象。
         """
         record = {arg: 'do_not' for arg in OPSI_RECORD_ARGS}
+        record['CloudUpload'] = False
         record.update(values or {})
         record['RetentionDays'] = 0
 
@@ -146,21 +147,18 @@ class TestOpsiDropRecordLookup(FakeConfigTestCase):
 
 
 class TestMigrationThroughConfigUpdate(unittest.TestCase):
-    """走真实的 config_update：旧配置里的单一开关要把 7 个新开关一起点亮。"""
+    """走真实 config_update，拆分旧开关并归一化为本地截图选项。"""
 
     def make_config(self, old):
-        """按 tests/test_drop_cleanup.py 的既有手法在内存里构造配置。"""
-        config = AzurLaneConfig('template')
-        config.auto_update = False
-        config.data = config.config_update({'Alas': old})
-        config.bind('Alas')
-        return config
+        """直接调用迁移器，不初始化会保存用户配置的 AzurLaneConfig。"""
+        data = ConfigUpdater().config_update({'Alas': old})['Alas']['DropRecord']
+        return SimpleNamespace(**{f'DropRecord_{arg}': value for arg, value in data.items()})
 
     def test_old_config_gets_every_switch(self):
         config = self.make_config({'DropRecord': {'OpsiRecord': 'save_and_upload'}})
         for arg in OPSI_RECORD_ARGS:
             with self.subTest(arg=arg):
-                self.assertEqual(getattr(config, f'DropRecord_{arg}'), 'save_and_upload')
+                self.assertEqual(getattr(config, f'DropRecord_{arg}'), 'save')
 
     def test_already_migrated_keys_keep_user_values(self):
         """迁移过的开关保持用户改过的值，只有还缺的那些由旧值补齐。
@@ -173,7 +171,7 @@ class TestMigrationThroughConfigUpdate(unittest.TestCase):
             'OpsiMeowfficerFarming': 'save_and_upload',
         }})
         self.assertEqual(config.DropRecord_OpsiAbyssal, 'do_not')
-        self.assertEqual(config.DropRecord_OpsiMeowfficerFarming, 'save_and_upload')
+        self.assertEqual(config.DropRecord_OpsiMeowfficerFarming, 'save')
         self.assertEqual(config.DropRecord_OpsiExplore, 'save')
 
     def test_old_config_keeps_other_drop_settings(self):
@@ -186,19 +184,15 @@ class TestMigrationThroughConfigUpdate(unittest.TestCase):
         config = self.make_config({'DropRecord': {'RetentionDays': 3}})
         for arg in OPSI_RECORD_ARGS:
             with self.subTest(arg=arg):
-                self.assertEqual(getattr(config, f'DropRecord_{arg}'), 'upload')
+                self.assertEqual(getattr(config, f'DropRecord_{arg}'), 'do_not')
 
 
 class TestMeowfficerStatisticsStayWired(FakeConfigTestCase):
-    """短猫掉落截图这个开关就是掉落统计的数据源，档位语义不能漂移。
-
-    2026-09-25 起改口径：除侵蚀1练级外的所有大世界任务都解析入库，
-    且「保存」与「上传」都统计，区别只在要不要把截图落盘（与科研同口径）。
-    """
+    """本地统计独立于截图保存，并兼容旧上传档位的直接调用。"""
 
     def test_method_matrix_drives_save_and_local(self):
         cases = (
-            ('do_not', False, False),
+            ('do_not', False, True),
             ('save', True, True),
             ('upload', False, True),
             ('save_and_upload', True, True),

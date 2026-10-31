@@ -555,55 +555,51 @@ DropRecord:
   ZipMethod:
     value: zip
     option: [ bz2, gzip, xz, zip ]
-  AzurStatsID: null
   CloudUpload: true
-  API:
-    value: default
-    option: [default, cn_gz_reverse_proxy]
   ResearchRecord:
-    value: do_not
-    option: [do_not, save, upload, save_and_upload]
+    value: upload
+    option: [upload, save_and_upload, do_not]
   CommissionRecord:
-    value: do_not
-    option: [do_not, save, upload, save_and_upload]
+    value: upload
+    option: [upload, save_and_upload, do_not]
   CommissionIncomeScreenshot:
     value: save
     option: [do_not, save]
   CombatRecord:
     value: do_not
-    option: [do_not, save, upload, save_and_upload]
+    option: [save, do_not]
   # 大世界掉落截图按任务拆分（原 OpsiRecord 单一开关）。跨月每日跟大世界每日、
   # 档案坐标跟隐秘海域、月度Boss跟深渊坐标共用一项，其余任务走 OpsiOther。
   OpsiHazard1Leveling:
-    value: upload
-    option: [do_not, save, upload, save_and_upload]
+    value: do_not
+    option: [save, do_not]
   OpsiMeowfficerFarming:
-    value: upload
-    option: [do_not, save, upload, save_and_upload]
+    value: do_not
+    option: [save, do_not]
   OpsiDaily:
-    value: upload
-    option: [do_not, save, upload, save_and_upload]
+    value: do_not
+    option: [save, do_not]
   OpsiObscure:
-    value: upload
-    option: [do_not, save, upload, save_and_upload]
+    value: do_not
+    option: [save, do_not]
   OpsiAbyssal:
-    value: upload
-    option: [do_not, save, upload, save_and_upload]
+    value: do_not
+    option: [save, do_not]
   OpsiStronghold:
-    value: upload
-    option: [do_not, save, upload, save_and_upload]
+    value: do_not
+    option: [save, do_not]
   OpsiExplore:
-    value: upload
-    option: [do_not, save, upload, save_and_upload]
+    value: do_not
+    option: [save, do_not]
   OpsiOther:
-    value: upload
-    option: [do_not, save, upload, save_and_upload]
+    value: do_not
+    option: [save, do_not]
   MeowfficerBuy:
     value: do_not
-    option: [do_not, save]
+    option: [save, do_not]
   MeowfficerTalent:
     value: do_not
-    option: [do_not, save, upload, save_and_upload]
+    option: [save, do_not]
   TelemetryReport: true
 Backup:
   Enable: true
@@ -2557,7 +2553,15 @@ FleetAffinityTraining:
     value: 100
     validate: [1, 200]
 
+FleetDorm:
+  Enabled: false
+  Floor:
+    value: floor_1
+    option: [floor_1, floor_2]
+
 FleetTraining:
+  StopOnComplete: false
+  Notify: false
   FullScanRecord:
     type: stored
     value: 2020-01-01 00:00:00

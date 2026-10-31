@@ -5,7 +5,6 @@
 搜索选项勾选、确认弹窗处理以及滚动条控制等操作。
 """
 from module.base.utils import get_color
-from module.handler.assets import POPUP_CANCEL
 from module.logger import logger
 from module.os_handler.assets import *
 from module.os_handler.map_event import MapEventHandler
@@ -139,11 +138,9 @@ class StrategicSearchHandler(MapEventHandler):
                     and self.handle_popup_confirm(offset=(30, 30), name='STRATEGIC_SEARCH'):
                 confirmed = True
                 continue
-            # A secondary popup may concern Meowfficer recall or another action.
-            # Never accept an unidentified dialog using a generic confirm button.
-            if confirmed and self.appear(POPUP_CANCEL, offset=(30, 30)):
-                logger.warning('[大世界-策略] 发现未识别的二次确认弹窗，未自动确认')
-                return False
+            # 计划作战确认后可能继续弹出指挥喵召回等确认框，处理后等待新截图。
+            if confirmed and self.handle_popup_confirm(offset=(30, 30), name='STRATEGIC_SEARCH_MEOWFFICER'):
+                continue
             if self.is_in_map():
                 return True
 

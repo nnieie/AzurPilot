@@ -95,19 +95,20 @@ class UpdateServiceTest(unittest.TestCase):
         self.assertEqual(self.service.commits()['total'], 1)
 
     def test_fetch_reserves_operation_and_keeps_local_head(self):
-        self.updater._fetch_with_retry = Mock()
+        self.updater.fetch_update = Mock()
         with patch('module.api.update_service.Thread') as thread:
             self.assertTrue(self.service.start('fetch')['accepted'])
             with self.assertRaises(ApiError):
                 self.service.start('fetch')
             thread.assert_called_once()
         self.service._run('fetch')
+        self.updater.fetch_update.assert_called_once_with('origin', 'dev', max_retry=3, delay=1)
         self.assertIsNone(self.service.operation)
         self.assertEqual(self.updater.state, 1)
         self.assertEqual(self.git('rev-parse', 'HEAD'), self.base)
 
     def test_fetch_failure_is_reported_and_can_retry(self):
-        self.updater._fetch_with_retry = Mock(side_effect=RuntimeError('凭据不可回显'))
+        self.updater.fetch_update = Mock(side_effect=RuntimeError('凭据不可回显'))
         self.service._run('fetch')
         self.assertEqual(self.updater.state, 'failed')
         self.assertNotIn('凭据', self.service.status()['error'])

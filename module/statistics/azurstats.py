@@ -780,18 +780,12 @@ class AzurStats:
             method = None
         if method is not None:
             method_value = str(method)
-            save = save or 'save' in method_value
+            save = save or method_value in ('save', 'save_and_upload')
         if local is None:
-            if is_opsi_drop_genre(genre):
-                # 大世界掉落统计（2026-09-25 用户定，与科研同口径）：
-                # 「保存」与「上传」都解析入库，区别只在要不要把截图落盘；
-                # 只有「不记录」才不统计。侵蚀1练级不适用（见 is_opsi_drop_genre）。
-                local = method_value != 'do_not'
-            else:
-                local = False
-        # 科研掉落走独立解析链路（写 cl1_record.db）：只要用户没有显式关掉记录，
-        # 存图与否都保留本地统计；upload 档额外通过临时磁盘队列上报云端。
-        analyze = genre == 'research' and method_value != 'do_not'
+            # 截图保存策略与本地统计独立；侵蚀1收益继续由大世界总结记录。
+            local = is_opsi_drop_genre(genre)
+        # “不上传”仅关闭云端提交，科研领奖仍需解析到本地统计。
+        analyze = genre == 'research'
         upload = (getattr(self.config, 'DropRecord_CloudUpload', False) is True
                   and method_value in ('upload', 'save_and_upload') and genre in ('commission', 'research'))
         return DropImage(stat=self, genre=genre, save=save, local=local, info=info, analyze=analyze, upload=upload)

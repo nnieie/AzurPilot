@@ -71,6 +71,13 @@ class GeometryTests(unittest.TestCase):
         self.assertEqual(menu_area(1), (152, 586, 353, 628))
         self.assertEqual(menu_area(6), (152, 316, 353, 358))
 
+    def test_reported_fifth_fleet_menu_keeps_native_highlight_and_bottom_number(self):
+        image = frame('menu_surface5_native')
+        self.assertEqual(5, selected_menu_fleet(image))
+        self.assertEqual(5, bottom_fleet_index(image))
+        self.assertTrue(fleet_type_selected(image))
+        self.assertFalse(selector_closed(image))
+
     def test_detail_columns_are_surface_one_to_six_and_submarine_one_to_three(self):
         surface = frame('detail_surface')
         submarine = frame('detail_submarine')
@@ -445,7 +452,7 @@ class VisualTargetTests(unittest.TestCase):
         move.assert_called_once()
         tool.device.swipe.assert_called_once()
 
-    def test_direct_menu_and_arrow_navigation_verify_the_new_highlight(self):
+    def test_direct_menu_and_arrow_navigation_keep_positive_confirmation(self):
         for method in ('menu', 'arrows'):
             with self.subTest(method=method):
                 tool = runner()
@@ -469,9 +476,144 @@ class VisualTargetTests(unittest.TestCase):
                     self.assertIn(FLEET_NEXT, [call.args[0] for call in tool.device.click.call_args_list])
                 else:
                     self.assertIn(menu_area(4), [call.args[0].button for call in tool.device.click.call_args_list])
+                    self.assertEqual(2, tool.device.click.call_count)
+
+
+class SingleMenuSelectionTests(unittest.TestCase):
+    @staticmethod
+    def closed(fleet, kind='surface'):
+        image = frame(f'closed_{kind}')
+        row = fleet - 1 if kind == 'surface' else fleet + 5
+        left = 298 if kind == 'surface' else 664
+        image[647:707, left:left + 50] = frame('fleet_index_regions')[row * 60:(row + 1) * 60, :50]
+        return image
+
+    def navigate(self, images, fleet, kind='surface'):
+        tool = runner()
+        tool._formation_visible = Mock(return_value=True)
+        def frames(**kwargs):
+            for image in images:
+                tool.device.image = image
+                yield image
+        tool.loop = frames
+        with patch('module.retire.fleet_management.Timer') as timer:
+            timer.return_value.reached.return_value = True
+            FleetManagement.fleet_enter(tool, fleet, kind)
+        return tool
+
+    def test_reported_menu_selects_third_fleet_once_without_reopening_it(self):
+        menu = frame('menu_surface5_native')
+        unknown = self.closed(5)
+        unknown[647:707, 298:348] = 0
+        tool = self.navigate([menu, menu, self.closed(5), unknown, self.closed(3)], 3)
+        self.assertEqual(['第3舰队'], [call.args[0].name for call in tool.device.click.call_args_list])
+
+    def test_submarine_menu_also_returns_after_one_target_click(self):
+        menu = frame('menu_submarine')
+        tool = self.navigate([menu, menu, self.closed(1, 'submarine')], 1, 'submarine')
+        self.assertEqual(['第1舰队'], [call.args[0].name for call in tool.device.click.call_args_list])
+
+    def test_single_target_click_waits_for_animation_without_more_input(self):
+        tool = runner()
+        tool._formation_visible = Mock(return_value=True)
+        state = SimpleNamespace(clock=100., selected_at=None)
+        menu, closed = frame('menu_surface5_native'), self.closed(3)
+        def frames(**kwargs):
+            for _ in range(20):
+                state.clock += .1
+                tool.device.image = menu if state.selected_at is None else closed
+                yield None
+        def click(button):
+            self.assertEqual('第3舰队', button.name)
+            state.selected_at = state.clock
+        tool.loop = frames
+        tool.device.click.side_effect = click
+        with patch('module.base.timer.time', side_effect=lambda: state.clock):
+            FleetManagement.fleet_enter(tool, 3)
+        tool.device.click.assert_called_once()
+        self.assertGreaterEqual(state.clock - state.selected_at, .5)
+
+    def test_unknown_result_does_not_reopen_the_menu_or_claim_the_switch_succeeded(self):
+        menu = frame('menu_surface5_native')
+        tool = runner()
+        tool._formation_visible = Mock(return_value=True)
+        def frames(**kwargs):
+            for image in (menu, menu, self.closed(5), self.closed(5)):
+                tool.device.image = image
+                yield image
+        tool.loop = frames
+        with patch('module.retire.fleet_management.Timer') as timer:
+            timer.return_value.reached.return_value = True
+            with self.assertRaises(FleetManagementError):
+                FleetManagement.fleet_enter(tool, 3)
+        self.assertEqual(['第3舰队'], [call.args[0].name for call in tool.device.click.call_args_list])
 
 
 class DirectRotationTests(unittest.TestCase):
+    def test_fixed_slot_portrait_skips_another_source_ship_on_the_earlier_page(self):
+        scanner = VisualDockScanner()
+        native = frame('slot4_dock')
+        cards = scanner.scan(native)
+        rows = sorted({card.y for card in cards})
+        aylwin = next(card for card in cards if card.col == 1 and card.y == rows[0])
+        snake = next(card for card in cards if card.col == 1 and card.y == rows[1])
+        mercury = next(card for card in cards if card.col == 2 and card.y == rows[1])
+        # 错误截图中艾尔温已在1队；仅在虚拟页面还原交换前的3队徽标。
+        native[aylwin.y + 117:aylwin.y + 162, aylwin.x:aylwin.x + 35] = (
+            native[mercury.y + 117:mercury.y + 162, mercury.x:mercury.x + 35])
+        earlier = native.copy()
+        earlier[rows[1]:rows[1] + 207, 85:570] = native[rows[0]:rows[0] + 207, 85:570]
+        # 与日志一样，艾尔温先出现在完整第二行，水星号还需要翻页。
+        earlier[rows[0] + 117:rows[0] + 162, aylwin.x:aylwin.x + 35] = 0
+        entries = [('水星号', 4, 88, mercury), ('长蛇号', 5, 98, snake), ('艾尔温', 6, 99, aylwin)]
+        source = [dict(name=name, slot=slot, level=level, emotion=150) for name, slot, level, _ in entries]
+        pictures = [scanner.portrait(native, card).copy() for *_, card in entries]
+        detail = detail_portraits(frame('slot4_detail'))
+
+        class SelectionSubmitted(Exception):
+            pass
+
+        for cached, available in ((False, True), (True, True), (True, False)):
+            with self.subTest(cached=cached, source_visible=available):
+                tool = runner()
+                tool._rotation_fleet = 1
+                tool._rotation_picker = (1, 4)
+                if cached:
+                    tool._rotation_scanned_slot = (1, 4)
+                tool._rotation_result = {'vanguard': {'1': [dict(name='热心.改', slot=4, level=105, emotion=150)],
+                                                       '3': deepcopy(source)}}
+                # 候补按等级降序排列，与固定舰位顺序相反。
+                tool._rotation_pool = {'vanguard': ({'3': list(reversed(source))},
+                                                     {'3': list(reversed(pictures))})}
+                tool._slot_portraits = {(3, slot): detail[slot] for slot in (4, 5, 6)}
+                tool.device.image = earlier
+                pages = []
+
+                def dock_pages(scan, **kwargs):
+                    for image in (earlier, native) if available else (earlier,):
+                        tool.device.image = image
+                        pages.append(image)
+                        yield scan.scan(image), []
+
+                tool._dock_pages = dock_pages
+                tool._confirm_replacement.side_effect = SelectionSubmitted
+                with (patch('module.runtime.fleet_formation.FleetNameScanner', side_effect=AssertionError('禁止舰名OCR')),
+                      patch('module.runtime.fleet_formation.LevelScanner', side_effect=AssertionError('禁止等级OCR'))):
+                    if available:
+                        with self.assertRaises(SelectionSubmitted):
+                            tool.rotate_slot(3, 4, 1)
+                        self.assertEqual(len(pages), 2)
+                        button = tool.device.click.call_args.args[0]
+                        self.assertEqual(button.button, (mercury.x + 20, mercury.y + 40,
+                                                         mercury.x + 115, mercury.y + 145))
+                        tool._confirm_replacement.assert_called_once()
+                    else:
+                        with self.assertRaisesRegex(FleetManagementError, '未能确认来源舰位卡面'):
+                            tool.rotate_slot(3, 4, 1)
+                        tool.device.click.assert_not_called()
+                        tool._confirm_replacement.assert_not_called()
+                tool._save_result.assert_not_called()
+
     def test_local_check_starts_from_selected_slot_and_preserves_other_fleet_morale(self):
         tool = self.direct_tool()
         tool._rotation_result['main']['1'][0]['emotion'] = 70

@@ -1402,7 +1402,7 @@
   "DropRecord": {
     "_info": {
       "name": "Drop record",
-      "help": ""
+      "help": "Research and commissions support cloud submission. Other scenes only control local screenshots. Local reward statistics are independent of saving and uploading."
     },
     "SaveFolder": {
       "name": "Drop save directory",
@@ -1427,35 +1427,23 @@
       "xz": "xz",
       "zip": "zip"
     },
-    "AzurStatsID": {
-      "name": "Contributor ID",
-      "help": "Optional anonymous contributor identifier for AzurPilot cloud statistics."
-    },
     "CloudUpload": {
       "name": "Cloud statistics upload",
-      "help": "Upload / Save and upload send research and drop screenshots to api.azurpilot.com while retaining local statistics. Turn off for local processing only. Failed uploads are retained for retry, up to 512 MiB and 7 days."
-    },
-    "API": {
-      "name": "Unified cloud API",
-      "help": "Uses https://api.azurpilot.com. Old route options are retained only for configuration compatibility.",
-      "default": "api.azurpilot.com",
-      "cn_gz_reverse_proxy": "api.azurpilot.com"
+      "help": "Master switch for research and commission submissions. Structured drops go to api.azurpilot.com; unknown item icons and their source frames go to templates-api.azurpilot.com. Failed work is retried from a local queue (up to 64 MiB and 10000 jobs). Disabling pauses uploads while local statistics and screenshot saving continue."
     },
     "ResearchRecord": {
-      "name": "Research screenshot",
-      "help": "",
-      "do_not": "No action",
-      "save": "Save",
+      "name": "Research drop submission",
+      "help": "Upload submits to the cloud without keeping regular screenshots. Save and upload also keeps screenshots in the drop folder. Do not upload pauses submissions and queued retries for this scene. All options retain local statistics. Uploading also requires the cloud statistics master switch.",
       "upload": "Upload",
-      "save_and_upload": "Save and upload"
+      "save_and_upload": "Save and upload",
+      "do_not": "Do not upload"
     },
     "CommissionRecord": {
-      "name": "Commission screenshot",
-      "help": "",
-      "do_not": "No action",
-      "save": "Save",
+      "name": "Commission drop submission",
+      "help": "Upload submits to the cloud without keeping regular screenshots. Save and upload also keeps screenshots in the drop folder. Do not upload pauses submissions and queued retries for this scene. All options retain local statistics. Uploading also requires the cloud statistics master switch.",
       "upload": "Upload",
-      "save_and_upload": "Save and upload"
+      "save_and_upload": "Save and upload",
+      "do_not": "Do not upload"
     },
     "CommissionIncomeScreenshot": {
       "name": "Commission reward screenshot",
@@ -1465,89 +1453,69 @@
     },
     "CombatRecord": {
       "name": "Combat drop screenshot",
-      "help": "Enabling this will slow down click speed during settlement\nDoes not take effect in auto-search mode",
-      "do_not": "No action",
+      "help": "Supports local screenshots only; no cloud submission.\nEnabling this will slow down click speed during settlement\nDoes not take effect in auto-search mode",
       "save": "Save",
-      "upload": "Upload",
-      "save_and_upload": "Save and upload"
+      "do_not": "Do not save"
     },
     "OpsiHazard1Leveling": {
       "name": "Corrosion 1 drop screenshot",
-      "help": "Corrosion 1 leveling is not counted here (its profit is on the \"Operation Siren summary\" page); Save only keeps the screenshot, Upload does nothing",
-      "do_not": "No action",
+      "help": "Controls local screenshots only. Corrosion 1 rewards remain in the Operation Siren summary and are excluded from drop statistics.",
       "save": "Save",
-      "upload": "Upload",
-      "save_and_upload": "Save and upload"
+      "do_not": "Do not save"
     },
     "OpsiMeowfficerFarming": {
       "name": "Meowfficer farming drop screenshot",
-      "help": "Save and Upload both parse drops into the \"Operation Siren drops\" page; the only difference is whether the screenshot is kept",
-      "do_not": "No action",
+      "help": "Controls local screenshots only. Both options retain local Operation Siren drop statistics; neither submits to the cloud.",
       "save": "Save",
-      "upload": "Upload",
-      "save_and_upload": "Save and upload"
+      "do_not": "Do not save"
     },
     "OpsiDaily": {
       "name": "Operation Siren daily drop screenshot",
-      "help": "Save and Upload both parse drops into the \"Operation Siren drops\" page; the only difference is whether the screenshot is kept\nCross-Month Daily shares this switch",
-      "do_not": "No action",
+      "help": "Controls local screenshots only. Both options retain local Operation Siren drop statistics; neither submits to the cloud.\nCross-Month Daily shares this setting.",
       "save": "Save",
-      "upload": "Upload",
-      "save_and_upload": "Save and upload"
+      "do_not": "Do not save"
     },
     "OpsiObscure": {
       "name": "Obscured zone drop screenshot",
-      "help": "Save and Upload both parse drops into the \"Operation Siren drops\" page; the only difference is whether the screenshot is kept\nArchive Coordinates shares this switch",
-      "do_not": "No action",
+      "help": "Controls local screenshots only. Both options retain local Operation Siren drop statistics; neither submits to the cloud.\nArchive Coordinates shares this setting.",
       "save": "Save",
-      "upload": "Upload",
-      "save_and_upload": "Save and upload"
+      "do_not": "Do not save"
     },
     "OpsiAbyssal": {
       "name": "Abyssal zone drop screenshot",
-      "help": "Save and Upload both parse drops into the \"Operation Siren drops\" page; the only difference is whether the screenshot is kept\nMonthly Boss shares this switch",
-      "do_not": "No action",
+      "help": "Controls local screenshots only. Both options retain local Operation Siren drop statistics; neither submits to the cloud.\nMonthly Boss shares this setting.",
       "save": "Save",
-      "upload": "Upload",
-      "save_and_upload": "Save and upload"
+      "do_not": "Do not save"
     },
     "OpsiStronghold": {
       "name": "Siren stronghold drop screenshot",
-      "help": "Save and Upload both parse drops into the \"Operation Siren drops\" page; the only difference is whether the screenshot is kept",
-      "do_not": "No action",
+      "help": "Controls local screenshots only. Both options retain local Operation Siren drop statistics; neither submits to the cloud.",
       "save": "Save",
-      "upload": "Upload",
-      "save_and_upload": "Save and upload"
+      "do_not": "Do not save"
     },
     "OpsiExplore": {
       "name": "Monthly exploration drop screenshot",
-      "help": "Its own switch for Monthly Exploration, not shared with other tasks\nSave and Upload both parse drops into the \"Operation Siren drops\" page; the only difference is whether the screenshot is kept",
-      "do_not": "No action",
+      "help": "Controls local screenshots only. Both options retain local Operation Siren drop statistics; neither submits to the cloud.\nMonthly Exploration has its own setting.",
       "save": "Save",
-      "upload": "Upload",
-      "save_and_upload": "Save and upload"
+      "do_not": "Do not save"
     },
     "OpsiOther": {
       "name": "Other Operation Siren drop screenshot",
-      "help": "Fallback for Operation Siren tasks without a switch of their own\nSave and Upload both parse drops into the \"Operation Siren drops\" page; the only difference is whether the screenshot is kept",
-      "do_not": "No action",
+      "help": "Controls local screenshots only. Both options retain local Operation Siren drop statistics; neither submits to the cloud.\nApplies to Operation Siren tasks without their own setting.",
       "save": "Save",
-      "upload": "Upload",
-      "save_and_upload": "Save and upload"
+      "do_not": "Do not save"
     },
     "MeowfficerBuy": {
       "name": "Meowfficer purchase screenshot",
-      "help": "",
-      "do_not": "No action",
-      "save": "Save"
+      "help": "Supports local screenshots only; no cloud submission.",
+      "save": "Save",
+      "do_not": "Do not save"
     },
     "MeowfficerTalent": {
       "name": "Meowfficer talent screenshot",
-      "help": "",
-      "do_not": "No action",
+      "help": "Supports local screenshots only; no cloud submission.",
       "save": "Save",
-      "upload": "Upload",
-      "save_and_upload": "Save and upload"
+      "do_not": "Do not save"
     },
     "TelemetryReport": {
       "name": "Telemetry data reporting",
@@ -1944,7 +1912,7 @@
   "OperationHandover": {
     "_info": {
       "name": "Operation handover settings",
-      "help": ""
+      "help": "Supports main and event stages. Names such as 12-4 use the main campaign; D3, T6, and SP3 use the selected event. Event difficulty follows the stage name. Handover availability is checked in game."
     },
     "Count": {
       "name": "Handover count",
@@ -6929,10 +6897,34 @@
       "help": "Off by default. Uses training slots and reserves. Verify every enabled goal on the same ship before completion; morale swaps keep progress."
     }
   },
+  "FleetDorm": {
+    "_info": {
+      "name": "Rest after rotation",
+      "help": "After all swaps, arrange the entire current fleet on the selected dorm floor, then continue the task."
+    },
+    "Enabled": {
+      "name": "Enable rest after rotation",
+      "help": "Off by default. Clear the selected floor and select the entire current fleet by its number, including fixed slots. Priority: all-battle fleet, mob fleet, boss fleet. Skip rest and continue if the floor is locked, slots are insufficient or selection cannot be verified. CN only."
+    },
+    "Floor": {
+      "name": "Dorm floor",
+      "help": "Train on the first floor or rest on the second. Floors and slots are not purchased automatically.",
+      "floor_1": "First floor (training)",
+      "floor_2": "Second floor (rest)"
+    }
+  },
   "FleetTraining": {
     "_info": {
       "name": "Training records",
       "help": "Persists verified readings, completed goals and pending swaps across restarts."
+    },
+    "StopOnComplete": {
+      "name": "Stop after all current training ships graduate",
+      "help": "Off by default. Disable the current task when every selected ship meets all enabled level/affinity goals. Do not recruit the next batch. Uses the existing check interval."
+    },
+    "Notify": {
+      "name": "Training and replacement notifications",
+      "help": "Off by default. Report recorded level, affinity and morale after checks and outgoing/incoming ships and sources after confirmed replacements. Uses launcher notifications and the global error OnePush configuration."
     },
     "FullScanRecord": {
       "name": "Last full fleet scan",

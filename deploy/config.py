@@ -175,8 +175,12 @@ class DeployConfig(DeployConfigTransaction, ConfigModel):
         Returns:
             str: 绝对文件路径。
         """
+        path = self.config[key]
+        # 启动器可写入带双引号的 YAML 路径，引号不是文件名的一部分。
+        if len(path) >= 2 and path[0] == path[-1] == '"':
+            path = path[1:-1]
         return (
-            os.path.abspath(os.path.join(self.root_filepath, self.config[key]))
+            os.path.abspath(os.path.join(self.root_filepath, path))
             .replace(r"\\", "/")
             .replace("\\", "/")
             .replace('"', '"')

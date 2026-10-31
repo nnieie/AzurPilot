@@ -76,8 +76,9 @@ def test_deploy_entrypoints_do_not_load_runtime_http():
     )
 
 
-@pytest.mark.parametrize('download', [False, True])
-@pytest.mark.parametrize('asynchronous', [False, True])
+@pytest.mark.parametrize('download, asynchronous', [
+    (False, False), (True, False), (False, True), (True, True), ('update', False),
+])
 def test_first_request_uses_http3_and_correct_headers(certificate, download, asynchronous):
     async def scenario():
         requests = []
@@ -113,8 +114,16 @@ def test_first_request_uses_http3_and_correct_headers(certificate, download, asy
                                                   verify=str(certificate[0]))
             else:
                 def send():
-                    with http.Session(download=download) as session:
+                    if download == 'update':
+                        from module.runtime.update_network import RuntimeGitOverCdnClient
+                        with patch('module.runtime.update_network._read_device_id', return_value='test-device'):
+                            session = RuntimeGitOverCdnClient._create_session(max_retries=0)
+                    else:
+                        session = http.Session(download=download)
+                    with session:
                         session.trust_env = False
+                        if download == 'update':
+                            return session.get(url, timeout=3, verify=str(certificate[0]))
                         return session.post(url, json={'test': 1}, timeout=3, verify=str(certificate[0]))
                 response = await asyncio.to_thread(send)
             assert response.http_version == 30

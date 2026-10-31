@@ -11,6 +11,8 @@
 通过指定海域列表实现高效的指挥喵资源收集。
 """
 
+from contextlib import ExitStack
+
 from module.config.config import TaskEnd
 from module.config.utils import get_os_reset_remain
 from module.exception import (

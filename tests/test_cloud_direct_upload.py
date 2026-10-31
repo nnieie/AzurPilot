@@ -132,6 +132,56 @@ def record(number=1, items=None):
             'items': items or [{'item': 'Coins', 'amount': 2, 'tag': ''}]}
 
 
+def test_disabled_scene_retains_pending_work_without_blocking_other_scene(release):
+    queue, api, _ = service(release)
+    # A disabled scene must not consume the 200-record batch limit.
+    for number in range(201):
+        queue.enqueue(record(number))
+    commission = {**record(9999), 'scene': 'commission', 'comm': 'Daily Resource Extraction I'}
+    queue.enqueue(commission)
+    queue.scene_enabled = lambda scene: scene == 'commission'
+    api.submit = Mock(return_value={'schema_version': 3, 'results': [
+        {'record_id': commission['record_id'], 'status': 'accepted'}]})
+    queue._submit()
+    assert [row['scene'] for row in api.submit.call_args.args[0]] == ['commission']
+    assert len(list((queue.root / 'jobs').glob('*.json'))) == 201
+    assert queue.enqueue(record(9998)) is None
+    queue.scene_enabled = lambda scene: True
+    api.submit.side_effect = lambda rows: {'schema_version': 3, 'results': [
+        {'record_id': row['record_id'], 'status': 'accepted'} for row in rows]}
+    queue._submit()
+    assert len(api.submit.call_args.args[0]) == 200
+    queue._submit()
+    assert not list((queue.root / 'jobs').glob('*.json'))
+
+
+def test_shared_unknown_icon_can_register_through_enabled_scene(release):
+    queue, api, image = service(release)
+    cell = np.zeros((96, 96, 3), np.uint8)
+    cell[21:70, 40:89] = image
+    queue.identify(cell, '1', scene='research')
+    queue.identify(cell, '1', scene='commission')
+    queue.scene_enabled = lambda scene: False
+    api.register = Mock(return_value={'match': 'new', 'template_id': 'U-ABCD', 'identity_id': 'U-ABCD'})
+    queue._register()
+    api.register.assert_not_called()
+    queue.scene_enabled = lambda scene: scene == 'commission'
+    queue._register()
+    assert api.register.call_args.args[2] == 'commission'
+    assert not list((queue.root / 'icons').glob('*.json'))
+
+
+def test_disabled_scene_does_not_upload_source_screenshots(release):
+    queue, api, _ = service(release)
+    frame = np.zeros((720, 1280, 3), np.uint8)
+    queue.capture(frame, [{'source': 'U-ABCD', 'bounds': [10, 10, 106, 106]}], scene='research')
+    queue.scene_enabled = lambda scene: False
+    api.upload_screenshot = Mock()
+    queue._upload_screenshots()
+    api.upload_screenshot.assert_not_called()
+    assert len(list((queue.root / 'screenshots').glob('*.json'))) == 1
+
+
 def test_offline_icon_is_49px_and_waits_for_server_id(release):
     queue, api, image = service(release)
     cell = np.zeros((96, 96, 3), np.uint8)

@@ -1,7 +1,7 @@
 """
 Web界面更新管理器。
 
-继承 DeployConfig 和 GitManager，提供 Alas 的自动更新、Git 操作、
+继承 DeployConfig 和 RuntimeGitManager，提供 Alas 的自动更新、Git 操作、
 依赖同步和版本检查功能。通过后台线程执行更新任务。
 """
 
@@ -15,7 +15,6 @@ from typing import Generator, List, Tuple
 import requests
 from deploy.atomic import atomic_write
 from deploy.config import ExecutionError
-from deploy.git import GitManager
 from deploy.utils import DEPLOY_CONFIG
 from module.base.retry import retry
 from module.logger import logger
@@ -24,12 +23,13 @@ from module.runtime.process_manager import ProcessManager
 from module.runtime.setting import State, mark_dependency_sync_pending
 from module.runtime.startup_memory import mark_update_restart
 from module.runtime.task_handler import TaskHandler, get_next_time
+from module.runtime.update_network import RuntimeGitManager
 
 
-class Updater(DeployConfig, GitManager):
+class Updater(DeployConfig, RuntimeGitManager):
     """Web 界面更新与版本管理控制器。
 
-    继承 DeployConfig 和 GitManager，负责检查云端/本地更新、
+    继承 DeployConfig 和 RuntimeGitManager，负责检查云端/本地更新、
     协调进程停止、拉取代码与触发 WebUI 热重载及依赖同步。
 
     Attributes:
@@ -148,12 +148,16 @@ class Updater(DeployConfig, GitManager):
             logger.warning("强制更新开关不可访问，按关闭处理")
 
         if State.deploy_config.GitOverCdn:
-            status = self.goc_client.get_status()
+            client = self.goc_client
+            try:
+                status = client.get_status()
+            finally:
+                client.close()
             if status == "uptodate":
-                logger.info(f"无更新")
+                logger.info("无更新")
                 return False
             elif status == "behind":
-                logger.info(f"有新更新可用")
+                logger.info("有新更新可用")
                 return True
             else:
                 # 失败时回退到 git pull
@@ -179,11 +183,11 @@ class Updater(DeployConfig, GitManager):
         sha1, _, _, message = self.get_commit(f"..{source}/{self.Branch}")
 
         if sha1:
-            logger.info(f"有新更新可用")
+            logger.info("有新更新可用")
             logger.info(f"{sha1[:8]} - {message}")
             return True
         else:
-            logger.info(f"无更新")
+            logger.info("无更新")
             return False
 
     def _check_update_(self) -> bool:

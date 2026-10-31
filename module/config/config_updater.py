@@ -69,6 +69,8 @@ ARCHIVES_PREFIX = {
 MAINS = ['Main', 'Main2', 'Main3']
 EVENTS = ['Event', 'Event2', 'Event3', 'EventA', 'EventB', 'EventC', 'EventD', 'EventSp']
 GEMS_FARMINGS = ['GemsFarming', 'ThreeOilLowCost']
+# 根据关卡名在主线与所选活动之间切换的任务。
+MIXED_CAMPAIGNS = GEMS_FARMINGS + ['OperationHandover']
 RAIDS = ['Raid', 'RaidDaily', 'RaidScuttle']
 WAR_ARCHIVES = ['WarArchives']
 COALITIONS = ['Coalition', 'CoalitionSp', 'CoalitionScuttle']
@@ -104,7 +106,7 @@ def refresh_campaign_events(data, args, is_template=False):
     """刷新已结束的活动，避免旧关卡名指向新活动中不存在的地图。"""
     options = campaign_event_options(data, args)
     if not is_template:
-        for task in EVENTS + RAIDS + COALITIONS + GEMS_FARMINGS:
+        for task in EVENTS + RAIDS + COALITIONS + MIXED_CAMPAIGNS:
             candidates = options.get(task, [])
             if candidates and deep_get(data, f'{task}.Campaign.Event', 'campaign_main') not in candidates:
                 deep_set(data, f'{task}.Campaign.Event', candidates[0])
@@ -596,10 +598,10 @@ class ConfigGenerator:
                         if not hasattr(self, f'_{server}_latest_event_date'):
                             setattr(self, f'_{server}_latest_event_date', int(event.date))
                         if int(event.date) == getattr(self, f'_{server}_latest_event_date'):
-                            for task in EVENTS + GEMS_FARMINGS:
+                            for task in EVENTS + MIXED_CAMPAIGNS:
                                 insert(task)
 
-        for task in EVENTS + GEMS_FARMINGS + WAR_ARCHIVES + RAIDS + COALITIONS:
+        for task in EVENTS + MIXED_CAMPAIGNS + WAR_ARCHIVES + RAIDS + COALITIONS:
             latest = {}
             for server in ARCHIVES_PREFIX.keys():
                 latest[server] = deep_get(self.args, keys=f'{task}.Campaign.Event.option_{server}', default=[])
@@ -827,11 +829,6 @@ class ConfigUpdater:
             value = parse_value(value, data=data)
             deep_set(new, keys=keys, value=value)
 
-        # 处理 AzurStatsID
-        if is_template:
-            deep_set(new, 'Alas.DropRecord.AzurStatsID', None)
-        else:
-            deep_default(new, 'Alas.DropRecord.AzurStatsID', random_id())
         # 更新到最新活动
         refresh_campaign_events(new, self.args, is_template=is_template)
 
@@ -856,6 +853,16 @@ class ConfigUpdater:
 
         if not is_template:
             new = self.config_redirect(old, new)
+            # 在 OpsiRecord 拆分后统一清洗旧档位；只保存的科研/委托按新三档迁移。
+            drop = deep_get(new, 'Alas.DropRecord')
+            old_drop = deep_get(old, 'Alas.DropRecord', {})
+            for arg in ('ResearchRecord', 'CommissionRecord'):
+                # parse_value 已将不再合法的旧选项替换成默认值，迁移时需读原值。
+                if old_drop.get(arg) == 'save':
+                    drop[arg] = 'save_and_upload'
+            for arg in (*OPSI_RECORD_ARGS, 'CombatRecord', 'MeowfficerTalent'):
+                value = old_drop.get(arg, drop[arg])
+                drop[arg] = 'save' if value in ('save', 'save_and_upload') else 'do_not'
             old_priority = deep_get(old, 'General.YukikazeTaskManager.TaskPriorityAdjustment')
             new_priority = deep_get(new, 'General.YukikazeTaskManager.TaskPriorityAdjustment')
             template_priority = deep_get(

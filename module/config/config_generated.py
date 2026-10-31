@@ -268,23 +268,21 @@ class GeneratedConfig:
     DropRecord_RetentionDays = 0
     DropRecord_BackUpMethod = 'zip'  # delete, zip, copy
     DropRecord_ZipMethod = 'zip'  # bz2, gzip, xz, zip
-    DropRecord_AzurStatsID = None
     DropRecord_CloudUpload = True
-    DropRecord_API = 'default'  # default, cn_gz_reverse_proxy
-    DropRecord_ResearchRecord = 'do_not'  # do_not, save, upload, save_and_upload
-    DropRecord_CommissionRecord = 'do_not'  # do_not, save, upload, save_and_upload
+    DropRecord_ResearchRecord = 'upload'  # upload, save_and_upload, do_not
+    DropRecord_CommissionRecord = 'upload'  # upload, save_and_upload, do_not
     DropRecord_CommissionIncomeScreenshot = 'save'  # do_not, save
-    DropRecord_CombatRecord = 'do_not'  # do_not, save, upload, save_and_upload
-    DropRecord_OpsiHazard1Leveling = 'upload'  # do_not, save, upload, save_and_upload
-    DropRecord_OpsiMeowfficerFarming = 'upload'  # do_not, save, upload, save_and_upload
-    DropRecord_OpsiDaily = 'upload'  # do_not, save, upload, save_and_upload
-    DropRecord_OpsiObscure = 'upload'  # do_not, save, upload, save_and_upload
-    DropRecord_OpsiAbyssal = 'upload'  # do_not, save, upload, save_and_upload
-    DropRecord_OpsiStronghold = 'upload'  # do_not, save, upload, save_and_upload
-    DropRecord_OpsiExplore = 'upload'  # do_not, save, upload, save_and_upload
-    DropRecord_OpsiOther = 'upload'  # do_not, save, upload, save_and_upload
-    DropRecord_MeowfficerBuy = 'do_not'  # do_not, save
-    DropRecord_MeowfficerTalent = 'do_not'  # do_not, save, upload, save_and_upload
+    DropRecord_CombatRecord = 'do_not'  # save, do_not
+    DropRecord_OpsiHazard1Leveling = 'do_not'  # save, do_not
+    DropRecord_OpsiMeowfficerFarming = 'do_not'  # save, do_not
+    DropRecord_OpsiDaily = 'do_not'  # save, do_not
+    DropRecord_OpsiObscure = 'do_not'  # save, do_not
+    DropRecord_OpsiAbyssal = 'do_not'  # save, do_not
+    DropRecord_OpsiStronghold = 'do_not'  # save, do_not
+    DropRecord_OpsiExplore = 'do_not'  # save, do_not
+    DropRecord_OpsiOther = 'do_not'  # save, do_not
+    DropRecord_MeowfficerBuy = 'do_not'  # save, do_not
+    DropRecord_MeowfficerTalent = 'do_not'  # save, do_not
     DropRecord_TelemetryReport = True
 
     # 配置组 `Backup`
@@ -1218,7 +1216,13 @@ class GeneratedConfig:
     FleetAffinityTraining_Enabled = False
     FleetAffinityTraining_Target = 100
 
+    # 配置组 `FleetDorm`
+    FleetDorm_Enabled = False
+    FleetDorm_Floor = 'floor_1'  # floor_1, floor_2
+
     # 配置组 `FleetTraining`
+    FleetTraining_StopOnComplete = False
+    FleetTraining_Notify = False
     FleetTraining_FullScanRecord = datetime.datetime(2020, 1, 1, 0, 0)
     FleetTraining_CheckIntervalHours = 6.0
     FleetTraining_State = {}

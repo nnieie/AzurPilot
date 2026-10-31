@@ -840,40 +840,26 @@
           "zip"
         ]
       },
-      "AzurStatsID": {
-        "type": "input",
-        "value": null
-      },
       "CloudUpload": {
         "type": "checkbox",
         "value": true
       },
-      "API": {
-        "type": "select",
-        "value": "default",
-        "option": [
-          "default",
-          "cn_gz_reverse_proxy"
-        ]
-      },
       "ResearchRecord": {
         "type": "select",
-        "value": "do_not",
+        "value": "upload",
         "option": [
-          "do_not",
-          "save",
           "upload",
-          "save_and_upload"
+          "save_and_upload",
+          "do_not"
         ]
       },
       "CommissionRecord": {
         "type": "select",
-        "value": "do_not",
+        "value": "upload",
         "option": [
-          "do_not",
-          "save",
           "upload",
-          "save_and_upload"
+          "save_and_upload",
+          "do_not"
         ]
       },
       "CommissionIncomeScreenshot": {
@@ -888,108 +874,88 @@
         "type": "select",
         "value": "do_not",
         "option": [
-          "do_not",
           "save",
-          "upload",
-          "save_and_upload"
+          "do_not"
         ]
       },
       "OpsiHazard1Leveling": {
         "type": "select",
-        "value": "upload",
+        "value": "do_not",
         "option": [
-          "do_not",
           "save",
-          "upload",
-          "save_and_upload"
+          "do_not"
         ]
       },
       "OpsiMeowfficerFarming": {
         "type": "select",
-        "value": "upload",
+        "value": "do_not",
         "option": [
-          "do_not",
           "save",
-          "upload",
-          "save_and_upload"
+          "do_not"
         ]
       },
       "OpsiDaily": {
         "type": "select",
-        "value": "upload",
+        "value": "do_not",
         "option": [
-          "do_not",
           "save",
-          "upload",
-          "save_and_upload"
+          "do_not"
         ]
       },
       "OpsiObscure": {
         "type": "select",
-        "value": "upload",
+        "value": "do_not",
         "option": [
-          "do_not",
           "save",
-          "upload",
-          "save_and_upload"
+          "do_not"
         ]
       },
       "OpsiAbyssal": {
         "type": "select",
-        "value": "upload",
+        "value": "do_not",
         "option": [
-          "do_not",
           "save",
-          "upload",
-          "save_and_upload"
+          "do_not"
         ]
       },
       "OpsiStronghold": {
         "type": "select",
-        "value": "upload",
+        "value": "do_not",
         "option": [
-          "do_not",
           "save",
-          "upload",
-          "save_and_upload"
+          "do_not"
         ]
       },
       "OpsiExplore": {
         "type": "select",
-        "value": "upload",
+        "value": "do_not",
         "option": [
-          "do_not",
           "save",
-          "upload",
-          "save_and_upload"
+          "do_not"
         ]
       },
       "OpsiOther": {
         "type": "select",
-        "value": "upload",
+        "value": "do_not",
         "option": [
-          "do_not",
           "save",
-          "upload",
-          "save_and_upload"
+          "do_not"
         ]
       },
       "MeowfficerBuy": {
         "type": "select",
         "value": "do_not",
         "option": [
-          "do_not",
-          "save"
+          "save",
+          "do_not"
         ]
       },
       "MeowfficerTalent": {
         "type": "select",
         "value": "do_not",
         "option": [
-          "do_not",
           "save",
-          "upload",
-          "save_and_upload"
+          "do_not"
         ]
       },
       "TelemetryReport": {
@@ -13254,7 +13220,22 @@
         "type": "select",
         "value": "campaign_main",
         "option": [
-          "campaign_main"
+          "event_20261022_cn"
+        ],
+        "option_cn": [
+          "event_20261022_cn"
+        ],
+        "option_en": [
+          "event_20261022_cn"
+        ],
+        "option_jp": [
+          "event_20261022_cn"
+        ],
+        "option_tw": [
+          "event_20261022_cn"
+        ],
+        "option_bold": [
+          "event_20261022_cn"
         ]
       },
       "Mode": {
@@ -20651,7 +20632,29 @@
         ]
       }
     },
+    "FleetDorm": {
+      "Enabled": {
+        "type": "checkbox",
+        "value": false
+      },
+      "Floor": {
+        "type": "select",
+        "value": "floor_1",
+        "option": [
+          "floor_1",
+          "floor_2"
+        ]
+      }
+    },
     "FleetTraining": {
+      "StopOnComplete": {
+        "type": "checkbox",
+        "value": false
+      },
+      "Notify": {
+        "type": "checkbox",
+        "value": false
+      },
       "FullScanRecord": {
         "type": "stored",
         "value": "2020-01-01 00:00:00",

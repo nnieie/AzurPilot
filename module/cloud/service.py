@@ -22,11 +22,12 @@ class CloudService:
     MAX_BYTES = 64 << 20
 
     def __init__(self, root, device_id, *, api=None, public_key=None, apply_mappings=None,
-                 enabled=lambda: True):
+                 enabled=lambda: True, scene_enabled=lambda scene: True):
         self.root = Path(root)
         self.api = api or PublicAPI(device_id)
         self.device_id = device_id
         self.enabled = enabled
+        self.scene_enabled = scene_enabled
         self.history = apply_mappings or (lambda mappings: None)
         self._pump_lock = threading.Lock()
         self._thread_lock = threading.Lock()
@@ -80,7 +81,7 @@ class CloudService:
         if binding:
             item = map_items([{'item': source, 'amount': 1}], self.mappings())[0]
             return {**item, 'source_template_id': source}
-        if not self.enabled():
+        if not self.enabled() or not self.scene_enabled(scene):
             return {'item': source, 'source_template_id': source, 'tag': ''}
         with config_transaction(self._lock_path):
             path = self.root / 'icons' / (source[2:] + '.json')
@@ -95,12 +96,19 @@ class CloudService:
                     raise CloudError('Could not encode template icon')
                 write_json(path, {'source': source, 'image_base64': base64.b64encode(png).decode(),
                                   'scene': scene})
+            else:
+                # 一个未知图标可能同时被科研和委托引用，任一允许的来源均可登记。
+                job = read_json(path)
+                scenes = job.get('scenes', [job['scene']])
+                if scene not in scenes:
+                    job['scenes'] = [*scenes, scene]
+                    write_json(path, job)
         self.start()
         return {'item': source, 'source_template_id': source, 'tag': ''}
 
     def capture(self, image, observations, *, scene):
         """Keep one lossless full frame for all its unresolved items, including cached U-IDs."""
-        if not observations or not self.enabled():
+        if not observations or not self.enabled() or not self.scene_enabled(scene):
             return
         if image.shape != (720, 1280, 3) or image.dtype != np.uint8:
             raise ValueError('Expected a complete 1280x720 RGB reward screenshot')
@@ -126,10 +134,14 @@ class CloudService:
         self.start()
 
     def _upload_screenshots(self):
-        for path in sorted((self.root / 'screenshots').glob('*.json'))[:10]:
+        processed = 0
+        for path in sorted((self.root / 'screenshots').glob('*.json')):
             if not self.enabled():
                 return
             job = read_json(path)
+            if not self.scene_enabled(job['scene']):
+                continue
+            processed += 1
             bindings = self._bindings()
             references = []
             for row in job['observations']:
@@ -159,12 +171,14 @@ class CloudService:
                         write_json(path, current)
                     else:
                         path.unlink()
+            if processed >= 10:
+                break
 
     def enqueue(self, record):
-        if not self.enabled():
-            return None
         if record.get('scene') not in ('commission', 'research'):
             raise ValueError('Only commission and research can be submitted')
+        if not self.enabled() or not self.scene_enabled(record['scene']):
+            return None
         record = dict(record)
         record.setdefault('record_id', uuid.uuid4().hex)
         record.setdefault('client', 'AzurPilot')
@@ -193,11 +207,16 @@ class CloudService:
         logger.warning(f'[云端统计] 记录保留在 rejected: {reason}')
 
     def _register(self):
-        for path in sorted((self.root / 'icons').glob('*.json'))[:50]:
+        processed = 0
+        for path in sorted((self.root / 'icons').glob('*.json')):
             if not self.enabled():
                 return
             job = read_json(path)
-            response = self.api.register(job['image_base64'], self.catalog.revision, job['scene'])
+            scene = next((scene for scene in job.get('scenes', [job['scene']])
+                          if self.scene_enabled(scene)), None)
+            if scene is None:
+                continue
+            response = self.api.register(job['image_base64'], self.catalog.revision, scene)
             canonical, identity = response.get('template_id'), response.get('identity_id')
             if (response.get('match') not in ('new', 'cluster', 'formal')
                     or not isinstance(canonical, str) or not ITEM_ID.fullmatch(canonical)
@@ -212,13 +231,18 @@ class CloudService:
             self.history(self.mappings())
             path.unlink()
             self._next_sync = 0
+            processed += 1
+            if processed >= 50:
+                break
 
     def _submit(self):
         paths, records = [], []
         bindings = self._bindings()
-        for path in sorted((self.root / 'jobs').glob('*.json'))[:200]:
+        for path in sorted((self.root / 'jobs').glob('*.json')):
             job = read_json(path)
             record = job['record']
+            if not self.scene_enabled(record['scene']):
+                continue
             sources = []
             for item in job['source_items']:
                 identity = item.get('source_template_id', item['item'])
@@ -240,6 +264,8 @@ class CloudService:
             record['template_revision'] = self.catalog.revision
             paths.append(path)
             records.append(record)
+            if len(records) >= 200:
+                break
         if not records or not self.enabled():
             return
         response = self.api.submit(records)

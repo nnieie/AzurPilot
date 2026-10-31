@@ -253,7 +253,7 @@ class UpdateService:
                         raise ApiError('UPDATE_BUSY', '更新器正在处理其他操作')
                     self.updater.state = 'checking'
                     owns_check = True
-                    self.updater._fetch_with_retry('origin', self.updater.Branch, max_retry=3, delay=1)
+                    self.updater.fetch_update('origin', self.updater.Branch, max_retry=3, delay=1)
                     local, upstream = self.heads()
                     behind = int(self.git('rev-list', '--count', f'{local}..{upstream}')) if local and upstream else 0
                     self.updater.state = bool(behind)
