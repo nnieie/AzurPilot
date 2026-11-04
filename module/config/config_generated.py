@@ -924,6 +924,7 @@ class GeneratedConfig:
     IslandFarm_WorkerFilter = 'WorkerJuu'
     IslandFarm_MinFarm = 660
     IslandFarm_CropTargets = None
+    IslandFarm_DefaultCrop = 'wheat'  # wheat, corn, rice, chinese_cabbage, potato, soybean, pasture, coffee_bean
     IslandFarm_PlantPotatoes = 4  # 0, 1, 2, 3, 4
 
     # 配置组 `IslandOrchard`
@@ -932,6 +933,7 @@ class GeneratedConfig:
     IslandOrchard_MinOrchard = 300
     IslandOrchard_CropTargets = None
     IslandOrchard_IgnoreAvocado = True
+    IslandOrchard_DefaultCrop = 'rubber'  # apple, citrus, banana, mango, lemon, avocado, rubber, pear, persimmon
     IslandOrchard_PlantRubber = 0  # 0, 1, 2, 3, 4
     IslandOrchard_AmagiChanRubber = False
 
@@ -941,6 +943,7 @@ class GeneratedConfig:
     IslandNursery_MinNursery = 0
     IslandNursery_CropTargets = None
     IslandNursery_IgnorePineapple = True
+    IslandNursery_DefaultCrop = 'lavender'  # carrot, onion, flax, strawberry, cotton, tea, lavender, pineapple, asparagus
     IslandNursery_PlantLavender = 2  # 0, 1, 2
 
     # 配置组 `IslandRancher`
@@ -963,6 +966,8 @@ class GeneratedConfig:
     IslandFishery_MinCrab = 50
     IslandFishery_MinSquid = 50
     IslandFishery_MinSeaCucumber = 50
+    IslandFishery_MinFreshwaterFishMeat = 0
+    IslandFishery_MinSaltwaterFishMeat = 0
     IslandFishery_PlantYellowfinTuna = 3  # 0, 1, 2, 3
     IslandFishery_RancherFilter = 'WorkerJuu'
 
@@ -1260,6 +1265,9 @@ class GeneratedConfig:
     IslandProductionPlanner_RescanTechnology = True  # True, False
     IslandProductionPlanner_ScanSeasonTasks = True  # True, False
     IslandProductionPlanner_SeasonTaskTargets = None
+    IslandProductionPlanner_ScanCargoOrders = True  # True, False
+    IslandProductionPlanner_CargoTargets = None
+    IslandProductionPlanner_CargoTargetDays = 1
     IslandProductionPlanner_ExtraTargets = None
     IslandProductionPlanner_DailyProfitLowerLimit = 50000
     IslandProductionPlanner_DailyBufferSafetyMargin = 0

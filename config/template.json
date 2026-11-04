@@ -3455,6 +3455,7 @@
       "WorkerFilter": "WorkerJuu",
       "MinFarm": 660,
       "CropTargets": null,
+      "DefaultCrop": "wheat",
       "PlantPotatoes": 4
     },
     "IslandOrchard": {
@@ -3463,6 +3464,7 @@
       "MinOrchard": 300,
       "CropTargets": null,
       "IgnoreAvocado": true,
+      "DefaultCrop": "rubber",
       "PlantRubber": 0,
       "AmagiChanRubber": false
     },
@@ -3472,6 +3474,7 @@
       "MinNursery": 0,
       "CropTargets": null,
       "IgnorePineapple": true,
+      "DefaultCrop": "lavender",
       "PlantLavender": 2
     },
     "Storage": {
@@ -3510,6 +3513,8 @@
       "MinCrab": 50,
       "MinSquid": 50,
       "MinSeaCucumber": 50,
+      "MinFreshwaterFishMeat": 0,
+      "MinSaltwaterFishMeat": 0,
       "PlantYellowfinTuna": 3,
       "RancherFilter": "WorkerJuu"
     },
@@ -4122,6 +4127,9 @@
       "RescanTechnology": true,
       "ScanSeasonTasks": true,
       "SeasonTaskTargets": null,
+      "ScanCargoOrders": true,
+      "CargoTargets": null,
+      "CargoTargetDays": 1,
       "ExtraTargets": null,
       "DailyProfitLowerLimit": 50000,
       "DailyBufferSafetyMargin": 0,
